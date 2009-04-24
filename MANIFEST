@@ -1,0 +1,24 @@
+agent/build.xml
+agent/j4p-agent.war
+agent/lib/json_simple-1.1.jar
+agent/lib/servlet-api-2.4.jar
+agent/pom.xml
+agent/src/main/java/org/cpan/jmx4perl/AgentServlet.java
+agent/src/main/java/org/cpan/jmx4perl/converter/ArrayHandler.java
+agent/src/main/java/org/cpan/jmx4perl/converter/AttributeToJsonConverter.java
+agent/src/main/java/org/cpan/jmx4perl/converter/CollectionHandler.java
+agent/src/main/java/org/cpan/jmx4perl/converter/CompositeHandler.java
+agent/src/main/java/org/cpan/jmx4perl/converter/MapHandler.java
+agent/src/main/java/org/cpan/jmx4perl/converter/PlainValueHandler.java
+agent/src/main/java/org/cpan/jmx4perl/converter/TabularDataHandler.java
+agent/src/main/java/org/cpan/jmx4perl/JmxRequest.java
+agent/src/main/webapp/WEB-INF/web.xml
+Build.PL
+examples/check_jmx4perl
+lib/JMX/Jmx4Perl.pm
+lib/JMX/Jmx4Perl/Agent.pm
+lib/jmx4perl.pod
+LICENSE
+MANIFEST			This list of files
+META.yml
+README

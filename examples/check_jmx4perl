@@ -1,0 +1,85 @@
+#!/usr/bin/perl
+
+=head1 NAME 
+
+check_jmx4perl - Nagios check using jmx4perl for accessing JMX information 
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=cut
+
+use FindBin qw ($Bin);
+use lib qq($Bin/../lib);
+use JMX::Jmx4Perl;
+use Getopt::Long;
+use Pod::Usage;
+use strict;
+use Data::Dumper;
+
+my ($url,$user,$password,$mbean,$attribute,$path,
+    $critical_low,$critical_high,$warning_low,$warning_high,
+    $help,$man);
+GetOptions("url=s" => \$url,
+           "user=s" => \$user,
+           "password=s" => \$password,
+           "mbean=s" => \$mbean,
+           "attribute=s" => \$attribute,
+           "path=s" => \$path,
+           "criticalLow=i" => \$critical_low,
+           "criticalHigh=i" => \$critical_high,
+           "warningLow=i" => \$warning_low,
+           "warningHigh=i" => \$warning_high,
+           'help|?' => \$help, man => \$man) or pod2usage(2);
+pod2usage(1) if $help;
+pod2usage(-exitstatus => 0, -verbose => 2) if $man;
+&mandatory_check("url",$url);
+&mandatory_check("mbean",$mbean);
+&mandatory_check("attribute",$attribute);
+
+my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $url, user => $user, password => $password);
+my $resp = $jmx->get_attribute($mbean,$attribute,$path);
+
+if (!defined($resp->{value})) {
+    &critical("JMX Request failed",Dumper($resp));
+}
+my $value = $resp->{value};
+if (ref($value)) { 
+    &critical("Response value is a ".ref($value).". Did you forget a --path parameter ?","Value: " . Dumper($value));
+}
+&critical("$value < $critical_low") if (defined($critical_low) && $value < $critical_low);
+&critical("$value > $critical_high") if (defined($critical_high) && $value > $critical_high);
+&warning("$value < $warning_low") if (defined($warning_low) && $value < $warning_low);
+&warning("$value > $warning_high") if (defined($warning_high) && $value > $warning_high);
+&ok("$value");
+
+sub critical {
+    &msg(2,"CRITICAL",@_);
+}
+
+sub warning {
+    &msg(1,"WARNING",@_);
+}
+
+sub ok {
+    &msg(0,"OK",@_);
+}
+
+sub msg {
+    my ($exit_code,$prefix,$short,$long) = @_;
+    print "$prefix $mbean, $attribute" . ($path ? ", $path" : "") . " -- " . $short . "\n";
+    print $long,"\n" if $long;
+    exit $exit_code;
+}
+
+
+
+sub mandatory_check {
+    my ($option,$value) = @_;
+    unless ($value) {
+        print "::: Mandatory parameter --$option is missing\n\n";
+        pod2usage(1);
+        exit(1);
+    }
+}

@@ -1,0 +1,29 @@
+
+
+
+
+
+
+
+
+
+Test Suite
+==========
+
+- Maven
+
+
+
+
+JMX JSON Agent
+==============
+
+
+- Minimum Java Version: 1.5
+- Servlet: >= 2.4
+- Deployment instructions for
+  + Weblogic (9/10)
+  + JBoss (4.x + 5)
+  + Tomcat
+  + Jetty
+  + Glassfish

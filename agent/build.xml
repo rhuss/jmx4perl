@@ -1,0 +1,43 @@
+<project name="json-jmx-agent" default="main" basedir=".">
+  <property name="version" value="1.0"/>
+  <property name="war-name" value="j4p-agent.war"/>
+
+  <target name="main" depends="war"/>
+  
+  <target name="clean">
+    <delete includeemptydirs="true">
+      <fileset dir="target" includes="**/*"/>
+      <fileset dir="." includes="*.war"/>
+    </delete>
+  </target>
+	
+  <target name="mkdir">
+    <mkdir dir="target/classes"/>
+  </target>
+  
+  <target name="compile" depends="mkdir">
+    <javac 	srcdir="src/main/java" 
+            destdir="target/classes"
+            includes="**/*.java"
+            target="1.5"
+            source="1.5">
+      <classpath>
+        <fileset dir="lib">
+          <include name="*.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+
+  </target>
+  
+  <target name="war" depends="compile">
+    <war destfile="target/${war-name}" webxml="src/main/webapp/WEB-INF/web.xml">
+      <lib dir="lib">
+        <exclude name="servlet-api*"/>
+      </lib>
+      <classes dir="target/classes"/>
+    </war>
+    <copy file="target/${war-name}" todir="."/>
+  </target>
+  
+</project>
