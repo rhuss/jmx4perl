@@ -33,7 +33,7 @@ my $build = $class->new
    dist_abstract => 'Easy JMX access to Java Applications',
    distribution_type => 'module',
    installdirs => 'site',
-
+   script_files => 'scripts',
    license => "perl",
    
    requires => {

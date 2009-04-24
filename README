@@ -1,29 +1,109 @@
+                               jmx4perl
+                               ========
 
+INTRODUCTION
 
+  jmx4perl provides a new way for accessing Java JEE Server management
+  interfaces which are based on JMX (Java Management Extensions). It
+  is an agent based approach, where a small Java Webapplication (<30k)
+  deployed on the application server provides a an HTTP/JSON based
+  access to the JMX MBeans registered within the application server.  
 
+  A discussion about the pros and cons of an agent based vs. a direct
+  JMX remoting (which is available via JSR 160 connectors) can be
+  found in the man page "jmx4perl" contained within this package. The
+  biggest advantage for an agent based approach is that no local java
+  installation is required for using it.
 
+  There a future plans for providing a JSR 160 based access as
+  well. Stay tuned ...
 
+HOW IT WORKS
 
+  You need to deploy a small (<30k) Java Agent WAR (web archive) to
+  the Java application server to monitor. Thats all on the java
+  side. There is no need to add any startup parameters to the
+  application server and to open any additional ports. All
+  communication takes places via HTTP where JSON objects are
+  exchanged. Additionally, the agent benefits from the security
+  infrastructure in place which every application server provides for
+  web application.
 
+  The Perl module JMX::Jmx4Perl::Agent accesses this web application
+  and transform the request's results from JSON into a simple pure
+  Perl object. This distribution contains a sample Nagios check
+  'check_jmx4perl' which use this result to perform various checks.
 
+INSTALLATION
 
-Test Suite
-==========
+  The Perl part installs as any other module via Module::Build, which
+  you need to have installed. Using
 
-- Maven
+  perl Build.PL
+  ./Build install
 
+  will install the modules (sorry, no tests yet). If you have Java
+  and "ant" (a Java build tool) installed, the Java agent will be
+  compiled and packaged as well. However, this is not required. A
+  precompile "j4p-agent.war" can be found in the "agent" directory. 
 
+  For the module to work, you need to deploy "j4p-agent.war" to the
+  JEE Server to monitor. The concrete steps depend on the specific way
+  for deploying on the targeted server, which in most cases is a
+  simple copying in to a specific directory. Please consult the
+  documentation of your Java application server for the details (look
+  for "deployment" and "war")
 
+  (TODO: Detailed deployment instructions for supported platforms)
 
-JMX JSON Agent
-==============
+  To test it, you can use 'check_jmx4perl' which gets installed as
+  well. Consult its documentation for further details. 
+  
+SUPPORTED APPLICATION SERVERS
+  
+  For now, the following Java Application Servers has been tested:
 
+  * JBoss 4
+  * Weblogic 10 
+  * Glassfish 2
+  * Tomcat 5
+  * Jetty 6
 
-- Minimum Java Version: 1.5
-- Servlet: >= 2.4
-- Deployment instructions for
-  + Weblogic (9/10)
-  + JBoss (4.x + 5)
-  + Tomcat
-  + Jetty
-  + Glassfish
+  There is work underway to extend this list. However, it is expected
+  that every Java application server which runs with at least Java 1.5
+  and conforms to at least version 2.4 of the Servlet specification
+  should work.
+
+LICENSE
+
+  Copyright (C) 2009 Roland Huss (roland@cpan.org)
+
+  Jmx4perl is free software: you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 2 of the License, or
+  (at your option) any later version.
+
+  jmx4perl is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+  Please contact roland@cpan.org for any license questions, there is
+  a commercial license available as well. 
+
+ACKNOWLEDGMENTS
+
+  Many thanks goes to Gerhard Lausser, who pushed to me to think
+  harder about a better way for monitoring JEE Server from
+  Nagios. Good luck, Gerhard, with your forthcoming Nagios book !
+
+BUGS 
+
+  Please send any comments and bug reports to roland@cpan.org 
+
+AUTHOR
+
+  roland@cpan.org
