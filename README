@@ -40,6 +40,7 @@ INSTALLATION
   you need to have installed. Using
 
   perl Build.PL
+  ./Build
   ./Build install
 
   will install the modules (sorry, no tests yet). If you have Java
@@ -91,14 +92,22 @@ LICENSE
   You should have received a copy of the GNU General Public License
   along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
 
-  Please contact roland@cpan.org for any license questions, there is
+  Please contact roland@cpan.org for any licensing questions, there is
   a commercial license available as well. 
+
+PROFESSIONAL SERVICES
+
+  Just in case you need professional support for this module (or
+  Nagios or JMX in general), you might want have a look at
+  http://www.consol.com/opensource/nagios/. Contact
+  roland.huss@consol.de for further information (or use the contact
+  form at http://www.consol.com/contact/)
 
 ACKNOWLEDGMENTS
 
   Many thanks goes to Gerhard Lausser, who pushed to me to think
-  harder about a better way for monitoring JEE Server from
-  Nagios. Good luck, Gerhard, with your forthcoming Nagios book !
+  harder about a better way for monitoring JEE Servers by Nagios. Good
+  luck, Gerhard, with your forthcoming Nagios book !
 
 BUGS 
 

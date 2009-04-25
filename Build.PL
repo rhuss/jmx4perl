@@ -44,7 +44,9 @@ my $build = $class->new
                 "Getopt::Long" => 0,
                 "Carp" => 0
                },
-   
+   recommends => {
+                   "Nagios::Plugin" => "0.32"
+                  },
    build_requires => {
                       "Module::Build" => "0",
                       "Test::More" => "0",

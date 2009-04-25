@@ -112,8 +112,12 @@ sub _get_attribute {
     my $req = HTTP::Request->new(GET => $url);
     my $resp = $ua->request($req);
     if ($resp->is_error) {
-        my $error = "Error while fetching $url:\n " . $resp->status_line . "\n";
-        $error .= $resp->content if $resp->content;
+        my $error = "Error while fetching $url :\n" . $resp->status_line . "\n";
+        my $content = $resp->content;
+        if ($content) {
+            chomp $content;
+            $error .=  $content if $content ne $resp->status_line;
+        }
         croak $error;
     }
     
