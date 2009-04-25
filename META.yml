@@ -4,9 +4,9 @@ version: 0.01_01
 author:
   - Roland Huss (roland@cpan.org)
 abstract: Easy JMX access to Java Applications
-license: perl
+license: gpl
 resources:
-  license: http://dev.perl.org/licenses/
+  license: http://www.gnu.org/licenses/old-licenses/gpl-1.0.txt
 requires:
   Carp: 0
   Data::Dumper: 0
@@ -18,6 +18,8 @@ build_requires:
   Module::Build: 0
   Test: 0
   Test::More: 0
+recommends:
+  Nagios::Plugin: 0.32
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm

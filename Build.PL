@@ -5,10 +5,10 @@ my $class = Module::Build->subclass(
       class => "Module::Build::Custom",
       code => <<'SUBCLASS' );
 
-  sub ACTION_dist {
+  sub ACTION_build {
       my $self = shift;
       $self->depends_on("buildagent");
-      $self->SUPER::ACTION_dist;
+      $self->SUPER::ACTION_build;
   }
 
   sub ACTION_clean {
@@ -20,7 +20,7 @@ my $class = Module::Build->subclass(
   sub ACTION_buildagent {
       my $self = shift;
       
-      die "!!!! Cannot create agent.war !!!" 
+      print "Cannot re-create agent.war" 
               unless $self->do_system(qw(ant -f agent/build.xml));
   }
 SUBCLASS
@@ -31,10 +31,9 @@ my $build = $class->new
    dist_version_from => "lib/JMX/Jmx4Perl.pm",
    dist_author => 'Roland Huss (roland@cpan.org)',
    dist_abstract => 'Easy JMX access to Java Applications',
-   distribution_type => 'module',
    installdirs => 'site',
    script_files => 'scripts',
-   license => "perl",
+   license => 'gpl',
    
    requires => {
                 "JSON" => "2.12",
@@ -53,11 +52,6 @@ my $build = $class->new
                       "Test" => "0"
                      },                       
    keywords => [  "JMX", "JEE", "Management" ],
-   provides => {
-                "JMX::JSON" => {
-                               file =>  "lib/JMX/JSON.pm"
-                              }
-               }
   );
 
 $build->create_build_script;
