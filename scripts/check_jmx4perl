@@ -22,9 +22,10 @@ my $np = Nagios::Plugin->
   new(
       usage => 
       "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning>\n" . 
-      "                 [--user <user>] [--password <password>] [-v] ",
+      "                      [--user <user>] [--password <password>] [-v] [--help]\n",
       version => "0.01",
       url => "http://www.consol.com/opensource/nagios/",
+      shortname => "jmx4perl",
       plugin => "check_jmx4perl",
       blurb => "This plugin checks for JMX attribute values on a remote Java application server",
       extra => "\n\nYou need to deploy j4p-agent.war on the target application server.\n" .
