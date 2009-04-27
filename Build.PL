@@ -5,10 +5,10 @@ my $class = Module::Build->subclass(
       class => "Module::Build::Custom",
       code => <<'SUBCLASS' );
 
-  sub ACTION_build {
+  sub ACTION_dist {
       my $self = shift;
       $self->depends_on("buildagent");
-      $self->SUPER::ACTION_build;
+      $self->SUPER::ACTION_dist;
   }
 
   sub ACTION_clean {
@@ -41,10 +41,11 @@ my $build = $class->new
                 "Data::Dumper" => 0,
                 "Pod::Usage" => 0,
                 "Getopt::Long" => 0,
-                "Carp" => 0
+                "Carp" => 0,
+                "Object::Tiny" => "1.06"
                },
    recommends => {
-                   "Nagios::Plugin" => "0.32"
+                   "Nagios::Plugin" => "0.27"
                   },
    build_requires => {
                       "Module::Build" => "0",

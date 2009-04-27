@@ -19,11 +19,12 @@ JMX::Jmx4Perl - Access to JMX via Perl
 package JMX::Jmx4Perl;
 
 use Carp;
+use JMX::Jmx4Perl::Request;
 
-$VERSION = "0.01_01";
+$VERSION = "0.01_02";
 
 my $REGISTRY = {
-                # Agent base
+                # Agent based
                 "agent" => "JMX::Jmx4Perl::Agent",
                 "JMX::Jmx4Perl::Agent" => "JMX::Jmx4Perl::Agent",
                 "JJAgent" => "JMX::Jmx4Perl::Agent",
@@ -52,10 +53,23 @@ sub new {
 
 # ==========================================================================
 
-=item $resp = $jmx->get_attribute($object_name,$attribute,$path) 
+=item $resp => $jmx_get_attribute(...)
 
-=item $resp = $jmx->get_attribute({ domain => <domain>, properties => { <key>
-=> value }, attribute => <attribute>, path => <path>)
+  $resp = $jmx->get_attribute($mbean,$attribute,$path) 
+  $resp = $jmx->get_attribute({ domain => <domain>, 
+                                properties => { <key> => value }, 
+                                attribute => <attribute>, 
+                                path => <path>)
+
+Read a JMX attribute. In the first form, you provide the MBean name, the
+attribute name and an optional path as positional arguments. The second
+variant uses named parameters from a hashref. 
+
+The Mbean name can be specified with the canoncial name (key C<mbean), or with
+a domain name (key C<domain>) and one or more properties (key C<properties> or
+C<props>) which contain key-value pairs in a Hashref. For more about naming 
+of MBeans please refer to L<http://java.sun.com/j2se/1.5.0/docs/api/javax/management/ObjectName.html>
+for more information about JMX naming.
 
 =cut 
 
@@ -63,7 +77,7 @@ sub get_attribute {
     my $self = shift;
     my ($object,$attribute,$path);
     if (ref($_[0]) eq "HASH") {
-        $object = $_[0]->{object};
+        $object = $_[0]->{mbean};
         if (!$object && $_[0]->{domain} && ($_[0]->{properties} || $_[0]->{props})) {
             $object = $_[0]->{domain} . ":";
             my $href = $_[0]->{properties} || $_[0]->{props};
@@ -80,7 +94,21 @@ sub get_attribute {
     croak "No object name provided" unless $object;
     croak "No attribute provided for object $object" unless $attribute;
 
-    $self->_get_attribute($object,$attribute,$path);
+    my $request = JMX::Jmx4Perl::Request->new(READ_ATTRIBUTE,$object,$attribute,$path);
+    return $self->request($request);
+}
+
+=item $resp = $jmx->request($request)
+
+Send a request to the underlying agent and return the response. This is an
+abstract method which needs to be overwritten by a subclass. The argument must
+be of type L<JMX::Jmx4Perl::Request> and it returns an object of type
+L<JMX::Jmx4Perl::Response> 
+
+=cut 
+
+sub request {
+    croak "Internal: Must be overwritten by a subclass";    
 }
 
 sub cfg {
@@ -97,13 +125,9 @@ sub cfg {
 # ==========================================================================
 # Methods used for overwriting
 
+# Init method called during construction
 sub init {
     # Do nothing by default
-}
-
-# abstract method
-sub _get_attribute {
-    croak "Internal: Must be overwritten by a subclass";
 }
 
 # ==========================================================================

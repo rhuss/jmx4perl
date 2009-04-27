@@ -105,7 +105,10 @@ public class JmxRequest extends JSONObject {
     }
 
     private void setupJSON() {
-        put("attribute",getAttributeName());
+        put("type",type.getValue());
+        if (type == Type.READ_ATTRIBUTE || type == Type.WRITE_ATTRIBUTE) {
+            put("attribute",getAttributeName());
+        }
         if (extraArgs.size() > 0) {
             StringBuffer buf = new StringBuffer();
             Iterator<String> it = extraArgs.iterator();
@@ -115,13 +118,9 @@ public class JmxRequest extends JSONObject {
                     buf.append("/");
                 }
             }
-            put("innerPath",buf.toString());
+            put("path",buf.toString());
         }
-        JSONObject name = new JSONObject();
-        name.put("domain",objectName.getDomain());
-        name.put("canonical",objectName.getCanonicalName());
-        name.put("keys",objectName.getKeyPropertyList());
-        put("name",name);
+        put("mbean",objectName.getCanonicalName());
     }
 
     public String getObjectNameAsString() {

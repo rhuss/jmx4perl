@@ -7,6 +7,8 @@ use HTTP::Request;
 use Carp;
 use strict;
 use vars qw($VERSION $DEBUG @ISA);
+use JMX::Jmx4Perl;
+use JMX::Jmx4Perl::Request;
 
 @ISA = qw(JMX::Jmx4Perl);
 
@@ -103,12 +105,12 @@ sub init {
     return $self;
 }
 
-sub _get_attribute {
+sub request {
     my $self = shift;
-    my ($object,$attribute,$path) = @_;
+    my $jmx_request = shift;
  
     my $ua = $self->{ua};
-    my $url = $self->request_url("read",$object,$attribute,$path);
+    my $url = $self->request_url($jmx_request);
     my $req = HTTP::Request->new(GET => $url);
     my $resp = $ua->request($req);
     if ($resp->is_error) {
@@ -122,17 +124,24 @@ sub _get_attribute {
     }
     
     my $ret = from_json($resp->content());
-    return $ret;
+    return JMX::Jmx4Perl::Response->new($jmx_request,$ret->{value});
 }
 
 sub request_url {
     my $self = shift;
-    my ($type,$object,$attribute,$path) = @_;
+    my $request = shift;
     my $url = $self->cfg('url') || croak "No base url given in configuration";
     $url .= "/" unless $url =~ m|/$|;
-    $url .= "$type/";
-    $url .= $object . "/" . $attribute;
-    $url .= "/" . $path if $path;
+    my $type = $request->get("type");
+    $url .= $type . "/";
+    $url .= $request->get("mbean") . "/";
+    if ($type eq READ_ATTRIBUTE || $type eq WRITE_ATTRIBUTE) {
+        $url .= $request->get("attribute");
+        $url .= "/" . $request->get("path") if $request->get("path");
+        if ($type eq WRITE_ATTRIBUTE) {
+            $url .= "/" . $request->get("value");
+        }
+    }
     return $url;
 }
 
@@ -185,4 +194,5 @@ along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
 roland@cpan.org
 
 =cut
+
 1;

@@ -78,7 +78,7 @@ public class AgentServlet extends HttpServlet {
 
     private void handle(HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
         JmxRequest jmxReq = new JmxRequest(pReq.getPathInfo());
-        Object retValue = null;
+        Object retValue;
         if (jmxReq.getType() == JmxRequest.Type.READ_ATTRIBUTE) {
             retValue = getMBeanAttribute(jmxReq);
         } else {

@@ -1,3 +1,10 @@
+2009-04-27  Roland Huss  <roland@consol.de>
+
+	* scripts/check_jmx4perl: Adopted output and added a --name parameter
+
+	* lib/JMX/Jmx4Perl/Request.pm: Added request and response objects
+	and tuned JSON format
+
 2009-04-25  Roland Huss  <roland@consol.de>
 
 	* Initial development release 0.01_01
