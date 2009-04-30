@@ -53,7 +53,7 @@ public class TabularDataHandler implements AttributeToJsonConverter.Handler {
         } else {
             JSONArray ret = new JSONArray();
             for (CompositeData cd : (Collection <CompositeData>) td.values()) {
-                ret.add(pConverter.prepareForJson(td,pExtraArgs));
+                ret.add(pConverter.prepareForJson(cd,pExtraArgs));
             }
             return ret;
         }
