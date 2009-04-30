@@ -24,6 +24,7 @@ package org.cpan.jmx4perl;
 
 
 import org.cpan.jmx4perl.converter.AttributeToJsonConverter;
+import org.json.simple.JSONObject;
 
 import javax.management.*;
 import javax.servlet.ServletException;
@@ -32,13 +33,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 
 /**
  * Agent servlet which connects to a local JMX MBeanServer for
@@ -94,18 +96,54 @@ public class AgentServlet extends HttpServlet {
     }
 
     private void handle(HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
-        JmxRequest jmxReq = new JmxRequest(pReq.getPathInfo());
-        Object retValue;
-        JmxRequest.Type type = jmxReq.getType();
-        if (type == JmxRequest.Type.READ_ATTRIBUTE) {
-            retValue = getMBeanAttribute(jmxReq);
-        } else if (type == JmxRequest.Type.LIST_MBEANS) {
-            retValue = listMBeans();
-        } else {
-            throw new UnsupportedOperationException("Unsupported operation '" + jmxReq.getType() + "'");
+        JSONObject json = null;
+        JmxRequest jmxReq = null;
+        int code = 200;
+        Throwable throwable = null;
+        try {
+            jmxReq = new JmxRequest(pReq.getPathInfo());
+            Object retValue;
+            JmxRequest.Type type = jmxReq.getType();
+            if (type == JmxRequest.Type.READ_ATTRIBUTE) {
+                retValue = getMBeanAttribute(jmxReq);
+            } else if (type == JmxRequest.Type.LIST_MBEANS) {
+                retValue = listMBeans();
+            } else {
+                throw new UnsupportedOperationException("Unsupported operation '" + jmxReq.getType() + "'");
+            }
+            json = jsonConverter.convertToJson(retValue,jmxReq);
+            json.put("status",200 /* success */);  
+        } catch (UnsupportedOperationException exp) {
+            code = 501;
+            throwable = exp;
+        } catch (IllegalArgumentException exp) {
+            code = 400;
+            throwable = exp;
+        } catch (IllegalStateException exp) {
+            code = 500;
+            throwable = exp;
+        } catch (Exception exp) {
+            code = 500;
+            throwable = exp;
+        } catch (Error error) {
+            code = 500;
+            throwable = error;
+        } finally {
+            if (code != 200) {
+                json = getErrorJSON(code,throwable,jmxReq);
+            }
+            sendResponse(pResp,code,json.toJSONString());
         }
-        String jsonTxt = jsonConverter.convertToJson(retValue,jmxReq);
-        sendResponse(pResp, jsonTxt);
+    }
+
+    private JSONObject getErrorJSON(int pErrorCode, Throwable pExp, JmxRequest pJmxReq) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("status",pErrorCode);
+        jsonObject.put("error",pExp.toString());
+        StringWriter writer = new StringWriter();
+        pExp.printStackTrace(new PrintWriter(writer));
+        jsonObject.put("stacktrace",writer.toString());
+        return jsonObject;
     }
 
     private Object listMBeans() {
@@ -182,9 +220,10 @@ public class AgentServlet extends HttpServlet {
         }
     }
 
-    private void sendResponse(HttpServletResponse pResp, String pJsonTxt) throws IOException {
+    private void sendResponse(HttpServletResponse pResp, int pStatusCode, String pJsonTxt) throws IOException {
         pResp.setContentType("text/plain");
         pResp.setCharacterEncoding("utf-8");
+        pResp.setStatus(pStatusCode);
         PrintWriter writer = pResp.getWriter();
         writer.write(pJsonTxt);
     }

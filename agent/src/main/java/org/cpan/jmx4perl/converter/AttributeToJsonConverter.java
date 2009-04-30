@@ -57,7 +57,7 @@ public class AttributeToJsonConverter {
         arrayHandler = new ArrayHandler();
     }
 
-    public String convertToJson(Object pValue, JmxRequest pRequest) {
+    public JSONObject convertToJson(Object pValue, JmxRequest pRequest) {
         Stack<String> extraStack = new Stack<String>();
         List<String> extraArgs = pRequest.getExtraArgs();
         if (extraArgs != null) {
@@ -71,7 +71,7 @@ public class AttributeToJsonConverter {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("value",jsonResult);
         jsonObject.put("request",pRequest);
-        return jsonObject.toJSONString();
+        return jsonObject;
     }
 
     Object prepareForJson(Object pValue,Stack<String> pExtraArgs) {

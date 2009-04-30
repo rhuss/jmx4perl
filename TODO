@@ -1,7 +1,8 @@
 01 Data format description. Maybe even encapsulate it into 
    an own object
 02 Javadoc documentation of agent
-03 Further module documentations
+03 Further module documentations: check_jmx4perl,
+   JMX::Jmx4Perl::Agent, Response, Request
 04 Deployment instructions for various application servers
 05 Additional Agents which start a JVM (e.g. with "Java::Import") 
    and call the appserver via JSR 160 connector

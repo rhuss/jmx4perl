@@ -1,3 +1,11 @@
+2009-04-30  Roland Huss  <roland@consol.de>
+
+	* agent/src/main/java/org/cpan/jmx4perl/AgentServlet.java: Catches
+	now exceptions and generates an own, machine readable error
+	text. Added keys "status", "error" and "stacktrace" to the JSON
+	answer. "status" contains an integer status code similar to
+	HTTP/1.1 
+
 2009-04-29  Roland Huss  <roland@consol.de>
 
 	* lib/JMX/Jmx4Perl.pm (request): Added a 'list()' method for

@@ -114,7 +114,8 @@ sub request {
     my $url = $self->request_url($jmx_request);
     my $req = HTTP::Request->new(GET => $url);
     my $resp = $ua->request($req);
-    if ($resp->is_error) {
+    my $ret = from_json($resp->content());
+    if ($resp->is_error && !$ret->{status}) {
         my $error = "Error while fetching $url :\n" . $resp->status_line . "\n";
         my $content = $resp->content;
         if ($content) {
@@ -124,8 +125,8 @@ sub request {
         croak $error;
     }
     
-    my $ret = from_json($resp->content());
-    return JMX::Jmx4Perl::Response->new($jmx_request,$ret->{value});
+
+    return JMX::Jmx4Perl::Response->new($ret->{status},$jmx_request,$ret->{value},$ret->{error},$ret->{stacktrace});
 }
 
 sub request_url {

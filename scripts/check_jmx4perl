@@ -122,6 +122,9 @@ eval {
         }
     }
     my $resp = $jmx->request($jmx_request);
+    if ($resp->is_error) {
+       $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
+    }
     my $duration = int ((gettimeofday)[1] - $start_time) / 1000;
 
     # Show list of beans
