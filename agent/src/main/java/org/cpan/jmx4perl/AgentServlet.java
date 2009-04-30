@@ -33,14 +33,31 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
 
 /**
- * Entry servlet which connects to JMX MBeanServer
- * for fetching attributes which are returned in a fixed
- * JSON format.
+ * Agent servlet which connects to a local JMX MBeanServer for
+ * JMX operations. This agent is a part of <a href="">Jmx4Perl</a>,
+ * a Perl package for accessing JMX from within perl.
+ * <p>
+ * It uses a REST based approach which translates a GET Url into a
+ * request. See {@link JmxRequest} for details about the URL format.
+ * <p>
+ * For now, only the request type
+ * {@link org.cpan.jmx4perl.JmxRequest.Type#READ_ATTRIBUTE} for reading MBean
+ * attributes is supported.
+ * <p>
+ * For the transfer via JSON only certain types are supported. Among basic types
+ * like strings or numbers, collections, arrays and maps are also supported (which
+ * translate into the corresponding JSON structure). Additional the OpenMBean types
+ * {@link javax.management.openmbean.CompositeData} and {@link javax.management.openmbean.TabularData}
+ * are supported as well. Refer to {@link org.cpan.jmx4perl.converter.AttributeToJsonConverter}
+ * for additional information.
  *
  * @author roland@cpan.org
  * @since Apr 18, 2009
@@ -79,13 +96,90 @@ public class AgentServlet extends HttpServlet {
     private void handle(HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
         JmxRequest jmxReq = new JmxRequest(pReq.getPathInfo());
         Object retValue;
-        if (jmxReq.getType() == JmxRequest.Type.READ_ATTRIBUTE) {
+        JmxRequest.Type type = jmxReq.getType();
+        if (type == JmxRequest.Type.READ_ATTRIBUTE) {
             retValue = getMBeanAttribute(jmxReq);
+        } else if (type == JmxRequest.Type.LIST_MBEANS) {
+            retValue = listMBeans();
         } else {
             throw new UnsupportedOperationException("Unsupported operation '" + jmxReq.getType() + "'");
         }
         String jsonTxt = jsonConverter.convertToJson(retValue,jmxReq);
         sendResponse(pResp, jsonTxt);
+    }
+
+    private Object listMBeans() {
+        try {
+            MBeanServer server = getMBeanServer();
+            Map<String /* domain */,
+                    Map<String /* props */,
+                            Map<String /* attribute/operation */,
+                                    List<String /* names */>>>> ret =
+                    new HashMap<String, Map<String, Map<String, List<String>>>>();
+            for (Object nameObject : server.queryNames((ObjectName) null,(QueryExp) null)) {
+                ObjectName name = (ObjectName) nameObject;
+                MBeanInfo mBeanInfo = server.getMBeanInfo(name);
+
+                Map mBeansMap = getOrCreateMap(ret,name.getDomain());
+                Map mBeanMap = getOrCreateMap(mBeansMap,name.getCanonicalKeyPropertyListString());
+
+                addAttributes(mBeanMap, mBeanInfo);
+                addOperations(mBeanMap, mBeanInfo);
+
+                // Trim if needed
+                if (mBeanMap.size() == 0) {
+                    mBeansMap.remove(name.getCanonicalKeyPropertyListString());
+                    if (mBeansMap.size() == 0) {
+                        ret.remove(name.getDomain());
+                    }
+                }
+            }
+            return ret;
+        } catch (InstanceNotFoundException e) {
+            throw new IllegalStateException("Internal error while retrieving list: " + e,e);
+        } catch (ReflectionException e) {
+            throw new IllegalStateException("Internal error while retrieving list: " + e,e);
+        } catch (IntrospectionException e) {
+            throw new IllegalStateException("Internal error while retrieving list: " + e,e);
+        }
+    }
+
+    private void addOperations(Map pMBeanMap, MBeanInfo pMBeanInfo) {
+        // Extract operations
+        Map opMap = new HashMap();
+        for (MBeanOperationInfo opInfo : pMBeanInfo.getOperations()) {
+            Map map = new HashMap();
+            List argList = new ArrayList();
+            for (MBeanParameterInfo paramInfo :  opInfo.getSignature()) {
+                Map args = new HashMap();
+                args.put("desc",paramInfo.getDescription());
+                args.put("name",paramInfo.getName());
+                args.put("type",paramInfo.getType());
+                argList.add(args);
+            }
+            map.put("args",argList);
+            map.put("ret",opInfo.getReturnType());
+            map.put("desc",opInfo.getDescription());
+            opMap.put(opInfo.getName(),map);
+        }
+        if (opMap.size() > 0) {
+            pMBeanMap.put("op",opMap);
+        }
+    }
+
+    private void addAttributes(Map pMBeanMap, MBeanInfo pMBeanInfo) {
+        // Extract atributes
+        Map attrMap = new HashMap();
+        for (MBeanAttributeInfo attrInfo : pMBeanInfo.getAttributes()) {
+            Map map = new HashMap();
+            map.put("type",attrInfo.getType());
+            map.put("desc",attrInfo.getDescription());
+            map.put("rw",new Boolean(attrInfo.isWritable() && attrInfo.isReadable()));
+            attrMap.put(attrInfo.getName(),map);
+        }
+        if (attrMap.size() > 0) {
+            pMBeanMap.put("attr",attrMap);
+        }
     }
 
     private void sendResponse(HttpServletResponse pResp, String pJsonTxt) throws IOException {
@@ -119,6 +213,20 @@ public class AgentServlet extends HttpServlet {
         return mBeanServer;
     }
 
+    /**
+     * Use various ways for gettint to the MBeanServer which should be exposed via this
+     * servlet.
+     *
+     * <ul>
+     *   <li>If running in JBoss, use <code>org.jboss.mx.util.MBeanServerLocator</code>
+     *   <li>Use {@link javax.management.MBeanServerFactory#findMBeanServer(String)} for
+     *       registered MBeanServer and take the <b>first</b> one in the returned list
+     *   <li>Finally, use the {@link java.lang.management.ManagementFactory#getPlatformMBeanServer()}
+     * </ul>
+     *
+     * @return the MBeanServer found
+     * @throws IllegalStateException if no MBeanServer could be found.
+     */
     private MBeanServer findMBeanServer() {
 
         // Check for JBoss MBeanServer via its utility class
@@ -160,6 +268,16 @@ public class AgentServlet extends HttpServlet {
             }
         }
     }
+
+    private Map getOrCreateMap(Map pMap, String pKey) {
+        Map nMap = (Map) pMap.get(pKey);
+        if (nMap == null) {
+            nMap = new HashMap();
+            pMap.put(pKey,nMap);
+        }
+        return nMap;
+    }
+
 
     private boolean checkForClass(String pClassName) {
         try {

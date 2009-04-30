@@ -6,7 +6,7 @@ JMX::Jmx4Perl::Jmx4PerlRequest - Encapsulates a request for Jmx4Perl
 
 =head1 SYNOPSIS
 
-  $req = JMX::Jmx4Perl::Jmx4PerlRequest->new(READ_ATTRIBUTE,$mbean,$attribute);
+  $req = JMX::Jmx4Perl::Request->new(READ_ATTRIBUTE,$mbean,$attribute);
 
 =head1 DESCRIPTION
 
@@ -86,7 +86,7 @@ use Carp;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = (
-           "READ_ATTRIBUTE","WRITE_ATTRIBUTE","EXEC_OPERATION",
+           "READ_ATTRIBUTE","WRITE_ATTRIBUTE","EXEC_OPERATION","LIST_MBEANS",
            "REGISTER_NOTIFICATION","REMOVE_NOTIFICATION"
           );
 
@@ -95,12 +95,14 @@ use constant {
     READ_ATTRIBUTE => "read",
     WRITE_ATTRIBUTE => "write",
     EXEC_OPERATION => "exec",
+    LIST_MBEANS => "list",
     REGISTER_NOTIFICATION => "regnotif",
     REMOVE_NOTIFICATION => "remnotif"
 };
 
 my $TYPES = 
-{ map { $_ => 1 } (READ_ATTRIBUTE, WRITE_ATTRIBUTE, EXEC_OPERATION, REGISTER_NOTIFICATION, REMOVE_NOTIFICATION) };
+{ map { $_ => 1 } (READ_ATTRIBUTE, WRITE_ATTRIBUTE, EXEC_OPERATION, LIST_MBEANS, 
+                   REGISTER_NOTIFICATION, REMOVE_NOTIFICATION) };
 
 
 =item  $req = new JMX::Jmx4Perl::Request(....);
@@ -132,6 +134,10 @@ named parameters are:
  Order    : $mbean, $attribute, $value, $path
  Mandatory: $mbean, $attribute, $value
 
+=item C<LIST>
+  
+ Order    : $path
+
 =back
 
 =cut
@@ -161,6 +167,8 @@ sub new {
                 $self->{mbean} = shift;
                 $self->{attribute} = shift;
                 $self->{path} = shift;
+            } elsif ($type eq LIST_MBEANS) {
+                $self->{path} = shift;
             } else {
                 croak "Type ",$type," not supported yet";
             }
@@ -186,7 +194,7 @@ sub get {
 # Internal check for validating that all arguments are given
 sub _validate {
     my $self = shift;
-    if ($self->{type} eq READ_ATTRIBUTE) {
+    if ($self->{type} eq READ_ATTRIBUTE || $self->{type} eq WRITE_ATTRIBUTE) {
         croak "READ_ATTRIBUTE: No mbean name given" unless $self->{mbean};
         croak "READ_ATTRIBUTE: No attribute name given" unless $self->{attribute};
     }

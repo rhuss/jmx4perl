@@ -3,7 +3,7 @@
 =head1 NAME
 
 JMX::Jmx4Perl::Response - Encapsulates as JMX Response as it comes from the
-observerd Server
+observered Server
 
 =SYNOPSIS
 

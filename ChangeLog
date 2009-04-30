@@ -1,3 +1,12 @@
+2009-04-29  Roland Huss  <roland@consol.de>
+
+	* lib/JMX/Jmx4Perl.pm (request): Added a 'list()' method for
+	getting all MBeans
+
+	* scripts/check_jmx4perl: added a '--list' option which lists all
+	registered MBeans along with there attributes and operations. A
+	'--path' can be used to restrict this list. 
+
 2009-04-27  Roland Huss  <roland@consol.de>
 
 	* scripts/check_jmx4perl: Adopted output and added a --name parameter

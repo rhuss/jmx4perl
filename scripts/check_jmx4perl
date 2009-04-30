@@ -20,6 +20,8 @@ use Data::Dumper;
 use Nagios::Plugin;
 use Time::HiRes qw(gettimeofday);
 
+# Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
+# to the usual Nagios conventions
 *Nagios::Plugin::Functions::get_shortname = sub {
     return undef;
 };
@@ -34,7 +36,7 @@ my $np = Nagios::Plugin->
       plugin => "check_jmx4perl",
       blurb => "This plugin checks for JMX attribute values on a remote Java application server",
       extra => "\n\nYou need to deploy j4p-agent.war on the target application server.\n" .
-      "Please refer to the documentation of JMX::Jmx4Perl for further details"
+      "Please refer to the documentation for JMX::Jmx4Perl for further details"
      );
 $np->shortname(undef);
 $np->add_arg(
@@ -45,12 +47,10 @@ $np->add_arg(
 $np->add_arg(
          spec => "mbean|m=s",
          help => "MBean name (e.g. \"java.lang:type=Memory\")",
-         required => 1
         );
 $np->add_arg(
          spec => "attribute|a=s",
          help => "Attribute name (e.g. \"HeapMemoryUsage\")",
-         required => 1
         );
 $np->add_arg(
          spec => "path|p=s",
@@ -83,22 +83,38 @@ $np->add_arg(
              help => "Name to use for output. Optional, by default a standard value based on the MBean ".
              "and attribute will be used"
             );
+$np->add_arg(
+             spec => "list|l",
+             help => "List MBean names along with there attributes and operations. An inner path can be given to only list a subset"
+            );
 $np->getopts();
 
-$np->nagios_die("At least a critical or warning threshold must be given") 
-  if (!$np->opts->critical && !$np->opts->warning);
-$np->set_thresholds
-  (
-   $np->opts->critical ? (critical => $np->opts->critical) : (),
-   $np->opts->warning ? (warning => $np->opts->warning) : ()
-  );
-
 my $o = $np->opts;
+
+$np->nagios_die("An MBean name and a attribute must be provided")
+  if (!$o->list && (!$o->mbean && !$o->attribute));
+
+$np->nagios_die("At least a critical or warning threshold must be given") 
+  if ((!defined($o->critical) && !defined($o->warning)) && !$o->list);
+
+
+if (!$o->list) {
+    $np->set_thresholds
+      (
+       $np->opts->critical ? (critical => $np->opts->critical) : (),
+       $np->opts->warning ? (warning => $np->opts->warning) : ()
+      );
+}
+
 eval {
     my $start_time = (gettimeofday)[1];
     my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $o->url, user => $o->user, password => $o->password);
-    my $jmx_request = 
-      JMX::Jmx4Perl::Request->new(READ_ATTRIBUTE,$o->mbean,$o->attribute,$o->path);
+    my $jmx_request;
+    if ($o->list) {
+        $jmx_request = JMX::Jmx4Perl::Request->new(LIST_MBEANS,$o->path);
+    } else {
+        $jmx_request = JMX::Jmx4Perl::Request->new(READ_ATTRIBUTE,$o->mbean,$o->attribute,$o->path);
+    }
     if ($o->verbose) {
         print "Request URL: ",$jmx->request_url($jmx_request),"\n";
         if ($o->user) {
@@ -108,9 +124,15 @@ eval {
     my $resp = $jmx->request($jmx_request);
     my $duration = int ((gettimeofday)[1] - $start_time) / 1000;
 
+    # Show list of beans
+    if ($o->list) {
+        print $jmx->formatted_list($resp);
+        exit(0);
+    }
+
     $np->add_perfdata(label => "duration", value => $duration, uom => "ms");
-    if (!defined($resp->{value})) {
-        $np->nagios_die("JMX Request " . &format($o) . " failed" . Dumper($resp));
+    if (!defined($resp->value)) {
+        $np->nagios_die("JMX Request " . &get_name($o) . " failed" . Dumper($resp));
     }
     if ($o->verbose) {
         print "Result fetched in ",$duration,"ms:\n";
@@ -121,22 +143,29 @@ eval {
         $np->nagios_die("Response value is a ".ref($value).
                   ", not a plain value. Did you forget a --path parameter ?","Value: " . Dumper($value));
     }
-    $np->add_perfdata(label => &format($o),value => $value, critical => $o->critical, warning => $o->warning);
+    $np->add_perfdata(label => &get_name($o),value => $value, critical => $o->critical, warning => $o->warning);
     my $code = $np->check_threshold($value);    
-    $np->nagios_exit($code,&format($o). " : Threshold " . ($code == CRITICAL ? $o->critical : $o->warning) . 
+    $np->nagios_exit($code,&get_name($o). " : Threshold " . ($code == CRITICAL ? $o->critical : $o->warning) . 
                      " failed for value $value") if $code != OK;
-    $np->nagios_exit(OK,&format($o) . " : $value in range");
+    $np->nagios_exit(OK,&get_name($o) . " : $value in range");
 };
 if ($@) {
     $np->nagios_die("Error: $@");
 }
 
-sub format { 
+sub get_name { 
     my $o = shift;
     if ($o->name) {
         return $o->name;
     } else {
+        # Default name
         return "[".$o->mbean.",".$o->attribute.($o->path ? "," . $o->path : "")."]";
     }
 }
 
+sub print_mbeans {
+    my $resp = shift;
+    
+    
+    print Dumper($resp->value);    
+}

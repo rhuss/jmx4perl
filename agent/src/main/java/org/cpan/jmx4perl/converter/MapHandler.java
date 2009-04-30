@@ -51,7 +51,7 @@ public class MapHandler implements AttributeToJsonConverter.Handler {
                     }
                 }
                 throw new IllegalArgumentException("Map key " + decodedKey +
-                        " is unknown for map " + pValue);
+                        " is unknown for map " + trimString(pValue.toString()));
             } catch (UnsupportedEncodingException exp) {
                 throw new RuntimeException("Internal: Encoding UTF-8 not supported");
             }
@@ -62,6 +62,14 @@ public class MapHandler implements AttributeToJsonConverter.Handler {
                         pConverter.prepareForJson(entry.getValue(),pExtraArgs));
             }
             return ret;
+        }
+    }
+
+    private String trimString(String pString) {
+        if (pString.length() > 400) {
+            return pString.substring(0,400) + " ...";
+        } else {
+            return pString;
         }
     }
 }

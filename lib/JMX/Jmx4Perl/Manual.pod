@@ -1,0 +1,183 @@
+=pod
+
+=head1 NAME 
+
+jmx4perl - Access Modules to JMX (Java Management Extensions) 
+
+=head1 DESCRIPTION
+
+I<This document is a work in progress. Please send comments and typos to
+roland@cpan.org> 
+
+JMX (Java Management Extensions) is the standard management solution in the
+Java world. Since JDK 1.5 it is available in every Java Virtual Machine and
+especially JEE application servers use this technology intensively for exposing
+managable entities. In fact, the popular JEE Server JBoss 4 is even based
+on a JMX kernel.
+
+For the Perl world, it's not that easy to access JMX MBeans. MBeans are is the
+Java term for JMX managed entities. The existing solutions are mostly based on
+the Java standard JSR-160 (I<TODO: link>), which defines how JMX can be accessed
+remotely. The problem of JSR-160 with respect to Perl is, that the default
+communication protocols rely on exchanging serialized Java objects. Hence they
+are required to start a Java Virtual Machine, in the one way or other. This has
+quite some implications concerning installation requirements (you need a Java
+virtual machine with the proper version installed) and performance (firing up a
+JVM is not something you get for free)
+
+I<(TODO: add references to existing solutions like check_jmx ....)>
+
+The ultimate goal of B<jmx4perl> is to bridge both worlds in the most simplest
+way. This is done with an agent based approach as described below. In short,
+the building blocks of this bridge are based on standards well known and used
+in both worlds: HTTP and JSON.
+
+Another future goal is to provide an abstraction for accessing certain, well
+known MBeans for various supported JEE application server, which differ in
+naming from brand to brand. For now, the JEE servers supported are JBoss 4 & 5,
+Weblogic 10 and Glassfish as well as the pure servlet containers Jetty 6,
+Tomcat 5 & 6. Other platform might work as well, however they are not yet
+tested. Please let me know, when it works on other Servers as well, which is
+highly likely due to the simplistic nature of the agent webapp.
+
+B<jmx4perl> is not an academic exercise. In fact, it originates from the need
+to let Nagios (a hopefully well known open source monitoring solution) access
+JEE appliation servers in a painless way. You can find a nagios check in the
+scripts directory, which is a prefactored check directly usable in a Nagios
+setup.
+
+=head1 MBean Features
+
+JMX is a complex, which can not be completely revealed in this short
+documentation. Refer to L<....> for a complete documentation of JMX. But in
+short, once can distinguish three kind of access to MBeans:
+
+=over
+
+=item Attribute reading and writing
+
+An MBean can have one or more attributes, which can be read and/or
+written. For the moment, jmx4perl supports reading of attributes only. 
+
+=item Execution of operations
+
+MBean can expose certain operations, which can be executed via JMX
+calls. jmx4perl does not yet support execution of JMX operations, but this is
+on the roadmap.
+
+=item Notifications
+
+Listeners can register to get notified for certain notifications by the
+MBeans. This is not yet supported by jmx4perl and it is technically quite
+challenging, since HTTP, our transport protocol, is a typical Request-Repsonse
+based protocol which is unidirectional. However, there are already ideas, how
+to overcome this limitation.
+
+=back
+
+In short, jmx4perl supports only reading of attributes for the moment. In most
+cases this is sufficient for Nagios monitoring.
+
+=head1 Agent based Approach
+
+As mentioned above we are using an agent based approach. An agent based
+approach requires you to install a small Java Webapplication within your JEE
+application server. It registers itself locally to the JMX MBeanServer, and
+listens to HTTP requests whose results are translated into a JSON
+representation. This reponse can be easily picked up by a Perl module,
+C<JMX::Jmx4Perl> in our case. This kind of approach differs from the canonical
+approach as suggested by the JMX specification itself quite a bit. It only
+works for application servers, where Java web applications can be
+deployed. Otherwise, it has also quite some advantages:
+
+=head2 Advantages
+
+=over 4 
+
+=item * 
+
+No special startup options for the JEE server are required for exposing JMX
+informations as it would be the case for exporting JMX via JSR-160 connectors. 
+
+=item * 
+
+No Java installation required on the client for using the agent
+
+=item * 
+
+No overhead with regard to startup times of a JVM
+
+=item *
+
+Since the agent is a standard Java Web Application it can be secured by
+standard JEE means like any other Java Web Application. 
+
+=item *
+
+Firewall friendly since all HTTP communications go over a single port. 
+
+=back 
+
+=head2 Disadvantages
+
+=over 4
+
+=item * 
+
+Only applicable for JEE Server or servlet container, where a WAR (Java Web
+Archive) can be deployed.
+
+=item * 
+
+For now, only reading of MBean attributes is supported. However, support for
+writing of attributes and execution of operations are underway. Notifications
+are bit more involved, but chances are good that some sort of support will be
+incorporated into a future version as well. 
+
+=back 
+
+=head1 What's next ?
+
+There are several entry points for jmx4perl. The easiest is to start to play
+around with F<check_jmx4perl>. This is a complete command lines tool tailored
+for usage with Nagios. Read its man page for the usage.
+
+Next, L<JMX::Jmx4Perl> is the entry module. Use it, if you need
+programmatically access to JMX. 
+
+Of course, you are free to access the agent servlet directly without the usage
+of the provided modules. A description of the request and response format can
+be found at ... (I<TODO: Document the JSON-HTTP-Protocol>)
+
+=head1 Further Directions
+
+As an supplement to the provided agent based approach, the more traditional way
+of using a JVM for remote communication would be a nice additional option. With
+help of modules like C<Java::Import> this should fit nicely in the provided
+API. 
+
+Support for attribute writing, execution of operations and (maybe)
+notifications.
+
+=head1 License
+
+Copyright (C) 2009 Roland Huss
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut

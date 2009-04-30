@@ -29,6 +29,13 @@ import java.util.List;
 import java.util.Stack;
 
 /**
+ * A converter which convert attribute and return values
+ * into a JSON representation. It uses certain handlers for this which
+ * are registered programatically in the constructor.
+ *
+ * Each handler gets a reference to this converter object so that it
+ * can use it for a recursive solution of nested objects.
+ *
  * @author roland
  * @since Apr 19, 2009
  */
