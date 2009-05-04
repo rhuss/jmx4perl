@@ -9,17 +9,18 @@ use strict;
 use vars qw($VERSION $DEBUG @ISA);
 use JMX::Jmx4Perl;
 use JMX::Jmx4Perl::Request;
+use JMX::Jmx4Perl::Agent::UserAgent;
 
 @ISA = qw(JMX::Jmx4Perl);
 
 =head1 NAME 
 
-JMX::Jmx4Perl::Agent - Agent for JSON-HTTP Acess to a remote JMX Agent
+JMX::Jmx4Perl::Agent - JSON-HTTP based acess to a remote JMX Agent
 
 =head1 SYNOPSIS
 
- my $agent = new JMX::Jmx4Perl::Agent(url => "http://jeeserver/jjagent");
- my $answer = $agent->fetch_attribute("java.lang:type=Memory","HeapMemoryUsage");
+ my $agent = new JMX::Jmx4Perl(mode=>"agent", url => "http://jeeserver/jjagent");
+ my $answer = $agent->get_attribute("java.lang:type=Memory","HeapMemoryUsage");
  print Dumper($answer);
 
  $VAR1 = {
@@ -31,18 +32,15 @@ JMX::Jmx4Perl::Agent - Agent for JSON-HTTP Acess to a remote JMX Agent
                },
     'request' => {
                    'attribute' => 'HeapMemoryUsage',
-                   'name' => {
-                              'keys' => {
-                                         'type' => 'Memory'
-                                        },
-                              'domain' => 'java.lang',
-                              'canonical' => 'java.lang:type=Memory'
-                             }
+                   'name' => 'java.lang:type=Memory'
                   },
  };
 
 =head1 DESCRIPTION
 
+This module is not used directly, but via L<JMX::Jmx4Perl>, which acts as a
+proxy to this module. You can think of L<JMX::Jmx4Perl> as the interface which
+is backed up by this module. Other implementations (e.g. 
 
 =head1 METHODS
 
@@ -72,6 +70,7 @@ L<LWP::UserAgent>
 Credentials to use for the HTTP request
 
 =item proxy => { http => '<http_proxy>', https => '<https_proxy>', ...  }
+
 =item proxy => <http_proxy>
 
 Optional proxy to use
@@ -80,8 +79,12 @@ Optional proxy to use
 
 Credentials to use for accessing the proxy
 
+=back 
+
 =cut
 
+# Init called by parent package within 'new' for specific initialization. See
+# above for the parameters recognized
 sub init {
     my $self = shift;
         
@@ -106,6 +109,15 @@ sub init {
     return $self;
 }
 
+=item $resp = $agent->request($request)
+
+Implementation of the JMX request as specified in L<JMX::Jmx4Perl>. It uses a
+L<HTTP:Request> sent via an L<LWP::UserAgent> for posting a JSON representation
+of the request. This method shouldn't be called directly but via
+L<JMX::Jmx4Perl>->request(). 
+
+=cut
+
 sub request {
     my $self = shift;
     my $jmx_request = shift;
@@ -129,6 +141,12 @@ sub request {
     return JMX::Jmx4Perl::Response->new($ret->{status},$jmx_request,$ret->{value},$ret->{error},$ret->{stacktrace});
 }
 
+=item $url = $agent->request_url($request)
+
+Generate the URL for accessing the java agent based on a given request. 
+
+=cut 
+
 sub request_url {
     my $self = shift;
     my $request = shift;
@@ -149,6 +167,9 @@ sub request_url {
     return $url;
 }
 
+=back
+
+=cut 
 
 # ===================================================================
 # Specialized UserAgent for passing in credentials:
@@ -170,36 +191,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
 
-=AUTHOR
+=head1 AUTHOR
 
 roland@cpan.org
 
 =cut
-
-package JMX::Jmx4Perl::Agent::UserAgent;
-use vars qw(@ISA);
-@ISA = qw(LWP::UserAgent);
-
-sub jjagent_config { 
-    my $self = shift;
-    $self->{jjagent_config} = shift;
-}
-
-sub get_basic_credentials { 
-    my ($self, $realm, $uri, $isproxy) = @_;
-
-    my $cfg = $self->{jjagent_config} || {};
-    my $user = $isproxy ? $cfg->{proxy_user} : $cfg->{user};
-    my $password = $isproxy ? $cfg->{proxy_password} : $cfg->{password};
-
-    if ($user && $password) {
-        return ($user,$password);
-    } else {
-        return (undef,undef);
-    }
-}
-
-# Switch back to main package
-package JMX::Jmx4Perl::Agent;
 
 1;

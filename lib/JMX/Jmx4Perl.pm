@@ -226,6 +226,7 @@ sub list {
 
 
 =item $formatted_text = $jmx->formatted_list($path)
+
 =item $formatted_text = $jmx->formatted_list($resp)
 
 Get the a formatted string representing the MBeans as returnded by C<list()>.
@@ -389,6 +390,7 @@ sub autodiscover_mode {
     return "agent";
 }
 
+=back
 
 =head1 ROADMAP
 
@@ -431,7 +433,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
 
-=AUTHOR
+=head1 AUTHOR
 
 roland@cpan.org
 

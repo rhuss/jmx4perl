@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-JMX::Jmx4Perl::Jmx4PerlRequest - Encapsulates a request for Jmx4Perl
+JMX::Jmx4Perl::Request - Encapsulates a request for Jmx4Perl
 
 =head1 SYNOPSIS
 
@@ -10,7 +10,7 @@ JMX::Jmx4Perl::Jmx4PerlRequest - Encapsulates a request for Jmx4Perl
 
 =head1 DESCRIPTION
 
-A Jmx4PerlRequest encapsulates a request for various operational
+A L<JMX::Jmx4Perl::Request> encapsulates a request for various operational
 types. Probably the most common type is C<READ_ATTRIBUTE> which let you
 retrieve an attribute value from an MBeanServer. (In fact, at the time being,
 this is the only one supported fo now)

@@ -4,9 +4,31 @@
 
 check_jmx4perl - Nagios check using jmx4perl for accessing JMX information 
 
-=head1 SYNOPSIS
+=head1 SYNOPSIS 
+
+ check_jmx4perl --url=http://localhost:8888/j4p-agent \
+                --name= memory_used \
+                --mbean java.lang:type=Memory \
+                --attribute HeapMemoryUsage \ 
+                --path used \
+                --critical 10000000 \
+                --warning   5000000 
+
+ check_jmx4perl --url=http://localhost:8888/j4p-agent \
+                --list
 
 =head1 DESCRIPTION
+
+Command for providing Nagios conformant output for JMX response fetched via
+L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
+C<--warning>) thresholds. 
+
+C<--list> lists all registered MBeans along with their attributes and
+operations. You can provide an inner path with C<--path> as well. See
+L<JMX::Jmx4Perl::Request> for an explanation about inner pathes (in short, it's
+some sort of XPath expression which selects only a subset of all MBeans and
+their values). See L<JMX::Jmx4Perl>, method "list()" for a more rigorous
+documentation abouting listing of MBeans.
 
 =cut
 
@@ -172,3 +194,26 @@ sub print_mbeans {
     
     print Dumper($resp->value);    
 }
+
+=head1 LICENSE
+
+This file is part of jmx4perl.
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
