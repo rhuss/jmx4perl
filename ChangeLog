@@ -1,3 +1,7 @@
+2009-05-04  Roland Huss  <roland@consol.de>
+
+	* scripts/check_jmx4perl: added more documentation
+
 2009-04-30  Roland Huss  <roland@consol.de>
 
 	* agent/src/main/java/org/cpan/jmx4perl/AgentServlet.java: Catches
