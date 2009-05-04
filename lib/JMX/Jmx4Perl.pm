@@ -83,7 +83,7 @@ use strict;
 use vars qw($VERSION);
 use Data::Dumper;
 
-$VERSION = "0.01_03";
+$VERSION = "0.01_04";
 
 my $REGISTRY = {
                 # Agent based
