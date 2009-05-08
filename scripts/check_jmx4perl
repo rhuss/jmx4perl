@@ -6,8 +6,8 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
 
 =head1 SYNOPSIS 
 
- check_jmx4perl --url=http://localhost:8888/j4p-agent \
-                --name= memory_used \
+ check_jmx4perl --url http://localhost:8888/j4p-agent \
+                --name memory_used \
                 --mbean java.lang:type=Memory \
                 --attribute HeapMemoryUsage \ 
                 --path used \

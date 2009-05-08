@@ -15,11 +15,11 @@ use JMX::Jmx4Perl::Agent::UserAgent;
 
 =head1 NAME 
 
-JMX::Jmx4Perl::Agent - JSON-HTTP based acess to a remote JMX Agent
+JMX::Jmx4Perl::Agent - JSON-HTTP based acess to a remote JMX agent
 
 =head1 SYNOPSIS
 
- my $agent = new JMX::Jmx4Perl(mode=>"agent", url => "http://jeeserver/jjagent");
+ my $agent = new JMX::Jmx4Perl(mode=>"agent", url => "http://jeeserver/j4p-agent");
  my $answer = $agent->get_attribute("java.lang:type=Memory","HeapMemoryUsage");
  print Dumper($answer);
 
@@ -30,6 +30,7 @@ JMX::Jmx4Perl::Agent - JSON-HTTP based acess to a remote JMX Agent
                 'max' => 532742144,
                 'init' => 0
                },
+    'status' => 200,
     'request' => {
                    'attribute' => 'HeapMemoryUsage',
                    'name' => 'java.lang:type=Memory'

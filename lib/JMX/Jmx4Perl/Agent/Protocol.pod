@@ -77,27 +77,27 @@ type. j4p-agent knows how to serialize certain complex data types with JSON,
 i.e. collections and C<CompoundData>. Please refer to the next section for more
 details about JSON serialization. An I<inner path> can be used to specify a
 certain substructure (plain value, array, hash) within the returned complex
-attribute value. Think of it as somethink like "XPath lite". This is best
+attribute value. Think of it as something like "XPath lite". This is best
 explained by an example:
 
 The attribute C<HeapMemoryUsage> of the MBean C<java.lang:type=Memory> can be
 requested with the URL 
 
-  http://localhost:8080/read/java.lang:type=Memory/HeapMemoryUsage
+  http://localhost:8080/j4p-agent/read/java.lang:type=Memory/HeapMemoryUsage
 
 which returns a complex JSON structure like
 
  {
-   'committed' => 18292736,
-   'used' => 15348352,
-   'max' => 532742144,
-   'init' => 0
+   "committed" : 18292736,
+   "used" : 15348352,
+   "max" => 532742144,
+   "init" => 0
  }
 
 In order to get to the value for used heap memory you should specify an inner
 path C<used>, so that the request 
 
- http://localhost:8080/read/java.lang:type=Memory/HeapMemoryUsage/used
+ http://localhost:8080/j4p-agent/read/java.lang:type=Memory/HeapMemoryUsage/used
 
 results in a response of
   
@@ -224,9 +224,9 @@ The C<value> has the following format:
          {
            "args" : [
                       { 
-                       "type" => <argument type>
-                       "name" => <argument name>
-                       "desc" => <textual description of argument>
+                       "type" : <argument type>
+                       "name" : <argument name>
+                       "desc" : <textual description of argument>
                       },
                       .....
                      ],

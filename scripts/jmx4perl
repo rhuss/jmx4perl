@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+jmx4perl - JMX acccess modules and tools
+
+=head1 DESCRIPTION
+
+I<For the time being, this is only a collection of ideas, which still have to 
+come to live>
+
+This command line tool provides an easy to use shell for accessing remote JMX
+MBeans.
+
+=over 
+
+=item * 
+
+Readline support 
+
+=item *
+
+TAB completion of MBean names, attributes and operations
+
+=item * 
+
+Autodetection of various application servers
+
+=item * 
+
+Reading and writing of attributes
+
+=item * 
+
+Excecution of MBean operations
+
+=back

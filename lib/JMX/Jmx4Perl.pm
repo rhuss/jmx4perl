@@ -208,10 +208,12 @@ given, the returned value has the following format
               .... 
            };
 
-A complete path has the format C<"<domain>/<property
-list>/("attribute"|"operation")/<index>"> (e.g. C<java.lang/name=Code
-Cache,type=MemoryPool/attribute/0>). A path can be provided partially, in which
-case the remaining map/array is returned.
+A complete path has the format C<"E<lt>domainE<gt>/E<lt>property
+listE<gt>/("attribute"|"operation")/E<lt>indexE<gt>">
+(e.g. C<java.lang/name=Code Cache,type=MemoryPool/attribute/0>). A path can be
+provided partially, in which case the remaining map/array is returned. See also
+L<JMX::Jmx4Perl::Agent::Protocol> for a more detailed discussion of inner
+pathes. 
 
 =cut
 
@@ -261,6 +263,7 @@ sub formatted_list {
 
 my $SPACE = 4;
 my @SEPS = (":");
+
 sub _format_map { 
     my ($ret,$map,$path,$level) = @_;
     
