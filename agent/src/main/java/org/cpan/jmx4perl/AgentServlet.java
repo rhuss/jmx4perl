@@ -17,7 +17,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * Contact roland@cpan.org for any licensing questions.
+ * A commercial license is available as well. You can either apply the GPL or
+ * obtain a commercial license for closed source development. Please contact
+ * roland@cpan.org for further information.
  */
 
 package org.cpan.jmx4perl;
@@ -60,6 +62,9 @@ import java.util.Map;
  * {@link javax.management.openmbean.CompositeData} and {@link javax.management.openmbean.TabularData}
  * are supported as well. Refer to {@link org.cpan.jmx4perl.converter.AttributeToJsonConverter}
  * for additional information.
+ *
+ * For the client part, please read the documentation of
+ * <a href="http://search.cpan.org/dist/jmx4perl">jmx4perl</a>.
  *
  * @author roland@cpan.org
  * @since Apr 18, 2009
@@ -112,7 +117,7 @@ public class AgentServlet extends HttpServlet {
                 throw new UnsupportedOperationException("Unsupported operation '" + jmxReq.getType() + "'");
             }
             json = jsonConverter.convertToJson(retValue,jmxReq);
-            json.put("status",200 /* success */);  
+            json.put("status",200 /* success */);
         } catch (UnsupportedOperationException exp) {
             code = 501;
             throwable = exp;
@@ -316,7 +321,6 @@ public class AgentServlet extends HttpServlet {
         }
         return nMap;
     }
-
 
     private boolean checkForClass(String pClassName) {
         try {

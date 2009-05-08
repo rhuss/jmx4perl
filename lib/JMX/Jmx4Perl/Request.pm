@@ -60,14 +60,14 @@ attribute
 
 This optional parameter can be used to specify a nested value in an complex
 mbean attribute or nested return value from a JMX operation. For example, the
-MBean <C>""</C>'s attribute <C>"HeapMemoryUsage</C> is a complex value,
-which looks in the JSON representation like
+MBean C<java.lang:type=Memory>'s attribute C<HeapMemoryUsage> is a complex
+value, which looks in the JSON representation like
 
  "value":{"init":0,"max":518979584,"committed":41381888,"used":33442568}
 
-So, to fetch the C<"used"> value only, specify a C<used> as path within the
+So, to fetch the C<"used"> value only, specify C<used> as path within the
 request. You can access deeper nested values by building up a path with "/" as
-separator.
+separator. This looks a bit like a simplified form of XPath.
 
 =back 
 
@@ -129,7 +129,7 @@ named parameters are:
  Order    : $mbean, $attribute, $path
  Mandatory: $mbean, $attribute
 
-=item C<WRITE_ATTRIBUTE>
+=item C<WRITE_ATTRIBUTE> (not supported yet)
 
  Order    : $mbean, $attribute, $value, $path
  Mandatory: $mbean, $attribute, $value
@@ -218,6 +218,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+A commercial license is available as well. Please contact roland@cpan.org for
+further details.
 
 =head1 AUTHOR
 

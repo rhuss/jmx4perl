@@ -23,22 +23,22 @@ It uses a traditional request-response paradigma for performing JMX operations
 on a remote Java Virtual machine. 
 
 There a various ways how JMX information can be transfered. For now, a single
-operational mode is supported. It is based on an I<agent>, a small (<30k) Java
+operational mode is supported. It is based on an I<agent>, a small (~30k) Java
 Servlet, which needs to deployed on a Java application server. It plays the
 role of a proxy, which on one side communicates with the MBeans server in the
 application server and transfers JMX related information via HTPP and JSON to
 the client (i.e. this module). Please refer to L<JMX::Jmx4Perl::Manual> for
 installation instructions howto deploy the agent servlet (which can be found in
-the distribution at F<agent/j4p-agent.war>).
+the distribution as F<agent/j4p-agent.war>).
 
 An alternative, and more 'java like' approach, is the usage of JSR 160
-connectors. The default connectors provided by the Java Virtual Machine (JVM)
-since version 1.5 support only propriertary protocols which require serialized
-Java objects to be exchanged. This implies that a JVM needs to be started on
-the client side, adding quite some overhead if used from within
-perl. Nevertheless, plans are underway to support this operational mode as
-well, which allows for monitoring of Java application which are not running in
-a servlet container.
+connectors. However, the default connectors provided by the Java Virtual
+Machine (JVM) since version 1.5 support only propriertary protocols which
+require serialized Java objects to be exchanged. This implies that a JVM needs
+to be started on the client side, adding quite some overhead if used from
+within Perl. Nevertheless, plans are underway to support this operational mode
+as well, which allows for monitoring of Java application which are not running
+in a servlet container.
 
 For further discussion comparing both approaches, please refer to
 L<JMX::Jmx4Perl::Manual> 
@@ -83,7 +83,7 @@ use strict;
 use vars qw($VERSION);
 use Data::Dumper;
 
-$VERSION = "0.01_04";
+$VERSION = "0.1";
 
 my $REGISTRY = {
                 # Agent based
@@ -432,6 +432,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+A commercial license is available as well. Please contact roland@cpan.org for
+further details.
+
+=head1 PROFESSIONAL SERVICES
+
+Just in case you need professional support for this module (or Nagios or JMX in
+general), you might want to have a look at
+http://www.consol.com/opensource/nagios/. Contact roland.huss@consol.de for
+further information (or use the contact form at http://www.consol.com/contact/)
 
 =head1 AUTHOR
 

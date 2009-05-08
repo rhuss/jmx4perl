@@ -191,6 +191,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
 
+A commercial license is available as well. Please contact roland@cpan.org for
+further details.
+
 =head1 AUTHOR
 
 roland@cpan.org

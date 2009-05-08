@@ -20,7 +20,7 @@ INTRODUCTION
 
 HOW IT WORKS
 
-  You need to deploy a small (<30k) Java Agent WAR (web archive) to
+  You need to deploy a small (~ 30k) Java Agent WAR (web archive) to
   the Java application server to monitor. Thats all on the java
   side. There is no need to add any startup parameters to the
   application server and to open any additional ports. All
@@ -76,7 +76,7 @@ SUPPORTED APPLICATION SERVERS
   should work.
 
 LICENSE
-
+  
   Copyright (C) 2009 Roland Huss (roland@cpan.org)
 
   Jmx4perl is free software: you can redistribute it and/or modify it
@@ -92,8 +92,9 @@ LICENSE
   You should have received a copy of the GNU General Public License
   along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
 
-  Please contact roland@cpan.org for any licensing questions, there is
-  a commercial license available as well. 
+  A commercial license is available as well. You can either apply the
+  GPL or obtain a commercial license for closed source
+  development. Please contact roland@cpan.org for further information.
 
 PROFESSIONAL SERVICES
 

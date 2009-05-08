@@ -17,8 +17,8 @@ the answer as returned by a L<JMX::Jmx4Perl> backend. Depending on the
 C<status> it either contains the result of a valid request or a error message.
 The status is modelled after HTTP response codes (see
 L<http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html>). For now, only the
-codes C<200> and C<5xx> codes are used to specified successful request and
-errors respectively.
+codes C<200> and C<400 .. 599> codes are used to specified successful request
+and errors respectively.
 
 =head1 METHODS
 
@@ -144,6 +144,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+A commercial license is available as well. Please contact roland@cpan.org for
+further details.
 
 =head1 AUTHOR
 

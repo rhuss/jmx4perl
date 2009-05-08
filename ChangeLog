@@ -1,3 +1,9 @@
+2009-05-05  Roland Huss  <roland@consol.de>
+
+	* lib/JMX/Jmx4Perl/Agent/Protocol.pod: added a protocol
+	description for the REST-JSON communication to the j4p-agent Web
+	application.
+
 2009-05-04  Roland Huss  <roland@consol.de>
 
 	* scripts/check_jmx4perl: added more documentation
