@@ -1,0 +1,359 @@
+=pod
+
+=head1 NAME
+
+JMX::Jmx4Perl::Agent::Protocol - j4p-agent protocol specification 
+
+=head1 DESCRIPTION
+
+This document defines the protocol format for exchanging informations between
+the Java-Agent C<j4p-agent.war> running in a Java Application Server and the
+Perl module L<JMX::Jmx4Perl::Agent> which is used on the client side. The
+communication is based on HTTP as the transport protocol and hence follows a
+request-response paradigmn. The request is performed by doing a simple restfule
+GET HTTP request where the request information is part of the URL itself. The
+response returned by the agent uses JSON for the data representation. Both, the
+request URL format and the JSON format of the response are described below.
+
+=head1 VERSION
+
+This document describes Version 0.1 of the j4p-agent protocol. This is the
+initial version. 
+
+=head1 REQUEST 
+
+Jmx4perl uses a restful style for the request, which essentially is a single URL
+without additional parameters for specifying the request. For this to work, the
+URL is divided into parts separated by C</>. In general, the request URL looks
+like
+
+ <base-url>/<mode of operation>/<operation specific parameter>/..../
+
+The I<C<E<lt>base-urlE<gt>>> specifies the URL under which the C<j4p-agent> is
+accessible in general. It typically looks like
+F<http://localhost:8080/j4p-agent>, but depends obviously on your deployment
+setup. Normally, the last part of this URL is the name of the deployed
+Webapplication, which by default is based on the filename F<j4p-agent.war>.
+I<C<E<lt>mode of operationE<gt>>> specifies one of the supported operations
+after which operation specific parameters follow.
+
+The supported operations are described now in the following sections. 
+
+=head2 read
+
+Mode used for reading an JMX attributes. The operation specific parameters have
+the following format.
+
+  <mbean name>/<attribute name>/<inner path>
+
+=over
+
+=item C<mbean name> (mandatory)
+
+The canonical name of the MBean for which the attribute should be
+fetched. Please refer to the JMX documentation for the definition of a
+B<canonical name>. In short, it contains two parts: A domain part and a list of
+properties which are separated by C<:>. Properties themselves are combines
+in a comma separated list of key-value pairs.
+
+Example:
+
+ java.lang:type=Memory
+ java.lang:name=Code Cache,type=MemoryPool
+
+=item C<attribute name> (mandatory)
+
+This is the name of the attribute which is requested. 
+
+Example:
+
+ HeapMemoryUsage
+ SystemProperties
+
+=item C<inner path> (optional)
+
+This is an optional part which specifies an inner path within the attribute's
+type. j4p-agent knows how to serialize certain complex data types with JSON,
+i.e. collections and C<CompoundData>. Please refer to the next section for more
+details about JSON serialization. An I<inner path> can be used to specify a
+certain substructure (plain value, array, hash) within the returned complex
+attribute value. Think of it as somethink like "XPath lite". This is best
+explained by an example:
+
+The attribute C<HeapMemoryUsage> of the MBean C<java.lang:type=Memory> can be
+requested with the URL 
+
+  http://localhost:8080/read/java.lang:type=Memory/HeapMemoryUsage
+
+which returns a complex JSON structure like
+
+ {
+   'committed' => 18292736,
+   'used' => 15348352,
+   'max' => 532742144,
+   'init' => 0
+ }
+
+In order to get to the value for used heap memory you should specify an inner
+path C<used>, so that the request 
+
+ http://localhost:8080/read/java.lang:type=Memory/HeapMemoryUsage/used
+
+results in a response of
+  
+ 15348352
+
+If the attribute contains arrays at some level, use a numeric index as part of
+the innerpath if you want to transverse into this array. 
+
+=back
+
+=head2 list
+
+The list operation allows you to get information about the accessible
+MBeans. This information includes the MBean names, their attributes and
+operations along with type information and description (as far as they are
+provided by the MBean author which doesn't seem to be often the case). 
+
+A list-request can take these specific, optional,  parameters
+
+  <inner path>
+
+=over
+
+=item C<inner path> (optional)
+
+The I<inner path>, as above, specifies a subset of the complete response. You
+can use this to select a specific domain, MBean or attribute/operation. See
+below for the format of the complete answer. 
+
+=back 
+
+=head1 RESPONSE
+
+As already mentioned, the response is an HTTP response containing a JSON
+payload. This section describes the format of the retuned answer, depending on
+the operation mode. In general, two kinds of responses can be classified: In
+the normal case, a HTTP Response with response code 200 is returned, containing
+the result of the operation as a JSON payload. In case of an error, a 4xx or
+5xx code will be returned and the JSON payload contains details about the error
+occured.
+
+In the non-error case, the top-level JSON response objects contains a C<value>,
+a C<status> of 200 and a C<request>, which encapsulated the original
+request. This C<request> has as members a C<type> member for the operational
+mode ("read", "list", ...) and additional entries containing the operation
+specific parameters as given in the request URL. 
+
+=head2 read
+
+A typical response for an attribute read operation for an URL like 
+
+ http://localhost:8080/j4p-agent/java.lang:type=Memory/HeapMemoryUsage/
+
+looks like 
+
+ {
+   "value":{
+             "init":134217728,
+             "max":532742144,
+             "committed":133365760,
+             "used":19046472
+           },
+   "status":200,
+   "request":{
+               "mbean":"java.lang:type=Memory",
+               "type":"read",
+               "attribute":"HeapMemoryUsage"
+             }
+ }
+
+As you can see, the C<value> contains the attribute's value, either as a
+single, simple value if the attribute has a primitive type, or a complex JSON
+structure (containing maps and arrays) if the attribute has a more complex type
+understood by the F<j4p-agent>. For comlext object types, which can not be
+serialized by the F<j4p-agent>, the stringified value (i.e. the output of the
+object's C<toString()> method) is returned here. For a successul request the
+C<status> is always C<200>. The C<request>'s attribute are:
+
+=over
+
+=item mbean
+
+name of the requested MBean
+
+=item attribute
+
+attribute name
+
+=item type 
+
+is always C<read>
+
+=item path 
+
+an optional path, if provided in the request.
+
+=back
+
+=head2 list
+
+The list operation (without a I<path>) returns a JSON object containing a
+C<value>, C<status> and C<request> member as for C<read> operations. 
+
+The C<value> has the following format:
+  
+ { 
+  <domain> : 
+  {
+    <prop list> : 
+    {
+      "attr" : 
+      {
+        <attr name> : 
+        { 
+          "type" : <attribute type>,
+          "desc" : <textual description of attribute>,
+          "rw"   : true/false
+        },
+        ....
+      }, 
+      "op" :
+      {
+         <operation name> :
+         {
+           "args" : [
+                      { 
+                       "type" => <argument type>
+                       "name" => <argument name>
+                       "desc" => <textual description of argument>
+                      },
+                      .....
+                     ],
+           "ret"  : <return type>,
+           "desc" : <textual description of operation>
+         }, 
+         .....
+      }
+    }, 
+    ....
+  },
+  ....
+ }
+
+The C<domain name> and the C<property list> together uniquely identify a single
+MBean. The property list is in the so called I<canonical order>, i.e. in the
+form "<key1>=<val1>,<key2>=<val2>,.." where the keys are ordered
+alphabetically. Each MBean has zero or more attributes and operations which can
+be reaced in an MBeans JSON object with the keys C<attr> and C<op>
+respectively. Within these groups the contained information is explained above
+in the schema and consist of Java types for attributes, arguments and return
+values, descriptive information and whether an attribute is writable (C<rw ==
+true>) or read-only. 
+
+As for reading attributes you can fetch a subset of this information using an
+path. E.g a path of C<domain/prop-list> would return the value for a single
+bean only. For example, a request 
+
+ http://localhost:8080/j4p-agent/list/java.lang/type=Memory
+
+results in an answer
+
+ {
+   "value":
+   { 
+     "op":
+     { 
+       "gc":
+       {
+         "args":[],
+         "ret":"void",
+         "desc":"gc"
+       }
+     },
+     "attr":
+     {
+       "NonHeapMemoryUsage":
+       {
+         "type":"javax.management.openmbean.CompositeData",
+         "rw":false,
+         "desc":"NonHeapMemoryUsage"
+       },
+       "Verbose":
+       {
+         "type":"boolean",
+         "rw":true,
+         "desc":"Verbose"
+       },
+       "HeapMemoryUsage":
+       {
+         "type":"javax.management.openmbean.CompositeData",
+         "rw":false,
+         "desc":"HeapMemoryUsage"
+       },
+       "ObjectPendingFinalizationCount":
+       {
+         "type":"int",
+         "rw":false,
+         "desc":"ObjectPendingFinalizationCount"
+       }
+     }
+   },
+   "status":200,
+   "request":
+   {
+     "type":"list",
+     "path":"java.lang\/type=Memory"
+   }
+ }
+
+=head2 Error Response
+
+An error response looks like
+
+  {
+    "status":400,
+    "error":"java.lang.IllegalArgumentException: Invalid request type 'java.lang:type=Memory'",
+    "stacktrace":"java.lang.IllegalArgumentException: Invalid request type 'java.lang:type=Memory'\n
+                  \tat org.cpan.jmx4perl.JmxRequest.extractType(Unknown Source)\n
+                  \tat org.cpan.jmx4perl.JmxRequest.<init>(Unknown Source) ...."
+  } 
+
+I.e. the C<status> has a code in the range C<400 .. 499> or C<500 .. 599> as it
+is specified for HTTP return codes. The C<error> member contains an error
+description while C<stacktrace> contains a Java stacktrace occured on the
+server side (if any). 
+
+=head1 LICENSE
+
+Copyright (C) 2009 Roland Huss
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see L<http://www.gnu.org/licenses/>.
+
+A commercial license is available as well. You can either apply the GPL or
+obtain a commercial license for closed source development. Please contact
+roland@cpan.org for further information.
+
+=head1 PROFESSIONAL SERVICES
+
+Just in case you need professional support for jmx4perl (or Nagios or JMX in
+general), you might want to have a look at
+L<http://www.consol.com/opensource/nagios/>. Contact roland.huss@consol.de for
+further information (or use the contact form at L<http://www.consol.com/contact/>)
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
