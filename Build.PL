@@ -42,7 +42,9 @@ my $build = $class->new
                 "Pod::Usage" => 0,
                 "Getopt::Long" => 0,
                 "Carp" => 0,
-                "Object::Tiny" => "1.06"
+                "Module::Find" => 0,
+                "Object::Tiny" => "1.06",
+                "Scalar::Util" => 0
                },
    recommends => {
                    "Nagios::Plugin" => "0.27"

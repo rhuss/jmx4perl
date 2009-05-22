@@ -6,7 +6,8 @@ JMX::Jmx4Perl - Access to JMX via Perl
 
 =head1 SYNOPSIS
    
-   my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p-agent");
+   my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p-agent",
+                               product => "jboss");
    my $request = new JMX::Jmx4Perl::Request(type => READ_ATTRIBUTE,
                                             mbean => "java.lang:type=Memory",
                                             attribute => "HeapMemoryUsage",
@@ -80,10 +81,11 @@ package JMX::Jmx4Perl;
 use Carp;
 use JMX::Jmx4Perl::Request;
 use strict;
-use vars qw($VERSION);
+use vars qw($VERSION $HANDLER_BASE_PACKAGE);
 use Data::Dumper;
+use Module::Find;
 
-$VERSION = "0.1";
+$VERSION = "0.15_1";
 
 my $REGISTRY = {
                 # Agent based
@@ -92,15 +94,45 @@ my $REGISTRY = {
                 "JJAgent" => "JMX::Jmx4Perl::Agent",
                };
 
-=item $jmx = JMX::Jmx4Perl->new(mode => <access module>, ....)
+
+my %PRODUCT_HANDLER;
+
+sub _register_handlers { 
+    my $handler_package = shift;
+    %PRODUCT_HANDLER = ();
+    for my $handler (findsubmod $handler_package) {
+        next unless $handler;
+        my $handler_file = $handler;
+        $handler_file =~ s|::|/|g;
+        require $handler_file.".pm";
+        next if $handler eq $handler_package."::BaseHandler";
+        my $id = eval "${handler}::id()";
+        croak "No id() method on $handler: $@" if $@;
+        $PRODUCT_HANDLER{lc $id} = $handler;
+    }    
+}
+
+BEGIN {
+    &_register_handlers("JMX::Jmx4Perl::ProductHandler");
+}
+
+
+=item $jmx = JMX::Jmx4Perl->new(mode => <access module>, product => <id>, ....)
 
 Create a new instance. The call is dispatched to an Jmx4Perl implementation by
 selecting an appropriate mode. For now, the only mode supported is "agent",
 which uses the L<JMX::Jmx4Perl::Agent> backend. Hence, the mode can be
 submitted for now.
 
-Any other named parameters are interpreted by the backend, please refer to its
-documentation for details (i.e. L<JMX::Jmx4Perl::Agent>)
+If you provide a product id via the named parameter C<product> you can given
+B<jmx4perl> a hint which server you are using. By default, this module uses
+autodetection to guess the kind of server you are talking to. You need to
+provide this argument only if you use B<jmx4perl>'s alias feature and if you
+want to speed up things (autodetection can be quite slow since this requires
+several JMX request to detect product specific MBean attributes).
+
+Any other named parameters are interpreted by the backend, please
+refer to its documentation for details (i.e. L<JMX::Jmx4Perl::Agent>)
 
 =cut
 
@@ -109,12 +141,19 @@ sub new {
     my $cfg = ref($_[0]) eq "HASH" ? $_[0] : {  @_ };
     
     my $mode = delete $cfg->{mode} || &autodiscover_mode();
+    my $product = $cfg->{product} ? lc delete $cfg->{product} : undef;
+
     $class = $REGISTRY->{$mode} || croak "Unknown runtime mode " . $mode;
+    if ($product && !$PRODUCT_HANDLER{lc $product}) {
+        croak "No handler for product '$product'. Known Handlers are [".(join ", ",keys %PRODUCT_HANDLER)."]";
+    }
+
     eval "require $class";
     croak "Cannot load $class: $@" if $@;
 
     my $self = { 
                 cfg => $cfg,
+                product => $product
              };
     bless $self,(ref($class) || $class);
     $self->init();
@@ -126,10 +165,15 @@ sub new {
 =item $resp => $jmx->get_attribute(...)
 
   $value = $jmx->get_attribute($mbean,$attribute,$path) 
+  $value = $jmx->get_attribute($alias)
+  $value = $jmx->get_attribute(ALIAS)       # Literal alias as defined in
+                                            # JMX::Jmx4Perl::Alias
   $value = $jmx->get_attribute({ domain => <domain>, 
-                                properties => { <key> => value }, 
-                                attribute => <attribute>, 
-                                path => <path>)
+                                 properties => { <key> => value }, 
+                                 attribute => <attribute>, 
+                                 path => <path> })
+  $value = $jmx->get_attribute({ alias => <alias>, 
+                                 path => <path })
 
 Read a JMX attribute. In the first form, you provide the MBean name, the
 attribute name and an optional path as positional arguments. The second
@@ -142,26 +186,52 @@ MBeans please refer to
 L<http://java.sun.com/j2se/1.5.0/docs/api/javax/management/ObjectName.html> for
 more information about JMX naming.
 
-This method returns the value as it is returned from the server
+Alternatively, you can provide an alias, which gets resolved to its real name
+by so called I<product handler>. Several product handlers are provided out of
+the box. If you have specified a C<product> id during construction of this
+object, the associated handler is selected. Otherwise, autodetection is used to
+guess the product. Note, that autodetection is potentially slow since it
+involves several JMX calls to the server. If you call with a single, scalar
+value, this argument is taken as alias (without any path). If you want to use
+aliases together with a path, you need to use the second form with a hash ref
+for providing the (named) arguments. 
+
+This method returns the value as it is returned from the server.
 
 =cut 
 
 sub get_attribute {
     my $self = shift;
-    my ($object,$attribute,$path);
+    my ($object,$attribute,$path,$alias_path);
     if (ref($_[0]) eq "HASH") {
-        $object = $_[0]->{mbean};
-        if (!$object && $_[0]->{domain} && ($_[0]->{properties} || $_[0]->{props})) {
-            $object = $_[0]->{domain} . ":";
-            my $href = $_[0]->{properties} || $_[0]->{props};
-            croak "'properties' is not a hashref" unless ref($href);
-            for my $k (keys %{$href}) {
-                $object .= $k . "=" . $href->{$k};
+        if ($_[0]->{alias}) {
+            ($object,$attribute,$alias_path) = $self->resolve_attribute_alias($_[0]->{alias});
+            if ($alias_path) {
+                $path = $_[0]->{path} ? $_[0]->{path} . "/" . $alias_path : $alias_path;
+            } else { 
+                $path = $_[0]->{path};
             }
+        } else {
+            $object = $_[0]->{mbean};
+            if (!$object && $_[0]->{domain} && ($_[0]->{properties} || $_[0]->{props})) {
+                $object = $_[0]->{domain} . ":";
+                my $href = $_[0]->{properties} || $_[0]->{props};
+                croak "'properties' is not a hashref" unless ref($href);
+                for my $k (keys %{$href}) {
+                    $object .= $k . "=" . $href->{$k};
+                }
+            }
+            $attribute = $_[0]->{attribute};
+            $path = $_[0]->{path};
         }
-        $attribute = $_[0]->{attribute};
-        $path = $_[0]->{path};
+        
     } else {
+        if (@_ == 1) {
+            # A single argument can only be used as an alias
+            ($object,$attribute,$path) = $self->resolve_attribute_alias($_[0]->{alias});
+        } elsif (UNIVERSAL::isa($_[0],"JMX::Jmx4Perl::Agent::Object")) {
+            ($object,$attribute,$path) = $self->resolve_attribute_alias($_[0]);      
+        }
         ($object,$attribute,$path) = @_;
     }
     croak "No object name provided" unless $object;
@@ -171,6 +241,57 @@ sub get_attribute {
     my $response = $self->request($request);
     return $response->value;
 }
+
+=item ($object,$attribute,$path) = $self->resolve_attribute_alias($alias)
+
+Resolve an alias for an attibute. This is done by querying registered product
+handlers for resolving an alias. This method will croak if a handler could be
+found but not such alias is known by C<jmx4perl>. 
+
+If the C<product> was not set during construction, the first call to this
+method will try to autodetect the server. If it cannot determine the proper
+server it will throw an exception. 
+
+Returns the object, attribute, path triple which can be used for requesting the
+server or C<undef> if the handler can not resolve this aliase
+
+=cut
+
+sub resolve_attribute_alias {
+    my $self = shift;
+    my $alias = shift || croak "No alias provided";
+
+    my $handler = $self->{product_handler} || $self->_create_handler();
+    return $handler->attribute_alias($alias);
+}
+
+sub _create_handler {
+    my $self = shift;
+    $self->{product} ||= $self->_autodetect_product();
+    croak "Cannot autodetect server product" unless $self->{product};
+    
+    $self->{product_handler} = $self->_new_handler($self->{product});
+    return $self->{product_handler};        
+}
+
+sub _autodetect_product {
+    my $self = shift;
+    for my $id (keys %PRODUCT_HANDLER) {
+        my $handler = $self->_new_handler($id);
+        return $id if $handler->autodetect();
+    }
+    return undef;
+}
+
+sub _new_handler {
+    my $self = shift;
+    my $product = shift;
+
+    my $handler = eval $PRODUCT_HANDLER{$product}."->new(\$self)";
+    croak "Cannot create handler ",$self->{product},": $@" if $@;
+    return $handler;
+}
+
 
 =item $value = $jmx->list($path)
 

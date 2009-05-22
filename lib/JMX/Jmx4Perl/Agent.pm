@@ -9,9 +9,12 @@ use strict;
 use vars qw($VERSION $DEBUG @ISA);
 use JMX::Jmx4Perl;
 use JMX::Jmx4Perl::Request;
+use JMX::Jmx4Perl::Response;
 use JMX::Jmx4Perl::Agent::UserAgent;
 
 @ISA = qw(JMX::Jmx4Perl);
+
+$VERSION = $JMX::Jmx4Perl::VERSION;
 
 =head1 NAME 
 
@@ -94,7 +97,7 @@ sub init {
     $ua->jjagent_config($self->{cfg});
     $ua->timeout($self->cfg-('timeout')) if $self->cfg('timeout');
     $ua->agent("JMX::Jmx4Perl::Agent $VERSION");
-    $ua->env_proxy;
+    # $ua->env_proxy;
     my $proxy = $self->cfg('proxy');
     if ($proxy) {
         if (ref($proxy) eq "HASH") {

@@ -154,7 +154,6 @@ sub new {
     }
     croak "Invalid type '",$type,"' given (should be one of ",join(" ",keys %$TYPES),")" unless $TYPES->{$type};
     
-    my $self;
     # Hash comes after type
     if (!$self) {
         if (ref($_[0]) eq "HASH") {
