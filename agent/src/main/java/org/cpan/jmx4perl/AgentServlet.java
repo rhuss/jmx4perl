@@ -118,8 +118,14 @@ public class AgentServlet extends HttpServlet {
             }
             json = jsonConverter.convertToJson(retValue,jmxReq);
             json.put("status",200 /* success */);
+        } catch (AttributeNotFoundException exp) {
+            code = 404;
+            throwable = exp;
+        } catch (InstanceNotFoundException exp) {
+            code = 404;
+            throwable = exp;
         } catch (UnsupportedOperationException exp) {
-            code = 501;
+            code = 404;
             throwable = exp;
         } catch (IllegalArgumentException exp) {
             code = 400;
@@ -151,7 +157,7 @@ public class AgentServlet extends HttpServlet {
         return jsonObject;
     }
 
-    private Object listMBeans() {
+    private Object listMBeans() throws InstanceNotFoundException {
         try {
             MBeanServer server = getMBeanServer();
             Map<String /* domain */,
@@ -178,8 +184,6 @@ public class AgentServlet extends HttpServlet {
                 }
             }
             return ret;
-        } catch (InstanceNotFoundException e) {
-            throw new IllegalStateException("Internal error while retrieving list: " + e,e);
         } catch (ReflectionException e) {
             throw new IllegalStateException("Internal error while retrieving list: " + e,e);
         } catch (IntrospectionException e) {
@@ -233,14 +237,10 @@ public class AgentServlet extends HttpServlet {
         writer.write(pJsonTxt);
     }
 
-    private Object getMBeanAttribute(JmxRequest pJmxReq) {
+    private Object getMBeanAttribute(JmxRequest pJmxReq) throws AttributeNotFoundException, InstanceNotFoundException {
         try {
             wokaroundJBossBug(pJmxReq);
             return getMBeanServer().getAttribute(pJmxReq.getObjectName(), pJmxReq.getAttributeName());
-        } catch (AttributeNotFoundException ex) {
-            throw new IllegalArgumentException("No attribute '" + pJmxReq.getAttributeName() + "' :" + ex);
-        } catch (InstanceNotFoundException ex) {
-            throw new IllegalArgumentException("No object with name '" + pJmxReq.getObjectName() + "' : " + ex);
         } catch (ReflectionException e) {
             throw new RuntimeException("Internal error for " + pJmxReq.getAttributeName() +
                     "' on object " + pJmxReq.getObjectName() + ": " + e);
