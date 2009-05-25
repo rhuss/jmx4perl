@@ -10,9 +10,12 @@ sub id { return "Test1" };
 
 sub autodetect { return 1; }
 
-sub _init_attribute_aliases {
-    return {
+sub _init_aliases {
+    return { 
+            attributes => 
+          {
             MEMORY_HEAP => [ "resolved_name", "resolved_attr" ]
+          }
            };
 }
 

@@ -33,6 +33,7 @@ scripts/check_jmx4perl
 scripts/jmx4perl
 t/10_handler.t
 t/20_alias.t
+t/30_request.t
 t/lib/ProductHandlerTest/Test1Handler.pm
 t/lib/ProductHandlerTest/Test2Handler.pm
 TODO
