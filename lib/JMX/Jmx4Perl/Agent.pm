@@ -131,7 +131,6 @@ sub request {
     my $url = $self->request_url($jmx_request);
     my $req = HTTP::Request->new(GET => $url);
     my $resp = $ua->request($req);
-    print Dumper($resp);
     my $ret = from_json($resp->content());
     if ($resp->is_error && !$ret->{status}) {
         my $error = "Error while fetching $url :\n" . $resp->status_line . "\n";

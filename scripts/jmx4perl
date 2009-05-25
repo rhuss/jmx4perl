@@ -7,10 +7,11 @@ jmx4perl - JMX acccess modules and tools
 =head1 DESCRIPTION
 
 I<For the time being, this is only a collection of ideas, which still have to 
-come to live>
+come to live. Expect this quite soon, but, as always, no promises ;-)>
 
-This command line tool provides an easy to use shell for accessing remote JMX
-MBeans.
+This is command line tool provides an easy to use shell for accessing remote
+JMX MBeans. It a wrapper around L<JMX::Jmx4Perl>, which is the programmatic
+entry point for jmx4perl.
 
 =over 
 
@@ -35,3 +36,30 @@ Reading and writing of attributes
 Excecution of MBean operations
 
 =back
+
+=head1 SEE ALSO
+
+L<check_jmx4perl> - a production ready Nagios check using L<JMX::Jmx4Perl>
+
+=head1 LICENSE
+
+This file is part of jmx4perl.
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut

@@ -5,6 +5,23 @@
 JMX::Jmx4Perl - Access to JMX via Perl
 
 =head1 SYNOPSIS
+
+Simple:
+
+   use strict;
+   use JMX::Jmx4Perl;
+   use JMX::Jmx4Perl::Alias;   # Import certains aliases for MBeans
+
+   print "Memory Used: ",
+          JMX::Jmx4Perl
+              ->new(url => "http://localhost:808get0/j4p-agent")
+              ->get_attribute(MEMORY_HEAP_USED);
+   
+Advanced:
+
+   use strict;
+   use JMX::Jmx4Perl;
+   use JMX::Jmx4Perl::Request;   # Type constants are exported here
    
    my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p-agent",
                                product => "jboss");
@@ -228,11 +245,11 @@ sub get_attribute {
     } else {
         if (@_ == 1) {
             # A single argument can only be used as an alias
-            ($object,$attribute,$path) = $self->resolve_attribute_alias($_[0]->{alias});
-        } elsif (UNIVERSAL::isa($_[0],"JMX::Jmx4Perl::Agent::Object")) {
-            ($object,$attribute,$path) = $self->resolve_attribute_alias($_[0]);      
+            ($object,$attribute,$path) = 
+              $self->resolve_attribute_alias(UNIVERSAL::isa($_[0],"JMX::Jmx4Perl::Agent::Object") ? $_[0]->{alias} : $_[0];
+        } else {
+            ($object,$attribute,$path) = @_;
         }
-        ($object,$attribute,$path) = @_;
     }
     croak "No object name provided" unless $object;
     croak "No attribute provided for object $object" unless $attribute;
