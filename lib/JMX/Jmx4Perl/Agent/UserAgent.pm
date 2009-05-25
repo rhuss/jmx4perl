@@ -3,6 +3,7 @@
 # Helper package in order to provide credentials
 # in the request
 package JMX::Jmx4Perl::Agent::UserAgent;
+use LWP::UserAgent;
 use vars qw(@ISA);
 @ISA = qw(LWP::UserAgent);
 
