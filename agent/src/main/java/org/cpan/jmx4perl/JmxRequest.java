@@ -119,6 +119,7 @@ public class JmxRequest extends JSONObject {
                 type = extractType(elements.pop());
 
                 if (type != Type.LIST_MBEANS) {
+                    objectNameS = elements.pop();
                     objectName = new ObjectName(elements.pop());
                     if (type == Type.READ_ATTRIBUTE || type == Type.WRITE_ATTRIBUTE) {
                         attributeName = elements.pop();
@@ -150,7 +151,15 @@ public class JmxRequest extends JSONObject {
         }
     }
 
-    private Stack<String> extractElementsFromPath(String path) {
+    /*
+    We need to use this special treating for slashes (i.e. to escape with '/-/') because URI encoding doesnt work
+    well with HttpRequest.pathInfo() since in Tomcat/JBoss slash seems to be decoded to early so that it get messed up
+    and answers with a "HTTP/1.x 400 Invalid URI: noSlash" without returning any further indications
+
+    For the rest of unsafe chars, we use uri decoding (as anybody should do). It could be of course the case,
+    that the pathinfo has been already uri decoded (dont know by heart)
+     */
+    private Stack<String> extractElementsFromPath(String path) throws UnsupportedEncodingException {
         String[] elements = (path.startsWith("/") ? path.substring(1) : path).split("/");
         Stack<String> ret = new Stack<String>();
         for (int i=0;i<elements.length;i++) {
@@ -163,12 +172,13 @@ public class JmxRequest extends JSONObject {
                     val.append("/");
                 }
                 if (i+1 < elements.length) {
-                    val.append(elements[i+1]);
+                    val.append(URLDecoder.decode(elements[i+1],"UTF-8"));
                     i++;
                 }
+
                 ret.push(val.toString());
             } else {
-                ret.push(elements[i]);
+                ret.push(URLDecoder.decode(elements[i],"UTF-8"));
             }
         }
         // Reverse stack
