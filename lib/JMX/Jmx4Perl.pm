@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.15_1";
+$VERSION = "0.15_2";
 
 my $REGISTRY = {
                 # Agent based
@@ -246,7 +246,7 @@ sub get_attribute {
         if (@_ == 1) {
             # A single argument can only be used as an alias
             ($object,$attribute,$path) = 
-              $self->resolve_attribute_alias(UNIVERSAL::isa($_[0],"JMX::Jmx4Perl::Agent::Object") ? $_[0]->{alias} : $_[0];
+              $self->resolve_attribute_alias(UNIVERSAL::isa($_[0],"JMX::Jmx4Perl::Agent::Object") ? $_[0]->{alias} : $_[0]);
         } else {
             ($object,$attribute,$path) = @_;
         }
