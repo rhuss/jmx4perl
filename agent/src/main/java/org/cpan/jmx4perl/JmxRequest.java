@@ -25,11 +25,11 @@ package org.cpan.jmx4perl;
 
 import org.json.simple.JSONObject;
 
-import javax.management.ObjectName;
 import javax.management.MalformedObjectNameException;
-import java.util.*;
-import java.net.URLDecoder;
+import javax.management.ObjectName;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.*;
 
 /**
  * A JMX request which knows how to translate from a REST Url. Additionally
@@ -112,20 +112,21 @@ public class JmxRequest extends JSONObject {
     JmxRequest(String pPathInfo) {
         try {
             if (pPathInfo != null && pPathInfo.length() > 0) {
-                StringTokenizer tok = new StringTokenizer(pPathInfo,"/");
-                String typeS = tok.nextToken();
-                type = extractType(typeS);
+
+                // Get all path elements as a reverse stack
+                Stack<String> elements = extractElementsFromPath(pPathInfo);
+
+                type = extractType(elements.pop());
 
                 if (type != Type.LIST_MBEANS) {
-                    objectNameS = tok.nextToken();
-                    objectName = new ObjectName(objectNameS);
+                    objectName = new ObjectName(elements.pop());
                     if (type == Type.READ_ATTRIBUTE || type == Type.WRITE_ATTRIBUTE) {
-                        attributeName = tok.nextToken();
+                        attributeName = elements.pop();
                         if (type == Type.WRITE_ATTRIBUTE) {
-                            value = URLDecoder.decode(tok.nextToken(),"UTF-8");
+                            value = URLDecoder.decode(elements.pop(),"UTF-8");
                         }
                     } else if (type == Type.EXEC_OPERATION) {
-                        operation = tok.nextToken();
+                        operation = elements.pop();
                     } else {
                         throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
                     }
@@ -133,8 +134,8 @@ public class JmxRequest extends JSONObject {
 
                 // Extract all additional args from the remaining path info
                 extraArgs = new ArrayList<String>();
-                while (tok.hasMoreTokens()) {
-                    extraArgs.add(tok.nextToken());
+                while (!elements.isEmpty()) {
+                    extraArgs.add(elements.pop());
                 }
                 setupJSON();
             }
@@ -147,6 +148,32 @@ public class JmxRequest extends JSONObject {
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Internal: Illegal encoding for URL conversion: " + e,e);
         }
+    }
+
+    private Stack<String> extractElementsFromPath(String path) {
+        String[] elements = (path.startsWith("/") ? path.substring(1) : path).split("/");
+        Stack<String> ret = new Stack<String>();
+        for (int i=0;i<elements.length;i++) {
+            if (elements[i].matches("^-+$")) {
+                if (ret.isEmpty()) {
+                    continue;
+                }
+                StringBuffer val = new StringBuffer(ret.pop());
+                for (int j=0;j<elements[i].length();j++) {
+                    val.append("/");
+                }
+                if (i+1 < elements.length) {
+                    val.append(elements[i+1]);
+                    i++;
+                }
+                ret.push(val.toString());
+            } else {
+                ret.push(elements[i]);
+            }
+        }
+        // Reverse stack
+        Collections.reverse(ret);
+        return ret;
     }
 
     private Type extractType(String pTypeS) {
