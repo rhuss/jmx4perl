@@ -129,6 +129,18 @@ below for the format of the complete answer.
 
 =back 
 
+=head2 Escaping
+
+If you are forced to use a slash (C</>) as part of your request (e.g. as part
+of you bean's name) you need to escape it. A single slash (C</>) is escaped by
+the combination C</-/>, two subsequent slashes (C<//>) are to be escaped with
+C</--/> and so on. For example, to request the atrribute C<State> on the MBean
+named C<jboss.jmx:alias=jmx/rmi/RMIAdaptor>, you should an URL like
+
+  .../read/jboss.jmx:alias=jmx/-/rmi/-/RMIAdaptor/State
+
+L<JMX::Jmx4Perl::Agent> does this sort of escaping transparently.
+
 =head1 RESPONSE
 
 As already mentioned, the response is an HTTP response containing a JSON
