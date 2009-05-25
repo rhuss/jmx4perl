@@ -1,6 +1,6 @@
 ---
 name: jmx4perl
-version: 0.15_1
+version: 0.15_2
 author:
   - Roland Huss (roland@cpan.org)
 abstract: Easy JMX access to Java Applications
@@ -17,6 +17,7 @@ requires:
   Object::Tiny: 1.06
   Pod::Usage: 0
   Scalar::Util: 0
+  URI: 0
 build_requires:
   Module::Build: 0
   Test: 0
@@ -26,7 +27,7 @@ recommends:
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.15_1
+    version: 0.15_2
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0

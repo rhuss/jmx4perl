@@ -38,6 +38,7 @@ my $build = $class->new
    requires => {
                 "JSON" => "2.12",
                 "LWP::UserAgent" => 0,
+                "URI" => 0,
                 "Data::Dumper" => 0,
                 "Pod::Usage" => 0,
                 "Getopt::Long" => 0,
