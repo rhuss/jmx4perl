@@ -2,7 +2,7 @@
 package JMX::Jmx4Perl::Agent;
 
 use JSON;
-use LWP::UserAgent;
+use URI::Escape;
 use HTTP::Request;
 use Carp;
 use strict;
@@ -173,12 +173,17 @@ sub request_url {
 }
 
 # Escape '/' which are used as separators by using "/-/" as an escape sequence
-# Should be save within an URL
+# URI Encoding doesn't work for slashes, since some Appserver tend to mangle
+# them up with pathinfo-slashes too early in the request cycle.
+# E.g. Tomcat/Jboss croaks with a "HTTP/1.x 400 Invalid URI: noSlash" if one
+# uses an encoded slash somewhere in the path-info part.
 sub _escape {
     my $self = shift;
     my $input = shift;
-    $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
-    return $input;
+    $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;    
+    return uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
+                                                              # default
+                                                              # set. See L<URI>
 }
 
 =back
