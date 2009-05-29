@@ -45,8 +45,8 @@ directly usable in a Nagios setup.
 
 =head1 MBean Features
 
-JMX is a complex, which can not be completely revealed in this short
-documentation. Refer to
+JMX is a complex specification, which can not be completely revealed in this
+short documentation. Refer to
 L<http://java.sun.com/docs/books/tutorial/jmx/index.html> for a JMX
 tutorial. But in short, once can distinguish three kind of operational modes:
 
@@ -122,7 +122,7 @@ Firewall friendly since all HTTP communication goes over a single port.
 
 =item * 
 
-Only applicable for JEE Server or servlet container, where a WAR (Java Web
+Only applicable for JEE server or servlet container, where a WAR (Java Web
 Archive) can be deployed.
 
 =item * 
@@ -133,6 +133,56 @@ are bit more involved, but chances are good that some sort of support will be
 incorporated into a future version as well. 
 
 =back 
+
+=head1 FEATURES
+
+=head2 Autodetection
+
+Jmx4Perl is able to autodectect various application servers. This is done by
+querying a certain MBean attribute which is unique for this specific
+product. The following application servers can be autodetected:
+
+=over
+
+=item * 
+
+JBoss 4 and 5
+
+=item * 
+
+Tomcat 4 and 5 
+
+=item * 
+
+Jetty 6
+
+=back 
+
+Please note, that autodetection is not for free. It takes some considerable
+time to probe various servers. So, if you have the chance to provide the
+application server id, you should do this. This is only relevant if you are
+going to use the aliasing feature. 
+
+=head2 Aliasing
+
+L<JMX::Jmx4Perl::Alias> provides a thin abstraction layer about over the JMX
+naming scheme so that you can use a single alias value to access the
+combination (MBean name,attribute) or (MBean name,operation). It also maps the
+differing naming schemes of different application server to unique names, as
+far as this is possible. E.g. the alias C<SERVER_VERSION> maps on JBoss to the
+attribute C<VersionNumber> of MBean C<jboss.system:type=Server>, whereas for
+Jetty it's mapped to .... 
+
+Remember, you can always use the the native JMX naming to access your MBeans
+without worrying about aliasing.  
+
+=head2 Full featured Nagios plugin C<check_jmx4perl> 
+
+A full functional Nagios plugin called C<check_jmx4perl> is provided in the
+scripts directory. It can be used to monitor any JMX Mbean's attribute with a
+numeric value. Thresholds for warning and critical values can be provided in
+the formas as defined by L<Nagios::Plugin>. You can use autodetection and
+aliasing here as well.
 
 =head1 WHAT'S NEXT ?
 

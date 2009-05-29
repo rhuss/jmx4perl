@@ -1,0 +1,11 @@
+0.15
+  - Aliasing
+  - Autodetection 
+  - Bug Fixes:
+    * Correct URL encoding for request URL
+    * Slash '/' needs to be custom encoded, since URI encoding doesn't 
+      work for JBoss 4/5 due to a bug
+
+0.1
+  - Initial release
+  - check_jmx4perl

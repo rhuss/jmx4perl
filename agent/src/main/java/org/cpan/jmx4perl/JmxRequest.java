@@ -120,7 +120,7 @@ public class JmxRequest extends JSONObject {
 
                 if (type != Type.LIST_MBEANS) {
                     objectNameS = elements.pop();
-                    objectName = new ObjectName(elements.pop());
+                    objectName = new ObjectName(objectNameS);
                     if (type == Type.READ_ATTRIBUTE || type == Type.WRITE_ATTRIBUTE) {
                         attributeName = elements.pop();
                         if (type == Type.WRITE_ATTRIBUTE) {
@@ -144,8 +144,8 @@ public class JmxRequest extends JSONObject {
             throw new IllegalArgumentException("Invalid path info " + pPathInfo,exp);
         } catch (MalformedObjectNameException e) {
             throw new IllegalArgumentException(
-                    "Invalid object name " + objectNameS +
-                            ": " + e.getMessage(),e);
+                    "Invalid object name \"" + objectNameS +
+                            "\": " + e.getMessage(),e);
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Internal: Illegal encoding for URL conversion: " + e,e);
         }
@@ -242,5 +242,25 @@ public class JmxRequest extends JSONObject {
 
     public String getOperation() {
         return operation;
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer ret = new StringBuffer("JmxRequest[");
+        if (type == Type.READ_ATTRIBUTE) {
+            ret.append("READ mbean=").append(objectNameS).append(", attribute=").append(attributeName);
+        } else if (type == Type.WRITE_ATTRIBUTE) {
+            ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(attributeName)
+                    .append(", value=").append(value);
+        } else if (type == Type.EXEC_OPERATION) {
+            ret.append("EXEC mbean=").append(objectNameS).append(", operation=").append(operation);
+        } else {
+            ret.append(type).append(" mbean=").append(objectNameS);
+        }
+        if (extraArgs != null && extraArgs.size() > 0) {
+            ret.append(", extra=").append(extraArgs);
+        }
+        ret.append("]");
+        return ret.toString();
     }
 }

@@ -30,6 +30,7 @@ import org.json.simple.JSONObject;
 
 import javax.management.*;
 import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -81,12 +82,20 @@ public class AgentServlet extends HttpServlet {
     // The MBeanServer to use
     private MBeanServer mBeanServer;
 
+    // Use debugging ?
+    private boolean debug = false;
+
     @Override
     public void init() throws ServletException {
         super.init();
         jsonConverter = new AttributeToJsonConverter();
         isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
         mBeanServer = findMBeanServer();
+        ServletConfig config = getServletConfig();
+        String doDebug = config.getInitParameter("debug");
+        if (doDebug != null && Boolean.valueOf(doDebug)) {
+            debug = true;
+        }
     }
 
 
@@ -107,10 +116,16 @@ public class AgentServlet extends HttpServlet {
         Throwable throwable = null;
         try {
             jmxReq = new JmxRequest(pReq.getPathInfo());
+            if (debug) {
+                log(jmxReq.toString());
+            }
             Object retValue;
             JmxRequest.Type type = jmxReq.getType();
             if (type == JmxRequest.Type.READ_ATTRIBUTE) {
                 retValue = getMBeanAttribute(jmxReq);
+                if (debug) {
+                    log("Return: " + retValue.toString());
+                }
             } else if (type == JmxRequest.Type.LIST_MBEANS) {
                 retValue = listMBeans();
             } else {
@@ -142,6 +157,12 @@ public class AgentServlet extends HttpServlet {
         } finally {
             if (code != 200) {
                 json = getErrorJSON(code,throwable,jmxReq);
+                if (debug) {
+                    log("Error " + code,throwable);
+                }
+            }
+            if (debug) {
+                log("Success");
             }
             sendResponse(pResp,code,json.toJSONString());
         }

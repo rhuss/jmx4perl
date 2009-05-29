@@ -1,3 +1,13 @@
+2009-05-28  Roland Huss  <roland@consol.de>
+
+	* lib/JMX/Jmx4Perl/ProductHandler/JBoss.pm: Added JBoss product
+	handler. 
+
+	* lib/JMX/Jmx4Perl/Alias.pm: Added aliasing feature
+
+	* lib/JMX/Jmx4Perl/Manual.pod: Added sections for aliasing and
+	autodetection. 
+
 2009-05-05  Roland Huss  <roland@consol.de>
 
 	* lib/JMX/Jmx4Perl/Agent/Protocol.pod: added a protocol

@@ -12,9 +12,13 @@ use Carp qw(croak);
 
 JMX::Jmx4Perl::ProductHandler::BaseHandler - Base package for product specific handler 
 
-=head1 SYNOPSIS
-
 =head1 DESCRIPTION
+
+This base class is used for specific L<JMX::Jmx4Perl::ProductHandler> in order
+to provide some common functionality. Extends this package if you want to hook
+in your own product handler. Any module below
+C<JMX::Jmx4Perl::ProductHandler::> will be automatically picked up by
+L<JMX::Jmx4Perl>.
 
 =head1 METHODS
 
@@ -123,7 +127,7 @@ sub attribute_alias {
     if (UNIVERSAL::isa($alias_or_name,"JMX::Jmx4Perl::Alias::Object")) {
         $alias = $alias_or_name;
     } else {
-        $alias = JMX::Jmx4Perl::Alias->get_by_name($alias_or_name) 
+        $alias = JMX::Jmx4Perl::Alias->by_name($alias_or_name) 
           || croak "No alias $alias_or_name known";
     }
     return $self->resolve_attribute_alias($alias) || @{$alias->default()};
@@ -181,5 +185,32 @@ sub try_attribute {
     }
     return $self->{$property} != 0;
 }
+
+
+=head1 LICENSE
+
+This file is part of jmx4perl.
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+A commercial license is available as well. Please contact roland@cpan.org for
+further details.
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
 
 1;

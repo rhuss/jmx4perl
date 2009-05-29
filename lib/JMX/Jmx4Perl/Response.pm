@@ -107,8 +107,9 @@ sub stacktrace { return shift->{stacktrace}; }
 
 =item $content = $response->value() 
 
-Return the content of this response, which is a JSON representation of the
-result as returned by the Java agent. This is set only when C<is_ok> is true. 
+Return the content of this response, which is a represents the JSON response as
+returned by the Java agent as a hash reference value. This is set only when C<is_ok> is
+true.
 
 =cut
 

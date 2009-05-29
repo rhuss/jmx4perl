@@ -141,8 +141,6 @@ sub request {
         }
         croak $error;
     }
-    
-
     return JMX::Jmx4Perl::Response->new($ret->{status},$jmx_request,$ret->{value},$ret->{error},$ret->{stacktrace});
 }
 
@@ -174,7 +172,7 @@ sub request_url {
 
 # Escape '/' which are used as separators by using "/-/" as an escape sequence
 # URI Encoding doesn't work for slashes, since some Appserver tend to mangle
-# them up with pathinfo-slashes too early in the request cycle.
+# them up with pathinfo-slashes to early in the request cycle.
 # E.g. Tomcat/Jboss croaks with a "HTTP/1.x 400 Invalid URI: noSlash" if one
 # uses an encoded slash somewhere in the path-info part.
 sub _escape {

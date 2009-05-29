@@ -6,12 +6,16 @@
   <display-name>JSON JMX Agent</display-name>
 
   <servlet>
-    <servlet-name>JJAgent</servlet-name>
+    <servlet-name>jmx4perl</servlet-name>
     <servlet-class>org.cpan.jmx4perl.AgentServlet</servlet-class>
+    <init-param>
+      <param-name>debug</param-name>
+      <param-value>true</param-value>
+    </init-param>
   </servlet>
 
   <servlet-mapping>
-    <servlet-name>JJAgent</servlet-name>
+    <servlet-name>jmx4perl</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
 

@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.15_2";
+$VERSION = "0.15_4";
 
 my $REGISTRY = {
                 # Agent based
@@ -110,7 +110,6 @@ my $REGISTRY = {
                 "JMX::Jmx4Perl::Agent" => "JMX::Jmx4Perl::Agent",
                 "JJAgent" => "JMX::Jmx4Perl::Agent",
                };
-
 
 my %PRODUCT_HANDLER;
 
