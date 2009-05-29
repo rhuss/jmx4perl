@@ -44,7 +44,6 @@ my $build = $class->new
                 "Getopt::Long" => 0,
                 "Carp" => 0,
                 "Module::Find" => 0,
-                "Object::Tiny" => "1.06",
                 "Scalar::Util" => 0
                },
    recommends => {
