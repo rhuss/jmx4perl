@@ -305,12 +305,22 @@ public class AgentServlet extends HttpServlet {
         catch (IllegalAccessException e) { }
         catch (InvocationTargetException e) { }
 
-        List servers = MBeanServerFactory.findMBeanServer(null);
+        List<MBeanServer> servers = MBeanServerFactory.findMBeanServer(null);
         MBeanServer server = null;
         if (servers != null && servers.size() > 0) {
 			server = (MBeanServer) servers.get(0);
+            if (servers.size() > 1) {
+                log("More than one MBeanServer found, taking first one");
+                if (debug) {
+                    for (MBeanServer s : servers) {
+                        log("    " + s.toString() +
+                                ": default domain = " + s.getDefaultDomain() + ", " +
+                                s.getDomains().length + " domains, " +
+                                s.getMBeanCount() + " MBeans");
+                    }
+                }
+            }
 		}
-
 		if (server == null) {
             // Attempt to load the PlatformMBeanServer.
             server = ManagementFactory.getPlatformMBeanServer();
