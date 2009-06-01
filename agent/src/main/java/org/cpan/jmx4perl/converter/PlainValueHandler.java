@@ -38,6 +38,6 @@ public class PlainValueHandler implements AttributeToJsonConverter.Handler {
     public Object handle(AttributeToJsonConverter pConverter, Object pValue, Stack pExtraArgs) {
         // TODO: Check extra args for an expression which should be applied to the
         // value object to get the 'real' value.
-        return pValue;
+        return pValue.toString();
     }
 }

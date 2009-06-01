@@ -14,7 +14,6 @@ requires:
   JSON: 2.12
   LWP::UserAgent: 0
   Module::Find: 0
-  Object::Tiny: 1.06
   Pod::Usage: 0
   Scalar::Util: 0
   URI: 0

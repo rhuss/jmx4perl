@@ -16,16 +16,6 @@ specific namings
 
 This is the product handler support JBoss 4.x and JBoss 5.x
 
-In order to access the JVM JMX properties, you have to start JBoss including
-the following C<JAVA_OPTIONS>
-
-   -Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl \
-   -Djboss.platform.mbeanserver
-
-I.e. you can use C<run.sh> like
-
-   JAVA_OPTS="-Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl -Djboss.platform.mbeanserver" bin/run.sh
-
 =cut
 
 sub id {
@@ -67,10 +57,6 @@ sub _init_aliases {
    }
      # Alias => [ "mbean", "attribute", "path" ]
     };
-}
-
-sub description { 
-    my ($self,$jmx4perl) = @_;
 }
 
 

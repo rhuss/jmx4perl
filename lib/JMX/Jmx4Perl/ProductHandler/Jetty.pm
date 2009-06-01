@@ -14,9 +14,10 @@ specific namings
 
 =head1 DESCRIPTION
 
-This is the product handler support Jetty. Please note, that you must have JMX
-support enabled in Jetty for autodetection and aliasing to work. See the Jetty
-documentation for details.
+This is the product handler support Jetty. It supports Jetty version 5,6 and 7.
+
+Please note, that you must have JMX support enabled in Jetty for autodetection
+and aliasing to work. See the Jetty documentation for details.
 
 =cut
 
@@ -24,16 +25,26 @@ sub id {
     return "jetty";
 }
 
+sub name { 
+    return "Jetty";
+}
+
 sub autodetect {
     my $self = shift;
-    return $self->try_attribute("version","org.mortbay.jetty:id=0,type=server","version");
+    return $self->try_version;
 }
 
 sub version {
     my $self = shift;
-    $self->try_attribute("version","org.mortbay.jetty:id=0,type=server","version")
-      unless defined $self->{version};
+    $self->try_version unless defined $self->{version};
     return $self->{version};
+}
+
+sub try_version {
+    my $self = shift;
+    my $ret = $self->try_attribute("version","org.mortbay:jetty=default","version");
+    $self->{version} =~ s/Jetty\/([^\s]+).*/$1/;
+    return $ret;
 }
 
 sub jsr77 {
@@ -45,7 +56,7 @@ sub _init_aliases {
     {
      attributes => 
    {
-    SERVER_VERSION => [ "org.mortbay.jetty:id=0,type=server","version" ],
+    SERVER_VERSION => [ "org.mortbay:jetty=default","version",qr/Jetty\/([^\s]+)/ ],
    },
      operations => 
    {
@@ -53,10 +64,6 @@ sub _init_aliases {
    }
      # Alias => [ "mbean", "attribute", "path" ]
     };
-}
-
-sub description { 
-    my ($self,$jmx4perl) = @_;
 }
 
 

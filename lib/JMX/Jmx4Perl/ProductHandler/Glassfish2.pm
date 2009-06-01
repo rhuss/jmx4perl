@@ -57,10 +57,6 @@ sub _init_aliases {
     };
 }
 
-sub description { 
-    my ($self,$jmx4perl) = @_;
-}
-
 
 =head1 LICENSE
 

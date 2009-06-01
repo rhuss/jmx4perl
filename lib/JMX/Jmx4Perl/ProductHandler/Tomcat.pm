@@ -14,7 +14,7 @@ specific namings
 
 =head1 DESCRIPTION
 
-This is the product handler supporting Tomcat
+This is the product handler supporting Tomcat, Version 4, 5 and 6. 
 
 =cut
 
@@ -22,16 +22,26 @@ sub id {
     return "tomcat";
 }
 
+sub name { 
+    return "Apache Tomcat";
+}
+
 sub autodetect {
     my $self = shift;
-    return $self->try_attribute("version","jboss.system:type=Server","VersionNumber");
+    return $self->_try_version;
 }
 
 sub version {
     my $self = shift;
-    $self->try_attribute("version","jboss.system:type=Server","VersionNumber") 
-      unless defined $self->{version};
+    $self->_try_version unless defined $self->{version};
     return $self->{version};
+}
+
+sub _try_version {
+    my $self = shift;
+    my $res = $self->try_attribute("version","Catalina:type=Server","serverInfo");
+    $self->{version} =~ s/^.*\/?(.*)$/$1/;
+    return $res;
 }
 
 sub jsr77 {
@@ -43,22 +53,17 @@ sub _init_aliases {
     {
      attributes => 
    {
-    SERVER_VERSION => [ "jboss.system:type=Server", "VersionNumber"],
-    SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    SERVER_HOSTNAME => [ "jboss.system:type=ServerInf", "HostName"],
+    SERVER_VERSION => [ "Catalina:type=Server","serverInfo", qr/^.*\/?(.*)$/ ],
+    #SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
+    SERVER_HOSTNAME => [ "Catalina:type=Engine", "defaultHost"],
    },
      operations => 
    {
-    THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
+    #THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
    }
      # Alias => [ "mbean", "attribute", "path" ]
     };
 }
-
-sub description { 
-    my ($self,$jmx4perl) = @_;
-}
-
 
 =head1 LICENSE
 

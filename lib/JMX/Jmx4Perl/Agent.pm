@@ -134,7 +134,11 @@ sub request {
     if ($resp->is_error) {
         return new JMX::Jmx4Perl::Response($resp->code,$jmx_request,undef,$resp->message);
     }
-    my $ret = from_json($resp->content());
+    my $ret;
+    eval {
+        $ret = from_json($resp->content());
+    };
+    croak "Error while deserializing ",$resp->content," : ",$@ if $@;
     if ($resp->is_error && !$ret->{status}) {
         my $error = "Error while fetching $url :\n" . $resp->status_line . "\n";
         my $content = $resp->content;

@@ -29,8 +29,8 @@ import org.cpan.jmx4perl.converter.AttributeToJsonConverter;
 import org.json.simple.JSONObject;
 
 import javax.management.*;
-import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,10 +40,7 @@ import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Agent servlet which connects to a local JMX MBeanServer for
@@ -79,8 +76,8 @@ public class AgentServlet extends HttpServlet {
     // Are we running within JBoss ?
     private boolean isJBoss;
 
-    // The MBeanServer to use
-    private MBeanServer mBeanServer;
+    // The MBeanServers to use
+    private Set<MBeanServer> mBeanServers;
 
     // Use debugging ?
     private boolean debug = false;
@@ -90,7 +87,7 @@ public class AgentServlet extends HttpServlet {
         super.init();
         jsonConverter = new AttributeToJsonConverter();
         isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
-        mBeanServer = findMBeanServer();
+        mBeanServers = findMBeanServers();
         ServletConfig config = getServletConfig();
         String doDebug = config.getInitParameter("debug");
         if (doDebug != null && Boolean.valueOf(doDebug)) {
@@ -180,27 +177,28 @@ public class AgentServlet extends HttpServlet {
 
     private Object listMBeans() throws InstanceNotFoundException {
         try {
-            MBeanServer server = getMBeanServer();
             Map<String /* domain */,
                     Map<String /* props */,
                             Map<String /* attribute/operation */,
                                     List<String /* names */>>>> ret =
                     new HashMap<String, Map<String, Map<String, List<String>>>>();
-            for (Object nameObject : server.queryNames((ObjectName) null,(QueryExp) null)) {
-                ObjectName name = (ObjectName) nameObject;
-                MBeanInfo mBeanInfo = server.getMBeanInfo(name);
+            for (MBeanServer server : mBeanServers) {
+                for (Object nameObject : server.queryNames((ObjectName) null,(QueryExp) null)) {
+                    ObjectName name = (ObjectName) nameObject;
+                    MBeanInfo mBeanInfo = server.getMBeanInfo(name);
 
-                Map mBeansMap = getOrCreateMap(ret,name.getDomain());
-                Map mBeanMap = getOrCreateMap(mBeansMap,name.getCanonicalKeyPropertyListString());
+                    Map mBeansMap = getOrCreateMap(ret,name.getDomain());
+                    Map mBeanMap = getOrCreateMap(mBeansMap,name.getCanonicalKeyPropertyListString());
 
-                addAttributes(mBeanMap, mBeanInfo);
-                addOperations(mBeanMap, mBeanInfo);
+                    addAttributes(mBeanMap, mBeanInfo);
+                    addOperations(mBeanMap, mBeanInfo);
 
-                // Trim if needed
-                if (mBeanMap.size() == 0) {
-                    mBeansMap.remove(name.getCanonicalKeyPropertyListString());
-                    if (mBeansMap.size() == 0) {
-                        ret.remove(name.getDomain());
+                    // Trim if needed
+                    if (mBeanMap.size() == 0) {
+                        mBeansMap.remove(name.getCanonicalKeyPropertyListString());
+                        if (mBeansMap.size() == 0) {
+                            ret.remove(name.getDomain());
+                        }
                     }
                 }
             }
@@ -251,8 +249,13 @@ public class AgentServlet extends HttpServlet {
     }
 
     private void sendResponse(HttpServletResponse pResp, int pStatusCode, String pJsonTxt) throws IOException {
-        pResp.setContentType("text/plain");
-        pResp.setCharacterEncoding("utf-8");
+        try {
+            pResp.setCharacterEncoding("utf-8");
+            pResp.setContentType("text/plain");
+        } catch (NoSuchMethodError error) {
+            // For a Servlet 2.3 container, set the charset by hand
+            pResp.setContentType("text/plain; charset=utf-8");
+        }
         pResp.setStatus(pStatusCode);
         PrintWriter writer = pResp.getWriter();
         writer.write(pJsonTxt);
@@ -261,7 +264,23 @@ public class AgentServlet extends HttpServlet {
     private Object getMBeanAttribute(JmxRequest pJmxReq) throws AttributeNotFoundException, InstanceNotFoundException {
         try {
             wokaroundJBossBug(pJmxReq);
-            return getMBeanServer().getAttribute(pJmxReq.getObjectName(), pJmxReq.getAttributeName());
+            AttributeNotFoundException attrException = null;
+            InstanceNotFoundException objNotFoundException = null;
+            for (MBeanServer s : mBeanServers) {
+                try {
+                    return s.getAttribute(pJmxReq.getObjectName(), pJmxReq.getAttributeName());
+                } catch (InstanceNotFoundException exp) {
+                    // Remember exceptions for later use
+                    objNotFoundException = exp;
+                } catch (AttributeNotFoundException exp) {
+                    attrException = exp;
+                }
+            }
+            if (attrException != null) {
+                throw attrException;
+            }
+            // Must be there, otherwise we would nave have left the loop
+            throw objNotFoundException;
         } catch (ReflectionException e) {
             throw new RuntimeException("Internal error for " + pJmxReq.getAttributeName() +
                     "' on object " + pJmxReq.getObjectName() + ": " + e);
@@ -273,10 +292,6 @@ public class AgentServlet extends HttpServlet {
 
     // ==========================================================================
     // Helper
-
-    private MBeanServer getMBeanServer() {
-        return mBeanServer;
-    }
 
     /**
      * Use various ways for gettint to the MBeanServer which should be exposed via this
@@ -292,44 +307,40 @@ public class AgentServlet extends HttpServlet {
      * @return the MBeanServer found
      * @throws IllegalStateException if no MBeanServer could be found.
      */
-    private MBeanServer findMBeanServer() {
+    private Set<MBeanServer> findMBeanServers() {
 
         // Check for JBoss MBeanServer via its utility class
+        Set<MBeanServer> servers = new LinkedHashSet<MBeanServer>();
+
         try {
             Class locatorClass = Class.forName("org.jboss.mx.util.MBeanServerLocator");
             Method method = locatorClass.getMethod("locateJBoss");
-            return (MBeanServer) method.invoke(null);
+            servers.add((MBeanServer) method.invoke(null));
         }
         catch (ClassNotFoundException e) { /* Ok, its *not* JBoss, continue with search ... */ }
         catch (NoSuchMethodException e) { }
         catch (IllegalAccessException e) { }
         catch (InvocationTargetException e) { }
 
-        List<MBeanServer> servers = MBeanServerFactory.findMBeanServer(null);
-        MBeanServer server = null;
-        if (servers != null && servers.size() > 0) {
-			server = (MBeanServer) servers.get(0);
-            if (servers.size() > 1) {
-                log("More than one MBeanServer found, taking first one");
-                if (debug) {
-                    for (MBeanServer s : servers) {
-                        log("    " + s.toString() +
-                                ": default domain = " + s.getDefaultDomain() + ", " +
-                                s.getDomains().length + " domains, " +
-                                s.getMBeanCount() + " MBeans");
-                    }
-                }
-            }
-		}
-		if (server == null) {
-            // Attempt to load the PlatformMBeanServer.
-            server = ManagementFactory.getPlatformMBeanServer();
-		}
+        List<MBeanServer> mBeanServers = MBeanServerFactory.findMBeanServer(null);
+        if (mBeanServers != null) {
+            servers.addAll(mBeanServers);
+        }
 
-		if (server == null) {
-			throw new IllegalStateException("Unable to locate an MBeanServer instance");
+        servers.add(ManagementFactory.getPlatformMBeanServer());
+		if (servers.size() == 0) {
+			throw new IllegalStateException("Unable to locate any MBeanServer instance");
 		}
-		return server;
+        if (debug) {
+            log("Found " + servers.size() + " MBeanServers");
+            for (MBeanServer s : mBeanServers) {
+                log("    " + s.toString() +
+                        ": default domain = " + s.getDefaultDomain() + ", " +
+                        s.getDomains().length + " domains, " +
+                        s.getMBeanCount() + " MBeans");
+            }
+        }
+		return servers;
 	}
 
     private void wokaroundJBossBug(JmxRequest pJmxReq) throws ReflectionException, InstanceNotFoundException {
@@ -337,7 +348,14 @@ public class AgentServlet extends HttpServlet {
             try {
                 // invoking getMBeanInfo() works around a bug in getAttribute() that fails to
                 // refetch the domains from the platform (JDK) bean server
-                getMBeanServer().getMBeanInfo(pJmxReq.getObjectName());
+                for (MBeanServer s : mBeanServers) {
+                    try {
+                        s.getMBeanInfo(pJmxReq.getObjectName());
+                    } catch (InstanceNotFoundException exp) {
+                        // Only one can have the name. So, this exception
+                        // is being expected to happen
+                    }
+                }
             } catch (IntrospectionException e) {
                 throw new RuntimeException("Workaround for JBoss failed for object " + pJmxReq.getObjectName() + ": " + e);
             }
