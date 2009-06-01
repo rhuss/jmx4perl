@@ -53,3 +53,4 @@
 \bagent/target\b
 
 ^test.pl$
+scripts/handlerTest.pl

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::ProductHandler::JBoss;
+package JMX::Jmx4Perl::ProductHandler::Glassfish3;
 
 use JMX::Jmx4Perl::ProductHandler::BaseHandler;
 use strict;
@@ -9,43 +9,42 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::ProductHandler::JBoss - Product handler for accessing JBoss
-specific namings
+JMX::Jmx4Perl::ProductHandler::Glassfish - Product handler for accessing
+Glassfish specific namings
 
 =head1 DESCRIPTION
 
-This is the product handler support JBoss 4.x and JBoss 5.x
-
-In order to access the JVM JMX properties, you have to start JBoss including
-the following C<JAVA_OPTIONS>
-
-   -Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl \
-   -Djboss.platform.mbeanserver
-
-I.e. you can use C<run.sh> like
-
-   JAVA_OPTS="-Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl -Djboss.platform.mbeanserver" bin/run.sh
+This handler supports glassfish version 3.
 
 =cut
 
 sub id {
-    return "jboss";
+    return "glassfish3";
 }
 
 sub name {
-    return "JBoss";
+    return "Glassfish";
 }
 
 sub autodetect {
-    my $self = shift;
-    return $self->try_attribute("version","jboss.system:type=Server","VersionNumber");
+    return shift->_try_version;
 }
 
 sub version {
     my $self = shift;
-    $self->try_attribute("version","jboss.system:type=Server","VersionNumber") 
+    $self->_try_version
       unless defined $self->{version};
     return $self->{version};
+}
+
+
+sub _try_version {
+    return shift->try_attribute
+      (
+       "version",
+       "amx:j2eeType=X-DomainRoot,name=domain1",
+       "ApplicationServerFullVersion"
+      );
 }
 
 sub jsr77 {
@@ -57,13 +56,12 @@ sub _init_aliases {
     {
      attributes => 
    {
-    SERVER_VERSION => [ "jboss.system:type=Server", "VersionNumber"],
-    SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    SERVER_HOSTNAME => [ "jboss.system:type=ServerInf", "HostName"],
+    SERVER_VERSION => ["amx:j2eeType=X-DomainRoot,name=domain1","ApplicationServerFullVersion"],
    },
      operations => 
    {
-    THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
+    # No method known yet
+    THREAD_DUMP => [ "com.sun.appserv:category=monitor,server=server,type=JVMInformation", undef ]
    }
      # Alias => [ "mbean", "attribute", "path" ]
     };

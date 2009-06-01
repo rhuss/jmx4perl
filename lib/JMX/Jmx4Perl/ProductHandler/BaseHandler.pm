@@ -7,6 +7,7 @@ use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Alias;
 use Carp qw(croak);
+use Data::Dumper;
 
 =head1 NAME
 
@@ -55,6 +56,17 @@ sub id {
     croak "Must be overwritten to return a name";
 }
 
+=item $id = $handler->name()
+
+Return this handler's name. This method returns by default the id, but can 
+be overwritten by a subclass to provide something more descriptive.
+
+=cut 
+
+sub name { 
+    return shift->id;
+}
+
 =item $version = $handler->version() 
 
 Get the version of the underlying application server or return C<undef> if the
@@ -97,7 +109,7 @@ sub description {
 }
 
 
-=item $can_jsr77 = $handler->knows_jsr77()
+=item $can_jsr77 = $handler->jsr77()
 
 Return true if the app server represented by this handler is an implementation
 of JSR77, which provides a well defined way how to access deployed applications
@@ -107,7 +119,7 @@ be overwritten by a subclass.
 
 =cut
 
-sub knows_jsr77 {
+sub jsr77 {
     return undef;
 }
 
@@ -130,8 +142,26 @@ sub attribute_alias {
         $alias = JMX::Jmx4Perl::Alias->by_name($alias_or_name) 
           || croak "No alias $alias_or_name known";
     }
-    return $self->resolve_attribute_alias($alias) || @{$alias->default()};
+    my $aliasref = $self->resolve_attribute_alias($alias) || $alias->default();
+    return @$aliasref;
 }
+
+=item $description = $self->info()
+
+Get a textual description of the product handler. By default, it prints
+out the id, the version and well known properties known by the Java VM
+
+=cut
+
+sub info {
+    my $self = shift;
+    
+    my $ret = "";
+    $ret .= $self->server_info;
+    $ret .= "-" x 80 . "\n";
+    $ret .= $self->jvm_info;    
+}
+
 
 # Examines internal alias hash in order to return handler specific aliases
 # Can be overwritten if something more esoteric is required
@@ -172,20 +202,56 @@ sub try_attribute {
     my $jmx4perl = $self->{jmx4perl};
 
     if (defined($self->{$property})) {
-        return $self->{$property} != 0;
+        return length($self->{$property});
     }
     my $request = JMX::Jmx4Perl::Request->new(READ_ATTRIBUTE,$object,$attribute,$path);
     my $response = $jmx4perl->request($request);
     if ($response->status == 404) {
-        $self->{$property} = 0;
+        $self->{$property} = "";
     } elsif ($response->is_ok) {
         $self->{$property} = $response->value;
     } else {
         croak "Error while trying to autodetect ",$self->id(),": ",$response->error_text();
     }
-    return $self->{$property} != 0;
+    return length($self->{$property});
 }
 
+=item $server_info = $handler->server_info()
+
+Get's a textual description of the server. By default, this includes the id and
+the version, but can (and should) be overidden by a subclass to contain more
+specific information
+
+=cut
+
+sub server_info { 
+    my $self = shift;
+    my $jmx4perl = $self->{jmx4perl};
+    
+    my $ret = "";
+    $ret .= sprintf("%-10.10s %s\n","Name:",$self->name);
+    $ret .= sprintf("%-10.10s %s\n","Version:",$self->version);
+    return $ret;
+}
+
+=item jvm_info = $handler->jvm_info()
+
+Get information which is based on well known MBeans which are available for
+every Virtual machine.
+
+=cut
+
+sub jvm_info {
+    my $self = shift;
+    my $jmx4perl = $self->{jmx4perl};
+    
+    my $ret = "";
+    $ret .= "Memory:\n";
+    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory used:",int($jmx4perl->get_attribute(MEMORY_HEAP_USED)/(1024*1024)) . " MB");
+}
+
+
+=back
 
 =head1 LICENSE
 

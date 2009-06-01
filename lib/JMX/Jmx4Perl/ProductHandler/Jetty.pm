@@ -9,7 +9,7 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::ProductHandler::Tomcat - Product handler for accessing Tomcat
+JMX::Jmx4Perl::ProductHandler::Jetty - Product handler for accessing jetty
 specific namings
 
 =head1 DESCRIPTION
@@ -36,7 +36,7 @@ sub version {
     return $self->{version};
 }
 
-sub know_jsr77 {
+sub jsr77 {
     return 0;
 }
 

@@ -34,7 +34,7 @@ sub version {
     return $self->{version};
 }
 
-sub know_jsr77 {
+sub jsr77 {
     return 1;
 }
 
