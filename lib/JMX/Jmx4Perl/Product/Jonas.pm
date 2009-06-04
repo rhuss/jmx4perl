@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::Product::Tomcat;
+package JMX::Jmx4Perl::Product::Jonas;
 
 use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
@@ -9,33 +9,35 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Tomcat - Handler for Apache Tomcat
+JMX::Jmx4Perl::Product::Jonas - Handler for Jonas
 
 =head1 DESCRIPTION
 
-This is the product handler supporting Tomcat, Version 4, 5 and 6. 
+This is the product handler support Jonas 4.
 
 =cut
 
 sub id {
-    return "tomcat";
+    return "jonas";
 }
 
-sub name { 
-    return "Apache Tomcat";
+sub name {
+    return "Jonas";
 }
 
-# Pure Tomcat must be *after* all App-Servers using tomcat as web container
-sub order {
-    return 20;
+sub order { 
+    return 10;
 }
 
 sub _try_version {
     my $self = shift;
+    return $self->try_attribute("version","jonas:j2eeType=J2EEServer,name=jonas","serverVersion");
+}
 
-    my $res = $self->try_attribute("version","Catalina:type=Server","serverInfo");
-    $self->{version} =~ s/^.*?\/?(.*)$/$1/;
-    return $res;
+sub server_info { 
+    my $self = shift;
+    my $ret = $self->SUPER::server_info();
+    $ret .= sprintf("%-10.10s %s\n","Web:",$self->{jmx4perl}->get_attribute("jonas:name=webContainers,type=service","ServerName"));
 }
 
 sub jsr77 {
@@ -48,7 +50,7 @@ sub init_aliases {
      attributes => 
    {
     #SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    SERVER_HOSTNAME => [ "Catalina:type=Engine", "defaultHost"],
+    SERVER_HOSTNAME => [ "jonas:name=jonas,type=ServerProxy", "HostName"],
    },
      operations => 
    {
@@ -57,6 +59,7 @@ sub init_aliases {
      # Alias => [ "mbean", "attribute", "path" ]
     };
 }
+
 
 =head1 LICENSE
 
