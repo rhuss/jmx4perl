@@ -14,7 +14,7 @@ sub order {
     return -1;
 }
 
-sub _init_aliases {
+sub init_aliases {
     return { attributes => 
            {
             MEMORY_HEAP => [ "resolved2_name", "resolved2_attr" ]

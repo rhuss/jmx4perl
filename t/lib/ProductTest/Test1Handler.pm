@@ -13,7 +13,7 @@ sub autodetect { return 1; }
 sub order { 
     return 1;
 }
-sub _init_aliases {
+sub init_aliases {
     return { 
             attributes => 
           {

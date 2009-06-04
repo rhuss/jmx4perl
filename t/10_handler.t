@@ -5,7 +5,7 @@ use warnings;
 use FindBin qw($Bin);
 use lib qq($Bin/lib);
 use JMX::Jmx4Perl::Alias;
-
+use Data::Dumper;
 use Test::More tests => 9;
 
 BEGIN { use_ok("JMX::Jmx4Perl"); }
