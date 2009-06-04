@@ -91,14 +91,12 @@ require Exporter;
           );
 
 
-use constant {
-    READ => "read",
-    WRITE => "write",
-    EXEC_OPERATION => "exec",
-    LIST => "list",
-    REGISTER_NOTIFICATION => "regnotif",
-    REMOVE_NOTIFICATION => "remnotif"
-};
+use constant READ => "read";
+use constant WRITE => "write";
+use constant EXEC_OPERATION => "exec";
+use constant LIST => "list";
+use constant REGISTER_NOTIFICATION => "regnotif";
+use constant REMOVE_NOTIFICATION => "remnotif";
 
 my $TYPES = 
 { map { $_ => 1 } (READ, WRITE, EXEC_OPERATION, LIST, 
