@@ -19,7 +19,7 @@ allows to map common functionality with different naming schemes across
 different application servers. E.g you can access the heap memory usage of your
 application by using the alias C<MEMORY_HEAP_USED> regardless how the specific
 MBean and its attributes are named on the target application server. Specific
-L<JMX::Jmx4Perl::ProductHandler> take care about this mapping. 
+L<JMX::Jmx4Perl::Product> take care about this mapping. 
 
 Alias are normally named hierachically, from the most general to the most
 specific, where the parts are separate by underscore
@@ -100,7 +100,7 @@ my %ALIAS_MAP =
   RUNTIME_VM_VENDOR => ["JVM Vendor", [ "java.lang:type=Runtime", "VmVendor"]],
   RUNTIME_ARGUMENTS => ["Arguments when starting the JVM", [ "java.lang:type=Runtime", "InputArguments"]],
   RUNTIME_UPTIME => ["Total uptime of JVM", [ "java.lang:type=Runtime", "Uptime"]],
-  RUNTIME_STARTIME => ["Time when starting the JVM", [ "java.lang:type=Runtime", "StartTime"]],
+  RUNTIME_STARTTIME => ["Time when starting the JVM", [ "java.lang:type=Runtime", "StartTime"]],
   RUNTIME_CLASSPATH => ["Classpath", [ "java.lang:type=Runtime", "ClassPath"]],
   RUNTIME_BOOTCLASSPATH => ["Bootclasspath", [ "java.lang:type=Runtime", "BootClassPath"]],
   RUNTIME_LIBRARY_PATH => ["The LD_LIBRARY_PATH", [ "java.lang:type=Runtime", "LibraryPath"]],

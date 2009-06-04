@@ -131,13 +131,19 @@ sub request {
     my $url = $self->request_url($jmx_request);
     my $req = HTTP::Request->new(GET => $url);
     my $resp = $ua->request($req);
-    if ($resp->is_error) {
-        return new JMX::Jmx4Perl::Response($resp->code,$jmx_request,undef,$resp->message);
-    }
     my $ret;
     eval {
         $ret = from_json($resp->content());
     };
+    if ($@) {
+        return new JMX::Jmx4Perl::Response->new
+          ( 
+           $resp->code,
+           $jmx_request,
+           $resp->content,
+           "Error while deserializing JSON answer (probably wrong URL)"
+          );
+    }
     croak "Error while deserializing ",$resp->content," : ",$@ if $@;
     if ($resp->is_error && !$ret->{status}) {
         my $error = "Error while fetching $url :\n" . $resp->status_line . "\n";
@@ -165,13 +171,13 @@ sub request_url {
     my $type = $request->get("type");
     $url .= $type . "/";
     $url .= $self->_escape($request->get("mbean")) . "/";
-    if ($type eq READ_ATTRIBUTE || $type eq WRITE_ATTRIBUTE) {
+    if ($type eq READ || $type eq WRITE) {
         $url .= $self->_escape($request->get("attribute"));
         $url .= "/" . $self->_escape($request->get("path")) if $request->get("path");
-        if ($type eq WRITE_ATTRIBUTE) {
+        if ($type eq WRITE) {
             $url .= "/" . $self->_escape($request->get("value"));
         }
-    } elsif ($type eq LIST_MBEANS) {
+    } elsif ($type eq LIST) {
         $url .= $self->_escape($request->get("path")) if $request->get("path");
     }
     return $url;

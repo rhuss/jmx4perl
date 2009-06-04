@@ -9,4 +9,4 @@ use Test::More tests => 2;
 
 BEGIN { use_ok("JMX::Jmx4Perl::Request"); }
 
-ok(READ_ATTRIBUTE eq "read","Import of constants");
+ok(READ eq "read","Import of constants");

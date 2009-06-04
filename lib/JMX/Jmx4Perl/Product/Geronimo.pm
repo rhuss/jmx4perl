@@ -1,61 +1,51 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::ProductHandler::Tomcat;
+package JMX::Jmx4Perl::Product::Geronimo;
 
-use JMX::Jmx4Perl::ProductHandler::BaseHandler;
+use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
-use base "JMX::Jmx4Perl::ProductHandler::BaseHandler";
+use base "JMX::Jmx4Perl::Product::BaseHandler";
 
 use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::ProductHandler::Tomcat - Product handler for accessing Tomcat
-specific namings
+JMX::Jmx4Perl::Product::Geronimo - Handler for Geronimo
 
 =head1 DESCRIPTION
 
-This is the product handler supporting Tomcat, Version 4, 5 and 6. 
+This is the product handler supporting Geronimo, V2
 
 =cut
 
 sub id {
-    return "tomcat";
+    return "geronimo";
 }
 
 sub name { 
-    return "Apache Tomcat";
+    return "Geronimo";
 }
 
-sub autodetect {
-    my $self = shift;
-    return $self->_try_version;
-}
-
-sub version {
-    my $self = shift;
-    $self->_try_version unless defined $self->{version};
-    return $self->{version};
+# Not that popular
+sub order {
+    return 10;
 }
 
 sub _try_version {
     my $self = shift;
-    my $res = $self->try_attribute("version","Catalina:type=Server","serverInfo");
-    $self->{version} =~ s/^.*\/?(.*)$/$1/;
-    return $res;
+    return $self->try_attribute("version","geronimo:j2eeType=J2EEServer,name=geronimo","serverVersion");
 }
 
 sub jsr77 {
     return 1;
 }
 
-sub _init_aliases {
+sub init_aliases {
     return 
     {
      attributes => 
    {
-    SERVER_VERSION => [ "Catalina:type=Server","serverInfo", qr/^.*\/?(.*)$/ ],
     #SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    SERVER_HOSTNAME => [ "Catalina:type=Engine", "defaultHost"],
+    #SERVER_HOSTNAME => [ "Catalina:type=Engine", "defaultHost"],
    },
      operations => 
    {
@@ -64,6 +54,8 @@ sub _init_aliases {
      # Alias => [ "mbean", "attribute", "path" ]
     };
 }
+
+
 
 =head1 LICENSE
 

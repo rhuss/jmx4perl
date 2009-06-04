@@ -15,7 +15,8 @@ is(MEMORY_HEAP->name,"memory:heap","Name");
 
 # Check by name
 for $_ (qw(memory:heap:used MEMORY_HEAP_USED)) {
-    my $heap = JMX::Jmx4Perl::Alias->get_by_name($_);
+    my $heap = JMX::Jmx4Perl::Alias->by_name($_);
     ok(MEMORY_HEAP_USED == $heap,"Equality");
     ok($heap->isa("JMX::Jmx4Perl::Alias::Object"),"isa");
 }
+

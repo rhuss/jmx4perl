@@ -19,6 +19,7 @@
     <javac 	srcdir="src/main/java" 
             destdir="target/classes"
             includes="**/*.java"
+            debug="true"
             target="1.5"
             source="1.5">
       <classpath>

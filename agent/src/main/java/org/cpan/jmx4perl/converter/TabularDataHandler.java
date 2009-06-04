@@ -27,6 +27,7 @@ import org.json.simple.JSONArray;
 
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
+import javax.management.AttributeNotFoundException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -43,7 +44,7 @@ public class TabularDataHandler implements AttributeToJsonConverter.Handler {
     }
 
     public Object handle(AttributeToJsonConverter pConverter, Object pValue,
-                         Stack<String> pExtraArgs) {
+                         Stack<String> pExtraArgs) throws AttributeNotFoundException {
         TabularData td = (TabularData) pValue;
 
         if (!pExtraArgs.isEmpty()) {

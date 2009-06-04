@@ -2,16 +2,286 @@
 
 =head1 NAME
 
-jmx4perl - JMX acccess modules and tools
+jmx4perl - JMX acccess tool
+
+=cut
+
+use Getopt::Long;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use JMX::Jmx4Perl;
+use JMX::Jmx4Perl::Request;
+use JMX::Jmx4Perl::Alias;
+use strict;
+use Carp;
+use Data::Dumper;
+
+my %COMMANDS = 
+  (
+   info => \&command_info,
+   list => \&command_list,
+   attributes => \&command_attributes,
+   read => \&command_read,
+);
+
+my %opts = ();
+my $result = GetOptions(\%opts,
+                        "user|u=s","password|p=s",
+                        "proxy-user=s","proxy-password=s",
+                        "product=s",
+                        "verbose|v!",
+                        "shell|s=s",
+                        "help|h!" => sub { &Getopt::Long::HelpMessage() }
+                       );
+
+my $url;
+my $command;
+my @args;
+if (!@ARGV) {
+    $opts{shell} = 1;
+} elsif(lc $ARGV[0] eq "aliases") {
+    &command_aliases;
+    exit(0);
+} elsif (@ARGV == 1) {
+    $command = "info";
+    $url = $ARGV[0];
+} else {
+    $command = lc shift @ARGV;
+    $url = pop @ARGV || croak "No url given for command '",$command,"'. See --help for assistance";    
+    @args = ( @ARGV );
+}
+
+if ($opts{shell}) {
+    print "Interactive shell mode not supported yet\n";
+    exit 1;
+} else {
+    my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
+    my @jmx_args = ("url" => $url);
+    for my $arg qw(product user password proxy-user proxy-password) {
+        my $cfg = $arg;
+        $cfg =~ s/\-/_/g;
+        push @jmx_args,( $cfg => $opts{$arg}) if $opts{$arg};
+    }
+    my $jmx4perl = new JMX::Jmx4Perl(@jmx_args);
+    &{$sub}($jmx4perl,@args);
+}
+
+=head1 SYNOPSIS
+
+  jmx4perl
+
+  jmx4perl .... --shell http://server:8080/j4p-agent
+
+  jmx4perl .... ["info"] <agent-url>
+
+  jmx4perl .... list <agent-url>
+
+  jmx4perl .... attributes <agent-url>
+
+  jmx4perl .... read <mbean-name> <attribute-name> [path] <agent-url>
+
+  jmx4perl .... aliases
+
+  jmx4perl --help
+
+  jmx4perl --version
+
+Options:
+
+   --product <id>          Product to use for aliasing (ommits autodetection)
+   --user <user>           Credential used for authentication
+   --password <pwd>  
+   --proxy-user <user>     Authentication information for a proxy
+   --proxy-password <pwd>
+   --verbose               Print out more information
 
 =head1 DESCRIPTION
 
-I<For the time being, this is only a collection of ideas, which still have to 
-come to live. Expect this quite soon, but, as always, no promises ;-)>
+B<jmx4perl> is a command line utility for easily accessing an instrumented
+application server. Before you can use this tool, you need to deploy a small
+agent application. In the following C<agent-url> is the URL for accessing this
+agent. See L<JMX::Jmx4Perl::Manual> for details. 
 
-This is command line tool provides an easy to use shell for accessing remote
-JMX MBeans. It a wrapper around L<JMX::Jmx4Perl>, which is the programmatic
-entry point for jmx4perl.
+You can use B<jmx4perl> in two modes: Directly by providing an C<agent-url> or
+enter an interactive mode if you ommit the agent-url or provide the the command
+line options C<--shell> (I<to be done>). 
+
+B<jmx4perl> servers also an example of how to use the L<JMX::Jmx4Perl> package.
+See its documentation for more details on how to embed JMX access into your
+programs. 
+
+=cut
+
+# =================================================================================================== 
+# Non-interactive commands:
+
+=head1 NON-INTERACTIVE COMMANDS
+
+=head2 info
+
+If you use the non-interactive mode without any command or with C<info> as
+command, you get a description about the server, including the application
+server's product name and version. This works by autodetection and only for the
+supported application servers (see L<JMX::Jmx4Perl::Manual> for a list of
+supported products). The only argument required is the url which points to the
+deployed jmx4perl agent.
+
+With C<--verbose> C<info> prints the system properties and runtime arguments as
+well. 
+
+=cut 
+
+sub command_info {
+    my $jmx = shift;
+    print $jmx->info($opts{verbose});
+}
+
+=head2 list
+
+List meta data of all registered mbeans on the target application server. This
+includes attributes and operations along whith their descriptions and
+parameters (as far as they are provided by mbean's info).
+
+You can provide an inner path as an additional argument as well. See
+L<JMX::Jmx4Perl::Request> for an explanation about inner pathes (in short, it's
+some sort of XPath expression which selects only a subset of all MBeans and
+their values). See L<JMX::Jmx4Perl>, method "list()" for a more rigorous
+documentation abouting listing of MBeans.
+
+=cut
+
+sub command_list {
+    my ($jmx,$path) = @_;
+
+    my $req = JMX::Jmx4Perl::Request->new(LIST,$path);
+    my $resp = $jmx->request($req);
+    &_check_for_error($resp);
+
+    # Show list of beans
+    print $jmx->formatted_list($resp);       
+}
+
+=head2 attributes 
+
+Show all attributes of all registerd mbeans and their values. For simple scalar
+values they are shown on one line, for more complex data structures,
+L<Data::Dumper> is used. Please note, that it is normal, that for certain
+attributes an error is returned (i.e. when this attribute is not implemented on
+the server side e.g. or an MXMbean). To see the full server side stacktrace for
+this errors, use C<--verbose> as command line option
+
+=cut
+
+sub command_attributes {
+    my $jmx = shift;
+    my $data = $jmx->list();
+
+    for my $d (keys %$data) {
+        for my $p (keys %{$data->{$d}}) {
+            my $attrs = $data->{$d}->{$p}->{'attr'};
+            if ($attrs) {
+                for my $a (keys %{$attrs}) {
+                    print "$d:$p -- $a";
+                    my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a);
+                    my $response = $jmx->request($request);
+                    if ($response->is_error) {
+                        print "\nERROR: ",$response->error_text,"\n";
+                        if ($opts{verbose} && $response->stacktrace) {
+                            print $response->stactrace;
+                        }
+                    } else {
+                        my $val = $response->value;
+                        if (ref($val)) {
+                            print "\n   ",Dumper($val);
+                        } else {
+                            print " = ",$val,"\n";
+                        }
+                    }
+                }
+            }
+        }
+    }   
+}
+
+=head2 read 
+
+Read an JMX attribute's value and print it out. The required arguments are the
+MBean's name and the attribute's name. Additionally, you can provide a I<path>
+within the return value to pick a sub-value. See L<JMX::Jmx4Perl::Request> for a
+detailed explanation of pathes.
+
+For a single value, the value itself is printed (without additional newline),
+for a more complex data structure, L<Data::Dumper> is used. 
+
+=cut 
+
+sub command_read {
+    my $resp = &_get_attribute(@_);
+    
+    &_check_for_error($resp);
+    
+    my $val = $resp->value;
+    if (ref($val)) {
+        print Dumper($val);
+    } else {
+        print $val;
+    }
+}
+
+=head2 aliases 
+
+Print out all known aliases. See L<JMX::Jmx4Perl::Manual> for a discussion
+about aliases. In short, you can use an alias as a shortcut for an MBean's
+and attribute's name.
+
+=cut
+
+sub command_aliases {
+    &JMX::Jmx4Perl::Alias::help;
+}
+
+# =============================================================================
+
+sub _check_for_error { 
+    my $resp = shift;
+    if ($resp->is_error) {
+        print STDERR "ERROR: ",$resp->error_text,"\n";
+        if ($resp->stacktrace && $opts{verbose}) {
+            print STDERR "Server Stacktrace:\n";
+            print STDERR $resp->stacktrace;
+        }
+        exit 1;
+    }
+}
+
+sub _get_attribute {
+    my ($jmx,$mbean,$attribute,$path) = @_;
+    croak "No MBean name or alias given" unless $mbean;
+    # Try to resolve the MBean name as an alias. If this works, we are using
+    # this alias.
+    my $alias = JMX::Jmx4Perl::Alias->by_name($mbean);
+    my $req;
+    if ($alias) {
+        my $path = $attribute;  # path comes after alias
+        my ($o,$a,$p) = $jmx->resolve_attribute_alias($alias);
+        die "Alias ",$alias->{alias}," is not available for product ",$jmx->product,"\n" unless $o;
+        if ($path) {
+            $p = $p ? $p . "/" . $path : $path;
+        }
+        $req = new JMX::Jmx4Perl::Request(READ,$o,$a,$p);
+    } else {
+        die "ERROR: Invalid format for MBean name $mbean (Did you misspelled an alias name ?)\n" if 
+          ($mbean !~ /^[^:]+:[^:]+$/ or $mbean !~ /:([^=])=/);
+        die "ERROR No attribute for MBean $mbean given\n" unless $attribute;
+        $req = new JMX::Jmx4Perl::Request(READ,$mbean,$attribute,$path);
+    }
+    return $jmx->request($req);
+}
+
+
+=head1 SHELL MODE
+
+I<Some ideas for the interactive mode, which needs still to be implemented: >
 
 =over 
 
@@ -21,7 +291,7 @@ Readline support
 
 =item *
 
-TAB completion of MBean names, attributes and operations
+.TAB completion of MBean names, attributes and operations
 
 =item * 
 
@@ -38,6 +308,9 @@ Excecution of MBean operations
 =back
 
 =head1 SEE ALSO
+
+L<JMX::Jmx4Perl> - Entry point for programmatic JMX access which is used by
+this tool.
 
 L<check_jmx4perl> - a production ready Nagios check using L<JMX::Jmx4Perl>
 

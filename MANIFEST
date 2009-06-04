@@ -23,10 +23,13 @@ lib/JMX/Jmx4Perl/Agent/UserAgent.pm
 lib/JMX/Jmx4Perl/Alias.pm
 lib/JMX/Jmx4Perl/Alias/Object.pm
 lib/JMX/Jmx4Perl/Manual.pod
-lib/JMX/Jmx4Perl/ProductHandler/BaseHandler.pm
-lib/JMX/Jmx4Perl/ProductHandler/JBoss.pm
-lib/JMX/Jmx4Perl/ProductHandler/Jetty.pm
-lib/JMX/Jmx4Perl/ProductHandler/Tomcat.pm
+lib/JMX/Jmx4Perl/Product/BaseHandler.pm
+lib/JMX/Jmx4Perl/Product/Geronimo.pm
+lib/JMX/Jmx4Perl/Product/Glassfish2.pm
+lib/JMX/Jmx4Perl/Product/Glassfish3.pm
+lib/JMX/Jmx4Perl/Product/JBoss.pm
+lib/JMX/Jmx4Perl/Product/Jetty.pm
+lib/JMX/Jmx4Perl/Product/Tomcat.pm
 lib/JMX/Jmx4Perl/Request.pm
 lib/JMX/Jmx4Perl/Response.pm
 LICENSE
@@ -38,6 +41,6 @@ scripts/jmx4perl
 t/10_handler.t
 t/20_alias.t
 t/30_request.t
-t/lib/ProductHandlerTest/Test1Handler.pm
-t/lib/ProductHandlerTest/Test2Handler.pm
+t/lib/ProductTest/Test1Handler.pm
+t/lib/ProductTest/Test2Handler.pm
 TODO

@@ -1,3 +1,14 @@
+2009-06-02  Roland Huss  <roland@consol.de>
+
+	* scripts/jmx4perl (_get_attribute): introduced jmx4perl command
+	line utility
+
+	* lib/JMX/Jmx4Perl/Product/BaseHandler.pm
+	(attribute_alias): Moved ProductHandler to Product
+	
+	* lib/JMX/Jmx4Perl/Request.pm: Renamed READ_ATTRIBUTE to READ
+	(same for write)
+
 2009-05-28  Roland Huss  <roland@consol.de>
 
 	* lib/JMX/Jmx4Perl/ProductHandler/JBoss.pm: Added JBoss product

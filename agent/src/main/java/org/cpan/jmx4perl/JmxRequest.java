@@ -50,7 +50,7 @@ import java.util.*;
  * The following types are recognized so far, along with there parameters:
  *
  * <ul>
- *   <li>Type: <b>read</b> ({@link Type#READ_ATTRIBUTE}<br/>
+ *   <li>Type: <b>read</b> ({@link Type#READ}<br/>
  *       Parameters: <code>param1<code> = MBean name, <code>param2</code> = Attribute name,
  *       <code>param3 ... paramN</code> = Inner Path.
  *       The inner path is optional and specifies a path into complex MBean attributes
@@ -58,7 +58,7 @@ import java.util.*;
  *       <code>paramX</code> should specify
  *       a numeric index, in maps/composite data <code>paramX</code> is a used as a string
  *       key.</li>
- *   <li>Type: <b>write</b> ({@link Type#WRITE_ATTRIBUTE}<br/>
+ *   <li>Type: <b>write</b> ({@link Type#WRITE}<br/>
  *       Parameters: <code>param1</code> = MBean name, <code>param2</code> = Attribute name,
  *       <code>param3</code> = value, <code>param4 ... paramN</code> = Inner Path.
  *       The value must be URL encoded (with UTF-8 as charset), and must be convertable into
@@ -79,11 +79,11 @@ public class JmxRequest extends JSONObject {
      */
     enum Type {
         // Supported:
-        READ_ATTRIBUTE("read"),
-        LIST_MBEANS("list"),
+        READ("read"),
+        LIST("list"),
 
         // Unsupported:
-        WRITE_ATTRIBUTE("write"),
+        WRITE("write"),
         EXEC_OPERATION("exec"),
         REGISTER_NOTIFICATION("regnotif"),
         REMOVE_NOTIFICATION("remnotif");
@@ -118,12 +118,12 @@ public class JmxRequest extends JSONObject {
 
                 type = extractType(elements.pop());
 
-                if (type != Type.LIST_MBEANS) {
+                if (type != Type.LIST) {
                     objectNameS = elements.pop();
                     objectName = new ObjectName(objectNameS);
-                    if (type == Type.READ_ATTRIBUTE || type == Type.WRITE_ATTRIBUTE) {
+                    if (type == Type.READ || type == Type.WRITE) {
                         attributeName = elements.pop();
-                        if (type == Type.WRITE_ATTRIBUTE) {
+                        if (type == Type.WRITE) {
                             value = URLDecoder.decode(elements.pop(),"UTF-8");
                         }
                     } else if (type == Type.EXEC_OPERATION) {
@@ -197,7 +197,7 @@ public class JmxRequest extends JSONObject {
 
     private void setupJSON() {
         put("type",type.getValue());
-        if (type == Type.READ_ATTRIBUTE || type == Type.WRITE_ATTRIBUTE) {
+        if (type == Type.READ || type == Type.WRITE) {
             put("attribute",getAttributeName());
         }
         if (extraArgs.size() > 0) {
@@ -211,7 +211,7 @@ public class JmxRequest extends JSONObject {
             }
             put("path",buf.toString());
         }
-        if (type != Type.LIST_MBEANS) {
+        if (type != Type.LIST) {
             put("mbean",objectName.getCanonicalName());
         }
     }
@@ -247,9 +247,9 @@ public class JmxRequest extends JSONObject {
     @Override
     public String toString() {
         StringBuffer ret = new StringBuffer("JmxRequest[");
-        if (type == Type.READ_ATTRIBUTE) {
+        if (type == Type.READ) {
             ret.append("READ mbean=").append(objectNameS).append(", attribute=").append(attributeName);
-        } else if (type == Type.WRITE_ATTRIBUTE) {
+        } else if (type == Type.WRITE) {
             ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(attributeName)
                     .append(", value=").append(value);
         } else if (type == Type.EXEC_OPERATION) {

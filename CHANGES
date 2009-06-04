@@ -1,6 +1,14 @@
 0.15
   - Aliasing
   - Autodetection 
+  - Command line tool "jmx4perl"
+    * reading of attributes
+    * listing of all availabel attributes and operations. 
+    * listing of all attribute values
+    * print server info
+    * print all available aliases
+  - Renamed READ_ATTRIBUTE to READ (same for WRITE) 
+    in JMX::Jmx4Perl::Request
   - Bug Fixes:
     * Correct URL encoding for request URL
     * Slash '/' needs to be custom encoded, since URI encoding doesn't 

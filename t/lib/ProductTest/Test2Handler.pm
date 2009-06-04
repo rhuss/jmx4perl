@@ -1,13 +1,17 @@
-package ProductHandlerTest::Test2Handler;
+package ProductTest::Test2Handler;
 
-use JMX::Jmx4Perl::ProductHandler::BaseHandler;
+use JMX::Jmx4Perl::Product::BaseHandler;
 use vars qw(@ISA);
-@ISA = qw(JMX::Jmx4Perl::ProductHandler::BaseHandler);
+@ISA = qw(JMX::Jmx4Perl::Product::BaseHandler);
 
 sub id { return "Test2" };
 
 sub autodetect {
     return 0;
+}
+
+sub order { 
+    return -1;
 }
 
 sub _init_aliases {

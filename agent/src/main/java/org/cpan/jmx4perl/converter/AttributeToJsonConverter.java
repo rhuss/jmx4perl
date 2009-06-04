@@ -26,6 +26,7 @@ package org.cpan.jmx4perl.converter;
 import org.json.simple.JSONObject;
 import org.cpan.jmx4perl.JmxRequest;
 
+import javax.management.AttributeNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -59,7 +60,7 @@ public class AttributeToJsonConverter {
         arrayHandler = new ArrayHandler();
     }
 
-    public JSONObject convertToJson(Object pValue, JmxRequest pRequest) {
+    public JSONObject convertToJson(Object pValue, JmxRequest pRequest) throws AttributeNotFoundException {
         Stack<String> extraStack = new Stack<String>();
         List<String> extraArgs = pRequest.getExtraArgs();
         if (extraArgs != null) {
@@ -76,7 +77,7 @@ public class AttributeToJsonConverter {
         return jsonObject;
     }
 
-    Object prepareForJson(Object pValue,Stack<String> pExtraArgs) {
+    Object prepareForJson(Object pValue,Stack<String> pExtraArgs) throws AttributeNotFoundException {
         if (pValue == null) {
             return null;
         }
@@ -101,6 +102,6 @@ public class AttributeToJsonConverter {
 
     public interface Handler {
         Class getType();
-        Object handle(AttributeToJsonConverter pConverter,Object pValue,Stack<String> pExtraArgs);
+        Object handle(AttributeToJsonConverter pConverter,Object pValue,Stack<String> pExtraArgs) throws AttributeNotFoundException;
     }
 }

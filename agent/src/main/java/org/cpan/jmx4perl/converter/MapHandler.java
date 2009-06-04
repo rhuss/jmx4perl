@@ -25,6 +25,7 @@ package org.cpan.jmx4perl.converter;
 
 import org.json.simple.JSONObject;
 
+import javax.management.AttributeNotFoundException;
 import java.util.*;
 import java.net.URLDecoder;
 import java.io.UnsupportedEncodingException;
@@ -40,7 +41,7 @@ public class MapHandler implements AttributeToJsonConverter.Handler {
     }
 
     public Object handle(AttributeToJsonConverter pConverter, Object pValue,
-                         Stack<String> pExtraArgs) {
+                         Stack<String> pExtraArgs) throws AttributeNotFoundException {
         Map<Object,Object> map = (Map<Object,Object>) pValue;
 
         if (!pExtraArgs.isEmpty()) {
@@ -55,15 +56,17 @@ public class MapHandler implements AttributeToJsonConverter.Handler {
                         " is unknown for map " + trimString(pValue.toString()));
             } catch (UnsupportedEncodingException exp) {
                 throw new RuntimeException("Internal: Encoding UTF-8 not supported");
+            } catch (AttributeNotFoundException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
-        } else {
-            JSONObject ret = new JSONObject();
-            for(Map.Entry entry : map.entrySet()) {
-                ret.put(entry.getKey(),
-                        pConverter.prepareForJson(entry.getValue(),pExtraArgs));
-            }
-            return ret;
         }
+
+        JSONObject ret = new JSONObject();
+        for(Map.Entry entry : map.entrySet()) {
+            ret.put(entry.getKey(),
+                    pConverter.prepareForJson(entry.getValue(),pExtraArgs));
+        }
+        return ret;
     }
 
     private String trimString(String pString) {

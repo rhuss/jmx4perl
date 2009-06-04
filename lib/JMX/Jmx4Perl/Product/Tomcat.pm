@@ -1,62 +1,65 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::ProductHandler::Glassfish2;
+package JMX::Jmx4Perl::Product::Tomcat;
 
-use JMX::Jmx4Perl::ProductHandler::BaseHandler;
+use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
-use base "JMX::Jmx4Perl::ProductHandler::BaseHandler";
+use base "JMX::Jmx4Perl::Product::BaseHandler";
 
 use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::ProductHandler::Glassfish - Product handler for accessing
-Glassfish specific namings
+JMX::Jmx4Perl::Product::Tomcat - Handler for Apache Tomcat
 
 =head1 DESCRIPTION
 
-This handler supports glassfish version 2.
+This is the product handler supporting Tomcat, Version 4, 5 and 6. 
 
 =cut
 
 sub id {
-    return "glassfish2";
+    return "tomcat";
 }
 
-sub name {
-    return "Glassfish";
+sub name { 
+    return "Apache Tomcat";
 }
 
-sub autodetect {
+# Let it run after JBoss
+sub order {
+    return -1;
+}
+
+sub _try_version {
     my $self = shift;
-    return $self->try_attribute("version","com.sun.appserv:category=runtime,j2eeType=J2EEDomain,name=com.sun.appserv","applicationServerFullVersion");
-}
+    # JBoss also has the tomcat tag, so we need to check this here as well
+    my $is_jboss = $self->try_attribute("jboss_version","jboss.system:type=Server","VersionNumber");
+    return undef if $is_jboss;
 
-sub version {
-    my $self = shift;
-    $self->try_attribute("version","com.sun.appserv:category=runtime,j2eeType=J2EEDomain,name=com.sun.appserv","applicationServerFullVersion")
-      unless defined $self->{version};
-    return $self->{version};
+    my $res = $self->try_attribute("version","Catalina:type=Server","serverInfo");
+    $self->{version} =~ s/^.*?\/?(.*)$/$1/;
+    return $res;
 }
 
 sub jsr77 {
     return 1;
 }
 
-sub _init_aliases {
+sub init_aliases {
     return 
     {
      attributes => 
    {
-    SERVER_VERSION => [ "com.sun.appserv:category=runtime,j2eeType=J2EEDomain,name=com.sun.appserv","applicationServerFullVersion" ],
+    #SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
+    SERVER_HOSTNAME => [ "Catalina:type=Engine", "defaultHost"],
    },
      operations => 
    {
-    THREAD_DUMP => [ "com.sun.appserv:category=monitor,server=server,type=JVMInformation", "getThreadDump"]
+    #THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
    }
      # Alias => [ "mbean", "attribute", "path" ]
     };
 }
-
 
 =head1 LICENSE
 

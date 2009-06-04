@@ -25,6 +25,7 @@ package org.cpan.jmx4perl.converter;
 
 import org.json.simple.JSONArray;
 
+import javax.management.AttributeNotFoundException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -40,7 +41,7 @@ public class CollectionHandler implements AttributeToJsonConverter.Handler {
         return Collection.class;
     }
 
-    public Object handle(AttributeToJsonConverter pConverter, Object pValue, Stack<String> pExtraArgs) {
+    public Object handle(AttributeToJsonConverter pConverter, Object pValue, Stack<String> pExtraArgs) throws AttributeNotFoundException {
         Collection list = (Collection) pValue;
         List ret = null;
         Iterator it = list.iterator();

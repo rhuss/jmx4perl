@@ -1,71 +1,59 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::ProductHandler::Glassfish3;
+package JMX::Jmx4Perl::Product::JBoss;
 
-use JMX::Jmx4Perl::ProductHandler::BaseHandler;
+use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
-use base "JMX::Jmx4Perl::ProductHandler::BaseHandler";
+use base "JMX::Jmx4Perl::Product::BaseHandler";
 
 use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::ProductHandler::Glassfish - Product handler for accessing
-Glassfish specific namings
+JMX::Jmx4Perl::Product::JBoss - Handler for JBoss
 
 =head1 DESCRIPTION
 
-This handler supports glassfish version 3.
+This is the product handler support JBoss 4.x and JBoss 5.x
 
 =cut
 
 sub id {
-    return "glassfish3";
+    return "jboss";
 }
 
 sub name {
-    return "Glassfish";
+    return "JBoss";
 }
 
-sub autodetect {
-    return shift->_try_version;
+sub order { 
+    return -2;
 }
-
-sub version {
-    my $self = shift;
-    $self->_try_version
-      unless defined $self->{version};
-    return $self->{version};
-}
-
 
 sub _try_version {
-    return shift->try_attribute
-      (
-       "version",
-       "amx:j2eeType=X-DomainRoot,name=domain1",
-       "ApplicationServerFullVersion"
-      );
+    my $self = shift;
+    return $self->try_attribute("version","jboss.system:type=Server","VersionNumber");
 }
 
 sub jsr77 {
     return 1;
 }
 
-sub _init_aliases {
+sub init_aliases {
     return 
     {
      attributes => 
    {
-    SERVER_VERSION => ["amx:j2eeType=X-DomainRoot,name=domain1","ApplicationServerFullVersion"],
+    SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
+    SERVER_HOSTNAME => [ "jboss.system:type=ServerInfo", "HostName"],
    },
      operations => 
    {
-    # No method known yet
-    THREAD_DUMP => [ "com.sun.appserv:category=monitor,server=server,type=JVMInformation", undef ]
+    THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
    }
      # Alias => [ "mbean", "attribute", "path" ]
     };
 }
+
 
 =head1 LICENSE
 

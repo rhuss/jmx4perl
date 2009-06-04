@@ -1,16 +1,15 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::ProductHandler::Jetty;
+package JMX::Jmx4Perl::Product::Jetty;
 
-use JMX::Jmx4Perl::ProductHandler::BaseHandler;
+use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
-use base "JMX::Jmx4Perl::ProductHandler::BaseHandler";
+use base "JMX::Jmx4Perl::Product::BaseHandler";
 
 use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::ProductHandler::Jetty - Product handler for accessing jetty
-specific namings
+JMX::Jmx4Perl::Product::Jetty - Handler for Jetty
 
 =head1 DESCRIPTION
 
@@ -29,18 +28,7 @@ sub name {
     return "Jetty";
 }
 
-sub autodetect {
-    my $self = shift;
-    return $self->try_version;
-}
-
-sub version {
-    my $self = shift;
-    $self->try_version unless defined $self->{version};
-    return $self->{version};
-}
-
-sub try_version {
+sub _try_version {
     my $self = shift;
     my $ret = $self->try_attribute("version","org.mortbay:jetty=default","version");
     $self->{version} =~ s/Jetty\/([^\s]+).*/$1/;
@@ -51,12 +39,11 @@ sub jsr77 {
     return 0;
 }
 
-sub _init_aliases {
+sub init_aliases {
     return 
     {
      attributes => 
    {
-    SERVER_VERSION => [ "org.mortbay:jetty=default","version",qr/Jetty\/([^\s]+)/ ],
    },
      operations => 
    {

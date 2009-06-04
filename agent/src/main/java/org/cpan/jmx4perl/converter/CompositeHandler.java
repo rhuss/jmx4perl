@@ -26,6 +26,8 @@ package org.cpan.jmx4perl.converter;
 import org.json.simple.JSONObject;
 
 import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.InvalidKeyException;
+import javax.management.AttributeNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Stack;
@@ -42,15 +44,18 @@ public class CompositeHandler implements AttributeToJsonConverter.Handler {
     }
 
     public Object handle(AttributeToJsonConverter pConverter, Object pValue,
-                         Stack<String> pExtraArgs) {
+                         Stack<String> pExtraArgs) throws AttributeNotFoundException {
         CompositeData cd = (CompositeData) pValue;
 
         if (!pExtraArgs.isEmpty()) {
+            String decodedKey = "";
             try {
-                String decodedKey = URLDecoder.decode(pExtraArgs.pop(), "UTF-8");
+                decodedKey = URLDecoder.decode(pExtraArgs.pop(), "UTF-8");
                 return pConverter.prepareForJson(cd.get(decodedKey),pExtraArgs);
             } catch (UnsupportedEncodingException exp) {
                 throw new RuntimeException("Internal: Encoding UTF-8 not supported");
+            }  catch (InvalidKeyException exp) {
+                throw new AttributeNotFoundException("Invalid path '" + decodedKey + "'");
             }
         } else {
             JSONObject ret = new JSONObject();

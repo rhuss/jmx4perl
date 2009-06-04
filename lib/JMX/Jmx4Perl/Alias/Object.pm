@@ -26,7 +26,7 @@ short description of the alias
 =item $alias->default()
 
 default values for an alias, which can be overwritten by a specific
-L<JMX::Jmx4Perl::ProductHandler>. This an arrayref with two values: The MBean's
+L<JMX::Jmx4Perl::Product>. This an arrayref with two values: The MBean's
 name and the attribute or operation name.
 
 =item $alias->type()

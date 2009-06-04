@@ -34,6 +34,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -41,6 +43,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.security.InvalidKeyException;
 
 /**
  * Agent servlet which connects to a local JMX MBeanServer for
@@ -51,7 +54,7 @@ import java.util.*;
  * request. See {@link JmxRequest} for details about the URL format.
  * <p>
  * For now, only the request type
- * {@link org.cpan.jmx4perl.JmxRequest.Type#READ_ATTRIBUTE} for reading MBean
+ * {@link org.cpan.jmx4perl.JmxRequest.Type#READ} for reading MBean
  * attributes is supported.
  * <p>
  * For the transfer via JSON only certain types are supported. Among basic types
@@ -118,12 +121,12 @@ public class AgentServlet extends HttpServlet {
             }
             Object retValue;
             JmxRequest.Type type = jmxReq.getType();
-            if (type == JmxRequest.Type.READ_ATTRIBUTE) {
+            if (type == JmxRequest.Type.READ) {
                 retValue = getMBeanAttribute(jmxReq);
                 if (debug) {
-                    log("Return: " + retValue.toString());
+                    log("Return: " + (retValue != null ?  retValue.toString() : "(null)"));
                 }
-            } else if (type == JmxRequest.Type.LIST_MBEANS) {
+            } else if (type == JmxRequest.Type.LIST) {
                 retValue = listMBeans();
             } else {
                 throw new UnsupportedOperationException("Unsupported operation '" + jmxReq.getType() + "'");
@@ -157,8 +160,7 @@ public class AgentServlet extends HttpServlet {
                 if (debug) {
                     log("Error " + code,throwable);
                 }
-            }
-            if (debug) {
+            } else if (debug) {
                 log("Success");
             }
             sendResponse(pResp,code,json.toJSONString());
@@ -312,23 +314,13 @@ public class AgentServlet extends HttpServlet {
         // Check for JBoss MBeanServer via its utility class
         Set<MBeanServer> servers = new LinkedHashSet<MBeanServer>();
 
-        try {
-            Class locatorClass = Class.forName("org.jboss.mx.util.MBeanServerLocator");
-            Method method = locatorClass.getMethod("locateJBoss");
-            servers.add((MBeanServer) method.invoke(null));
-        }
-        catch (ClassNotFoundException e) { /* Ok, its *not* JBoss, continue with search ... */ }
-        catch (NoSuchMethodException e) { }
-        catch (IllegalAccessException e) { }
-        catch (InvocationTargetException e) { }
-
-        List<MBeanServer> mBeanServers = MBeanServerFactory.findMBeanServer(null);
-        if (mBeanServers != null) {
-            servers.addAll(mBeanServers);
-        }
-
+        // =========================================================
+        addJBossMBeanServer(servers);
+        addFromMBeanServerFactory(servers);
+        addFromJndiContext(servers);
         servers.add(ManagementFactory.getPlatformMBeanServer());
-		if (servers.size() == 0) {
+
+        if (servers.size() == 0) {
 			throw new IllegalStateException("Unable to locate any MBeanServer instance");
 		}
         if (debug) {
@@ -342,6 +334,40 @@ public class AgentServlet extends HttpServlet {
         }
 		return servers;
 	}
+
+    private void addFromJndiContext(Set<MBeanServer> servers) {
+        // Weblogic stores the MBeanServer in a JNDI context
+        InitialContext ctx;
+        try {
+            ctx = new InitialContext();
+            MBeanServer server = (MBeanServer) ctx.lookup("java:comp/env/jmx/runtime");
+            if (server != null) {
+                servers.add(server);
+            }
+        } catch (NamingException e) { /* can happen on non-Weblogic platforms */ }
+    }
+
+    // Special handling for JBoss
+    private void addJBossMBeanServer(Set<MBeanServer> servers) {
+        try {
+            Class locatorClass = Class.forName("org.jboss.mx.util.MBeanServerLocator");
+            Method method = locatorClass.getMethod("locateJBoss");
+            servers.add((MBeanServer) method.invoke(null));
+        }
+        catch (ClassNotFoundException e) { /* Ok, its *not* JBoss, continue with search ... */ }
+        catch (NoSuchMethodException e) { }
+        catch (IllegalAccessException e) { }
+        catch (InvocationTargetException e) { }
+    }
+
+    // Lookup from MBeanServerFactory
+    private void addFromMBeanServerFactory(Set<MBeanServer> servers) {
+        List<MBeanServer> beanServers = MBeanServerFactory.findMBeanServer(null);
+        if (beanServers != null) {
+            servers.addAll(beanServers);
+        }
+    }
+
 
     private void wokaroundJBossBug(JmxRequest pJmxReq) throws ReflectionException, InstanceNotFoundException {
         if (isJBoss) {

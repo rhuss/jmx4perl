@@ -1,68 +1,53 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::ProductHandler::Geronimo;
+package JMX::Jmx4Perl::Product::Glassfish2;
 
-use JMX::Jmx4Perl::ProductHandler::BaseHandler;
+use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
-use base "JMX::Jmx4Perl::ProductHandler::BaseHandler";
+use base "JMX::Jmx4Perl::Product::BaseHandler";
 
 use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::ProductHandler::Geronimo - Product handler for accessing Geronimo
-specific namings
+JMX::Jmx4Perl::Product::Glassfish2 - Handler for Glassfish, Version 2
 
 =head1 DESCRIPTION
 
-This is the product handler supporting Geronimo, V2
+This handler supports glassfish version 2.
 
 =cut
 
 sub id {
-    return "geronimo";
+    return "glassfish2";
 }
 
-sub name { 
-    return "Geronimo";
-}
-
-sub autodetect {
-    my $self = shift;
-    return $self->_try_version;
-}
-
-sub version {
-    my $self = shift;
-    $self->_try_version unless defined $self->{version};
-    return $self->{version};
+sub name {
+    return "Glassfish";
 }
 
 sub _try_version {
     my $self = shift;
-    return $self->try_attribute("version","geronimo:j2eeType=J2EEServer,name=geronimo","serverVersion");
+    return $self->try_attribute("version","com.sun.appserv:category=runtime,j2eeType=J2EEDomain,name=com.sun.appserv",
+                                "applicationServerFullVersion");
 }
 
 sub jsr77 {
     return 1;
 }
 
-sub _init_aliases {
+sub init_aliases {
     return 
     {
      attributes => 
    {
-    SERVER_VERSION => [ "geronimo:j2eeType=J2EEServer,name=geronimo","serverVersion" ],
-    #SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    #SERVER_HOSTNAME => [ "Catalina:type=Engine", "defaultHost"],
    },
      operations => 
    {
-    #THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
+    THREAD_DUMP => [ "com.sun.appserv:category=monitor,server=server,type=JVMInformation", "getThreadDump"]
    }
      # Alias => [ "mbean", "attribute", "path" ]
     };
 }
-
 
 
 =head1 LICENSE

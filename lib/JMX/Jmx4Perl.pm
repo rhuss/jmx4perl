@@ -25,7 +25,7 @@ Advanced:
    
    my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p-agent",
                                product => "jboss");
-   my $request = new JMX::Jmx4Perl::Request(type => READ_ATTRIBUTE,
+   my $request = new JMX::Jmx4Perl::Request(type => READ,
                                             mbean => "java.lang:type=Memory",
                                             attribute => "HeapMemoryUsage",
                                             path => "used");
@@ -101,11 +101,11 @@ package JMX::Jmx4Perl;
 use Carp;
 use JMX::Jmx4Perl::Request;
 use strict;
-use vars qw($VERSION $HANDLER_BASE_PACKAGE);
+use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.15_4";
+$VERSION = "0.15_5";
 
 my $REGISTRY = {
                 # Agent based
@@ -119,6 +119,8 @@ my %PRODUCT_HANDLER;
 sub _register_handlers { 
     my $handler_package = shift;
     %PRODUCT_HANDLER = ();
+    
+    my @id2order = ();
     for my $handler (findsubmod $handler_package) {
         next unless $handler;
         my $handler_file = $handler;
@@ -128,11 +130,18 @@ sub _register_handlers {
         my $id = eval "${handler}::id()";
         croak "No id() method on $handler: $@" if $@;
         $PRODUCT_HANDLER{lc $id} = $handler;
-    }    
+        push @id2order, [ lc $id, $handler->order() ];
+    }
+    # Ordering Schema according to $handler->order():
+    # -10,-5,-3,0,undef,undef,undef,1,8,9,1000
+    my @high = map { $_->[0] } sort { $a->[1] <=> $b->[1] } grep { defined($_->[1]) && $_->[1] <= 0 } @id2order;
+    my @med  = map { $_->[0] } grep { not defined($_->[1]) } @id2order;
+    my @low  = map { $_->[0] } sort { $a->[1] <=> $b->[1] } grep { defined($_->[1]) && $_->[1] > 0 } @id2order;
+    @PRODUCT_HANDLER_ORDERING = (@high,@med,@low);
 }
 
 BEGIN {
-    &_register_handlers("JMX::Jmx4Perl::ProductHandler");
+    &_register_handlers("JMX::Jmx4Perl::Product");
 }
 
 
@@ -225,6 +234,10 @@ sub get_attribute {
     if (ref($_[0]) eq "HASH") {
         if ($_[0]->{alias}) {
             ($object,$attribute,$alias_path) = $self->resolve_attribute_alias($_[0]->{alias});
+            if (ref($object) eq "CODE") {
+                # Let the handler do it
+                return $self->request_attribute_by_handler($object);
+            }
             if ($alias_path) {
                 $path = $_[0]->{path} ? $_[0]->{path} . "/" . $alias_path : $alias_path;
             } else { 
@@ -248,7 +261,11 @@ sub get_attribute {
         if (@_ == 1) {
             # A single argument can only be used as an alias
             ($object,$attribute,$path) = 
-              $self->resolve_attribute_alias(UNIVERSAL::isa($_[0],"JMX::Jmx4Perl::Agent::Object") ? $_[0]->{alias} : $_[0]);
+              $self->resolve_attribute_alias($_[0]);
+            if (ref($object) eq "CODE") {
+                # Let the handler do it
+                return $self->request_attribute_by_handler($object);
+            }
         } else {
             ($object,$attribute,$path) = @_;
         }
@@ -256,7 +273,7 @@ sub get_attribute {
     croak "No object name provided" unless $object;
     croak "No attribute provided for object $object" unless $attribute;
 
-    my $request = JMX::Jmx4Perl::Request->new(READ_ATTRIBUTE,$object,$attribute,$path);
+    my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
     my $response = $self->request($request);
     return $response->value;
 }
@@ -272,7 +289,11 @@ method will try to autodetect the server. If it cannot determine the proper
 server it will throw an exception. 
 
 Returns the object, attribute, path triple which can be used for requesting the
-server or C<undef> if the handler can not resolve this aliase
+server or C<undef> if the handler can not resolve this alias.
+
+A handler can decide to handle the fetching of the alias value directly. In
+this case, this metod returns the code reference which needs to be executed
+with the handler as argument (see "request_attribute_by_handler") below. 
 
 =cut
 
@@ -280,8 +301,38 @@ sub resolve_attribute_alias {
     my $self = shift;
     my $alias = shift || croak "No alias provided";
 
-    my $handler = $self->{product_handler} || $self->_create_handler();
+    my $handler = $self->{product_handler} || $self->_create_handler();    
     return $handler->attribute_alias($alias);
+}
+
+=item $attribute_value = $self->request_attribute_by_handler($coderef)
+
+Execute a subroutine with the current handler as argument and returns the
+return value of this subroutine. This method is used in conjunction with
+C<resolve_attribute_alias> to allow handler a more sophisticated way to access
+the MBeanServer. Additionally, it allows for mangling the output, too.
+
+=cut
+
+sub request_attribute_by_handler {
+    my $self = shift;
+    my $code = shift;
+    my $handler = $self->{product_handler} || $self->_create_handler();    
+    return &{$code}($handler);
+}
+
+=item $product = $self->product_id()
+
+For supported application servers, this methods returns the name of the
+product. This product is either detected automatically or provided during
+construction time.
+
+=cut 
+
+sub product {
+    my $self = shift;
+    my $handler = $self->{product_handler} || $self->_create_handler();
+    return $handler->name();
 }
 
 sub _create_handler {
@@ -295,7 +346,7 @@ sub _create_handler {
 
 sub _autodetect_product {
     my $self = shift;
-    for my $id (keys %PRODUCT_HANDLER) {
+    for my $id (@PRODUCT_HANDLER_ORDERING) {
         my $handler = $self->_new_handler($id);
         return $id if $handler->autodetect();
     }
@@ -361,7 +412,7 @@ sub list {
     my $self = shift;
     my $path = shift;
 
-    my $request = JMX::Jmx4Perl::Request->new(LIST_MBEANS,$path);
+    my $request = JMX::Jmx4Perl::Request->new(LIST,$path);
     my $response = $self->request($request);
     return $response->value;    
 }
@@ -512,19 +563,21 @@ sub request {
 }
 
 
-=item $info = $jmx->info()
+=item $info = $jmx->info($verbose)
 
 Get a textual description of the server as returned by a product specific
-handler (see L<JMX::Jmx4Perl::ProductHandler::BaseHandler>). It uses the
+handler (see L<JMX::Jmx4Perl::Product::BaseHandler>). It uses the
 autodetection facility if no product is given explicitely during construction. 
+
+If C<$verbose> is true, print even more information
 
 =cut
 
 sub info {
     my $self = shift;
-    
+    my $verbose = shift;
     my $handler = $self->{product_handler} || $self->_create_handler();
-    return $handler->info();
+    return $handler->info($verbose);
 }
 
 
