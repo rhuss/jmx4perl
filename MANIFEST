@@ -29,7 +29,10 @@ lib/JMX/Jmx4Perl/Product/Glassfish2.pm
 lib/JMX/Jmx4Perl/Product/Glassfish3.pm
 lib/JMX/Jmx4Perl/Product/JBoss.pm
 lib/JMX/Jmx4Perl/Product/Jetty.pm
+lib/JMX/Jmx4Perl/Product/Jonas.pm
 lib/JMX/Jmx4Perl/Product/Tomcat.pm
+lib/JMX/Jmx4Perl/Product/Unknown.pm
+lib/JMX/Jmx4Perl/Product/Weblogic.pm
 lib/JMX/Jmx4Perl/Request.pm
 lib/JMX/Jmx4Perl/Response.pm
 LICENSE

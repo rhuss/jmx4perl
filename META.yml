@@ -48,8 +48,14 @@ provides:
     file: lib/JMX/Jmx4Perl/Product/JBoss.pm
   JMX::Jmx4Perl::Product::Jetty:
     file: lib/JMX/Jmx4Perl/Product/Jetty.pm
+  JMX::Jmx4Perl::Product::Jonas:
+    file: lib/JMX/Jmx4Perl/Product/Jonas.pm
   JMX::Jmx4Perl::Product::Tomcat:
     file: lib/JMX/Jmx4Perl/Product/Tomcat.pm
+  JMX::Jmx4Perl::Product::Unknown:
+    file: lib/JMX/Jmx4Perl/Product/Unknown.pm
+  JMX::Jmx4Perl::Product::Weblogic:
+    file: lib/JMX/Jmx4Perl/Product/Weblogic.pm
   JMX::Jmx4Perl::Request:
     file: lib/JMX/Jmx4Perl/Request.pm
   JMX::Jmx4Perl::Response:
