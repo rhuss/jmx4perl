@@ -13,6 +13,8 @@
     * Correct URL encoding for request URL
     * Slash '/' needs to be custom encoded, since URI encoding doesn't 
       work for JBoss 4/5 due to a bug
+  - Tested to work on JBoss 4 & 5, Oracle WebLogic 10, Jonas 4, Geronimo 2, 
+    Glassfish 2 & 3, Tomcat 4-6 and Jetty 5-7 
 
 0.1
   - Initial release

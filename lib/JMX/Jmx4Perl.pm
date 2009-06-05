@@ -105,7 +105,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.15_5";
+$VERSION = "0.15";
 
 my $REGISTRY = {
                 # Agent based
@@ -278,6 +278,38 @@ sub get_attribute {
     return $response->value;
 }
 
+=item $resp = $jmx->request($request)
+
+Send a request to the underlying agent and return the response. This is an
+abstract method which needs to be overwritten by a subclass. The argument must
+be of type L<JMX::Jmx4Perl::Request> and it returns an object of type
+L<JMX::Jmx4Perl::Response>.
+
+=cut 
+
+sub request {
+    croak "Internal: Must be overwritten by a subclass";    
+}
+
+
+=item $info = $jmx->info($verbose)
+
+Get a textual description of the server as returned by a product specific
+handler (see L<JMX::Jmx4Perl::Product::BaseHandler>). It uses the
+autodetection facility if no product is given explicitely during construction. 
+
+If C<$verbose> is true, print even more information
+
+=cut
+
+sub info {
+    my $self = shift;
+    my $verbose = shift;
+    my $handler = $self->{product_handler} || $self->_create_handler();
+    return $handler->info($verbose);
+}
+
+
 =item ($object,$attribute,$path) = $self->resolve_attribute_alias($alias)
 
 Resolve an alias for an attibute. This is done by querying registered product
@@ -425,8 +457,8 @@ sub list {
 Get the a formatted string representing the MBeans as returnded by C<list()>.
 C<$path> is the optional inner path for selecting only a subset of all mbean.
 See C<list()> for more details. If called with a L<JMX::Jmx4Perl::Response>
-object, the list will be taken from the provided response object and not
-fetched from the server
+object, the list and the optional path will be taken from the provided response
+object and not fetched again from the server.
 
 =cut
 
@@ -548,38 +580,6 @@ sub _get_space {
     my $level = shift;
     return " " x ($level * $SPACE);
 }
-
-=item $resp = $jmx->request($request)
-
-Send a request to the underlying agent and return the response. This is an
-abstract method which needs to be overwritten by a subclass. The argument must
-be of type L<JMX::Jmx4Perl::Request> and it returns an object of type
-L<JMX::Jmx4Perl::Response>.
-
-=cut 
-
-sub request {
-    croak "Internal: Must be overwritten by a subclass";    
-}
-
-
-=item $info = $jmx->info($verbose)
-
-Get a textual description of the server as returned by a product specific
-handler (see L<JMX::Jmx4Perl::Product::BaseHandler>). It uses the
-autodetection facility if no product is given explicitely during construction. 
-
-If C<$verbose> is true, print even more information
-
-=cut
-
-sub info {
-    my $self = shift;
-    my $verbose = shift;
-    my $handler = $self->{product_handler} || $self->_create_handler();
-    return $handler->info($verbose);
-}
-
 
 sub cfg {
     my $self = shift;

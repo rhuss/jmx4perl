@@ -5,7 +5,7 @@ INTRODUCTION
 
   jmx4perl provides a new way for accessing Java JEE Server management
   interfaces which are based on JMX (Java Management Extensions). It
-  is an agent based approach, where a small Java Webapplication (<30k)
+  is an agent based approach, where a small Java Webapplication 
   deployed on the application server provides a an HTTP/JSON based
   access to the JMX MBeans registered within the application server.  
 
@@ -15,12 +15,9 @@ INTRODUCTION
   biggest advantage for an agent based approach is that no local java
   installation is required for using it.
 
-  There a future plans for providing a JSR 160 based access as
-  well. Stay tuned ...
-
 HOW IT WORKS
 
-  You need to deploy a small (~ 35k) Java Agent WAR (web archive) to
+  You need to deploy a small (~ 40k) Java Agent WAR (web archive) to
   the Java application server to monitor. Thats all on the java
   side. There is no need to add any startup parameters to the
   application server and to open any additional ports. All
@@ -79,7 +76,9 @@ SUPPORTED APPLICATION SERVERS
 
   It is expected that every Java application server which runs with at
   least Java 1.5 and conforms to at least version 2.4 of the Servlet
-  specification should work out of the box.
+  specification should work out of the box.  Please open a bug at
+  http://rt.cpan.org/Public/Bug/Report.html?Queue=jmx4perl if you
+  encounter any problems.
 
 LICENSE
   

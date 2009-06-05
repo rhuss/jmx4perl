@@ -212,7 +212,7 @@ testing environment is a 64bit Ubuntu 9.04 installation, running in a virtual
 machine. However, this should not make any difference for another platform, so
 I'm pretty confident that the application servers from the list above will work
 with jmx4perl on any OS. Please open a bug at
-L<http://rt.cpan.org/Public/Dist/Display.html?Name=jmx4perl> if you encounter
+L<http://rt.cpan.org/Public/Bug/Report.html?Queue=jmx4perl> if you encounter
 any problems.
 
 I would like to support IBM Websphere as well, but unfortunately setting up a
