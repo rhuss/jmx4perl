@@ -13,7 +13,7 @@ JMX::Jmx4Perl::Product::Jonas - Handler for Jonas
 
 =head1 DESCRIPTION
 
-This is the product handler support Jonas 4.
+This is the product handler support Jonas 4 (L<jonas.ow2.org/>)
 
 =cut
 

@@ -612,34 +612,6 @@ sub autodiscover_mode {
 
 =back
 
-=head1 ROADMAP
-
-=over
-
-=item * 
-
-Suport for writing attributes 
-
-=item * 
-
-Support for executing JMX operations
-
-=item *
-
-JSR-77 support
-
-=item * 
-
-Command line utility for performing certain JMX operations (with readline
-support). 
-
-=item *
-
-JSR-160 access to a remote JMX Mbean-Server, which requires integration of a
-JVM (with something like L<Java::Import>)
-
-=back
-
 =head1 LICENSE
 
 This file is part of jmx4perl.

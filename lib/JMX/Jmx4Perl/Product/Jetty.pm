@@ -9,11 +9,12 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Jetty - Handler for Jetty
+JMX::Jmx4Perl::Product::Jetty - Handler for Jetty (http://www.mortbay.org/jetty/)
 
 =head1 DESCRIPTION
 
-This is the product handler support Jetty. It supports Jetty version 5,6 and 7.
+This is the product handler support Jetty. It supports Jetty version 5, 6 and
+7.
 
 Please note, that you must have JMX support enabled in Jetty for autodetection
 and aliasing to work. See the Jetty documentation for details.

@@ -13,7 +13,7 @@ JMX::Jmx4Perl::Product::Glassfish2 - Handler for Glassfish, Version 2
 
 =head1 DESCRIPTION
 
-This handler supports glassfish version 2.
+This handler supports glassfish version 2. (L<https://glassfish.dev.java.net/>)
 
 =cut
 

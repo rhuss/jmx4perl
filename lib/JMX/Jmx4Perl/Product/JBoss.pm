@@ -13,7 +13,7 @@ JMX::Jmx4Perl::Product::JBoss - Handler for JBoss
 
 =head1 DESCRIPTION
 
-This is the product handler support JBoss 4.x and JBoss 5.x
+This is the product handler support JBoss 4.x and JBoss 5.x (L<http://www.jboss.org/jbossas/>)
 
 =cut
 

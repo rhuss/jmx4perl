@@ -291,7 +291,7 @@ Readline support
 
 =item *
 
-.TAB completion of MBean names, attributes and operations
+TAB completion of MBean names, attributes and operations
 
 =item * 
 

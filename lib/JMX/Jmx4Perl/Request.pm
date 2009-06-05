@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-JMX::Jmx4Perl::Request - Encapsulates a jmx4perl request 
+JMX::Jmx4Perl::Request - A jmx4perl request 
 
 =head1 SYNOPSIS
 

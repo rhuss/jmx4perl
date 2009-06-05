@@ -9,39 +9,43 @@ JMX::Jmx4Perl::Manual - Manual for B<jmx4perl>
 JMX (Java Management Extensions) is the standard management solution in the
 Java world. Since JDK 1.5 it is available in every Java Virtual Machine and
 especially JEE application servers use this technology intensively for exposing
-managable entities. In fact, the popular JEE Server JBoss 4 is based
-on a JMX kernel.
+managable entities. In fact, the popular JEE Server JBoss 4 is based on a JMX
+kernel.
 
 For the Perl world, it's not that easy to access JMX MBeans. MBeans are is the
 Java term for JMX managed entities. The existing solutions are mostly based on
-the Java standard JSR-160 (I<TODO: link>), which defines how JMX can be accessed
-remotely. The problem of JSR-160 with respect to Perl is, that the default
-communication protocols rely on exchanging serialized Java objects. Hence they
-are required to start a Java Virtual Machine, in the one way or other. This has
-quite some implications concerning installation requirements (you need a Java
-virtual machine with the proper version installed) and performance (firing up a
-JVM is not something you get for free)
-
-I<(TODO: add references to existing solutions like check_jmx ....)>
+the Java standard JSR-160 (L<http://jcp.org/en/jsr/detail?id=160>), which
+defines how JMX can be accessed remotely. The problem of JSR-160 with respect
+to Perl is, that the default communication protocols rely on exchanging
+serialized Java objects. Hence they require to start a Java Virtual Machine, in
+the one way or other. This has quite some implications concerning installation
+requirements (you need a Java virtual machine with the proper version
+installed) and performance (firing up a JVM is not something you get for free)
 
 The ultimate goal of B<jmx4perl> is to bridge both worlds in the most simplest
 way. This is done with an agent based approach as described below. In short,
 the building blocks of this bridge are based on standards well known and used
 in both worlds: HTTP and JSON.
 
-Another future goal is to provide an abstraction for accessing certain,
-commonly known MBeans for various supported JEE application server, which
-differ in naming from brand to brand. For now, the JEE servers supported are
-JBoss 4 & 5, Weblogic 10 and Glassfish as well as the pure servlet containers
-Jetty 6, Tomcat 5 & 6. Other platform might work as well, however they are not
-yet tested. Please let me know, when it works for you on other servers as well
-(which is highly likely due to the simplistic nature of the agent webapp).
+Another goal is to provide an abstraction for accessing certain, commonly known
+MBeans for various supported JEE application server, which differ in naming
+from brand to brand. For now, the JEE servers supported are JBoss 4 & 5, Oracle
+WebLogic 10, Glassfish 2 and 3, Jonas 4 and Geronimo 2 as well as the pure
+servlet containers Jetty 5, 6 and 7, Tomcat 4, 5 & 6. Other platform might work
+as well, however they are not yet tested. Please let me know, whether jmx4perl
+works for you on other servers as well (which is highly likely due to the
+simplistic nature of the agent webapp). I got reports, that it works on IBM
+Websphere 6.1 and 7 as well, but unfortunately I can't verify this on my own
+due to the lack of a propert testing environment.
 
 B<jmx4perl> is not an academic exercise. In fact, it originates from the need
 to let Nagios (a hopefully well known open source monitoring solution, see
 L<http://www.nagios.org>) access JEE appliation servers in a painless way. You
 can find a nagios check in the scripts directory, which is a prefactored check
 directly usable in a Nagios setup.
+
+Additionally, there is a command line tool called (incidentally ;-) L<jmx4perl>
+which allows for simple access to JMX MBeans and much more features. 
 
 =head1 MBean Features
 
@@ -134,9 +138,37 @@ incorporated into a future version as well.
 
 =back 
 
+=head1 INSTALLATION 
+
+The Perl part installs as any other module via Module::Build, which
+you need to have installed. Using
+
+  perl Build.PL
+  ./Build
+  ./Build test
+  ./Build install
+
+will install the modules. If you have Java and "ant" (a Java build
+tool) installed, the Java agent will be compiled and packaged as
+well. However, this is not required. A precompiled F<j4p-agent.war>
+can be found in the F<agent> directory.
+
+For the module to work, you need to deploy F<j4p-agent.war> to the JEE Server to 
+monitor. The concrete steps depend on the specific way for deploying on the 
+targeted server, which in most cases is as simple as copying the agent in to a
+specific directory. Please consult the documentation of your Java application
+server for the details (look for "deployment" and "war")
+
+To test it, you can use L<jmx4perl> with the URL of the depolyed
+agent:
+
+  jmx4perl http://jeeserver:port/j4p-agent
+      
+Consult L<jmx4perl> for further details. 
+ 
 =head1 FEATURES
 
-=head2 Autodetection
+=head2 Autodetection and Product Support
 
 Jmx4Perl is able to autodectect various application servers. This is done by
 querying a certain MBean attribute which is unique for this specific
@@ -146,22 +178,52 @@ product. The following application servers can be autodetected:
 
 =item * 
 
-JBoss 4 and 5
+JBoss 4 and 5 (L<http://www.jboss.org/jbossas/>)
+
+=item *
+
+Oracle WebLogic 10 (and possibly Weblogic 9 as well, but this is still
+untested) (L<http://www.oracle.com/appserver/>)
+
+=item *
+
+Glassfish 2 and 3 (L<https://glassfish.dev.java.net/>)
+
+=item *
+
+Apache Geronimo 2 (L<http://geronimo.apache.org/>)
 
 =item * 
 
-Tomcat 4 and 5 
+Jonas 4 (L<jonas.ow2.org/>)
 
 =item * 
 
-Jetty 6
+Tomcat 4, 5 and 6 (L<http://tomcat.apache.org/>)
+
+=item * 
+
+Jetty 5, 6 and 7 (http://www.mortbay.org/jetty/)
 
 =back 
 
-Please note, that autodetection is not for free. It takes some considerable
-time to probe various servers. So, if you have the chance to provide the
-application server id, you should do this. This is only relevant if you are
-going to use the aliasing feature. 
+All these application servers has been tested to work with jmx4perl. The
+testing environment is a 64bit Ubuntu 9.04 installation, running in a virtual
+machine. However, this should not make any difference for another platform, so
+I'm pretty confident that the application servers from the list above will work
+with jmx4perl on any OS. Please open a bug at
+L<http://rt.cpan.org/Public/Dist/Display.html?Name=jmx4perl> if you encounter
+any problems.
+
+I would like to support IBM Websphere as well, but unfortunately setting up a
+testing environment takes to much effort. If someone has a IBM Websphere
+testing environment which I could use, I would be glad to setup a Websphere
+Handler as well.
+
+Please note, that autodetection is not for free with respect to performance. It
+takes some considerable time to probe various servers. So, if you have the
+chance to provide the application server id, you should do this. This is only
+relevant if you are going to use the aliasing feature.
 
 =head2 Aliasing
 
@@ -171,10 +233,10 @@ combination (MBean name,attribute) or (MBean name,operation). It also maps the
 differing naming schemes of different application server to unique names, as
 far as this is possible. E.g. the alias C<SERVER_VERSION> maps on JBoss to the
 attribute C<VersionNumber> of MBean C<jboss.system:type=Server>, whereas for
-Jetty it's mapped to .... 
+Jetty it's mapped to MBean C<org.mortbay:jetty=default>, Attribute C<version>. 
 
 Remember, you can always use the the native JMX naming to access your MBeans
-without worrying about aliasing.  
+without worrying about aliasing at all.  
 
 =head2 Full featured Nagios plugin C<check_jmx4perl> 
 
@@ -206,6 +268,25 @@ API.
 
 Support for attribute writing, execution of operations and (maybe)
 notifications.
+
+=head1 ROADMAP
+
+=over
+
+=item * 
+
+Suport for writing attributes 
+
+=item * 
+
+Support for executing JMX operations
+
+=item *
+
+JSR-77 support
+
+=back
+
 
 =head1 LICENSE
 

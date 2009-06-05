@@ -20,7 +20,7 @@ INTRODUCTION
 
 HOW IT WORKS
 
-  You need to deploy a small (~ 30k) Java Agent WAR (web archive) to
+  You need to deploy a small (~ 35k) Java Agent WAR (web archive) to
   the Java application server to monitor. Thats all on the java
   side. There is no need to add any startup parameters to the
   application server and to open any additional ports. All
@@ -33,6 +33,8 @@ HOW IT WORKS
   and transform the request's results from JSON into a simple pure
   Perl object. This distribution contains a sample Nagios check
   'check_jmx4perl' which use this result to perform various checks.
+  The command line tool 'jmx4perl' provides an easy access to the
+  agent, too.
 
 INSTALLATION
 
@@ -41,12 +43,13 @@ INSTALLATION
 
   perl Build.PL
   ./Build
+  ./Build test
   ./Build install
 
-  will install the modules (sorry, no tests yet). If you have Java
-  and "ant" (a Java build tool) installed, the Java agent will be
-  compiled and packaged as well. However, this is not required. A
-  precompile "j4p-agent.war" can be found in the "agent" directory. 
+  will install the modules. If you have Java and "ant" (a Java build
+  tool) installed, the Java agent will be compiled and packaged as
+  well. However, this is not required. A precompile "j4p-agent.war"
+  can be found in the "agent" directory.
 
   For the module to work, you need to deploy "j4p-agent.war" to the
   JEE Server to monitor. The concrete steps depend on the specific way
@@ -55,25 +58,28 @@ INSTALLATION
   documentation of your Java application server for the details (look
   for "deployment" and "war")
 
-  (TODO: Detailed deployment instructions for supported platforms)
+  To test it, you can use 'jmx4perl' with the URL of the depolyed
+  agent:
 
-  To test it, you can use 'check_jmx4perl' which gets installed as
-  well. Consult its documentation for further details. 
-  
+      jmx4perl http://jeeserver:port/j4p-agent
+      
+  Consult 'man jmx4perl' for further details. 
+ 
 SUPPORTED APPLICATION SERVERS
   
   For now, the following Java Application Servers has been tested:
 
-  * JBoss 4
-  * Weblogic 10 
-  * Glassfish 2
-  * Tomcat 5
-  * Jetty 6
+  * JBoss 4 & 5
+  * Oracle WebLogic 10 
+  * Jonas 4
+  * Geronimo 2
+  * Glassfish 2 & 3
+  * Tomcat 4, 5 & 6
+  * Jetty 5, 6 & 7
 
-  There is work underway to extend this list. However, it is expected
-  that every Java application server which runs with at least Java 1.5
-  and conforms to at least version 2.4 of the Servlet specification
-  should work.
+  It is expected that every Java application server which runs with at
+  least Java 1.5 and conforms to at least version 2.4 of the Servlet
+  specification should work out of the box.
 
 LICENSE
   
@@ -106,9 +112,9 @@ PROFESSIONAL SERVICES
 
 ACKNOWLEDGMENTS
 
-  Many thanks goes to Gerhard Lausser, who pushed to me to think
-  harder about a better way for monitoring JEE Servers by Nagios. Good
-  luck, Gerhard, with your forthcoming Nagios book !
+  Many thanks go to Gerhard Lausser, who pushed to me to think harder
+  about a better way for monitoring JEE Servers by Nagios. Good luck,
+  Gerhard, with your forthcoming Nagios book !
 
 BUGS 
 

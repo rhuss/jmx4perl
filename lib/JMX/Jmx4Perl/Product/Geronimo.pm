@@ -13,7 +13,7 @@ JMX::Jmx4Perl::Product::Geronimo - Handler for Geronimo
 
 =head1 DESCRIPTION
 
-This is the product handler supporting Geronimo, V2
+This is the product handler supporting Geronimo 2 (L<http://geronimo.apache.org/>)
 
 =cut
 
@@ -22,7 +22,7 @@ sub id {
 }
 
 sub name { 
-    return "Geronimo";
+    return "Apache Geronimo";
 }
 
 # Not that popular

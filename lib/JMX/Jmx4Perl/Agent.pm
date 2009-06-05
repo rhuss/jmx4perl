@@ -61,8 +61,8 @@ Creates a new local agent for a given url
 
 The url where the agent is deployed. This is a mandatory parameter. The url
 must include the context within the server, which is typically based on the
-name of the war archive. Example: http://localhost:8080/jjagent for a drop in
-deployment of the agent in a standard Tomcat's webapp directory. 
+name of the war archive. Example: C<http://localhost:8080/j4p-agent> for a drop
+in deployment of the agent in a standard Tomcat's webapp directory.
 
 =item timeout => <timeout>
 
@@ -117,7 +117,7 @@ sub init {
 =item $resp = $agent->request($request)
 
 Implementation of the JMX request as specified in L<JMX::Jmx4Perl>. It uses a
-L<HTTP:Request> sent via an L<LWP::UserAgent> for posting a JSON representation
+L<HTTP::Request> sent via an L<LWP::UserAgent> for posting a JSON representation
 of the request. This method shouldn't be called directly but via
 L<JMX::Jmx4Perl>->request(). 
 

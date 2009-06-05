@@ -9,11 +9,12 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Weblogic - Support for Weblogic
+JMX::Jmx4Perl::Product::Weblogic - Handler for Oracle WebLogic
 
 =head1 DESCRIPTION
 
-This is the product handler support for Weblogic 10
+This is the product handler support for Oracle Weblogic Server 10 (9 might
+work, but is not tested) (L<http://www.oracle.com/appserver/>)
 
 =cut
 
@@ -22,7 +23,7 @@ sub id {
 }
 
 sub name {
-    return "Weblogic";
+    return "Oracle WebLogic Server";
 }
 
 sub order { 

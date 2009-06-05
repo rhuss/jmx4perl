@@ -13,7 +13,7 @@ JMX::Jmx4Perl::Product::Tomcat - Handler for Apache Tomcat
 
 =head1 DESCRIPTION
 
-This is the product handler supporting Tomcat, Version 4, 5 and 6. 
+This is the product handler supporting Tomcat, Version 4, 5 and 6. (http://tomcat.apache.org/)
 
 =cut
 
