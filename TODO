@@ -2,7 +2,3 @@
 05 Additional Agents which start a JVM (e.g. with "Java::Import") 
    and call the appserver via JSR 160 connector
 06 WS-Management integration ?
-07 Tests
-08 jmx4perl command line tool for easy accessing JMX beans
-09 Rename "READ_ATTRIBUTE" => "READ" (same for write)
-10 Rename "ProductHandler" => "Product"
