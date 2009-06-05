@@ -187,7 +187,7 @@ sub command_attributes {
                     if ($response->is_error) {
                         print "\nERROR: ",$response->error_text,"\n";
                         if ($opts{verbose} && $response->stacktrace) {
-                            print $response->stactrace;
+                            print $response->stacktrace;
                         }
                     } else {
                         my $val = $response->value;

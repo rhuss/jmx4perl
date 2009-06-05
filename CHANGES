@@ -1,3 +1,9 @@
+0.16
+  - Switched off debugging in agent servlet
+  - Fixed syntax error when using 'jmx4perl -v attributes'
+  - Fixed Jetty Handler. 'had to remove support for Jetty 7
+    since I didn't managed to run 7.0M2 with JMX enabled.
+
 0.15
   - Aliasing
   - Autodetection 
@@ -14,7 +20,7 @@
     * Slash '/' needs to be custom encoded, since URI encoding doesn't 
       work for JBoss 4/5 due to a bug
   - Tested to work on JBoss 4 & 5, Oracle WebLogic 10, Jonas 4, Geronimo 2, 
-    Glassfish 2 & 3, Tomcat 4-6 and Jetty 5-7 
+    Glassfish 2 & 3, Tomcat 4-6 and Jetty 5 & 6 
 
 0.1
   - Initial release

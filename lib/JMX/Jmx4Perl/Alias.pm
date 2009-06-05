@@ -67,6 +67,7 @@ my %ALIAS_MAP =
   MEMORY_HEAP_USED => [ "Usedo heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "used" ]],
   MEMORY_HEAP_INIT => [ "Initially allocated heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "init" ]],
   MEMORY_HEAP_COMITTED => [ "Committed heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "committed" ]],
+  MEMORY_HEAP_MAX => [ "Committed heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "max" ]],
 
   # Class loading
   CL_LOADED => [ "Number of currently loaded classes", [ "java.lang:type=ClassLoading", "LoadedClassCount"]],

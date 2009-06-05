@@ -141,7 +141,7 @@ sub request {
            $resp->code,
            $jmx_request,
            $resp->content,
-           "Error while deserializing JSON answer (probably wrong URL)"
+           $resp->is_error ? $resp->status_line : "Error while deserializing JSON answer (probably wrong URL)"
           );
     }
     croak "Error while deserializing ",$resp->content," : ",$@ if $@;

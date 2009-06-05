@@ -291,7 +291,7 @@ sub try_attribute {
     } elsif ($response->is_ok) {
         $self->{$property} = $response->value;
     } else {
-        croak "Error while trying to autodetect ",$self->id(),": ",$response->error_text();
+        croak "Error : ",$response->error_text();
     }
     return length($self->{$property});
 }
@@ -330,6 +330,7 @@ sub jvm_info {
     $ret .= "Memory:\n";
     $ret .= sprintf("   %-20.20s %s\n","Heap-Memory used:",int($jmx4perl->get_attribute(MEMORY_HEAP_USED)/(1024*1024)) . " MB");
     $ret .= sprintf("   %-20.20s %s\n","Heap-Memory alloc:",int($jmx4perl->get_attribute(MEMORY_HEAP_COMITTED)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory max:",int($jmx4perl->get_attribute(MEMORY_HEAP_MAX)/(1024*1024)) . " MB");
     $ret .= "Classes:\n";
     $ret .= sprintf("   %-20.20s %s\n","Classes loaded:",$jmx4perl->get_attribute(CL_LOADED));
     $ret .= sprintf("   %-20.20s %s\n","Classes total:",$jmx4perl->get_attribute(CL_TOTAL));

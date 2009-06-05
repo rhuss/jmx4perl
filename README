@@ -72,7 +72,7 @@ SUPPORTED APPLICATION SERVERS
   * Geronimo 2
   * Glassfish 2 & 3
   * Tomcat 4, 5 & 6
-  * Jetty 5, 6 & 7
+  * Jetty 5 & 6
 
   It is expected that every Java application server which runs with at
   least Java 1.5 and conforms to at least version 2.4 of the Servlet
