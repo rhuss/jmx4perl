@@ -31,9 +31,11 @@ sub name {
 
 sub _try_version {
     my $self = shift;
+    # Jetty V5
     my $ret = $self->try_attribute("version","org.mortbay:jetty=default","version");
     if (!length($self->{version})) {
         delete $self->{version};
+        # Jetty V6
         $ret = $self->try_attribute("version","org.mortbay.jetty:id=0,type=server","version");
     }
     $self->{version} =~ s/Jetty\/([^\s]+).*/$1/;

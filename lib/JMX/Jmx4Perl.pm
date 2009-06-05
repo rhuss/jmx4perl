@@ -275,6 +275,9 @@ sub get_attribute {
 
     my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
     my $response = $self->request($request);
+    if ($response->status == 404) {
+        return undef;
+    }
     return $response->value;
 }
 

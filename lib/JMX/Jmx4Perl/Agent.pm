@@ -131,28 +131,31 @@ sub request {
     my $url = $self->request_url($jmx_request);
     my $req = HTTP::Request->new(GET => $url);
     my $resp = $ua->request($req);
-    my $ret;
+    my $ret = {};
     eval {
         $ret = from_json($resp->content());
     };
     if ($@) {
-        return new JMX::Jmx4Perl::Response->new
-          ( 
-           $resp->code,
-           $jmx_request,
-           $resp->content,
-           $resp->is_error ? $resp->status_line : "Error while deserializing JSON answer (probably wrong URL)"
-          );
+        if (!$resp->is_error) {
+            return new JMX::Jmx4Perl::Response->new
+              ( 
+               400,
+               $jmx_request,
+               $resp->content,
+               "Error while deserializing JSON answer (probably wrong URL)"
+              );
+        }
     }
-    croak "Error while deserializing ",$resp->content," : ",$@ if $@;
     if ($resp->is_error && !$ret->{status}) {
-        my $error = "Error while fetching $url :\n" . $resp->status_line . "\n";
+        my $error = "Error while fetching $url :\n\n" . $resp->status_line . "\n";
         my $content = $resp->content;
         if ($content) {
             chomp $content;
-            $error .=  $content if $content ne $resp->status_line;
+            $error .=  "=" x length($resp->status_line) . "\n\n";
+            my $short = substr($content,0,500);
+            $error .=  $short . (length($short) < length($content) ? "\n\n.......\n\n" : "") . "\n" if $content ne $resp->status_line;
         }
-        croak $error;
+        die $error;
     };
     return JMX::Jmx4Perl::Response->new($ret->{status},$jmx_request,$ret->{value},$ret->{error},$ret->{stacktrace});
 }
