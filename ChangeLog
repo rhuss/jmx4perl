@@ -1,3 +1,7 @@
+2009-06-05  Roland Huss  <roland@consol.de>
+
+	* lib/JMX/Jmx4Perl/Manual.pod: Tested for WebLogic 9.
+
 2009-06-02  Roland Huss  <roland@consol.de>
 
 	* scripts/jmx4perl (_get_attribute): introduced jmx4perl command

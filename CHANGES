@@ -1,3 +1,6 @@
+0.20
+  - Tested for WebLogic 9
+
 0.16
   - Switched off debugging in agent servlet
   - Fixed syntax error when using 'jmx4perl -v attributes'

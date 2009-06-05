@@ -31,8 +31,14 @@ my $result = GetOptions(\%opts,
                         "product=s",
                         "verbose|v!",
                         "shell|s=s",
+                        "version!",
                         "help|h!" => sub { &Getopt::Long::HelpMessage() }
                        );
+
+if ($opts{version}) {
+    print "jmx4perl ",$JMX::Jmx4Perl::VERSION,"\n";
+    exit(0);
+}
 
 my $url;
 my $command;

@@ -9,12 +9,12 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Jetty - Handler for Jetty (http://www.mortbay.org/jetty/)
+JMX::Jmx4Perl::Product::Jetty - Handler for Jetty 
 
 =head1 DESCRIPTION
 
-This is the product handler support Jetty. It supports Jetty version 5, 6 and
-7.
+This is the product handler support Jetty. It supports Jetty version 5 and 6.
+(L<http://www.mortbay.org/jetty/>)
 
 Please note, that you must have JMX support enabled in Jetty for autodetection
 and aliasing to work. See the Jetty documentation for details.
@@ -32,11 +32,11 @@ sub name {
 sub _try_version {
     my $self = shift;
     # Jetty V5
-    my $ret = $self->try_attribute("version","org.mortbay:jetty=default","version");
+    # Jetty V6
+    my $ret = $self->try_attribute("version","org.mortbay.jetty:id=0,type=server","version");
     if (!length($self->{version})) {
         delete $self->{version};
-        # Jetty V6
-        $ret = $self->try_attribute("version","org.mortbay.jetty:id=0,type=server","version");
+        $ret = $self->try_attribute("version","org.mortbay:jetty=default","version");
     }
     $self->{version} =~ s/Jetty\/([^\s]+).*/$1/;
     return $ret;
