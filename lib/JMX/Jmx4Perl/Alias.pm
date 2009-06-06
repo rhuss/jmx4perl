@@ -64,10 +64,10 @@ my %ALIAS_MAP =
   # Standard Java VM Attributes
   # Memory  
   MEMORY_HEAP => [ "Heap memory usage, multiple values", [ "java.lang:type=Memory", "HeapMemoryUsage" ]],
-  MEMORY_HEAP_USED => [ "Usedo heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "used" ]],
+  MEMORY_HEAP_USED => [ "Used heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "used" ]],
   MEMORY_HEAP_INIT => [ "Initially allocated heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "init" ]],
   MEMORY_HEAP_COMITTED => [ "Committed heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "committed" ]],
-  MEMORY_HEAP_MAX => [ "Committed heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "max" ]],
+  MEMORY_HEAP_MAX => [ "Maximum available heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "max" ]],
 
   # Class loading
   CL_LOADED => [ "Number of currently loaded classes", [ "java.lang:type=ClassLoading", "LoadedClassCount"]],
@@ -76,7 +76,7 @@ my %ALIAS_MAP =
   
   # Threads
   THREAD_COUNT => ["Active threads in the system", [ "java.lang:type=Threading", "ThreadCount"]],
-  THREAD_COUNT_PEAK => ["Peak count of active threads in the system", [ "java.lang:type=Threading", "PeakThreadCount"]],
+  THREAD_COUNT_PEAK => ["Peak thread count", [ "java.lang:type=Threading", "PeakThreadCount"]],
   THREAD_COUNT_STARTED => ["Count of threads started since system start", [ "java.lang:type=Threading", "TotalStartedThreadCount"]],
   THREAD_COUNT_DAEMON => ["Count of threads marked as daemons in the system", [ "java.lang:type=Threading", "DaemonThreadCount"]],
   
@@ -89,7 +89,7 @@ my %ALIAS_MAP =
   OS_FILE_OPEN_DESC => ["Number of open file descriptors", [ "java.lang:type=OperatingSystem", "OpenFileDescriptorCount"]],
   OS_FILE_MAX_DESC => ["Maximum number of open file descriptors", [ "java.lang:type=OperatingSystem", "MaxFileDescriptorCount"]],
   OS_CPU_TIME => ["The cpu time used by this process", [ "java.lang:type=OperatingSystem", "ProcessCpuTime"]],
-  OS_INFO_PROCESSORS => ["Numer of processors", [ "java.lang:type=OperatingSystem", "AvailableProcessors"]],
+  OS_INFO_PROCESSORS => ["Number of processors", [ "java.lang:type=OperatingSystem", "AvailableProcessors"]],
   OS_INFO_ARCH => ["Architecture", [ "java.lang:type=OperatingSystem", "Arch"]],
   OS_INFO_NAME => ["Operating system name", [ "java.lang:type=OperatingSystem", "Name"]],
   OS_INFO_VERSION => ["Operating system version", [ "java.lang:type=OperatingSystem", "Version"]],
@@ -219,13 +219,14 @@ outdated, to get the current one, use
  MEMORY_HEAP                    attr Heap memory usage, multiple values
  MEMORY_HEAP_COMITTED           attr Committed heap memory
  MEMORY_HEAP_INIT               attr Initially allocated heap memory
- MEMORY_HEAP_USED               attr User heap memory
+ MEMORY_HEAP_MAX                attr Maximum available heap memory
+ MEMORY_HEAP_USED               attr Used heap memory
  OS_CPU_TIME                    attr The cpu time used by this process
  OS_FILE_MAX_DESC               attr Maximum number of open file descriptors
  OS_FILE_OPEN_DESC              attr Number of open file descriptors
  OS_INFO_ARCH                   attr Architecture
  OS_INFO_NAME                   attr Operating system name
- OS_INFO_PROCESSORS             attr Numer of processors
+ OS_INFO_PROCESSORS             attr Number of processors
  OS_INFO_VERSION                attr Operating system version
  OS_MEMORY_FREE_PHYSICAL        attr The amount of free physical memory for the OS
  OS_MEMORY_FREE_SWAP            attr The amount of free swap space for the OS
@@ -237,7 +238,7 @@ outdated, to get the current one, use
  RUNTIME_CLASSPATH              attr Classpath
  RUNTIME_LIBRARY_PATH           attr The LD_LIBRARY_PATH
  RUNTIME_NAME                   attr Name of the runtime
- RUNTIME_STARTIME               attr Time when starting the JVM
+ RUNTIME_STARTTIME              attr Time when starting the JVM
  RUNTIME_SYSTEM_PROPERTIES      attr System properties
  RUNTIME_UPTIME                 attr Total uptime of JVM
  RUNTIME_VM_NAME                attr Name of JVM
@@ -249,7 +250,7 @@ outdated, to get the current one, use
  SERVER_VERSION                 attr Version of application server
  THREAD_COUNT                   attr Active threads in the system
  THREAD_COUNT_DAEMON            attr Count of threads marked as daemons in the system
- THREAD_COUNT_PEAK              attr Peak count of active threads in the system
+ THREAD_COUNT_PEAK              attr Peak thread count
  THREAD_COUNT_STARTED           attr Count of threads started since system start
  THREAD_DEADLOCKED              oper Find cycles of threads that are in deadlock waiting to acquire object monitors
  THREAD_DUMP                    oper Create a thread dump

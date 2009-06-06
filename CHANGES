@@ -1,4 +1,6 @@
-0.20
+0.17
+  - Documentation fixes
+  - Added missing dependeny to URI::Encode
   - Tested for WebLogic 9
 
 0.16
