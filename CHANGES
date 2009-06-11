@@ -1,8 +1,8 @@
-0.17
+0.20_1
+  - Support writing attribtues and executing operations 
   - Documentation fixes
-  - Added missing dependeny to URI::Encode
   - Tested for WebLogic 9
-
+  
 0.16
   - Switched off debugging in agent servlet
   - Fixed syntax error when using 'jmx4perl -v attributes'

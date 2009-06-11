@@ -108,6 +108,82 @@ the innerpath if you want to transverse into this array.
 
 =back
 
+=head2 write
+
+Writing an attribute is quite similar to reading, except that the URL takes an
+additional C<value> element:
+
+   <mbean name>/<attribute name>/<value>/<inner path>
+
+
+=over 
+
+=item C<mbean name> (mandatory)
+
+The MBean name as described above (see L</"read"> for details)
+
+=item C<attribute name> (mandatory)
+
+The attribute name (see L</"read"> for details)
+
+=item C<value> (mandatory)
+
+The value to set in its string representation. Note, that only values can be
+set, which have one for the following types:
+
+=over
+
+=item String
+
+=item Integer / int
+
+=item Long / long
+
+=item Boolean / boolean
+
+=cut
+
+=item C<inner path> (optional)
+
+An optional inner path for specifying an inner object on which to set the
+value. See L</"read"> for more on inner pathes.
+
+=back
+
+For example, you can set the garbage collector to verbose mode by using
+something like
+
+  http://localhost:8080/j4p-agent/write/java.lang:type=Memory/Verbose/true
+
+=head2 exec
+
+With this mode, you can execute a JMX operation on a target MBean. The format
+of this looks like
+
+  <mbean name>/<operation name>/<arg1>/<arg2>/....
+  
+=over
+
+=item C<mbean name> (mandatory)
+
+The MBean name as described above (see L</"read"> for details)
+
+=item C<operation name> (mandatory)
+
+Name of the operation to execute
+
+=item C<arg1>, C<arg2>, ...
+
+String representation for the arguments required to execute this
+operation. Only certain data types can be used here as desribed for the
+L</"write"> mode.
+
+=back
+
+For example, to execute a garbage collection you use
+
+  http://localhost:8080/j4p-agent/exec/java.lang:type=Memory/gc
+
 =head2 list
 
 The list operation allows you to get information about the accessible
@@ -207,6 +283,51 @@ is always C<read>
 an optional path, if provided in the request.
 
 =back
+
+=head2 write
+
+As response for a writing operation you get back the old value if the value was
+set. For a request 
+
+  http://localhost:8080/j4p0-agent/write/java.lang:type=ClassLoading/Verbose/true
+
+you get the answer (supposed that verbose mode was switched off for class
+loading at the time this request was sent)
+
+ { 
+   "value":"false",
+   "status":200,
+   "request": {
+                "mbean":"java.lang:type=ClassLoading",
+                "type":"write",
+                "attribute":"Verbose",
+                "value":"true"
+              }
+ }
+
+The response is quite similar to the read operation except for the additional
+C<value> element in the request (and of course, the different C<type>). 
+
+=head2 exec 
+
+For an C<exec> operation, the response contains the return value of the
+opeartion. C<null> is returned if either the operation return a null value or
+the operation is declared as void. A typical response for an URL like
+
+ http://localhost:8080/j4p-agent/exec/java.util.logging:type=Logging/setLoggerLevel/global/INFO
+
+looks like
+
+ {
+   "value":null,
+   "status":200,
+   "request": {
+                "type":"exec",
+                "mbean":"java.util.logging:type=Logging",
+                "operation":"setLoggerLevel",
+                "arguments":["global","INFO"]
+              }
+}
 
 =head2 list
 

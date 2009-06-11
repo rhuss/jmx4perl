@@ -66,8 +66,16 @@ my %ALIAS_MAP =
   MEMORY_HEAP => [ "Heap memory usage, multiple values", [ "java.lang:type=Memory", "HeapMemoryUsage" ]],
   MEMORY_HEAP_USED => [ "Used heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "used" ]],
   MEMORY_HEAP_INIT => [ "Initially allocated heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "init" ]],
-  MEMORY_HEAP_COMITTED => [ "Committed heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "committed" ]],
+  MEMORY_HEAP_COMITTED => [ "Committed heap memory. That's the memory currently available for this JVM", [ "java.lang:type=Memory", "HeapMemoryUsage", "committed" ]],
   MEMORY_HEAP_MAX => [ "Maximum available heap memory", [ "java.lang:type=Memory", "HeapMemoryUsage", "max" ]],
+
+  MEMORY_NONHEAP => [ "Non-Heap memory usage, multiple values", [ "java.lang:type=Memory", "NonHeapMemoryUsage" ]],
+  MEMORY_NONHEAP_USED => [ "Used non-heap memory (like a 'method area')", [ "java.lang:type=Memory", "NonHeapMemoryUsage", "used" ]],
+  MEMORY_NONHEAP_INIT => [ "Initially allocated non-heap memory", [ "java.lang:type=Memory", "NonHeapMemoryUsage", "init" ]],
+  MEMORY_NONHEAP_COMITTED => [ "Committed non-heap memory", [ "java.lang:type=Memory", "NonHeapMemoryUsage", "committed" ]],
+  MEMORY_NONHEAP_MAX => [ "Maximum available non-heap memory", [ "java.lang:type=Memory", "NonHeapMemoryUsage", "max" ]],
+
+  MEMORY_VERBOSE => [ "Switch on/off verbose messages concerning the garbage collector", ["java.lang:type=Memory", "Verbose"]],
 
   # Class loading
   CL_LOADED => [ "Number of currently loaded classes", [ "java.lang:type=ClassLoading", "LoadedClassCount"]],

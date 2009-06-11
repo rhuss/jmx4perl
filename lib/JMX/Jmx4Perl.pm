@@ -105,7 +105,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.17";
+$VERSION = "0.20_1";
 
 my $REGISTRY = {
                 # Agent based
@@ -230,47 +230,13 @@ This method returns the value as it is returned from the server.
 
 sub get_attribute {
     my $self = shift;
-    my ($object,$attribute,$path,$alias_path);
-    if (ref($_[0]) eq "HASH") {
-        if ($_[0]->{alias}) {
-            ($object,$attribute,$alias_path) = $self->resolve_attribute_alias($_[0]->{alias});
-            if (ref($object) eq "CODE") {
-                # Let the handler do it
-                return $self->request_attribute_by_handler($object);
-            }
-            if ($alias_path) {
-                $path = $_[0]->{path} ? $_[0]->{path} . "/" . $alias_path : $alias_path;
-            } else { 
-                $path = $_[0]->{path};
-            }
-        } else {
-            $object = $_[0]->{mbean};
-            if (!$object && $_[0]->{domain} && ($_[0]->{properties} || $_[0]->{props})) {
-                $object = $_[0]->{domain} . ":";
-                my $href = $_[0]->{properties} || $_[0]->{props};
-                croak "'properties' is not a hashref" unless ref($href);
-                for my $k (keys %{$href}) {
-                    $object .= $k . "=" . $href->{$k};
-                }
-            }
-            $attribute = $_[0]->{attribute};
-            $path = $_[0]->{path};
-        }
-        
-    } else {
-        if (@_ == 1) {
-            # A single argument can only be used as an alias
-            ($object,$attribute,$path) = 
-              $self->resolve_attribute_alias($_[0]);
-            if (ref($object) eq "CODE") {
-                # Let the handler do it
-                return $self->request_attribute_by_handler($object);
-            }
-        } else {
-            ($object,$attribute,$path) = @_;
-        }
-    }
+    my ($object,$attribute,$path) = $self->_extract_get_set_parameters(with_value => 0,params => [@_]);
     croak "No object name provided" unless $object;
+
+    if (ref($object) eq "CODE") {
+        return $self->handle_attribute_by_handler($object);        
+    }
+
     croak "No attribute provided for object $object" unless $attribute;
 
     my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
@@ -279,6 +245,126 @@ sub get_attribute {
         return undef;
     }
     return $response->value;
+}
+
+=item $resp = $jmx->set_attribute(...)
+
+  $new_value = $jmx->set_attribute($mbean,$attribute,$value,$path)
+  $new_value = $jmx->set_attribute($alias,$value)
+  $new_value = $jmx->set_attribute(ALIAS,$value)  # Literal alias as defined in
+                                                  # JMX::Jmx4Perl::Alias
+  $new_value = $jmx->set_attribute({ domain => <domain>, 
+                                     properties => { <key> => value }, 
+                                     attribute => <attribute>, 
+                                     value => <value>,
+                                     path => <path> })
+  $new_value = $jmx->set_attribute({ alias => <alias>, 
+                                     value => <value>,
+                                     path => <path })
+
+Method for writing an attribute. It has the same signature as L</get_attribute>
+except that it takes an additional parameter C<value> for setting the value. It
+returns the old value of the attribute (or the object pointed to by an inner
+path). 
+
+As for C<get_attribute> you can use a path to specify an inner part of a more
+complex data structure. The value is tried to set on the inner object which is
+pointed to by the given path. 
+
+Please note that only basic data types can be set this way. I.e you can set
+only values of the following types
+
+=over
+
+=item C<java.lang.String>
+
+=item C<java.lang.Boolean>
+
+=item C<java.lang.Integer>
+
+=back
+
+=cut
+
+sub set_attribute { 
+    my $self = shift;
+
+    print Dumper(\@_);
+    my ($object,$attribute,$path,$value) = 
+      $self->_extract_get_set_parameters(with_value => 1,params => [@_]);
+    croak "No object name provided" unless $object;
+
+    if (ref($object) eq "CODE") {
+        return $self->handle_attribute_by_handler($object,$value);        
+    }
+    croak "No attribute provided for object $object" unless $attribute;
+    croak "No value to set provided for object $object and attribute $attribute" unless $value;
+
+    my $request = JMX::Jmx4Perl::Request->new(WRITE,$object,$attribute,$value,$path);
+    my $response = $self->request($request);
+    if ($response->status == 404) {
+        return undef;
+    }
+    return $response->value;
+}
+
+# Helper method for extracting parameters for the set/get methods.
+sub _extract_get_set_parameters {
+    my $self = shift;
+    my %args = @_;
+    my $p = $args{params};
+    my $f = $p->[0];
+    my $with_value = $args{with_value};
+
+    my ($object,$attribute,$path,$value);
+    if (ref($f) eq "HASH") {
+        $value = $f->{value};
+        if ($f->{alias}) {
+            my $alias_path;
+            ($object,$attribute,$alias_path) = 
+              $self->resolve_alias($f->{alias});
+            if (ref($object) eq "CODE") {
+                # Let the handler do it
+                return ($object,undef,undef,$args{with_value} ? $value : undef);
+            }
+            if ($alias_path) {
+                $path = $f->{path} ? $f->{path} . "/" . $alias_path : $alias_path;
+            } else { 
+                $path = $f->{path};
+            }
+        } else {
+            $object = $f->{mbean};
+            if (!$object && $f->{domain} && ($f->{properties} || $f->{props})) {
+                $object = $f->{domain} . ":";
+                my $href = $f->{properties} || $f->{props};
+                croak "'properties' is not a hashref" unless ref($href);
+                for my $k (keys %{$href}) {
+                    $object .= $k . "=" . $href->{$k};
+                }
+            }
+            $attribute = $f->{attribute};
+            $path = $f->{path};
+        }        
+    } else {
+        if ( (@{$p} == 1 && !$args{with_value}) || 
+             (@{$p} == 2 && $args{with_value})) {
+            # A single argument can only be used as an alias
+            ($object,$attribute,$path) = 
+              $self->resolve_alias($f);
+            $value = $_[1];
+            if (ref($object) eq "CODE") {
+                # Let the handler do it
+                return ($object,undef,undef,$args{with_value} ? $value : undef);
+            }
+        } else {
+            if ($args{with_value}) {
+                ($object,$attribute,$value,$path) = @{$p};
+            } else {
+                ($object,$attribute,$path) = @{$p};
+            }
+        }
+    }
+    return ($object,$attribute,$path,$value);
 }
 
 =item $resp = $jmx->request($request)
@@ -313,7 +399,7 @@ sub info {
 }
 
 
-=item ($object,$attribute,$path) = $self->resolve_attribute_alias($alias)
+=item ($object,$attribute,$path) = $self->resolve_alias($alias)
 
 Resolve an alias for an attibute. This is done by querying registered product
 handlers for resolving an alias. This method will croak if a handler could be
@@ -328,32 +414,36 @@ server or C<undef> if the handler can not resolve this alias.
 
 A handler can decide to handle the fetching of the alias value directly. In
 this case, this metod returns the code reference which needs to be executed
-with the handler as argument (see "request_attribute_by_handler") below. 
+with the handler as argument (see "handle_attribute_by_handler") below. 
 
 =cut
 
-sub resolve_attribute_alias {
+sub resolve_alias {
     my $self = shift;
     my $alias = shift || croak "No alias provided";
 
     my $handler = $self->{product_handler} || $self->_create_handler();    
-    return $handler->attribute_alias($alias);
+    return $handler->alias($alias);
 }
 
-=item $attribute_value = $self->request_attribute_by_handler($coderef)
+=item $attribute_value = $self->handle_attribute_by_handler($coderef,$value)
 
 Execute a subroutine with the current handler as argument and returns the
 return value of this subroutine. This method is used in conjunction with
-C<resolve_attribute_alias> to allow handler a more sophisticated way to access
+C<resolve_alias> to allow handler a more sophisticated way to access
 the MBeanServer. Additionally, it allows for mangling the output, too.
+
+The subroutine is supposed to handle reading and writing of attributes. An
+optional second parameter specifies the value to set. If this is missing, a
+read is requested. 
 
 =cut
 
-sub request_attribute_by_handler {
+sub handle_attribute_by_handler {
     my $self = shift;
     my $code = shift;
     my $handler = $self->{product_handler} || $self->_create_handler();    
-    return &{$code}($handler);
+    return &{$code}($handler,@_);
 }
 
 =item $product = $self->product_id()
@@ -554,7 +644,7 @@ sub _format_attr_or_op {
 sub _format_attribute {
     my ($ret,$name,$attr,$level) = @_;
     $ret .= &_get_space($level);
-    $ret .= sprintf("%-35s %s\n",$name,$attr->{type}.(!$attr->{rw} ? " [ro]" : "").", \"".$attr->{desc}."\"");
+    $ret .= sprintf("%-35s %s\n",$name,$attr->{type}.((!$attr->{rw} || "false" eq lc $attr->{rw}) ? " [ro]" : "").", \"".$attr->{desc}."\"");
     return $ret;
 }
 

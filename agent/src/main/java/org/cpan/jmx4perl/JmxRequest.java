@@ -24,6 +24,7 @@
 package org.cpan.jmx4perl;
 
 import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -63,7 +64,7 @@ import java.util.*;
  *       <code>param3</code> = value, <code>param4 ... paramN</code> = Inner Path.
  *       The value must be URL encoded (with UTF-8 as charset), and must be convertable into
  *       a data structure</li>
- *   <li>Type: <b>exec</b> ({@link Type#EXEC_OPERATION}<br/>
+ *   <li>Type: <b>exec</b> ({@link Type#EXEC}<br/>
  *       Parameters: <code>param1</code> = MBean name, <code>param2</code> = operation name,
  *       <code>param4 ... paramN</code> = arguments for the operation.
  *       The arguments must be URL encoded (with UTF-8 as charset), and must be convertable into
@@ -84,7 +85,7 @@ public class JmxRequest extends JSONObject {
 
         // Unsupported:
         WRITE("write"),
-        EXEC_OPERATION("exec"),
+        EXEC("exec"),
         REGISTER_NOTIFICATION("regnotif"),
         REMOVE_NOTIFICATION("remnotif");
 
@@ -126,7 +127,7 @@ public class JmxRequest extends JSONObject {
                         if (type == Type.WRITE) {
                             value = URLDecoder.decode(elements.pop(),"UTF-8");
                         }
-                    } else if (type == Type.EXEC_OPERATION) {
+                    } else if (type == Type.EXEC) {
                         operation = elements.pop();
                     } else {
                         throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
@@ -199,17 +200,26 @@ public class JmxRequest extends JSONObject {
         put("type",type.getValue());
         if (type == Type.READ || type == Type.WRITE) {
             put("attribute",getAttributeName());
-        }
-        if (extraArgs.size() > 0) {
-            StringBuffer buf = new StringBuffer();
-            Iterator<String> it = extraArgs.iterator();
-            while (it.hasNext()) {
-                buf.append(it.next());
-                if (it.hasNext()) {
-                    buf.append("/");
+            if (extraArgs.size() > 0) {
+                StringBuffer buf = new StringBuffer();
+                Iterator<String> it = extraArgs.iterator();
+                while (it.hasNext()) {
+                    buf.append(it.next());
+                    if (it.hasNext()) {
+                        buf.append("/");
+                    }
                 }
+                put("path",buf.toString());
             }
-            put("path",buf.toString());
+        }
+        if (type == Type.WRITE) {
+            put("value",getValue());
+        }
+        if (type == Type.EXEC) {
+            put("operation",getOperation());
+            if (extraArgs.size() > 0) {
+                put("arguments",getExtraArgs());                
+            }
         }
         if (type != Type.LIST) {
             put("mbean",objectName.getCanonicalName());
@@ -252,7 +262,7 @@ public class JmxRequest extends JSONObject {
         } else if (type == Type.WRITE) {
             ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(attributeName)
                     .append(", value=").append(value);
-        } else if (type == Type.EXEC_OPERATION) {
+        } else if (type == Type.EXEC) {
             ret.append("EXEC mbean=").append(objectNameS).append(", operation=").append(operation);
         } else {
             ret.append(type).append(" mbean=").append(objectNameS);

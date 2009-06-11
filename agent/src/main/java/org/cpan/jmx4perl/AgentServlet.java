@@ -25,17 +25,18 @@
 package org.cpan.jmx4perl;
 
 
-import org.cpan.jmx4perl.converter.AttributeToJsonConverter;
+import org.cpan.jmx4perl.converter.attribute.AttributeConverter;
+import org.cpan.jmx4perl.converter.StringToObjectConverter;
 import org.json.simple.JSONObject;
 
 import javax.management.*;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -43,7 +44,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.security.InvalidKeyException;
 
 /**
  * Agent servlet which connects to a local JMX MBeanServer for
@@ -61,7 +61,7 @@ import java.security.InvalidKeyException;
  * like strings or numbers, collections, arrays and maps are also supported (which
  * translate into the corresponding JSON structure). Additional the OpenMBean types
  * {@link javax.management.openmbean.CompositeData} and {@link javax.management.openmbean.TabularData}
- * are supported as well. Refer to {@link org.cpan.jmx4perl.converter.AttributeToJsonConverter}
+ * are supported as well. Refer to {@link org.cpan.jmx4perl.converter.attribute.AttributeConverter}
  * for additional information.
  *
  * For the client part, please read the documentation of
@@ -74,7 +74,11 @@ public class AgentServlet extends HttpServlet {
 
     // Converter for converting various attribute object types
     // a JSON representation
-    private AttributeToJsonConverter jsonConverter;
+    private AttributeConverter attributeConverter;
+
+    // String to object converters for setting attributes and arguments
+    // of operations
+    private StringToObjectConverter stringToObjectConverter;
 
     // Are we running within JBoss ?
     private boolean isJBoss;
@@ -88,7 +92,8 @@ public class AgentServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        jsonConverter = new AttributeToJsonConverter();
+        stringToObjectConverter = new StringToObjectConverter();
+        attributeConverter = new AttributeConverter(stringToObjectConverter);
         isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
         mBeanServers = findMBeanServers();
         ServletConfig config = getServletConfig();
@@ -126,12 +131,16 @@ public class AgentServlet extends HttpServlet {
                 if (debug) {
                     log("Return: " + (retValue != null ?  retValue.toString() : "(null)"));
                 }
+            } else if (type == JmxRequest.Type.WRITE) {
+                retValue = setMBeanAttribute(jmxReq);
+            } else if (type == JmxRequest.Type.EXEC) {
+                retValue = executeMBeanOperation(jmxReq);
             } else if (type == JmxRequest.Type.LIST) {
                 retValue = listMBeans();
             } else {
                 throw new UnsupportedOperationException("Unsupported operation '" + jmxReq.getType() + "'");
             }
-            json = jsonConverter.convertToJson(retValue,jmxReq);
+            json = attributeConverter.convertToJson(retValue,jmxReq);
             json.put("status",200 /* success */);
         } catch (AttributeNotFoundException exp) {
             code = 404;
@@ -166,6 +175,8 @@ public class AgentServlet extends HttpServlet {
             sendResponse(pResp,code,json.toJSONString());
         }
     }
+
+
 
     private JSONObject getErrorJSON(int pErrorCode, Throwable pExp, JmxRequest pJmxReq) {
         JSONObject jsonObject = new JSONObject();
@@ -264,39 +275,124 @@ public class AgentServlet extends HttpServlet {
     }
 
     private Object getMBeanAttribute(JmxRequest pJmxReq) throws AttributeNotFoundException, InstanceNotFoundException {
+        return executeJmxOperation(
+                pJmxReq,
+                new JmxRequestExecutor() {
+                    public Object execute(JmxRequest request, MBeanServer server)
+                            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+                        return server.getAttribute(request.getObjectName(), request.getAttributeName());
+                    }
+                }
+        );
+    }
+
+    // Set the MBean attribute and return the old value
+    private Object setMBeanAttribute(JmxRequest pJmxReq) throws AttributeNotFoundException, InstanceNotFoundException {
+        return executeJmxOperation(
+                pJmxReq,
+                new JmxRequestExecutor() {
+                    public Object execute(JmxRequest request, MBeanServer server)
+                            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+                        try {
+                            return setAttribute(request, server);
+                        } catch (IntrospectionException exp) {
+                            throw new IllegalArgumentException("Cannot get info for MBean " + request.getObjectName() + ": " +exp,exp);
+                        } catch (InvalidAttributeValueException e) {
+                            throw new IllegalArgumentException("Invalid value " + request.getValue() + " for attribute " +
+                                    request.getAttributeName() + ", MBean " + request.getObjectNameAsString());
+                        } catch (IllegalAccessException e) {
+                            throw new IllegalArgumentException("Cannot set value " + request.getValue() + " for attribute " +
+                                    request.getAttributeName() + ", MBean " + request.getObjectNameAsString(),e);
+                        } catch (InvocationTargetException e) {
+                            throw new IllegalArgumentException("Cannot set value " + request.getValue() + " for attribute " +
+                                    request.getAttributeName() + ", MBean " + request.getObjectNameAsString(),e);
+                        }
+                    }
+                }
+        );
+
+    }
+
+    private Object executeMBeanOperation(JmxRequest pJmxReq)
+            throws InstanceNotFoundException, AttributeNotFoundException {
+        return executeJmxOperation(
+                pJmxReq,
+                new JmxRequestExecutor() {
+                    public Object execute(JmxRequest request, MBeanServer server)
+                            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+                        String[] paramClazzes = new String[0];
+                        paramClazzes = extractOperationTypes(server,request);
+                        Object[] params = new Object[paramClazzes.length];
+                        List<String> args = request.getExtraArgs();
+                        if (args.size() != paramClazzes.length) {
+                            throw new IllegalArgumentException("Invalid operation parameters. Operation " +
+                                    request.getOperation() + " requires " + paramClazzes.length +
+                                    " parameters, not " + args.size() + " as given");
+                        }
+                        for (int i = 0;i <  paramClazzes.length; i++) {
+                            params[i] = stringToObjectConverter.convertFromString(paramClazzes[i],args.get(i));
+                        }
+                        return server.invoke(request.getObjectName(),request.getOperation(),params,paramClazzes);
+                    }
+                }
+        );
+    }
+
+    private String[] extractOperationTypes(MBeanServer pServer, JmxRequest pRequest)
+            throws ReflectionException, InstanceNotFoundException {
         try {
-            wokaroundJBossBug(pJmxReq);
-            AttributeNotFoundException attrException = null;
-            InstanceNotFoundException objNotFoundException = null;
-            for (MBeanServer s : mBeanServers) {
-                try {
-                    return s.getAttribute(pJmxReq.getObjectName(), pJmxReq.getAttributeName());
-                } catch (InstanceNotFoundException exp) {
-                    // Remember exceptions for later use
-                    objNotFoundException = exp;
-                } catch (AttributeNotFoundException exp) {
-                    attrException = exp;
+            MBeanInfo mBeanInfo = pServer.getMBeanInfo(pRequest.getObjectName());
+            for (MBeanOperationInfo opInfo : mBeanInfo.getOperations()) {
+                if (opInfo.getName().equals(pRequest.getOperation())) {
+                    MBeanParameterInfo[] pInfos = opInfo.getSignature();
+                    String[] types = new String[pInfos.length];
+                    for (int i=0;i<pInfos.length;i++) {
+                        types[i] = pInfos[i].getType();
+                    }
+                    return types;
                 }
             }
-            if (attrException != null) {
-                throw attrException;
-            }
-            // Must be there, otherwise we would nave have left the loop
-            throw objNotFoundException;
-        } catch (ReflectionException e) {
-            throw new RuntimeException("Internal error for " + pJmxReq.getAttributeName() +
-                    "' on object " + pJmxReq.getObjectName() + ": " + e);
-        } catch (MBeanException e) {
-            throw new RuntimeException("Exception while fetching the attribute '" + pJmxReq.getAttributeName() +
-                    "' on object " + pJmxReq.getObjectName() + ": " + e);
+        } catch (IntrospectionException e) {
+            throw new IllegalStateException("Cannot extract MBeanInfo for " + pRequest.getObjectNameAsString());
         }
+        throw new IllegalArgumentException(
+                "Cannot extract type info for operation " + pRequest.getOperation() +
+                " on MBean " + pRequest.getObjectNameAsString());
+    }
+
+
+    // =================================================================================
+
+    private Object setAttribute(JmxRequest request, MBeanServer server)
+            throws MBeanException, AttributeNotFoundException, InstanceNotFoundException,
+            ReflectionException, IntrospectionException, InvalidAttributeValueException, IllegalAccessException, InvocationTargetException {
+        // Old value, will throw an exception if attribute is not known. That's good.
+        Object oldValue = server.getAttribute(request.getObjectName(), request.getAttributeName());
+
+        MBeanInfo mInfo = server.getMBeanInfo(request.getObjectName());
+        MBeanAttributeInfo aInfo = null;
+        for (MBeanAttributeInfo i : mInfo.getAttributes()) {
+            if (i.getName().equals(request.getAttributeName())) {
+                aInfo = i;
+                break;
+            }
+        }
+        if (aInfo == null) {
+            throw new AttributeNotFoundException("No attribute " + request.getAttributeName() +
+                    " found for MBean " + request.getObjectNameAsString());
+        }
+        String type = aInfo.getType();
+        Object[] values = attributeConverter.getValues(type,oldValue,request);
+        Attribute attribute = new Attribute(request.getAttributeName(),values[0]);
+        server.setAttribute(request.getObjectName(),attribute);
+        return values[1];
     }
 
     // ==========================================================================
     // Helper
 
     /**
-     * Use various ways for gettint to the MBeanServer which should be exposed via this
+     * Use various ways for getting to the MBeanServer which should be exposed via this
      * servlet.
      *
      * <ul>
@@ -368,6 +464,43 @@ public class AgentServlet extends HttpServlet {
         }
     }
 
+    // =====================================================================================
+
+    // Execute a request for all known MBeanServers until the first doesnt croak
+    private Object executeJmxOperation(JmxRequest pJmxReq, JmxRequestExecutor pOperation)
+            throws InstanceNotFoundException, AttributeNotFoundException {
+        try {
+            wokaroundJBossBug(pJmxReq);
+            AttributeNotFoundException attrException = null;
+            InstanceNotFoundException objNotFoundException = null;
+            for (MBeanServer s : mBeanServers) {
+                try {
+                    return pOperation.execute(pJmxReq,s);
+                } catch (InstanceNotFoundException exp) {
+                    // Remember exceptions for later use
+                    objNotFoundException = exp;
+                } catch (AttributeNotFoundException exp) {
+                    attrException = exp;
+                }
+            }
+            if (attrException != null) {
+                throw attrException;
+            }
+            // Must be there, otherwise we would nave have left the loop
+            throw objNotFoundException;
+        } catch (ReflectionException e) {
+            throw new RuntimeException("Internal error for " + pJmxReq.getAttributeName() +
+                    "' on object " + pJmxReq.getObjectName() + ": " + e);
+        } catch (MBeanException e) {
+            throw new RuntimeException("Exception while fetching the attribute '" + pJmxReq.getAttributeName() +
+                    "' on object " + pJmxReq.getObjectName() + ": " + e);
+        }
+    }
+
+    private interface JmxRequestExecutor {
+        Object execute(JmxRequest request,MBeanServer server)
+                throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException;
+    }
 
     private void wokaroundJBossBug(JmxRequest pJmxReq) throws ReflectionException, InstanceNotFoundException {
         if (isJBoss) {

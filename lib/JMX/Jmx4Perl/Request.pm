@@ -35,11 +35,11 @@ Get the value of a attribute
 
 =item WRITE
 
-Write an attribute (not supported yet)
+Write an attribute
 
-=item EXEC_OPERATION 
+=item EXEC
 
-Execute an JMX operation (not supported yet)
+Execute an JMX operation 
 
 =item REGISTER_NOTIFICATION
 
@@ -82,24 +82,25 @@ package JMX::Jmx4Perl::Request;
 use strict;
 use vars qw(@ISA @EXPORT);
 use Carp;
+use Data::Dumper;
 
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = (
-           "READ","WRITE","EXEC_OPERATION","LIST",
+           "READ","WRITE","EXEC","LIST",
            "REGISTER_NOTIFICATION","REMOVE_NOTIFICATION"
           );
 
 
 use constant READ => "read";
 use constant WRITE => "write";
-use constant EXEC_OPERATION => "exec";
+use constant EXEC => "exec";
 use constant LIST => "list";
 use constant REGISTER_NOTIFICATION => "regnotif";
 use constant REMOVE_NOTIFICATION => "remnotif";
 
 my $TYPES = 
-{ map { $_ => 1 } (READ, WRITE, EXEC_OPERATION, LIST, 
+{ map { $_ => 1 } (READ, WRITE, EXEC, LIST, 
                    REGISTER_NOTIFICATION, REMOVE_NOTIFICATION) };
 
 
@@ -127,10 +128,16 @@ named parameters are:
  Order    : $mbean, $attribute, $path
  Mandatory: $mbean, $attribute
 
-=item C<WRITE> (not supported yet)
+=item C<WRITE> 
 
  Order    : $mbean, $attribute, $value, $path
  Mandatory: $mbean, $attribute, $value
+
+=item C<EXEC> 
+
+ Order    : $mbean, $operation, $arg1, $arg2, ...
+ Mandatory: $mbean, $operation
+
 
 =item C<LIST>
   
@@ -164,6 +171,15 @@ sub new {
                 $self->{mbean} = shift;
                 $self->{attribute} = shift;
                 $self->{path} = shift;
+            } elsif ($type eq WRITE) {
+                $self->{mbean} = shift;
+                $self->{attribute} = shift;
+                $self->{value} = shift;
+                $self->{path} = shift;
+            } elsif ($type eq EXEC) {
+                $self->{mbean} = shift;
+                $self->{operation} = shift;
+                $self->{args} = [ @_ ];
             } elsif ($type eq LIST) {
                 $self->{path} = shift;
             } else {
@@ -191,9 +207,16 @@ sub get {
 # Internal check for validating that all arguments are given
 sub _validate {
     my $self = shift;
-    if ($self->{type} eq READ || $self->{type} eq WRITE) {
-        croak "READ: No mbean name given" unless $self->{mbean};
-        croak "READ: No attribute name given" unless $self->{attribute};
+    if ($self->{type} eq READ ||  $self->{type} eq WRITE) {
+        die $self->{type} . ": No mbean name given\n" unless $self->{mbean};
+        die $self->{type} . ": No attribute name given\n" unless $self->{attribute};
+    }
+    if ($self->{type} eq WRITE) {
+        die $self->{type} . ": No value given\n" unless $self->{value};
+    }
+    if ($self->{type} eq EXEC) {
+        die $self->{type} . ": No mbean name given\n" unless $self->{mbean};
+        die $self->{type} . ": No operation name given\n" unless $self->{operation};
     }
 }
 

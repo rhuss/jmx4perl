@@ -21,48 +21,54 @@
  * further details.
  */
 
-package org.cpan.jmx4perl.converter;
+package org.cpan.jmx4perl.converter.attribute;
 
+import org.cpan.jmx4perl.converter.StringToObjectConverter;
 import org.json.simple.JSONObject;
 
+import javax.management.AttributeNotFoundException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.InvalidKeyException;
-import javax.management.AttributeNotFoundException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.Stack;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * @author roland
  * @since Apr 19, 2009
  */
-public class CompositeHandler implements AttributeToJsonConverter.Handler {
+public class CompositeHandler implements AttributeConverter.Handler {
 
     public Class getType() {
         return CompositeData.class;
     }
 
-    public Object handle(AttributeToJsonConverter pConverter, Object pValue,
-                         Stack<String> pExtraArgs) throws AttributeNotFoundException {
+    public Object extractObject(AttributeConverter pConverter, Object pValue,
+                         Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         CompositeData cd = (CompositeData) pValue;
 
         if (!pExtraArgs.isEmpty()) {
-            String decodedKey = "";
+            String decodedKey = pExtraArgs.pop();
             try {
-                decodedKey = URLDecoder.decode(pExtraArgs.pop(), "UTF-8");
-                return pConverter.prepareForJson(cd.get(decodedKey),pExtraArgs);
-            } catch (UnsupportedEncodingException exp) {
-                throw new RuntimeException("Internal: Encoding UTF-8 not supported");
+                return pConverter.extractObject(cd.get(decodedKey),pExtraArgs,jsonify);
             }  catch (InvalidKeyException exp) {
                 throw new AttributeNotFoundException("Invalid path '" + decodedKey + "'");
             }
         } else {
-            JSONObject ret = new JSONObject();
-            for (String key : (Set<String>) cd.getCompositeType().keySet()) {
-                ret.put(key,pConverter.prepareForJson(cd.get(key),pExtraArgs));
+            if (jsonify) {
+                JSONObject ret = new JSONObject();
+                for (String key : (Set<String>) cd.getCompositeType().keySet()) {
+                    ret.put(key,pConverter.extractObject(cd.get(key),pExtraArgs,jsonify));
+                }
+                return ret;
+            } else {
+                return cd;
             }
-            return ret;
         }
+    }
+
+    public Object setObjectValue(StringToObjectConverter pConverter, Object pInner, String pAttribute, String pValue)
+            throws IllegalAccessException, InvocationTargetException {
+        throw new IllegalArgumentException("ComposideData cannot be written to");
     }
 }

@@ -21,13 +21,15 @@
  * further details.
   */
 
-package org.cpan.jmx4perl.converter;
+package org.cpan.jmx4perl.converter.attribute;
 
+import org.cpan.jmx4perl.converter.StringToObjectConverter;
 import org.json.simple.JSONArray;
 
+import javax.management.AttributeNotFoundException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
-import javax.management.AttributeNotFoundException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -37,28 +39,37 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class TabularDataHandler implements AttributeToJsonConverter.Handler {
+public class TabularDataHandler implements AttributeConverter.Handler {
 
     public Class getType() {
         return TabularData.class;
     }
 
-    public Object handle(AttributeToJsonConverter pConverter, Object pValue,
-                         Stack<String> pExtraArgs) throws AttributeNotFoundException {
+    public Object extractObject(AttributeConverter pConverter, Object pValue,
+                         Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         TabularData td = (TabularData) pValue;
 
         if (!pExtraArgs.isEmpty()) {
             String index = pExtraArgs.pop();
             int idx = Integer.valueOf(index).intValue();
             CompositeData cd = getRow(idx, td.values().iterator());
-            return pConverter.prepareForJson(cd,pExtraArgs);
+            return pConverter.extractObject(cd,pExtraArgs,jsonify);
         } else {
-            JSONArray ret = new JSONArray();
-            for (CompositeData cd : (Collection <CompositeData>) td.values()) {
-                ret.add(pConverter.prepareForJson(cd,pExtraArgs));
+            if (jsonify) {
+                JSONArray ret = new JSONArray();
+                for (CompositeData cd : (Collection <CompositeData>) td.values()) {
+                    ret.add(pConverter.extractObject(cd,pExtraArgs,jsonify));
+                }
+                return ret;
+            } else {
+                return td;
             }
-            return ret;
         }
+    }
+
+    public Object setObjectValue(StringToObjectConverter pConverter, Object pInner, String pAttribute, String pValue)
+            throws IllegalAccessException, InvocationTargetException {
+        throw new IllegalArgumentException("TabularData cannot be written to");
     }
 
     private static CompositeData getRow(int idx, Iterator it) {

@@ -15,11 +15,15 @@ sub order {
 }
 
 sub init_aliases {
-    return { attributes => 
-           {
-            MEMORY_HEAP => [ "resolved2_name", "resolved2_attr" ]
-           }
-           };
+    return 
+    { 
+     attributes => {
+                    MEMORY_HEAP => [ "resolved2_name", "resolved2_attr" ]
+                   },
+     operations => { 
+                    MEMORY_GC => [ "memory2_name", "gc2_op" ]
+                   }
+    };
 }
 
 1;

@@ -1,3 +1,4 @@
+
 =pod
 
 =head1 NAME 
@@ -31,14 +32,14 @@ Another goal is to provide an abstraction for accessing certain, commonly known
 MBeans for various supported JEE application server, which differ in naming
 from brand to brand. For now, the JEE servers supported are JBoss 4 & 5, Oracle
 WebLogic 9 & 10, Glassfish 2 and 3, Jonas 4 and Geronimo 2 as well as the pure
-servlet containers Jetty 5 and 6, Tomcat 4, 5 & 6. Other platform might work
+servlet containers Jetty 5 and 6, Tomcat 4, 5 & 6. Other platforms might work
 as well, however they are not yet tested. Please let me know, whether jmx4perl
 works for you on other servers as well (which is highly likely due to the
 simplistic nature of the agent webapp). I got reports, that it works on IBM
 Websphere 6.1 and 7 as well, but unfortunately I can't verify this on my own
 due to the lack of a proper testing environment.
 
-B<jmx4perl> is not an academic exercise. In fact, it originates from the need
+B<jmx4perl> is not an academic exercise. In fact it originates from the need
 to let Nagios (a hopefully well known open source monitoring solution, see
 L<http://www.nagios.org>) access JEE appliation servers in a painless way. You
 can find a nagios check in the scripts directory, which is a prefactored check
@@ -52,7 +53,8 @@ which allows for simple access to JMX MBeans and much more features.
 JMX is a complex specification, which can not be completely revealed in this
 short documentation. Refer to
 L<http://java.sun.com/docs/books/tutorial/jmx/index.html> for a JMX
-tutorial. But in short, once can distinguish three kind of operational modes:
+tutorial. But in short, one can distinguish between three kinds of operational
+modes:
 
 =over
 
@@ -71,9 +73,11 @@ on the roadmap.
 
 Listeners can register to get notified for certain notifications by the
 MBeans. This is not yet supported by jmx4perl and it is technically quite
-challenging, since HTTP, our transport protocol, is a typical Request-Repsonse
-based protocol which is unidirectional. However, there are already ideas, how
-to overcome this limitation.
+challenging, since HTTP, our transport protocol, is a typical request-response
+based protocol which is unidirectional by nature. However, there are already
+ideas how to overcome this limitation, but please don't hold your breath. This
+is on the roadmap, but with very low priority only. Tell me your use case if
+you want to push it up.
 
 =back
 
@@ -153,11 +157,11 @@ tool) installed, the Java agent will be compiled and packaged as
 well. However, this is not required. A precompiled F<j4p-agent.war>
 can be found in the F<agent> directory.
 
-For the module to work, you need to deploy F<j4p-agent.war> to the JEE Server to 
-monitor. The concrete steps depend on the specific way for deploying on the 
-targeted server, which in most cases is as simple as copying the agent in to a
+For the module to work, you need to deploy F<j4p-agent.war> to the JEE Server
+to monitor. The concrete steps depend on the specific way for deploying on the
+target server, which in most cases is as simple as copying the agent into a
 specific directory. Please consult the documentation of your Java application
-server for the details (look for "deployment" and "war")
+server for the details (look for "deployment" and "web application" (or "war))) 
 
 To test it, you can use L<jmx4perl> with the URL of the depolyed
 agent:
@@ -194,7 +198,7 @@ Apache Geronimo 2 (L<http://geronimo.apache.org/>)
 
 =item * 
 
-Jonas 4 (L<jonas.ow2.org/>)
+Jonas 4 (L<http://jonas.ow2.org/>)
 
 =item * 
 

@@ -129,6 +129,7 @@ sub request {
  
     my $ua = $self->{ua};
     my $url = $self->request_url($jmx_request);
+#    print $url;
     my $req = HTTP::Request->new(GET => $url);
     my $resp = $ua->request($req);
     my $ret = {};
@@ -174,14 +175,18 @@ sub request_url {
     my $type = $request->get("type");
     $url .= $type . "/";
     $url .= $self->_escape($request->get("mbean")) . "/";
-    if ($type eq READ || $type eq WRITE) {
+    if ($type eq READ) {
         $url .= $self->_escape($request->get("attribute"));
-        $url .= "/" . $self->_escape($request->get("path")) if $request->get("path");
-        if ($type eq WRITE) {
-            $url .= "/" . $self->_escape($request->get("value"));
-        }
+        $url .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
+    } elsif ($type eq WRITE) {
+        $url .= $self->_escape($request->get("attribute"));
+        $url .= "/" . $self->_escape($request->get("value"));
+        $url .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
     } elsif ($type eq LIST) {
-        $url .= $self->_escape($request->get("path")) if $request->get("path");
+        $url .= $self->_escape($request->get("path")) if defined($request->get("path"));
+    } elsif ($type eq EXEC) {
+        $url .= $self->_escape($request->get("operation"));
+        $url .= "/" . $self->_escape($_) for @{$request->get("args")};
     }
     return $url;
 }

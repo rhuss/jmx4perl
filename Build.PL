@@ -38,14 +38,13 @@ my $build = $class->new
    requires => {
                 "JSON" => "2.12",
                 "LWP::UserAgent" => 0,
-                "URI" => 0,
+                "URI" => "1.35",
                 "Data::Dumper" => 0,
                 "Pod::Usage" => 0,
                 "Getopt::Long" => 0,
                 "Carp" => 0,
                 "Module::Find" => 0,
                 "Scalar::Util" => 0,
-                "URI::Encode" => 0
                },
    recommends => {
                    "Nagios::Plugin" => "0.27"

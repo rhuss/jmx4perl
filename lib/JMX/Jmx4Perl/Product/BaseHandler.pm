@@ -136,17 +136,20 @@ sub jsr77 {
     return undef;
 }
 
-=item ($mbean,$attribute,$path) = $self->attribute_alias($alias)
+=item ($mbean,$attribute,$path) = $self->alias($alias)
 
-Return the mbean and attribute name for an registered alias. A subclass should
-call this parent method if it doesn't know about this alias, since JVM
-specific MBeans are aliased here.
+=item ($mbean,$operation) = $self->alias($alias)
+
+Return the mbean and attribute name for an registered attribute alias, for an
+operation alias, this method returns the mbean and the operation name. A
+subclass should call this parent method if it doesn't know about a specific
+alias, since JVM MXBeans are aliased here.
 
 Returns undef if this product handler doesn't know about the provided alias. 
 
 =cut 
 
-sub attribute_alias {
+sub alias {
     my ($self,$alias_or_name) = @_;
     my $alias;
     if (UNIVERSAL::isa($alias_or_name,"JMX::Jmx4Perl::Alias::Object")) {
@@ -155,7 +158,7 @@ sub attribute_alias {
         $alias = JMX::Jmx4Perl::Alias->by_name($alias_or_name) 
           || croak "No alias $alias_or_name known";
     }
-    my $aliasref = $self->resolve_attribute_alias($alias) || $alias->default();
+    my $aliasref = $self->resolve_alias($alias) || $alias->default();
     return undef unless defined($aliasref);
 
     return $aliasref if (ref($aliasref) eq "CODE"); # return coderefs directly
@@ -188,12 +191,12 @@ sub info {
 
 # Examines internal alias hash in order to return handler specific aliases
 # Can be overwritten if something more esoteric is required
-sub resolve_attribute_alias {
+sub resolve_alias {
     my $self = shift;
     my $alias = shift;
-    $alias = $alias->{alias} if (UNIVERSAL::isa($alias,"JMX::Jmx4Perl::Agent::Object"));
-    my $aliases = $self->{aliases}->{attributes};
-    return $aliases && $aliases->{$alias};
+    croak "Not an alias object " unless (UNIVERSAL::isa($alias,"JMX::Jmx4Perl::Alias::Object"));
+    my $aliases = $self->{aliases}->{$alias->{type} eq "attribute" ? "attributes" : "operations"};
+    return $aliases && $aliases->{$alias->{alias}};
 }
 
 
@@ -249,8 +252,8 @@ Example :
       }
   }
 
-Of course, you are free to overwrite C<attribute_alias> or
-C<resolve_attribute_allias> on your todo want you want.
+Of course, you are free to overwrite C<alias> or
+C<resolve_alias> on your own in order to do want you want it to do. 
 
 This default implementation returns an empty hashref.
 
@@ -331,6 +334,7 @@ sub jvm_info {
     $ret .= sprintf("   %-20.20s %s\n","Heap-Memory used:",int($jmx4perl->get_attribute(MEMORY_HEAP_USED)/(1024*1024)) . " MB");
     $ret .= sprintf("   %-20.20s %s\n","Heap-Memory alloc:",int($jmx4perl->get_attribute(MEMORY_HEAP_COMITTED)/(1024*1024)) . " MB");
     $ret .= sprintf("   %-20.20s %s\n","Heap-Memory max:",int($jmx4perl->get_attribute(MEMORY_HEAP_MAX)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","NonHeap-Memory max:",int($jmx4perl->get_attribute(MEMORY_NONHEAP_MAX)/(1024*1024)) . " MB");
     $ret .= "Classes:\n";
     $ret .= sprintf("   %-20.20s %s\n","Classes loaded:",$jmx4perl->get_attribute(CL_LOADED));
     $ret .= sprintf("   %-20.20s %s\n","Classes total:",$jmx4perl->get_attribute(CL_TOTAL));

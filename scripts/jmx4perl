@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-jmx4perl - JMX acccess tool
+jmx4perl - JMX acccess tools and modules
 
 =cut
 
@@ -22,6 +22,8 @@ my %COMMANDS =
    list => \&command_list,
    attributes => \&command_attributes,
    read => \&command_read,
+   write => \&command_write,
+   exec => \&command_exec
 );
 
 my %opts = ();
@@ -85,6 +87,10 @@ if ($opts{shell}) {
   jmx4perl .... attributes <agent-url>
 
   jmx4perl .... read <mbean-name> <attribute-name> [path] <agent-url>
+
+  jmx4perl .... write <mbean-name> <attribute-name> <value> [path] <agent-url>
+
+  jmx4perl .... exec <mbean-name> <operation> <arg1> <arg2> ... <agent-url>
 
   jmx4perl .... aliases
 
@@ -216,22 +222,58 @@ MBean's name and the attribute's name. Additionally, you can provide a I<path>
 within the return value to pick a sub-value. See L<JMX::Jmx4Perl::Request> for a
 detailed explanation of pathes.
 
+The MBean's name and the attribute can be substituted by an
+alias name, too.
+
 For a single value, the value itself is printed (without additional newline),
 for a more complex data structure, L<Data::Dumper> is used. 
 
 =cut 
 
 sub command_read {
-    my $resp = &_get_attribute(@_);
-    
+    my $resp = &_get_attribute(@_);    
+    &_check_for_error($resp);    
+    &_print_response($resp);
+}
+
+=head2 write
+
+Write a JMX attribute's value and print out the value as it is returned from
+the server. The required arguments are the MBean's name, the attribute and the
+value to set. Optionally, a inner path can be provided as well in which case a
+inner value is set. The MBean's name and the attribute can be substituted by an
+alias name, too. See also L</"aliases"> for getting all available aliases.
+
+The old value of the attribute (or the object pointed to by the inner path) is
+printed out in the same as for L</"read">
+
+=cut
+
+sub command_write {
+    my $resp = &_set_attribute(@_);
     &_check_for_error($resp);
-    
-    my $val = $resp->value;
-    if (ref($val)) {
-        print Dumper($val);
-    } else {
-        print $val;
-    }
+    &_print_response($resp);
+}
+
+=head2 exec
+
+Execute a JMX operation. The required arguments are the MBean's name, the name
+of the operation to execute and the arguments required for this operations
+(which can be empty if the operation doesn't take any arguments). The return
+value is the return value of the operation which can be C<undef> in the case of
+a void operation.
+
+A operation alias can also be used for the MBean's name and operation.
+
+For a single return value, the value itself is printed (without additional
+newline), for a more complex data structure, L<Data::Dumper> is used.
+
+=cut
+
+sub command_exec {
+    my $resp = &_exec_operation(@_);
+    &_check_for_error($resp);
+    &_print_response($resp);    
 }
 
 =head2 aliases 
@@ -260,30 +302,88 @@ sub _check_for_error {
     }
 }
 
+sub _print_response {
+    my $resp = shift;
+    my $val = $resp->value;
+    if (ref($val)) {
+        print Dumper($val);
+    } else {
+        print $val;
+    }
+}
+
 sub _get_attribute {
-    my ($jmx,$mbean,$attribute,$path) = @_;
+    my $jmx = shift;
+    my ($mbean,$attribute,$path) = _extract_get_set_parameter($jmx,"get",@_);
+
+    my $req = new JMX::Jmx4Perl::Request(READ,$mbean,$attribute,$path);
+    return $jmx->request($req);
+}
+
+sub _set_attribute {
+    my $jmx = shift;
+    my ($mbean,$attribute,$path,$value) = _extract_get_set_parameter($jmx,"set",@_);
+
+    my $req = new JMX::Jmx4Perl::Request(WRITE,$mbean,$attribute,$value,$path);
+    return $jmx->request($req);
+}
+
+sub _exec_operation {
+    my $jmx = shift;
+    
+    my ($mbean,$operation,@args) = @_;
+    
+    my $alias = JMX::Jmx4Perl::Alias->by_name($mbean);    
+    if ($alias) {
+        croak $alias->{alias}, " is not an operation alias" unless $alias->{type} eq "operation";
+        unshift @args,$operation;
+        ($mbean,$operation) = $jmx->resolve_alias($alias);
+        die "Alias ",$alias->{alias}," is not available for product ",$jmx->product,"\n" unless $mbean;
+    } else {
+        &_validate_mbean_name($mbean);
+        die "ERROR No operaration given for MBean $mbean given\n" unless $operation;
+    }    
+    my $req = new JMX::Jmx4Perl::Request(EXEC,$mbean,$operation,@args);
+    return $jmx->request($req);
+}
+
+
+sub _extract_get_set_parameter {
+    my ($jmx,$mode,$mbean,$attribute,$path_or_value,$path) = @_;
+    my $value;
+    $path = $path_or_value if $mode eq "get";
+    $value = $path_or_value if $mode eq "set";
+
     croak "No MBean name or alias given" unless $mbean;
+
     # Try to resolve the MBean name as an alias. If this works, we are using
     # this alias.
     my $alias = JMX::Jmx4Perl::Alias->by_name($mbean);
-    my $req;
     if ($alias) {
-        my $path = $attribute;  # path comes after alias
-        my ($o,$a,$p) = $jmx->resolve_attribute_alias($alias);
+        # Shift arguments
+        $path = $attribute if $mode eq "get";  # path comes after alias
+        if ($mode eq "set") {
+            $path = $value;
+            $value = $attribute;
+        }
+        my ($o,$a,$p) = $jmx->resolve_alias($alias);
         die "Alias ",$alias->{alias}," is not available for product ",$jmx->product,"\n" unless $o;
         if ($path) {
             $p = $p ? $p . "/" . $path : $path;
         }
-        $req = new JMX::Jmx4Perl::Request(READ,$o,$a,$p);
+        return ($o,$a,$p,$value);
     } else {
-        die "ERROR: Invalid format for MBean name $mbean (Did you misspelled an alias name ?)\n" if 
-          ($mbean !~ /^[^:]+:[^:]+$/ or $mbean !~ /:([^=])=/);
+        &_validate_mbean_name($mbean);
         die "ERROR No attribute for MBean $mbean given\n" unless $attribute;
-        $req = new JMX::Jmx4Perl::Request(READ,$mbean,$attribute,$path);
-    }
-    return $jmx->request($req);
+        return ($mbean,$attribute,$path,$value);
+    }    
 }
 
+sub _validate_mbean_name {
+    my $mbean = shift;
+    die "ERROR: Invalid format for MBean name $mbean (Did you misspelled an alias name ?)\n" if 
+      ($mbean !~ /^[^:]+:[^:]+$/ || $mbean !~ /:([^=]+)=/);    
+}
 
 =head1 SHELL MODE
 
