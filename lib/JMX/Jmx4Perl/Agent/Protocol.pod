@@ -440,6 +440,12 @@ results in an answer
    }
  }
 
+=head2 version
+
+A command C<version> returns the version of the underlying L<jmx4perl>
+package. The response looks like any other response, the version number itself
+is returned as C<value> attribute in the response.
+
 =head2 Error Response
 
 An error response looks like

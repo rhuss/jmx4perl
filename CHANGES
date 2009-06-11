@@ -2,7 +2,8 @@
   - Support writing attribtues and executing operations 
   - Documentation fixes
   - Tested for WebLogic 9
-  
+  - Added a "version" command to j4p-agent
+
 0.16
   - Switched off debugging in agent servlet
   - Fixed syntax error when using 'jmx4perl -v attributes'

@@ -4,6 +4,7 @@ agent/lib/json_simple-1.1.jar
 agent/lib/servlet-api-2.4.jar
 agent/pom.xml
 agent/src/main/java/org/cpan/jmx4perl/AgentServlet.java
+agent/src/main/java/org/cpan/jmx4perl/Version.java
 agent/src/main/java/org/cpan/jmx4perl/converter/attribute/ArrayHandler.java
 agent/src/main/java/org/cpan/jmx4perl/converter/attribute/AttributeConverter.java
 agent/src/main/java/org/cpan/jmx4perl/converter/attribute/CompositeHandler.java

@@ -61,13 +61,12 @@ modes:
 =item Attribute reading and writing
 
 An MBean can have one or more attributes, which can be read and/or
-written. For the moment, jmx4perl supports reading of attributes only. 
+written. 
 
 =item Execution of operations
 
 A MBean can expose certain operations, which can be executed via JMX
-calls. jmx4perl does not yet support execution of JMX operations, but this is
-on the roadmap.
+calls. 
 
 =item Notifications
 
@@ -172,6 +171,22 @@ Consult L<jmx4perl> for further details.
  
 =head1 FEATURES
 
+=head2 Reading and Writing Attributes
+
+Jmx4Perl knows how to read any attribute and how to write to certain attributes
+for whose types are string-to-object conversions are known. Currently, writing
+of attributes of type String, int, long and boolean is supported. As a special
+features, Jmx4Perl has the notion of an I<inner path> which is a XPath like
+expression for pointing into the object returned by a read or write
+operation. 
+
+=head2 Execution of JMX operations
+
+It is easy to execute JMX operations, even with arguments. However, they same
+restriction for the argument types apply as for writing attributes: There must
+be an easy way to deserialize an argument from a string representation. The
+same types as for writing attributes are supported.
+
 =head2 Autodetection and Product Support
 
 Jmx4Perl is able to autodectect various application servers. This is done by
@@ -275,14 +290,6 @@ notifications.
 =head1 ROADMAP
 
 =over
-
-=item * 
-
-Suport for writing attributes 
-
-=item * 
-
-Support for executing JMX operations
 
 =item *
 

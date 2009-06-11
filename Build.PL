@@ -19,7 +19,26 @@ my $class = Module::Build->subclass(
 
   sub ACTION_buildagent {
       my $self = shift;
-      
+      use FindBin;
+
+      my $version_java = "$FindBin::Bin/agent/src/main/java/org/cpan/jmx4perl/Version.java";
+      my $version_perl = "$FindBin::Bin/lib/JMX/Jmx4Perl.pm";
+      open(F,"$version_java") || die "Cannot open $version_java : $!";
+      my $c = join "",<F>;
+      close F;
+
+      open(F,"$version_perl") || die "Cannot open $version_perl : $!";
+      my $v = join "",<F>;
+      close F;
+      my $version = $1 if $v =~ /^\s+\$VERSION\s+=\s+"([^"]+)"/m; 
+      die "Cannot extract version from $version_perl" unless $version;
+      $c =~ s/String\s+VERSION\s+=\s+"[^"]*"/String VERSION = "$version"/;
+      print "Setting version to $version in Version.java\n";
+
+      open(F,">$version_java") || die "Cannot open $version_java for writing: $!";
+      print F $c;
+      close F;
+
       print "Cannot re-create agent.war" 
               unless $self->do_system(qw(ant -f agent/build.xml));
   }

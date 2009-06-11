@@ -87,7 +87,8 @@ public class JmxRequest extends JSONObject {
         WRITE("write"),
         EXEC("exec"),
         REGISTER_NOTIFICATION("regnotif"),
-        REMOVE_NOTIFICATION("remnotif");
+        REMOVE_NOTIFICATION("remnotif"),
+        VERSION("version");
 
         private String value;
 
@@ -119,7 +120,7 @@ public class JmxRequest extends JSONObject {
 
                 type = extractType(elements.pop());
 
-                if (type != Type.LIST) {
+                if (type != Type.LIST && type != Type.VERSION) {
                     objectNameS = elements.pop();
                     objectName = new ObjectName(objectNameS);
                     if (type == Type.READ || type == Type.WRITE) {
@@ -218,10 +219,10 @@ public class JmxRequest extends JSONObject {
         if (type == Type.EXEC) {
             put("operation",getOperation());
             if (extraArgs.size() > 0) {
-                put("arguments",getExtraArgs());                
+                put("arguments",getExtraArgs());
             }
         }
-        if (type != Type.LIST) {
+        if (type != Type.LIST && type != Type.VERSION) {
             put("mbean",objectName.getCanonicalName());
         }
     }

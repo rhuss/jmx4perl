@@ -128,15 +128,14 @@ public class AgentServlet extends HttpServlet {
             JmxRequest.Type type = jmxReq.getType();
             if (type == JmxRequest.Type.READ) {
                 retValue = getMBeanAttribute(jmxReq);
-                if (debug) {
-                    log("Return: " + (retValue != null ?  retValue.toString() : "(null)"));
-                }
             } else if (type == JmxRequest.Type.WRITE) {
                 retValue = setMBeanAttribute(jmxReq);
             } else if (type == JmxRequest.Type.EXEC) {
                 retValue = executeMBeanOperation(jmxReq);
             } else if (type == JmxRequest.Type.LIST) {
                 retValue = listMBeans();
+            } else if (type == JmxRequest.Type.VERSION) {
+                retValue = Version.getVersion();
             } else {
                 throw new UnsupportedOperationException("Unsupported operation '" + jmxReq.getType() + "'");
             }
