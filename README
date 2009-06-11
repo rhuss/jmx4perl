@@ -17,7 +17,7 @@ INTRODUCTION
 
 HOW IT WORKS
 
-  You need to deploy a small (~ 40k) Java Agent WAR (web archive) to
+  You need to deploy a small (~ 50k) Java Agent WAR (web archive) to
   the Java application server to monitor. Thats all on the java
   side. There is no need to add any startup parameters to the
   application server and to open any additional ports. All

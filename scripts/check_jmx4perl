@@ -19,6 +19,11 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --critical 10000000 \
                 --warning   5000000 
 
+  check_jmx4perl --url http://localhost:8888/j4p-agent 
+                 --alias MEMORY_HEAP_USED 
+                 --base-alias MEMORY_HEAP_MAX 
+                 --critical 0.8
+
 =head1 DESCRIPTION
 
 Command for providing Nagios conformant output for JMX response fetched via
@@ -48,7 +53,7 @@ my $np = Nagios::Plugin->
   new(
       usage => 
       "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning> -n <label>\n" . 
-      "                      [--alias <alias>] [--user <user>] [--password <password>] [--product <product>] [-v] [--help]\n",
+      "                      [--alias <alias>] [--base-alias <alias>] [--user <user>] [--password <password>] [--product <product>] [-v] [--help]\n",
       version => "0.01",
       url => "http://www.consol.com/opensource/nagios/",
       plugin => "check_jmx4perl",
@@ -77,6 +82,10 @@ $np->add_arg(
 $np->add_arg(
          spec => "attribute|a=s",
          help => "Attribute name (e.g. \"HeapMemoryUsage\")",
+        );
+$np->add_arg(
+         spec => "base-alias|b=s",
+         help => "Base alias name, which when given, interprets critical and warning values as relative",
         );
 $np->add_arg(
          spec => "path|p=s",
@@ -111,62 +120,26 @@ $np->add_arg(
             );
 $np->getopts();
 
+&_verify_and_initialize($np);
 my $o = $np->opts;
-$np->nagios_die("An MBean name and a attribute must be provided")
-  if ((!$o->mbean && !$o->attribute) && !$o->alias);
-
-$np->nagios_die("At least a critical or warning threshold must be given") 
-  if ((!defined($o->critical) && !defined($o->warning)));
-
-$np->set_thresholds
-  (
-   $np->opts->critical ? (critical => $np->opts->critical) : (),
-   $np->opts->warning ? (warning => $np->opts->warning) : ()
-  );
 
 eval {
-    my $start_time = (gettimeofday)[1];
+    my $o = $np->opts;
+
     my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $o->url, user => $o->user, password => $o->password,
                                  ($o->product ? (product => $o->product) : ()));
-    my $jmx_request;
-    my @req_args;
-    if ($o->alias) {
-        @req_args = $jmx->resolve_attribute_alias($o->alias);
-        $np->nagios_die("Cannot resolve alias ",$o->alias()) unless @req_args > 0;
-        if ($o->path) {
-            @req_args == 2 ? $req_args[2] = $o->path : $req_args[2] .= "/" . $o->path;
-        }
-    } else {
-        @req_args = ($o->mbean,$o->attribute,$o->path);
-    }
-    $jmx_request = JMX::Jmx4Perl::Request->new(READ,@req_args);
-    
-    if ($o->verbose) {
-        print "Request URL: ",$jmx->request_url($jmx_request),"\n";
-        if ($o->user) {
-            print "Remote User: ",$o->user,"\n";
-        }
-    }
-    my $resp = $jmx->request($jmx_request);
-    if ($resp->is_error) {
-        $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
-    }
-    my $duration = int ((gettimeofday)[1] - $start_time) / 1000;
-    
-    $np->add_perfdata(label => "duration", value => $duration, uom => "ms");
-    if (!defined($resp->value)) {
-        $np->nagios_die("JMX Request " . &get_name($o) . " failed" . Dumper($resp));
-    }
-    if ($o->verbose) {
-        print "Result fetched in ",$duration,"ms:\n";
-        print Dumper($resp);
-    }
-    my $value = $resp->{value};
-    if (ref($value)) { 
-        $np->nagios_die("Response value is a ".ref($value).
-                        ", not a plain value. Did you forget a --path parameter ?","Value: " . Dumper($value));
-    }
+    my $request = &_get_request($np,$jmx);
+    my $resp = &_send_request($np,$jmx,$request);
+    my $value = $resp->value;
+
+    my $base = undef;
+    if ($o->get("base-alias")) {
+        $request = new JMX::Jmx4Perl::Request(READ,$jmx->resolve_alias($o->get("base-alias")));
+        $resp = &_send_request($np,$jmx,$request);
+        $value = $value / $resp->value;
+    };
     $np->add_perfdata(label => &get_name($o),value => $value, critical => $o->critical, warning => $o->warning);
+
     my $code = $np->check_threshold($value);    
     $np->nagios_exit($code,&get_name($o). " : Threshold " . ($code == CRITICAL ? $o->critical : $o->warning) . 
                      " failed for value $value") if $code != OK;
@@ -193,6 +166,88 @@ sub print_mbeans {
     
     
     print Dumper($resp->value);    
+}
+
+sub _get_request {
+    my $np = shift;
+    my $jmx = shift;
+    my $o = $np->opts;
+    
+    my $request = JMX::Jmx4Perl::Request->new(READ,&_prepare_request_args($np,$jmx));
+    if ($o->verbose) {
+        print "Request URL: ",$jmx->request_url($request),"\n";
+        if ($o->user) {
+            print "Remote User: ",$o->user,"\n";
+        }
+    }
+    return $request;
+}
+
+
+sub _send_request {
+    my ($np,$jmx,$jmx_request) = @_;
+    my $o = $np->opts;
+
+    my $start_time = (gettimeofday)[1];
+    
+    my $resp = $jmx->request($jmx_request);
+    &_verify_response($np,$resp);
+
+    if ($o->verbose) {
+        my $duration = int ((gettimeofday)[1] - $start_time) / 1000;
+        print "Result fetched in ",$duration,"ms:\n";
+        print Dumper($resp);
+    }
+
+    return $resp;
+}
+
+sub _prepare_request_args {
+    my $np = shift;
+    my $jmx = shift;
+    my $o = $np->opts;
+
+    if ($o->alias) {
+        my @req_args = $jmx->resolve_alias($o->alias);
+        $np->nagios_die("Cannot resolve alias ",$o->alias()) unless @req_args > 0;
+        if ($o->path) {
+            @req_args == 2 ? $req_args[2] = $o->path : $req_args[2] .= "/" . $o->path;
+        }
+        return @req_args;
+    } else {
+        return ($o->mbean,$o->attribute,$o->path);
+    }
+}
+
+sub _verify_response {
+    my ($np,$resp) = @_;
+    if ($resp->is_error) {
+        $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
+    }
+    if (!defined($resp->value)) {
+        $np->nagios_die("JMX Request " . &get_name($o) . " failed" . Dumper($resp));
+    }
+    if (ref($resp->value)) { 
+        $np->nagios_die("Response value is a ".ref($resp->value).
+                        ", not a plain value. Did you forget a --path parameter ?","Value: " . Dumper($resp->value));
+    }
+}
+
+sub _verify_and_initialize { 
+    my $np = shift;
+    my $o = $np->opts;
+
+    $np->nagios_die("An MBean name and a attribute must be provided")
+      if ((!$o->mbean && !$o->attribute) && !$o->alias);
+    
+    $np->nagios_die("At least a critical or warning threshold must be given") 
+      if ((!defined($o->critical) && !defined($o->warning)));
+    
+    $np->set_thresholds
+      (
+       $o->critical ? (critical => $o->critical) : (),
+       $o->warning ? (warning => $o->warning) : ()
+      );    
 }
 
 =head1 LICENSE

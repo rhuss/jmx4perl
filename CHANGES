@@ -3,6 +3,8 @@
   - Documentation fixes
   - Tested for WebLogic 9
   - Added a "version" command to j4p-agent
+  - Added '--base-alias' to check_jmx4perl for using relative 
+    thresholds
 
 0.16
   - Switched off debugging in agent servlet
