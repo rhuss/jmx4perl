@@ -24,7 +24,6 @@
 package org.cpan.jmx4perl;
 
 import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -69,6 +68,13 @@ import java.util.*;
  *       <code>param4 ... paramN</code> = arguments for the operation.
  *       The arguments must be URL encoded (with UTF-8 as charset), and must be convertable into
  *       a data structure</li>
+ *    <li>Type: <b>version</b> ({@link Type#VERSION}<br/>
+ *        Parameters: none
+ *    <li>Type: <b>config</b> ({@link Type#CONFIG}<br/>
+ *       Parameters: <code>param1</code> = "attribute/operation", <code>param2</code> = MBean name,
+ *       <code>param3</code> = operation/attribute name <code>param4</code> = config key
+ *       <code>param5</code> = config value
+ *       <code>param6 .. paramN</code> = Inner path.
  * </ul>
  * @author roland
  * @since Apr 19, 2009
@@ -88,7 +94,8 @@ public class JmxRequest extends JSONObject {
         EXEC("exec"),
         REGISTER_NOTIFICATION("regnotif"),
         REMOVE_NOTIFICATION("remnotif"),
-        VERSION("version");
+        VERSION("version"),
+        CONFIG("config");
 
         private String value;
 
@@ -99,6 +106,7 @@ public class JmxRequest extends JSONObject {
         public String getValue() {
             return value;
         }
+
     };
 
 
@@ -108,7 +116,6 @@ public class JmxRequest extends JSONObject {
     private String value;
     private List<String> extraArgs;
     private String operation;
-
     private Type type;
 
     JmxRequest(String pPathInfo) {
@@ -120,27 +127,22 @@ public class JmxRequest extends JSONObject {
 
                 type = extractType(elements.pop());
 
-                if (type != Type.LIST && type != Type.VERSION) {
-                    objectNameS = elements.pop();
-                    objectName = new ObjectName(objectNameS);
-                    if (type == Type.READ || type == Type.WRITE) {
-                        attributeName = elements.pop();
-                        if (type == Type.WRITE) {
-                            value = URLDecoder.decode(elements.pop(),"UTF-8");
-                        }
-                    } else if (type == Type.EXEC) {
-                        operation = elements.pop();
-                    } else {
-                        throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
-                    }
+                Processor processor = processorMap.get(type);
+                if (processor == null) {
+                    throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
                 }
+
+                processor.process(this,elements);
 
                 // Extract all additional args from the remaining path info
                 extraArgs = new ArrayList<String>();
                 while (!elements.isEmpty()) {
                     extraArgs.add(elements.pop());
                 }
-                setupJSON();
+
+                // Setup JSON representation
+                put("type",type.getValue());
+                processor.setupJSON(this);
             }
         } catch (NoSuchElementException exp) {
             throw new IllegalArgumentException("Invalid path info " + pPathInfo,exp);
@@ -197,36 +199,6 @@ public class JmxRequest extends JSONObject {
         throw new IllegalArgumentException("Invalid request type '" + pTypeS + "'");
     }
 
-    private void setupJSON() {
-        put("type",type.getValue());
-        if (type == Type.READ || type == Type.WRITE) {
-            put("attribute",getAttributeName());
-            if (extraArgs.size() > 0) {
-                StringBuffer buf = new StringBuffer();
-                Iterator<String> it = extraArgs.iterator();
-                while (it.hasNext()) {
-                    buf.append(it.next());
-                    if (it.hasNext()) {
-                        buf.append("/");
-                    }
-                }
-                put("path",buf.toString());
-            }
-        }
-        if (type == Type.WRITE) {
-            put("value",getValue());
-        }
-        if (type == Type.EXEC) {
-            put("operation",getOperation());
-            if (extraArgs.size() > 0) {
-                put("arguments",getExtraArgs());
-            }
-        }
-        if (type != Type.LIST && type != Type.VERSION) {
-            put("mbean",objectName.getCanonicalName());
-        }
-    }
-
     public String getObjectNameAsString() {
         return objectNameS;
     }
@@ -243,6 +215,25 @@ public class JmxRequest extends JSONObject {
         return extraArgs;
     }
 
+    public String getExtraArgsAsPath() {
+        if (extraArgs.size() > 0) {
+            StringBuffer buf = new StringBuffer();
+            Iterator<String> it = extraArgs.iterator();
+            while (it.hasNext()) {
+                buf.append(it.next());
+                if (it.hasNext()) {
+                    buf.append("/");
+                }
+            }
+            return buf.toString();
+        } else {
+            return null;
+        }
+    }
+
+
+
+
     public String getValue() {
         return value;
     }
@@ -254,6 +245,7 @@ public class JmxRequest extends JSONObject {
     public String getOperation() {
         return operation;
     }
+
 
     @Override
     public String toString() {
@@ -273,5 +265,86 @@ public class JmxRequest extends JSONObject {
         }
         ret.append("]");
         return ret.toString();
+    }
+
+    // ==================================================================================
+    // Dedicated parser for the various operations. They are installed as static processors.
+    interface Processor {
+        void process(JmxRequest r,Stack<String> e)
+                throws MalformedObjectNameException;
+        void setupJSON(JmxRequest r);
+    }
+
+    private static Map<Type,Processor> processorMap;
+
+    static {
+        processorMap = new HashMap<Type, Processor>();
+        processorMap.put(Type.READ,new Processor() {
+            public void process(JmxRequest r,Stack<String> e) throws MalformedObjectNameException {
+                r.objectNameS = e.pop();
+                r.objectName = new ObjectName(r.objectNameS);
+                r.attributeName = e.pop();
+            }
+
+            public void setupJSON(JmxRequest r) {
+                r.put("mbean",r.objectName.getCanonicalName());
+                r.put("attribute",r.attributeName);
+                String path = r.getExtraArgsAsPath();
+                if (path != null) {
+                    r.put("path",path);
+                }
+            }
+        });
+        processorMap.put(Type.WRITE,new Processor() {
+
+            public void process(JmxRequest r, Stack<String> e) throws MalformedObjectNameException {
+                r.objectNameS = e.pop();
+                r.objectName = new ObjectName(r.objectNameS);
+                r.attributeName = e.pop();
+                r.value = e.pop();
+            }
+
+            public void setupJSON(JmxRequest r) {
+                r.put("mbean",r.objectName.getCanonicalName());
+                r.put("attribute",r.attributeName);
+                String path = r.getExtraArgsAsPath();
+                if (path != null) {
+                    r.put("path",path);
+                }
+                r.put("value",r.value);
+            }
+        });
+        processorMap.put(Type.EXEC,new Processor() {
+
+            public void process(JmxRequest r, Stack<String> e) throws MalformedObjectNameException {
+                r.objectNameS = e.pop();
+                r.objectName = new ObjectName(r.objectNameS);
+                r.operation = e.pop();
+            }
+
+            public void setupJSON(JmxRequest r) {
+                r.put("mbean",r.objectName.getCanonicalName());
+                r.put("operation",r.operation);
+                if (r.extraArgs.size() > 0) {
+                    r.put("arguments",r.extraArgs);
+                }
+            }
+        });
+
+        processorMap.put(Type.LIST,new Processor() {
+            public void process(JmxRequest r, Stack<String> e) throws MalformedObjectNameException {
+            }
+
+            public void setupJSON(JmxRequest r) {
+            }
+        });
+        processorMap.put(Type.VERSION,new Processor() {
+
+            public void process(JmxRequest r, Stack<String> e) throws MalformedObjectNameException {
+            }
+
+            public void setupJSON(JmxRequest r) {
+            }
+        });
     }
 }

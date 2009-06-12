@@ -73,7 +73,7 @@ public class AttributeConverter {
 
         Object jsonResult = extractObject(pValue,extraStack,true);
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("value",jsonResult);
+        jsonObject.put("value",jsonResult);        
         jsonObject.put("request",pRequest);
         return jsonObject;
     }

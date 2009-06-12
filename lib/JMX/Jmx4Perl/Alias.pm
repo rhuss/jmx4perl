@@ -114,8 +114,12 @@ my %ALIAS_MAP =
   RUNTIME_BOOTCLASSPATH => ["Bootclasspath", [ "java.lang:type=Runtime", "BootClassPath"]],
   RUNTIME_LIBRARY_PATH => ["The LD_LIBRARY_PATH", [ "java.lang:type=Runtime", "LibraryPath"]],
   RUNTIME_NAME => ["Name of the runtime", [ "java.lang:type=Runtime", "Name"]],
+
+  # Jmx4Perl
+  JMX4PERL_HISTORY_SIZE => [ "Size of the history of all attributes and operations in bytes" , ["jmx4perl:type=Config","HistorySize"]],
+
  },
-   
+
    operation  => 
  {
   # Memory
@@ -124,7 +128,13 @@ my %ALIAS_MAP =
   # Threads
   THREAD_DEADLOCKED => [ "Find cycles of threads that are in deadlock waiting to acquire object monitors", [ "java.lang:type=Threading", "findMonitorDeadlockedThreads"]],
   # TODO: Check for a default
-  THREAD_DUMP => [ "Create a thread dump" ]
+  THREAD_DUMP => [ "Create a thread dump" ],
+
+  # Jmx4Perl
+  JMX4PERL_HISTORY_MAX_ATTRIBUTE => [ "Set the size of the history for a specific attribute" , ["jmx4perl:type=Config","setHistoryEntriesForAttribute"]],
+  JMX4PERL_HISTORY_MAX_OPERATION => [ "Set the size of the history for a specific operation" , ["jmx4perl:type=Config","setHistoryEntriesForOperation"]],
+  JMX4PERL_HISTORY_RESET => [ "Reset the history for all attributes and operations" , ["jmx4perl:type=Config","resetHistoryEntries"]],
+  
  });
 
 my %NAME_TO_ALIAS_MAP;

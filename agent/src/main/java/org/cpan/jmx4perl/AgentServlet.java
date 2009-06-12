@@ -28,6 +28,8 @@ package org.cpan.jmx4perl;
 import org.cpan.jmx4perl.converter.StringToObjectConverter;
 import org.cpan.jmx4perl.converter.attribute.AttributeConverter;
 import org.cpan.jmx4perl.handler.*;
+import org.cpan.jmx4perl.history.HistoryStore;
+import org.cpan.jmx4perl.config.Config;
 import org.json.simple.JSONObject;
 
 import javax.management.*;
@@ -81,9 +83,6 @@ public class AgentServlet extends HttpServlet {
     // of operations
     private StringToObjectConverter stringToObjectConverter;
 
-    // Are we running within JBoss ?
-    private boolean isJBoss;
-
     // The MBeanServers to use
     private Set<MBeanServer> mBeanServers;
 
@@ -93,19 +92,35 @@ public class AgentServlet extends HttpServlet {
     // Map with all request handlers
     private Map<JmxRequest.Type,RequestHandler> requestHandlerMap;
 
+    // History handler
+    private HistoryStore historyStore;
+
+    // Whether we are running under JBoss
+    boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
+
     @Override
     public void init() throws ServletException {
         super.init();
+
+        // Central objects
         stringToObjectConverter = new StringToObjectConverter();
         attributeConverter = new AttributeConverter(stringToObjectConverter);
-        isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
+
+        // Get all MBean servers we can find
         mBeanServers = findMBeanServers();
+
+        // Set debugging configuration
         ServletConfig config = getServletConfig();
         String doDebug = config.getInitParameter("debug");
         if (doDebug != null && Boolean.valueOf(doDebug)) {
             debug = true;
         }
 
+        registerRequestHandler();
+        registerOwnMBeans();
+    }
+
+    private void registerRequestHandler() {
         RequestHandler handlers[] = {
                 new ReadHandler(),
                 new WriteHandler(attributeConverter),
@@ -120,14 +135,43 @@ public class AgentServlet extends HttpServlet {
         }
     }
 
+    private void registerOwnMBeans() {
+        int maxEntries;
+        ServletConfig config = getServletConfig();
+        try {
+            maxEntries = Integer.parseInt(config.getInitParameter("historeMaxEntries"));
+        } catch (NumberFormatException exp) {
+            maxEntries = 10;
+        }
+        historyStore = new HistoryStore(maxEntries);
+        if (mBeanServers.size() > 0) {
+            try {
+                Config configMBean = new Config(historyStore);
+                ObjectName name = new ObjectName(configMBean.getMBeanName());
+                mBeanServers.iterator().next().registerMBean(configMBean,name);
+                //ManagementFactory.getPlatformMBeanServer().registerMBean(configMBean,name);
+            } catch (NotCompliantMBeanException e) {
+                log("Error registering config MBean: " + e,e);
+            } catch (MBeanRegistrationException e) {
+                log("Cannot register MBean: " + e,e);
+            } catch (MalformedObjectNameException e) {
+                log("Invalid name for config MBean: " + e,e);
+            } catch (InstanceAlreadyExistsException e) {
+                log("Config MBean already exists: " + e,e);
+            }
+        }
+    }
+
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         handle(req, resp);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         handle(req,resp);
     }
 
@@ -138,12 +182,16 @@ public class AgentServlet extends HttpServlet {
         Throwable throwable = null;
         try {
             jmxReq = new JmxRequest(pReq.getPathInfo());
-            if (debug) log("Request:      " + jmxReq.toString());
+            if (debug) log("Request: " + jmxReq.toString());
+
             Object retValue = callRequestHandler(jmxReq);
-            if (debug) log("Return value: " + retValue);
+            if (debug) log("Return: " + retValue);
+
             json = attributeConverter.convertToJson(retValue,jmxReq);
+            historyStore.updateAndAdd(jmxReq,json);
+
             json.put("status",200 /* success */);
-            if (debug) log("Response:     " + json);
+            if (debug) log("Response: " + json);
         } catch (AttributeNotFoundException exp) {
             code = 404;
             throwable = exp;
@@ -321,6 +369,7 @@ public class AgentServlet extends HttpServlet {
     // =====================================================================================
 
     // Execute a request for all known MBeanServers until the first doesnt croak
+    // At the time being we dont need this one, but keep this method as reference.
     private void wokaroundJBossBug(JmxRequest pJmxReq) throws ReflectionException, InstanceNotFoundException {
         if (isJBoss) {
             try {
@@ -329,6 +378,7 @@ public class AgentServlet extends HttpServlet {
                 for (MBeanServer s : mBeanServers) {
                     try {
                         s.getMBeanInfo(pJmxReq.getObjectName());
+                        return;
                     } catch (InstanceNotFoundException exp) {
                         // Only one can have the name. So, this exception
                         // is being expected to happen
