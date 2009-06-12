@@ -13,7 +13,6 @@ agent/src/main/java/org/cpan/jmx4perl/converter/attribute/MapHandler.java
 agent/src/main/java/org/cpan/jmx4perl/converter/attribute/PlainValueHandler.java
 agent/src/main/java/org/cpan/jmx4perl/converter/attribute/TabularDataHandler.java
 agent/src/main/java/org/cpan/jmx4perl/converter/StringToObjectConverter.java
-agent/src/main/java/org/cpan/jmx4perl/handler/ConfigHandler.java
 agent/src/main/java/org/cpan/jmx4perl/handler/ExecHandler.java
 agent/src/main/java/org/cpan/jmx4perl/handler/ListHandler.java
 agent/src/main/java/org/cpan/jmx4perl/handler/ReadHandler.java
