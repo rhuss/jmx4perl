@@ -17,7 +17,7 @@ request URL format and the JSON format of the response are described below.
 
 =head1 VERSION
 
-This document describes Version 0.1 of the j4p-agent protocol. This is the
+This document describes Version 0.20 of the j4p-agent protocol. This is the
 initial version. 
 
 =head1 REQUEST 

@@ -1,10 +1,11 @@
-0.20_2
+0.20_3
   - Support for writing attributes and executing operations 
   - Documentation fixes
   - Tested for WebLogic 9
   - Added a "version" command to j4p-agent
   - Added '--base-alias' to check_jmx4perl for using relative 
     thresholds
+  - Internal refactoroing of j4p-agent to use request handlers
 
 0.16
   - Switched off debugging in agent servlet

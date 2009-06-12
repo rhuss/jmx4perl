@@ -78,7 +78,7 @@ public class JmxRequest extends JSONObject {
     /**
      * Enumeration for encapsulationg the request mode.
      */
-    enum Type {
+    public enum Type {
         // Supported:
         READ("read"),
         LIST("list"),
