@@ -98,6 +98,9 @@ public class AgentServlet extends HttpServlet {
     // Whether we are running under JBoss
     boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
 
+    // MBean used for configuration
+    private Config configMBean;
+
     @Override
     public void init() throws ServletException {
         super.init();
@@ -120,48 +123,12 @@ public class AgentServlet extends HttpServlet {
         registerOwnMBeans();
     }
 
-    private void registerRequestHandler() {
-        RequestHandler handlers[] = {
-                new ReadHandler(),
-                new WriteHandler(attributeConverter),
-                new ExecHandler(stringToObjectConverter),
-                new ListHandler(),
-                new VersionHandler()
-        };
+    @Override
+    public void destroy() {
+        unregisterOwnMBeans();
+        super.destroy();
 
-        requestHandlerMap = new HashMap<JmxRequest.Type,RequestHandler>();
-        for (RequestHandler handler : handlers) {
-            requestHandlerMap.put(handler.getType(),handler);
-        }
     }
-
-    private void registerOwnMBeans() {
-        int maxEntries;
-        ServletConfig config = getServletConfig();
-        try {
-            maxEntries = Integer.parseInt(config.getInitParameter("historeMaxEntries"));
-        } catch (NumberFormatException exp) {
-            maxEntries = 10;
-        }
-        historyStore = new HistoryStore(maxEntries);
-        if (mBeanServers.size() > 0) {
-            try {
-                Config configMBean = new Config(historyStore);
-                ObjectName name = new ObjectName(configMBean.getMBeanName());
-                mBeanServers.iterator().next().registerMBean(configMBean,name);
-                //ManagementFactory.getPlatformMBeanServer().registerMBean(configMBean,name);
-            } catch (NotCompliantMBeanException e) {
-                log("Error registering config MBean: " + e,e);
-            } catch (MBeanRegistrationException e) {
-                log("Cannot register MBean: " + e,e);
-            } catch (MalformedObjectNameException e) {
-                log("Invalid name for config MBean: " + e,e);
-            } catch (InstanceAlreadyExistsException e) {
-                log("Config MBean already exists: " + e,e);
-            }
-        }
-    }
-
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -288,6 +255,68 @@ public class AgentServlet extends HttpServlet {
         PrintWriter writer = pResp.getWriter();
         writer.write(pJsonTxt);
     }
+
+
+    private void registerRequestHandler() {
+        RequestHandler handlers[] = {
+                new ReadHandler(),
+                new WriteHandler(attributeConverter),
+                new ExecHandler(stringToObjectConverter),
+                new ListHandler(),
+                new VersionHandler()
+        };
+
+        requestHandlerMap = new HashMap<JmxRequest.Type,RequestHandler>();
+        for (RequestHandler handler : handlers) {
+            requestHandlerMap.put(handler.getType(),handler);
+        }
+    }
+
+    private void registerOwnMBeans() {
+        int maxEntries;
+        ServletConfig config = getServletConfig();
+        try {
+            maxEntries = Integer.parseInt(config.getInitParameter("historyMaxEntries"));
+        } catch (NumberFormatException exp) {
+            maxEntries = 10;
+        }
+        historyStore = new HistoryStore(maxEntries);
+        if (mBeanServers.size() > 0) {
+            try {
+                configMBean = new Config(historyStore);
+                ObjectName name = new ObjectName(configMBean.getMBeanName());
+                mBeanServers.iterator().next().registerMBean(configMBean,name);
+                //ManagementFactory.getPlatformMBeanServer().registerMBean(configMBean,name);
+            } catch (NotCompliantMBeanException e) {
+                log("Error registering config MBean: " + e,e);
+            } catch (MBeanRegistrationException e) {
+                log("Cannot register MBean: " + e,e);
+            } catch (MalformedObjectNameException e) {
+                log("Invalid name for config MBean: " + e,e);
+            } catch (InstanceAlreadyExistsException e) {
+                log("Config MBean already exists: " + e,e);
+            }
+        }
+    }
+
+    // Remove MBeans again.
+    private void unregisterOwnMBeans() {
+        if (configMBean != null) {
+            ObjectName name = null;
+            try {
+                name = new ObjectName(configMBean.getMBeanName());
+                mBeanServers.iterator().next().unregisterMBean(name);
+            } catch (MalformedObjectNameException e) {
+                // wont happen
+                log("Invalid name for config MBean: " + e,e);
+            } catch (InstanceNotFoundException e) {
+                log("No Mbean registered with name " + name + ": " + e,e);
+            } catch (MBeanRegistrationException e) {
+                log("Cannot unregister MBean: " + e,e);
+            }
+        }
+    }
+
 
 
     // ==========================================================================

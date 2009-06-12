@@ -256,6 +256,16 @@ Jetty it's mapped to MBean C<org.mortbay:jetty=default>, Attribute C<version>.
 Remember, you can always use the the native JMX naming to access your MBeans
 without worrying about aliasing at all.  
 
+=head2 History Tracking
+
+The agent C<j4p-agent> can be switched into a history tracking mode, where it
+records the values for C<read>, C<write> and C<exec> operations (the return
+value for the late mode). You have to call a certain, jmx4perl specific, MBean
+to turn it on. If switched on, each request contains an additional history
+entry containing the list of historical values along with their timestamps. The
+history is stored in a list with fixed length so that the oldes value gets
+removed from the list in case of an overflow. 
+
 =head2 Full featured Nagios plugin C<check_jmx4perl> 
 
 A full functional Nagios plugin called C<check_jmx4perl> is provided in the

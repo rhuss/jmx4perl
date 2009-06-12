@@ -117,7 +117,7 @@ my %ALIAS_MAP =
 
   # Jmx4Perl
   JMX4PERL_HISTORY_SIZE => [ "Size of the history of all attributes and operations in bytes" , ["jmx4perl:type=Config","HistorySize"]],
-
+  JMX4PERL_HISTORY_MAX_ENTRIES => [ "Maximum number of entries per attribute/operation possible" , ["jmx4perl:type=Config","GlobalEntryLimit"]],
  },
 
    operation  => 
@@ -233,12 +233,23 @@ outdated, to get the current one, use
  CL_LOADED                      attr Number of currently loaded classes
  CL_TOTAL                       attr Number of classes loaded in total
  CL_UNLOADED                    attr Number of unloaded classes
+ JMX4PERL_HISTORY_MAX_ATTRIBUTE oper Set the size of the history for a specific attribute
+ JMX4PERL_HISTORY_MAX_ENTRIES   attr Maximum number of entries per attribute/operation possible
+ JMX4PERL_HISTORY_MAX_OPERATION oper Set the size of the history for a specific operation
+ JMX4PERL_HISTORY_RESET         oper Reset the history for all attributes and operations
+ JMX4PERL_HISTORY_SIZE          attr Size of the history of all attributes and operations in bytes
  MEMORY_GC                      oper Run a garbage collection
  MEMORY_HEAP                    attr Heap memory usage, multiple values
- MEMORY_HEAP_COMITTED           attr Committed heap memory
+ MEMORY_HEAP_COMITTED           attr Committed heap memory. That's the memory currently available for this JVM
  MEMORY_HEAP_INIT               attr Initially allocated heap memory
  MEMORY_HEAP_MAX                attr Maximum available heap memory
  MEMORY_HEAP_USED               attr Used heap memory
+ MEMORY_NONHEAP                 attr Non-Heap memory usage, multiple values
+ MEMORY_NONHEAP_COMITTED        attr Committed non-heap memory
+ MEMORY_NONHEAP_INIT            attr Initially allocated non-heap memory
+ MEMORY_NONHEAP_MAX             attr Maximum available non-heap memory
+ MEMORY_NONHEAP_USED            attr Used non-heap memory (like a 'method area')
+ MEMORY_VERBOSE                 attr Switch on/off verbose messages concerning the garbage collector
  OS_CPU_TIME                    attr The cpu time used by this process
  OS_FILE_MAX_DESC               attr Maximum number of open file descriptors
  OS_FILE_OPEN_DESC              attr Number of open file descriptors

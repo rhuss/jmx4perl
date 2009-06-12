@@ -249,20 +249,41 @@ looks like
              "used":19046472
            },
    "status":200,
+   "timestamp":1244839118,
    "request":{
                "mbean":"java.lang:type=Memory",
                "type":"read",
                "attribute":"HeapMemoryUsage"
-             }
+             },
+   "history":[{"value":{
+                         "init":"134217728",
+                         "max":"532742144",
+                         "committed":"133365760",
+                         "used":"18958208"
+                       },
+               "timestamp":1244839045
+             }, ....
+             ]
  }
 
 As you can see, the C<value> contains the attribute's value, either as a
 single, simple value if the attribute has a primitive type, or a complex JSON
 structure (containing maps and arrays) if the attribute has a more complex type
-understood by the F<j4p-agent>. For comlext object types, which can not be
+understood by the F<j4p-agent>. For complex object types, which can not be
 serialized by the F<j4p-agent>, the stringified value (i.e. the output of the
 object's C<toString()> method) is returned here. For a successul request the
-C<status> is always C<200>. The C<request>'s attribute are:
+C<status> is always C<200>.  C<timestamp> contains the timestamp (i.e. epoch
+seconds) when the attribute was read on the server. 
+
+Optionally, a C<history> entry might be present. This is the case, when
+I<history tracking> is switched on. See L<jmx4perl> how to do this, in short,
+you have to execute an JMX operation on certain, jmx4perl specific MBean to
+turn it on. If this is the case, C<history> contains an array of json object,
+which have two attribute: C<value> containing the historical value (which can
+be as complex as any value) and C<timestamp> indicationg the time when this
+value was current. 
+
+The C<request>'s attribute are:
 
 =over
 

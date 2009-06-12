@@ -5,7 +5,10 @@
   - Added a "version" command to j4p-agent
   - Added '--base-alias' to check_jmx4perl for using relative 
     thresholds
-  - Internal refactoroing of j4p-agent to use request handlers
+  - Added '--delta' to check_jmx4perl for using an incremental 
+    mode
+  - Cleaned up check_jmx4perl perfdata output
+  - Added own j4p-agent MBean for configuration management
 
 0.16
   - Switched off debugging in agent servlet
@@ -21,8 +24,6 @@
     * listing of all attribute values
     * print server info
     * print all available aliases
-  - Renamed READ_ATTRIBUTE to READ (same for WRITE) 
-    in JMX::Jmx4Perl::Request
   - Bug Fixes:
     * Correct URL encoding for request URL
     * Slash '/' needs to be custom encoded, since URI encoding doesn't 

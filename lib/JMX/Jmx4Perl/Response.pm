@@ -40,14 +40,7 @@ when C<$status != 200>.
 
 sub new {
     my $class = shift;
-    my $self = { 
-                status => shift,
-                request => shift,
-                value => shift,
-               };
-    $self->{error} = $_[0] if ($_[0]);
-    $self->{stacktrace} = $_[1] if ($_[1]);
-
+    my $self = { @_ };
     return bless $self,(ref($class) || $class);
 }
 
@@ -61,6 +54,34 @@ return codes. C<200> is the code for a suceeded request. Any code in the range
 
 sub status {
     return shift->{status};
+}
+
+=item $timestamp = $response->timestamp()
+
+Get the timestamp (i.e. epoch seconds) when the request was executed on the
+serverside.
+
+=cut
+
+sub timestamp {
+    return shift->{timestamp};
+}
+
+=item $history = $response->history() 
+
+Get the history if history tracking is switched on. History tracking is
+switchen on by executing a certain JMX operation on the C<jmx4perl:type=Config>
+MBean. See the alias C<JMX4PERL_HISTORY_MAX_ATTRIBUTE> and L<jmx4perl/"HISTORY
+TRACKING"> for details.
+
+The returned arrayref (if any) contains hashes with two values: C<value>
+contains the historical value and C<timestamp> the timestamp when this value
+was recorded.
+
+=cut 
+
+sub history {
+    return shift->{history};
 }
 
 =item $ok = $response->is_ok()

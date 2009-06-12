@@ -165,6 +165,7 @@ public class JmxRequest extends JSONObject {
      */
     private Stack<String> extractElementsFromPath(String path) throws UnsupportedEncodingException {
         String[] elements = (path.startsWith("/") ? path.substring(1) : path).split("/");
+
         Stack<String> ret = new Stack<String>();
         for (int i=0;i<elements.length;i++) {
             if (elements[i].matches("^-+$")) {

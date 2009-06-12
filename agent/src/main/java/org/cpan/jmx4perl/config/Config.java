@@ -28,7 +28,7 @@ public class Config implements ConfigMBean {
         historyStore.configure(key,pMaxEntries);
     }
 
-    public void setMaxHistoryEntriesForOperation(String pMBean, String pOperation, int pMaxEntries) {
+    public void setHistoryEntriesForOperation(String pMBean, String pOperation, int pMaxEntries) {
         HistoryKey key = new HistoryKey(pMBean,pOperation);
         historyStore.configure(key,pMaxEntries);
     }
@@ -36,6 +36,15 @@ public class Config implements ConfigMBean {
     public void resetHistoryEntries() {
         historyStore.reset();
     }
+
+    public int getHistoryMaxEntries() {
+        return historyStore.getGlobalMaxEntries();
+    }
+
+    public void setHistoryMaxEntries(int pLimit) {
+        historyStore.setGlobalMaxEntries(pLimit);
+    }
+
 
     public int getHistorySize() throws IOException {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();

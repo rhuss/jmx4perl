@@ -27,6 +27,14 @@ public class HistoryStore implements Serializable {
         historyStore = new HashMap<HistoryKey, HistoryEntry>();
     }
 
+    public int getGlobalMaxEntries() {
+        return globalMaxEntries;
+    }
+
+    public void setGlobalMaxEntries(int pGlobalMaxEntries) {
+        globalMaxEntries = pGlobalMaxEntries;
+    }
+
     /**
      * Configure the history length for a specific entry. If the length
      * is 0 disable history for this key
@@ -50,10 +58,10 @@ public class HistoryStore implements Serializable {
         }
 
         if (entry != null) {
-            entry.setMaxEntries(globalMaxEntries);
+            entry.setMaxEntries(pMaxEntries);
             entry.trim();
         } else {
-            entry = new HistoryEntry(globalMaxEntries);
+            entry = new HistoryEntry(pMaxEntries);
             historyStore.put(pKey,entry);
         }
     }

@@ -22,8 +22,11 @@ my %COMMANDS =
    list => \&command_list,
    attributes => \&command_attributes,
    read => \&command_read,
+   get => \&command_read,
    write => \&command_write,
-   exec => \&command_exec
+   set => \&command_write,
+   exec => \&command_exec,
+   call => \&command_exec
 );
 
 my %opts = ();
@@ -34,6 +37,7 @@ my $result = GetOptions(\%opts,
                         "verbose|v!",
                         "shell|s=s",
                         "version!",
+                        "history!",
                         "help|h!" => sub { &Getopt::Long::HelpMessage() }
                        );
 
@@ -65,7 +69,7 @@ if ($opts{shell}) {
 } else {
     my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
     my @jmx_args = ("url" => $url);
-    for my $arg qw(product user password proxy-user proxy-password) {
+    for my $arg qw(product user password proxy-user proxy-password verbose) {
         my $cfg = $arg;
         $cfg =~ s/\-/_/g;
         push @jmx_args,( $cfg => $opts{$arg}) if $opts{$arg};
@@ -105,6 +109,7 @@ Options:
    --password <pwd>  
    --proxy-user <user>     Authentication information for a proxy
    --proxy-password <pwd>
+   --history               Print out the history of return values (if switched on and present)
    --verbose               Print out more information
 
 =head1 DESCRIPTION
@@ -215,7 +220,7 @@ sub command_attributes {
     }   
 }
 
-=head2 read 
+=head2 read / get
 
 Read an JMX attribute's value and print it out. The required arguments are the
 MBean's name and the attribute's name. Additionally, you can provide a I<path>
@@ -228,6 +233,9 @@ alias name, too.
 For a single value, the value itself is printed (without additional newline),
 for a more complex data structure, L<Data::Dumper> is used. 
 
+If the option C<--history> is given and history tracking is switched on (see
+below), then the stored history is printed as well.
+
 =cut 
 
 sub command_read {
@@ -236,7 +244,7 @@ sub command_read {
     &_print_response($resp);
 }
 
-=head2 write
+=head2 write / set
 
 Write a JMX attribute's value and print out the value as it is returned from
 the server. The required arguments are the MBean's name, the attribute and the
@@ -247,6 +255,13 @@ alias name, too. See also L</"aliases"> for getting all available aliases.
 The old value of the attribute (or the object pointed to by the inner path) is
 printed out in the same as for L</"read">
 
+To set a C<null> value use "[null]" as argument, to set an empty string use an
+empty argument (i.e. C<""> on the command line). These values are interpreted
+special, so you can't use them literally as values.
+
+If the option C<--history> is given and history tracking is switched on (see
+below), then the stored history is printed as well.
+
 =cut
 
 sub command_write {
@@ -255,7 +270,7 @@ sub command_write {
     &_print_response($resp);
 }
 
-=head2 exec
+=head2 exec / call
 
 Execute a JMX operation. The required arguments are the MBean's name, the name
 of the operation to execute and the arguments required for this operations
@@ -265,8 +280,15 @@ a void operation.
 
 A operation alias can also be used for the MBean's name and operation.
 
+To use a C<null> argument use "[null]", to set an empty string as argument use
+an empty argument (i.e. C<"">) on the command line. These values are
+interpreted special, so you can't use them literally as values.
+
 For a single return value, the value itself is printed (without additional
 newline), for a more complex data structure, L<Data::Dumper> is used.
+
+If the option C<--history> is given and history tracking is switched on (see
+below), then the stored history is printed as well.
 
 =cut
 
@@ -287,6 +309,40 @@ and attribute's name.
 sub command_aliases {
     &JMX::Jmx4Perl::Alias::help;
 }
+
+=head1 HISTORY TRACKING
+
+The agent j4p-agent knows about a history mode, which can remember a certain
+amount return values from previous requests. This mode can be switched on/off
+on a per attribute (+ inner path) and operation basis. By default it is
+switched off completely. You can switch in on by executing the
+C<JMX4PERL_HISTORY_MAX_ATTRIBUTE> and C<JMX4PERL_HISTORY_MAX_OPERATION>
+operation with L</"exec"> commands. This is best explained by some example:
+
+ jmx4perl exec JMX4PERL_HISTORY_MAX_ATTRIBUTE java.lang:type=Memory HeapMemoryUsage used 10 <agent-url>
+
+This switches on tracking of this particular attribute. I.e. each time a
+C<read> request is performed, the value is remembered along with a timestamp on
+the server side. At maximum 10 entries are kept, the oldest entries get shifted
+out after the eleventh read. Setting the value to C<0> will remove the history
+completely. You can't set the limit beyond a certain hard limit, which can be
+found as attribute under the alias
+C<JMX4PERL_HISTORY_MAX_ENTRIES>. Unfortunately, one can not use an alias yet
+for the arguments of C<JMX4PERL_HISTORY_MAX_ATTRIBUTE>. Also note, if you don't
+has an inner path, you need to use a C<[null]> as the argument before the max
+entry number.
+
+For completely resetting the history, use
+
+ jmx4perl exec JMX4PERL_HISTORY_RESET <agent-url>
+
+If you are curious about the size of the history for all entries, use 
+
+ jmx4perl read JMX4PERL_HISTORY_SIZE <agent-url>
+
+This will print out the history size in bytes.
+
+=cut
 
 # =============================================================================
 
@@ -310,6 +366,20 @@ sub _print_response {
     } else {
         print $val;
     }
+    if ($opts{history} && $resp->history) {
+        print "\nHistory:\n";
+        for my $entry (@{$resp->history}) {
+            my $time = localtime($entry->{timestamp});
+            my $value = $entry->{value};
+            if (ref($value)) {
+                print $time,"\n";
+                print Dumper($value);
+                print "\n";
+            } else {
+                printf " %s : %s\n",$time,$value;
+            }
+        }
+    }
 }
 
 sub _get_attribute {
@@ -330,13 +400,12 @@ sub _set_attribute {
 
 sub _exec_operation {
     my $jmx = shift;
-    
     my ($mbean,$operation,@args) = @_;
     
     my $alias = JMX::Jmx4Perl::Alias->by_name($mbean);    
     if ($alias) {
         croak $alias->{alias}, " is not an operation alias" unless $alias->{type} eq "operation";
-        unshift @args,$operation;
+        unshift @args,$operation if $operation;
         ($mbean,$operation) = $jmx->resolve_alias($alias);
         die "Alias ",$alias->{alias}," is not available for product ",$jmx->product,"\n" unless $mbean;
     } else {

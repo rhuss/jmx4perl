@@ -6,6 +6,7 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
 
 =head1 SYNOPSIS 
 
+ # Check used heap memory for absolute values
  check_jmx4perl --url http://localhost:8888/j4p-agent \
                 --name memory_used \
                 --mbean java.lang:type=Memory \
@@ -14,21 +15,34 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --critical 10000000 \
                 --warning   5000000 
 
+ # Check used heap memory for absolute values by using an alias
  check_jmx4perl --url http://localhost:8888/j4p-agent \
                 --alias MEMORY_HEAP_USED \
                 --critical 10000000 \
                 --warning   5000000 
 
-  check_jmx4perl --url http://localhost:8888/j4p-agent 
-                 --alias MEMORY_HEAP_USED 
-                 --base-alias MEMORY_HEAP_MAX 
-                 --critical 0.8
+ # Check that the used heap memory is below 80% of the available memory
+ check_jmx4perl --url http://localhost:8888/j4p-agent \
+                --alias MEMORY_HEAP_USED \
+                --base-alias MEMORY_HEAP_MAX \ 
+                --critical 0.8
+
+ # Check that no more than 5 threads are started in a minute
+ check_jmx4perl --url http://localhost:8888/j4p-agent \
+                --alias THREAD_COUNT_STARTED \
+                --delta 60 \
+                --critical 5
 
 =head1 DESCRIPTION
 
 Command for providing Nagios conformant output for JMX response fetched via
 L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
 C<--warning>) thresholds. 
+
+C<--delta> switches on incremental mode in which the difference between two
+following values is used. The optional argument are interpreted as seconds
+which are used for calculating the speed of growth. If not given, only the
+difference between the current and the latest value is taken.
 
 =cut
 
@@ -37,6 +51,7 @@ use lib qq($Bin/../lib);
 use JMX::Jmx4Perl;
 use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Response;
+use JMX::Jmx4Perl::Alias;
 use strict;
 use Data::Dumper;
 use Nagios::Plugin;
@@ -88,6 +103,10 @@ $np->add_arg(
          help => "Base alias name, which when given, interprets critical and warning values as relative",
         );
 $np->add_arg(
+         spec => "delta|d:s",
+         help => "Switches on incremental mode. Optional argument are seconds used for normalizing. ",
+        );
+$np->add_arg(
          spec => "path|p=s",
          help => "Inner path for extracting a single value from a complex attribute (e.g. \"used\")",
         );
@@ -114,10 +133,10 @@ $np->add_arg(
          help => "Print verbose output "
         );
 $np->add_arg(
-             spec => "name|n=s",
-             help => "Name to use for output. Optional, by default a standard value based on the MBean ".
-             "and attribute will be used"
-            );
+         spec => "name|n=s",
+         help => "Name to use for output. Optional, by default a standard value based on the MBean ".
+                 "and attribute will be used"
+        );
 $np->getopts();
 
 &_verify_and_initialize($np);
@@ -126,20 +145,43 @@ my $o = $np->opts;
 eval {
     my $o = $np->opts;
 
+    # Request
     my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $o->url, user => $o->user, password => $o->password,
                                  ($o->product ? (product => $o->product) : ()));
-    my $request = &_get_request($np,$jmx);
+    my $request = JMX::Jmx4Perl::Request->new(READ,&_prepare_request_args($np,$jmx));
     my $resp = &_send_request($np,$jmx,$request);
     my $value = $resp->value;
 
-    my $base = undef;
+    # Delta handling
+    my $delta = $o->get("delta");
+    if (defined($delta)) {
+        my $history = $resp->history;
+        if (!$history) {
+            &_switch_on_history($jmx,$request);           
+            # No delta on the first run
+            $value = 0;
+        } else {
+            my $old_value = $history->[0]->{value};
+            my $old_time = $history->[0]->{timestamp};
+            if ($delta) {
+                $value = (($resp->value - $old_value) / ($resp->timestamp - $old_time)) * $delta;
+            } else {
+                $value = $resp->value - $old_value;
+            }
+        }
+    }
+
+    # Base value handling
     if ($o->get("base-alias")) {
         $request = new JMX::Jmx4Perl::Request(READ,$jmx->resolve_alias($o->get("base-alias")));
         $resp = &_send_request($np,$jmx,$request);
         $value = $value / $resp->value;
     };
+
+    # Add Nagios perfdata
     $np->add_perfdata(label => &get_name($o),value => $value, critical => $o->critical, warning => $o->warning);
 
+    # Verify thresholds
     my $code = $np->check_threshold($value);    
     $np->nagios_exit($code,&get_name($o). " : Threshold " . ($code == CRITICAL ? $o->critical : $o->warning) . 
                      " failed for value $value") if $code != OK;
@@ -168,29 +210,21 @@ sub print_mbeans {
     print Dumper($resp->value);    
 }
 
-sub _get_request {
-    my $np = shift;
-    my $jmx = shift;
+
+sub _send_request {
+    my ($np,$jmx,$request) = @_;
     my $o = $np->opts;
-    
-    my $request = JMX::Jmx4Perl::Request->new(READ,&_prepare_request_args($np,$jmx));
+
+    my $start_time;    
     if ($o->verbose) {
         print "Request URL: ",$jmx->request_url($request),"\n";
         if ($o->user) {
             print "Remote User: ",$o->user,"\n";
         }
+        $start_time = (gettimeofday)[1];    
     }
-    return $request;
-}
 
-
-sub _send_request {
-    my ($np,$jmx,$jmx_request) = @_;
-    my $o = $np->opts;
-
-    my $start_time = (gettimeofday)[1];
-    
-    my $resp = $jmx->request($jmx_request);
+    my $resp = $jmx->request($request);
     &_verify_response($np,$resp);
 
     if ($o->verbose) {
@@ -200,6 +234,22 @@ sub _send_request {
     }
 
     return $resp;
+}
+
+sub _switch_on_history {
+    my ($jmx,$orig_request) = @_;
+    my ($mbean,$operation) = $jmx->resolve_alias(JMX4PERL_HISTORY_MAX_ATTRIBUTE);
+    # Set history to 1 (we need only the last
+    my $switch_request = new JMX::Jmx4Perl::Request(EXEC,$mbean,$operation,
+                                     $orig_request->get("mbean"),$orig_request->get("attribute"),$orig_request->get("path"),1);
+    my $resp = $jmx->request($switch_request);
+    if ($resp->is_error) {
+        $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
+    }
+
+    # Refetch value to initialize the history
+    $resp = $jmx->request($orig_request);
+    &_verify_response($np,$resp);
 }
 
 sub _prepare_request_args {

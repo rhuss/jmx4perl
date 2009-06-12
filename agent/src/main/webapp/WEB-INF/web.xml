@@ -12,6 +12,11 @@
       <param-name>debug</param-name>
       <param-value>false</param-value>
     </init-param>
+    <init-param>
+      <param-name>historyMaxEntries</param-name>
+      <param-value>10</param-value>
+    </init-param>
+
   </servlet>
 
   <servlet-mapping>

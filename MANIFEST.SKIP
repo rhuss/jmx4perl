@@ -55,3 +55,4 @@
 ^test.pl$
 scripts/handlerTest.pl
 ^TODO$
+^tmp

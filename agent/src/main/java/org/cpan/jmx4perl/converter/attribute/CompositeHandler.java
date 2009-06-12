@@ -48,11 +48,11 @@ public class CompositeHandler implements AttributeConverter.Handler {
         CompositeData cd = (CompositeData) pValue;
 
         if (!pExtraArgs.isEmpty()) {
-            String decodedKey = pExtraArgs.pop();
+            String key = pExtraArgs.pop();
             try {
-                return pConverter.extractObject(cd.get(decodedKey),pExtraArgs,jsonify);
+                return pConverter.extractObject(cd.get(key),pExtraArgs,jsonify);
             }  catch (InvalidKeyException exp) {
-                throw new AttributeNotFoundException("Invalid path '" + decodedKey + "'");
+                throw new AttributeNotFoundException("Invalid path '" + key + "'");
             }
         } else {
             if (jsonify) {

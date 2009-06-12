@@ -23,7 +23,7 @@ public class ExecHandler extends RequestHandler {
 
     public Object handleRequest(MBeanServer server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
-        String[] paramClazzes = new String[0];
+        String[] paramClazzes;
         paramClazzes = extractOperationTypes(server,request);
         Object[] params = new Object[paramClazzes.length];
         List<String> args = request.getExtraArgs();
@@ -56,8 +56,7 @@ public class ExecHandler extends RequestHandler {
             throw new IllegalStateException("Cannot extract MBeanInfo for " + pRequest.getObjectNameAsString());
         }
         throw new IllegalArgumentException(
-                "Cannot extract type info for operation " + pRequest.getOperation() +
-                " on MBean " + pRequest.getObjectNameAsString());
+                "No operation " + pRequest.getOperation() + " on MBean " + pRequest.getObjectNameAsString() + " exists.");
     }
 
 }

@@ -129,6 +129,7 @@ sub request {
  
     my $ua = $self->{ua};
     my $url = $self->request_url($jmx_request);
+    print "Requesting $url\n" if $self->{cfg}->{verbose};
 #    print $url;
     my $req = HTTP::Request->new(GET => $url);
     my $resp = $ua->request($req);
@@ -138,12 +139,12 @@ sub request {
     };
     if ($@) {
         if (!$resp->is_error) {
-            return new JMX::Jmx4Perl::Response->new
+            return JMX::Jmx4Perl::Response->new
               ( 
-               400,
-               $jmx_request,
-               $resp->content,
-               "Error while deserializing JSON answer (probably wrong URL)"
+               code => 400,
+               request => $jmx_request,
+               content => $resp->content,
+               error => "Error while deserializing JSON answer (probably wrong URL)"
               );
         }
     }
@@ -158,7 +159,7 @@ sub request {
         }
         die $error;
     };
-    return JMX::Jmx4Perl::Response->new($ret->{status},$jmx_request,$ret->{value},$ret->{error},$ret->{stacktrace});
+    return JMX::Jmx4Perl::Response->new(%{$ret},request => $jmx_request);
 }
 
 =item $url = $agent->request_url($request)
@@ -180,13 +181,13 @@ sub request_url {
         $url .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
     } elsif ($type eq WRITE) {
         $url .= $self->_escape($request->get("attribute"));
-        $url .= "/" . $self->_escape($request->get("value"));
+        $url .= "/" . $self->_escape($self->_null_escape($request->get("value")));
         $url .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
     } elsif ($type eq LIST) {
         $url .= $self->_escape($request->get("path")) if defined($request->get("path"));
     } elsif ($type eq EXEC) {
         $url .= $self->_escape($request->get("operation"));
-        $url .= "/" . $self->_escape($_) for @{$request->get("args")};
+        $url .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("args")};
     }
     return $url;
 }
@@ -203,6 +204,20 @@ sub _escape {
     return uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
                                                               # default
                                                               # set. See L<URI>
+}
+
+# Escape empty and undef values so that they can be detangled 
+# on the server side
+sub _null_escape {
+    my $self = shift;
+    my $value = shift;
+    if (!defined($value)) {
+        return "[null]";
+    } elsif (! length($value)) {
+        return "\"\"";
+    } else {
+        return $value;
+    }
 }
 
 =back
