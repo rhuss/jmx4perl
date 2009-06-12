@@ -1,5 +1,5 @@
 0.20_2
-  - Support writing attribtues and executing operations 
+  - Support for writing attributes and executing operations 
   - Documentation fixes
   - Tested for WebLogic 9
   - Added a "version" command to j4p-agent
@@ -9,8 +9,7 @@
 0.16
   - Switched off debugging in agent servlet
   - Fixed syntax error when using 'jmx4perl -v attributes'
-  - Fixed Jetty Handler. 'had to remove support for Jetty 7
-    since I didn't managed to run 7.0M2 with JMX enabled.
+  - Fixed Jetty Handler. 
 
 0.15
   - Aliasing
