@@ -1,9 +1,8 @@
-package org.cpan.jmx4perl.converter.handler;
+package org.cpan.jmx4perl.handler;
 
 import org.cpan.jmx4perl.JmxRequest;
 
 import javax.management.*;
-import java.util.List;
 import java.util.Set;
 
 /**

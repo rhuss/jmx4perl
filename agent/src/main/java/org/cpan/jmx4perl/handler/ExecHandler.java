@@ -1,4 +1,4 @@
-package org.cpan.jmx4perl.converter.handler;
+package org.cpan.jmx4perl.handler;
 
 import org.cpan.jmx4perl.JmxRequest;
 import org.cpan.jmx4perl.converter.StringToObjectConverter;

@@ -27,7 +27,7 @@ package org.cpan.jmx4perl;
 
 import org.cpan.jmx4perl.converter.StringToObjectConverter;
 import org.cpan.jmx4perl.converter.attribute.AttributeConverter;
-import org.cpan.jmx4perl.converter.handler.*;
+import org.cpan.jmx4perl.handler.*;
 import org.json.simple.JSONObject;
 
 import javax.management.*;
