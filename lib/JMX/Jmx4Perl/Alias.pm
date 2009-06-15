@@ -117,7 +117,9 @@ my %ALIAS_MAP =
 
   # Jmx4Perl
   JMX4PERL_HISTORY_SIZE => [ "Size of the history of all attributes and operations in bytes" , ["jmx4perl:type=Config","HistorySize"]],
-  JMX4PERL_HISTORY_MAX_ENTRIES => [ "Maximum number of entries per attribute/operation possible" , ["jmx4perl:type=Config","GlobalEntryLimit"]],
+  JMX4PERL_HISTORY_MAX_ENTRIES => [ "Maximum number of entries per attribute/operation possible" , ["jmx4perl:type=Config","HistoryMaxEntries"]],
+  JMX4PERL_DEBUG => [ "Switch on/off debugging by setting this boolean" , ["jmx4perl:type=Config","Debug"]],
+  JMX4PERL_DEBUG_MAX_ENTRIES => [ "Maximum number of entries for storing debug info" , ["jmx4perl:type=Config","DebugMaxEntries"]],
  },
 
    operation  => 
@@ -134,7 +136,8 @@ my %ALIAS_MAP =
   JMX4PERL_HISTORY_MAX_ATTRIBUTE => [ "Set the size of the history for a specific attribute" , ["jmx4perl:type=Config","setHistoryEntriesForAttribute"]],
   JMX4PERL_HISTORY_MAX_OPERATION => [ "Set the size of the history for a specific operation" , ["jmx4perl:type=Config","setHistoryEntriesForOperation"]],
   JMX4PERL_HISTORY_RESET => [ "Reset the history for all attributes and operations" , ["jmx4perl:type=Config","resetHistoryEntries"]],
-  
+  JMX4PERL_DEBUG_INFO => [ "Print out latest debug info", ["jmx4perl:type=Config","debugInfo"]],
+  JMX4PERL_SERVER_INFO => [ "Show information about registered MBeanServers", ["jmx4perl:type=Config","mBeanServerInfo"]]
  });
 
 my %NAME_TO_ALIAS_MAP;

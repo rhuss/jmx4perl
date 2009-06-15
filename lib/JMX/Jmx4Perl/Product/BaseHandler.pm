@@ -331,38 +331,38 @@ sub jvm_info {
     
     my $ret = "";
     $ret .= "Memory:\n";
-    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory used:",int($jmx4perl->get_attribute(MEMORY_HEAP_USED)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory alloc:",int($jmx4perl->get_attribute(MEMORY_HEAP_COMITTED)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory max:",int($jmx4perl->get_attribute(MEMORY_HEAP_MAX)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","NonHeap-Memory max:",int($jmx4perl->get_attribute(MEMORY_NONHEAP_MAX)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory used:",int($self->_get_attribute(MEMORY_HEAP_USED)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory alloc:",int($self->_get_attribute(MEMORY_HEAP_COMITTED)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory max:",int($self->_get_attribute(MEMORY_HEAP_MAX)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","NonHeap-Memory max:",int($self->_get_attribute(MEMORY_NONHEAP_MAX)/(1024*1024)) . " MB");
     $ret .= "Classes:\n";
-    $ret .= sprintf("   %-20.20s %s\n","Classes loaded:",$jmx4perl->get_attribute(CL_LOADED));
-    $ret .= sprintf("   %-20.20s %s\n","Classes total:",$jmx4perl->get_attribute(CL_TOTAL));
+    $ret .= sprintf("   %-20.20s %s\n","Classes loaded:",$self->_get_attribute(CL_LOADED));
+    $ret .= sprintf("   %-20.20s %s\n","Classes total:",$self->_get_attribute(CL_TOTAL));
     $ret .= "Threads:\n";
-    $ret .= sprintf("   %-20.20s %s\n","Threads current:",$jmx4perl->get_attribute(THREAD_COUNT));
-    $ret .= sprintf("   %-20.20s %s\n","Threads peak:",$jmx4perl->get_attribute(THREAD_COUNT_PEAK));
+    $ret .= sprintf("   %-20.20s %s\n","Threads current:",$self->_get_attribute(THREAD_COUNT));
+    $ret .= sprintf("   %-20.20s %s\n","Threads peak:",$self->_get_attribute(THREAD_COUNT_PEAK));
     $ret .= "OS:\n";
-    $ret .= sprintf("   %-20.20s %s\n","CPU Arch:",$jmx4perl->get_attribute(OS_INFO_ARCH));
-    $ret .= sprintf("   %-20.20s %s %s\n","CPU OS:",$jmx4perl->get_attribute(OS_INFO_NAME),$jmx4perl->get_attribute(OS_INFO_VERSION));
-    $ret .= sprintf("   %-20.20s %s\n","Memory total:",int($jmx4perl->get_attribute(OS_MEMORY_TOTAL_PHYSICAL)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Memory free:",int($jmx4perl->get_attribute(OS_MEMORY_FREE_PHYSICAL)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Swap used:",int(($jmx4perl->get_attribute(OS_MEMORY_TOTAL_SWAP)-
-                                                         $jmx4perl->get_attribute(OS_MEMORY_FREE_SWAP))/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Swap avail:",int($jmx4perl->get_attribute(OS_MEMORY_TOTAL_SWAP)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","FileDesc Open:",$jmx4perl->get_attribute(OS_FILE_OPEN_DESC));
-    $ret .= sprintf("   %-20.20s %s\n","FileDesc Max:",$jmx4perl->get_attribute(OS_FILE_MAX_DESC));    
+    $ret .= sprintf("   %-20.20s %s\n","CPU Arch:",$self->_get_attribute(OS_INFO_ARCH));
+    $ret .= sprintf("   %-20.20s %s %s\n","CPU OS:",$self->_get_attribute(OS_INFO_NAME),$self->_get_attribute(OS_INFO_VERSION));
+    $ret .= sprintf("   %-20.20s %s\n","Memory total:",int($self->_get_attribute(OS_MEMORY_TOTAL_PHYSICAL)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","Memory free:",int($self->_get_attribute(OS_MEMORY_FREE_PHYSICAL)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","Swap used:",int(($self->_get_attribute(OS_MEMORY_TOTAL_SWAP)-
+                                                         $self->_get_attribute(OS_MEMORY_FREE_SWAP))/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","Swap avail:",int($self->_get_attribute(OS_MEMORY_TOTAL_SWAP)/(1024*1024)) . " MB");
+    $ret .= sprintf("   %-20.20s %s\n","FileDesc Open:",$self->_get_attribute(OS_FILE_OPEN_DESC));
+    $ret .= sprintf("   %-20.20s %s\n","FileDesc Max:",$self->_get_attribute(OS_FILE_MAX_DESC));    
     $ret .= "Runtime:\n";
-    $ret .= sprintf("   %-20.20s %s\n","Name:",$jmx4perl->get_attribute(RUNTIME_NAME));    
+    $ret .= sprintf("   %-20.20s %s\n","Name:",$self->_get_attribute(RUNTIME_NAME));    
     $ret .= sprintf("   %-20.20s %s, %s, %s\n","JVM:",
-                    $jmx4perl->get_attribute(RUNTIME_VM_VERSION),
-                    $jmx4perl->get_attribute(RUNTIME_VM_NAME),
-                    $jmx4perl->get_attribute(RUNTIME_VM_VENDOR),
+                    $self->_get_attribute(RUNTIME_VM_VERSION),
+                    $self->_get_attribute(RUNTIME_VM_NAME),
+                    $self->_get_attribute(RUNTIME_VM_VENDOR),
                    );    
-    $ret .= sprintf("   %-20.20s %s\n","Uptime:",&_format_duration($jmx4perl->get_attribute(RUNTIME_UPTIME)));
-    $ret .= sprintf("   %-20.20s %s\n","Starttime:",scalar(localtime($jmx4perl->get_attribute(RUNTIME_STARTTIME)/1000)));    
+    $ret .= sprintf("   %-20.20s %s\n","Uptime:",&_format_duration($self->_get_attribute(RUNTIME_UPTIME)));
+    $ret .= sprintf("   %-20.20s %s\n","Starttime:",scalar(localtime($self->_get_attribute(RUNTIME_STARTTIME)/1000)));    
     if ($verbose) {
         my $args = "";
-        for my $arg (@{$jmx4perl->get_attribute(RUNTIME_ARGUMENTS)}) {
+        for my $arg (@{$self->_get_attribute(RUNTIME_ARGUMENTS)}) {
             $args .= $arg . " ";
             my $i = 1;
             if (length($args) > $i * 60) {
@@ -372,11 +372,24 @@ sub jvm_info {
         }
         $ret .= sprintf("   %-20.20s %s\n","Arguments:",$args);    
         $ret .= "System Properties:\n";
-        for my $prop (@{$jmx4perl->get_attribute(RUNTIME_SYSTEM_PROPERTIES)}) {
+        for my $prop (@{$self->_get_attribute(RUNTIME_SYSTEM_PROPERTIES)}) {
             $ret .= sprintf("   %-40.40s = %s\n",$prop->{key},$prop->{value});
         }
     }
     return $ret;
+}
+
+sub _get_attribute { 
+    my $self = shift;
+    
+    my $jmx4perl = $self->{jmx4perl};
+    my @args = $jmx4perl->resolve_alias(shift);
+    return "" unless $args[0];
+    my $request = new JMX::Jmx4Perl::Request(READ,@args);
+    my $response = $jmx4perl->request($request);
+    return "" if $response->status == 404;     # Ignore attributes not found
+    return $response->value if $response->is_ok;
+    die "Error fetching attribute ","@_",": ",$response->error_text;
 }
 
 sub _format_duration {

@@ -71,6 +71,7 @@ my $build = $class->new
    build_requires => {
                       "Module::Build" => "0",
                       "Test::More" => "0",
+                      "Test::Deep" => 0,
                       "Test" => "0"
                      },                       
    keywords => [  "JMX", "JEE", "Management" ],

@@ -16,6 +16,10 @@
       <param-name>historyMaxEntries</param-name>
       <param-value>10</param-value>
     </init-param>
+    <init-param>
+      <param-name>debugMaxEntries</param-name>
+      <param-value>100</param-value>
+    </init-param>
 
   </servlet>
 

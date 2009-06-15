@@ -1,6 +1,6 @@
 ---
 name: jmx4perl
-version: 0.20_3
+version: 0.20_4
 author:
   - Roland Huss (roland@cpan.org)
 abstract: Easy JMX access to Java Applications
@@ -20,13 +20,14 @@ requires:
 build_requires:
   Module::Build: 0
   Test: 0
+  Test::Deep: 0
   Test::More: 0
 recommends:
   Nagios::Plugin: 0.27
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.20_3
+    version: 0.20_4
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0

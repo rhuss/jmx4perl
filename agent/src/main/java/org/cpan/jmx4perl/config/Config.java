@@ -1,26 +1,32 @@
 package org.cpan.jmx4perl.config;
 
+import org.cpan.jmx4perl.MBeanServerHandler;
 import org.cpan.jmx4perl.history.HistoryKey;
 import org.cpan.jmx4perl.history.HistoryStore;
 
+import javax.management.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.lang.management.ManagementFactory;
+import java.util.Set;
+
 
 /**
  * @author roland
  * @since Jun 12, 2009
  */
-public class Config implements ConfigMBean {
+public class Config implements ConfigMBean, MBeanRegistration {
 
     private HistoryStore historyStore;
+    private DebugStore debugStore;
+    private MBeanServerHandler mBeanServerHandler;
 
-    public String getMBeanName() {
-        return "jmx4perl:type=Config";
-    }
 
-    public Config(HistoryStore pHistoryStore) {
+    public Config(HistoryStore pHistoryStore,DebugStore pDebugStore, MBeanServerHandler pMBeanServerHandler) {
         historyStore = pHistoryStore;
+        debugStore = pDebugStore;
+        mBeanServerHandler = pMBeanServerHandler;
     }
 
     public void setHistoryEntriesForAttribute(String pMBean, String pAttribute, String pPath, int pMaxEntries) {
@@ -37,6 +43,67 @@ public class Config implements ConfigMBean {
         historyStore.reset();
     }
 
+    public String debugInfo() {
+        return debugStore.debugInfo();
+    }
+
+    public String mBeanServerInfo() {
+        StringBuffer ret = new StringBuffer();
+        Set<MBeanServer> mBeanServers = mBeanServerHandler.getMBeanServers();
+        if (mBeanServers == null) {
+            ret.append("Not initialized yet\n");
+        } else {
+
+            ret.append("Found ").append(mBeanServers.size()).append(" MBeanServers\n");
+            for (MBeanServer s : mBeanServers) {
+                ret.append("    ")
+                        .append("++ ")
+                        .append(s.toString())
+                        .append(": default domain = ")
+                        .append(s.getDefaultDomain())
+                        .append(", ")
+                        .append(s.getMBeanCount())
+                        .append(" MBeans\n");
+
+                ret.append("        Domains:\n");
+                boolean javaLangFound = false;
+                for (String d : s.getDomains()) {
+                    if ("java.lang".equals(d)) {
+                        javaLangFound = true;
+                    }
+                    appendDomainInfo(ret, s, d);
+                }
+                if (!javaLangFound) {
+                    // JBoss fails to list java.lang in its domain list
+                    appendDomainInfo(ret,s,"java.lang");
+                }
+            }
+            ret.append("\n");
+            ret.append("Platform MBeanServer: ")
+                    .append(ManagementFactory.getPlatformMBeanServer())
+                    .append("\n");
+        }
+        return ret.toString();
+    }
+
+    private void appendDomainInfo(StringBuffer pRet, MBeanServer pServer, String pDomain) {
+        try {
+            pRet.append("         == ").append(pDomain).append("\n");
+            Set<ObjectInstance> beans = pServer.queryMBeans(new ObjectName(pDomain + ":*"),null);
+            for (ObjectInstance o : beans) {
+                String n = o.getObjectName().getCanonicalKeyPropertyListString();
+                pRet.append("              ").append(n).append("\n");
+            }
+        } catch (MalformedObjectNameException e) {
+            // Shouldnt happen
+            pRet.append("              INTERNAL ERROR: ").append(e).append("\n");
+        }
+    }
+
+    public void resetDebugInfo() {
+        debugStore.resetDebugInfo();
+    }
+
     public int getHistoryMaxEntries() {
         return historyStore.getGlobalMaxEntries();
     }
@@ -45,11 +112,42 @@ public class Config implements ConfigMBean {
         historyStore.setGlobalMaxEntries(pLimit);
     }
 
+    public boolean isDebug() {
+        return debugStore.isDebug();
+    }
+
+    public void setDebug(boolean pSwitch) {
+        debugStore.setDebug(pSwitch);
+    }
+
+    public int getMaxDebugEntries() {
+        return debugStore.getMaxDebugEntries();
+    }
+
+    public void setMaxDebugEntries(int pNumber) {
+        debugStore.setMaxDebugEntries(pNumber);
+    }
 
     public int getHistorySize() throws IOException {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
         ObjectOutputStream oOut = new ObjectOutputStream(bOut);
         oOut.writeObject(historyStore);
         return bOut.size();
+    }
+
+    // =================================================================================
+    // We are providing our own name
+
+    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws Exception {
+        return new ObjectName("jmx4perl:type=Config");
+    }
+
+    public void postRegister(Boolean pBoolean) {
+    }
+
+    public void preDeregister() throws Exception {
+    }
+
+    public void postDeregister() {
     }
 }

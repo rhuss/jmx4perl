@@ -44,7 +44,7 @@ It uses a traditional request-response paradigma for performing JMX operations
 on a remote Java Virtual machine. 
 
 There a various ways how JMX information can be transfered. For now, a single
-operational mode is supported. It is based on an I<agent>, a small (~30k) Java
+operational mode is supported. It is based on an I<agent>, a small (< 100k) Java
 Servlet, which needs to deployed on a Java application server. It plays the
 role of a proxy, which on one side communicates with the MBeans server in the
 application server and transfers JMX related information via HTPP and JSON to
@@ -86,10 +86,6 @@ listener when a certain event happens.
 
 =back
 
-For now only reading of attributes are supported, but development has start to
-support writing of attributes and executing of JMX operations. Notification
-support might come (or not ;-)
-
 =head1 METHODS
 
 =over
@@ -105,7 +101,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.20_3";
+$VERSION = "0.20_4";
 
 my $REGISTRY = {
                 # Agent based
@@ -128,7 +124,7 @@ sub _register_handlers {
         require $handler_file.".pm";
         next if $handler eq $handler_package."::BaseHandler";
         my $id = eval "${handler}::id()";
-        croak "No id() method on $handler: $@" if $@;
+        die "No id() method on $handler: $@" if $@;
         $PRODUCT_HANDLER{lc $id} = $handler;
         push @id2order, [ lc $id, $handler->order() ];
     }
@@ -173,7 +169,7 @@ sub new {
 
     $class = $REGISTRY->{$mode} || croak "Unknown runtime mode " . $mode;
     if ($product && !$PRODUCT_HANDLER{lc $product}) {
-        croak "No handler for product '$product'. Known Handlers are [".(join ", ",keys %PRODUCT_HANDLER)."]";
+        die "No handler for product '$product'. Known Handlers are [".(join ", ",keys %PRODUCT_HANDLER)."]";
     }
 
     eval "require $class";
@@ -224,7 +220,9 @@ value, this argument is taken as alias (without any path). If you want to use
 aliases together with a path, you need to use the second form with a hash ref
 for providing the (named) arguments. 
 
-This method returns the value as it is returned from the server.
+This method returns the value as it is returned from the server. It will throw
+an exception (die), if an error occurs on the server side, like when the name
+couldn't be found.
 
 =cut 
 
@@ -241,8 +239,11 @@ sub get_attribute {
 
     my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
     my $response = $self->request($request);
-    if ($response->status == 404) {
-        return undef;
+    if ($response->is_error) {
+        my $o = "(".$object.",".$attribute.($path ? "," . $path : "").")";
+        croak "The attribute $o is not registered on the server side"
+          if $response->status == 404;
+        croak "Error requesting $o: ",$response->error_text;
     }
     return $response->value;
 }
@@ -327,6 +328,7 @@ sub _extract_get_set_parameters {
                 # Let the handler do it
                 return ($object,undef,undef,$args{with_value} ? $value : undef);
             }
+            croak "No alias ",$f->{alias}," defined for handler ",$self->product->name unless $object; 
             if ($alias_path) {
                 $path = $f->{path} ? $f->{path} . "/" . $alias_path : $alias_path;
             } else { 
@@ -356,6 +358,7 @@ sub _extract_get_set_parameters {
                 # Let the handler do it
                 return ($object,undef,undef,$args{with_value} ? $value : undef);
             }
+            croak "No alias ",$f," defined for handler ",$self->product->name unless $object; 
         } else {
             if ($args{with_value}) {
                 ($object,$attribute,$value,$path) = @{$p};
@@ -426,6 +429,17 @@ sub resolve_alias {
     return $handler->alias($alias);
 }
 
+=item $do_support = $self->supports_alias($alias) 
+
+Test for checking whether a handler supports a certain alias. 
+
+=cut
+
+sub supports_alias {
+    my ($object) = shift->resolve_alias(shift);
+    return $object ? 1 : 0;
+}
+
 =item $attribute_value = $self->handle_attribute_by_handler($coderef,$value)
 
 Execute a subroutine with the current handler as argument and returns the
@@ -446,18 +460,23 @@ sub handle_attribute_by_handler {
     return &{$code}($handler,@_);
 }
 
-=item $product = $self->product_id()
+=item $product = $self->product()
 
-For supported application servers, this methods returns the name of the
-product. This product is either detected automatically or provided during
+For supported application servers, this methods returns product handler 
+which is an object of type L<JMX::Jmx4Perl::Product::BaseHandler>. 
+
+This product is either detected automatically or provided during
 construction time.
 
-=cut 
+The most interesting methods on this object are C<id()>, C<name()> and
+C<version()> 
+
+=cut
 
 sub product {
     my $self = shift;
     my $handler = $self->{product_handler} || $self->_create_handler();
-    return $handler->name();
+    return $handler;
 }
 
 sub _create_handler {
