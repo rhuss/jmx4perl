@@ -324,42 +324,61 @@ every Virtual machine.
 
 =cut
 
+
 sub jvm_info {
     my $self = shift;
     my $verbose = shift;
     my $jmx4perl = $self->{jmx4perl};
     
+    my @info = (
+                "Memory" => [
+                             "mem" => [ "Heap-Memory used", MEMORY_HEAP_USED ],
+                             "mem" => [ "Heap-Memory alloc", MEMORY_HEAP_COMITTED ],
+                             "mem" => [ "Heap-Memory max", MEMORY_HEAP_MAX ],
+                             "mem" => [ "NonHeap-Memory max", MEMORY_NONHEAP_MAX ],
+                            ],
+                "Classes" => [
+                              "nr" => [ "Classes loaded", CL_LOADED ],
+                              "nr" => [ "Classes total", CL_TOTAL ]
+                             ],
+                "Threads" => [
+                              "nr" => [ "Threads current", THREAD_COUNT ],
+                              "nr" => [ "Threads peak", THREAD_COUNT_PEAK ]
+                             ],
+                "OS" => [
+                         "str" => [ "CPU Arch", OS_INFO_ARCH ],
+                         "str" => [ "CPU OS",OS_INFO_NAME,OS_INFO_VERSION],
+                         "mem" => [ "Memory total",OS_MEMORY_PHYSICAL_FREE],
+                         "mem" => [ "Memory free",OS_MEMORY_PHYSICAL_FREE],                
+                         "mem" => [ "Swap total",OS_MEMORY_SWAP_TOTAL],                
+                         "mem" => [ "Swap free",OS_MEMORY_SWAP_FREE],
+                         "nr" => [ "FileDesc Open", OS_FILE_DESC_OPEN ],
+                         "nr" => [ "FileDesc Max", OS_FILE_DESC_MAX ]
+                        ],
+                "Runtime" => [
+                              "str" => [ "Name", RUNTIME_NAME ],
+                              "str" => [ "JVM", RUNTIME_VM_VERSION,RUNTIME_VM_NAME,RUNTIME_VM_VENDOR ],
+                              "duration" => [ "Uptime", RUNTIME_UPTIME ],
+                              "time" => [ "Starttime", RUNTIME_STARTTIME ]                              
+                             ]                         
+               );
+
     my $ret = "";
-    $ret .= "Memory:\n";
-    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory used:",int($self->_get_attribute(MEMORY_HEAP_USED)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory alloc:",int($self->_get_attribute(MEMORY_HEAP_COMITTED)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Heap-Memory max:",int($self->_get_attribute(MEMORY_HEAP_MAX)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","NonHeap-Memory max:",int($self->_get_attribute(MEMORY_NONHEAP_MAX)/(1024*1024)) . " MB");
-    $ret .= "Classes:\n";
-    $ret .= sprintf("   %-20.20s %s\n","Classes loaded:",$self->_get_attribute(CL_LOADED));
-    $ret .= sprintf("   %-20.20s %s\n","Classes total:",$self->_get_attribute(CL_TOTAL));
-    $ret .= "Threads:\n";
-    $ret .= sprintf("   %-20.20s %s\n","Threads current:",$self->_get_attribute(THREAD_COUNT));
-    $ret .= sprintf("   %-20.20s %s\n","Threads peak:",$self->_get_attribute(THREAD_COUNT_PEAK));
-    $ret .= "OS:\n";
-    $ret .= sprintf("   %-20.20s %s\n","CPU Arch:",$self->_get_attribute(OS_INFO_ARCH));
-    $ret .= sprintf("   %-20.20s %s %s\n","CPU OS:",$self->_get_attribute(OS_INFO_NAME),$self->_get_attribute(OS_INFO_VERSION));
-    $ret .= sprintf("   %-20.20s %s\n","Memory total:",int($self->_get_attribute(OS_MEMORY_TOTAL_PHYSICAL)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Memory free:",int($self->_get_attribute(OS_MEMORY_FREE_PHYSICAL)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Swap used:",int(($self->_get_attribute(OS_MEMORY_TOTAL_SWAP)-
-                                                         $self->_get_attribute(OS_MEMORY_FREE_SWAP))/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","Swap avail:",int($self->_get_attribute(OS_MEMORY_TOTAL_SWAP)/(1024*1024)) . " MB");
-    $ret .= sprintf("   %-20.20s %s\n","FileDesc Open:",$self->_get_attribute(OS_FILE_OPEN_DESC));
-    $ret .= sprintf("   %-20.20s %s\n","FileDesc Max:",$self->_get_attribute(OS_FILE_MAX_DESC));    
-    $ret .= "Runtime:\n";
-    $ret .= sprintf("   %-20.20s %s\n","Name:",$self->_get_attribute(RUNTIME_NAME));    
-    $ret .= sprintf("   %-20.20s %s, %s, %s\n","JVM:",
-                    $self->_get_attribute(RUNTIME_VM_VERSION),
-                    $self->_get_attribute(RUNTIME_VM_NAME),
-                    $self->_get_attribute(RUNTIME_VM_VENDOR),
-                   );    
-    $ret .= sprintf("   %-20.20s %s\n","Uptime:",&_format_duration($self->_get_attribute(RUNTIME_UPTIME)));
-    $ret .= sprintf("   %-20.20s %s\n","Starttime:",scalar(localtime($self->_get_attribute(RUNTIME_STARTTIME)/1000)));    
+    while (@info) {
+        my $titel = shift @info;
+        my $e = shift @info;
+        my $val = "";
+        while (@$e) {
+            $self->_append_info(\$val,shift @$e,shift @$e);            
+        }
+        if (length $val) {
+            $ret .= $titel . ":\n";
+            $ret .= $val;
+        }
+    }
+    
+
+
     if ($verbose) {
         my $args = "";
         for my $arg (@{$self->_get_attribute(RUNTIME_ARGUMENTS)}) {
@@ -379,15 +398,37 @@ sub jvm_info {
     return $ret;
 }
 
+sub _append_info {
+    my $self = shift;
+    my $r = shift;
+    my $type = shift;
+    my $content = shift;
+    my $label = shift @$content;
+    my $value = $self->_get_attribute(shift @$content);
+    return unless defined($value);
+    if ($type eq "mem") {
+        $value = int($value/(1024*1024)) . " MB";
+    } elsif ($type eq "str" && @$content) {
+        while (@$content) {
+            $value .= " " . $self->_get_attribute(shift @$content);
+        }
+    } elsif ($type eq "duration") {
+        $value = &_format_duration($value);
+    } elsif ($type eq "time") {
+        $value = scalar(localtime($value));
+    }
+    $$r .= sprintf("   %-20.20s: %s\n",$label,$value);
+}
+
 sub _get_attribute { 
     my $self = shift;
     
     my $jmx4perl = $self->{jmx4perl};
     my @args = $jmx4perl->resolve_alias(shift);
-    return "" unless $args[0];
+    return undef unless $args[0];
     my $request = new JMX::Jmx4Perl::Request(READ,@args);
     my $response = $jmx4perl->request($request);
-    return "" if $response->status == 404;     # Ignore attributes not found
+    return undef if $response->status == 404;     # Ignore attributes not found
     return $response->value if $response->is_ok;
     die "Error fetching attribute ","@_",": ",$response->error_text;
 }

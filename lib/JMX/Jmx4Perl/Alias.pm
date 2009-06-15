@@ -89,13 +89,13 @@ my %ALIAS_MAP =
   THREAD_COUNT_DAEMON => ["Count of threads marked as daemons in the system", [ "java.lang:type=Threading", "DaemonThreadCount"]],
   
   # Operating System
-  OS_MEMORY_FREE_PHYSICAL => ["The amount of free physical memory for the OS", [ "java.lang:type=OperatingSystem", "FreePhysicalMemorySize"]],
-  OS_MEMORY_FREE_SWAP => ["The amount of free swap space for the OS", [ "java.lang:type=OperatingSystem", "FreeSwapSpaceSize"]],
-  OS_MEMORY_TOTAL_PHYSICAL => ["The amount of total physical memory for the OS", [ "java.lang:type=OperatingSystem", "TotalPhysicalMemorySize"]],
-  OS_MEMORY_TOTAL_SWAP => ["The amount of total swap memory available", [ "java.lang:type=OperatingSystem", "TotalSwapSpaceSize"]],
+  OS_MEMORY_PHYSICAL_FREE => ["The amount of free physical memory for the OS", [ "java.lang:type=OperatingSystem", "FreePhysicalMemorySize"]],
+  OS_MEMORY_PHYSICAL_TOTAL => ["The amount of total physical memory for the OS", [ "java.lang:type=OperatingSystem", "TotalPhysicalMemorySize"]],
+  OS_MEMORY_SWAP_FREE => ["The amount of free swap space for the OS", [ "java.lang:type=OperatingSystem", "FreeSwapSpaceSize"]],
+  OS_MEMORY_SWAP_TOTAL => ["The amount of total swap memory available", [ "java.lang:type=OperatingSystem", "TotalSwapSpaceSize"]],
   OS_MEMORY_VIRTUAL => ["Size of virtual memory used by this process", [ "java.lang:type=OperatingSystem", "CommittedVirtualMemorySize"]],
-  OS_FILE_OPEN_DESC => ["Number of open file descriptors", [ "java.lang:type=OperatingSystem", "OpenFileDescriptorCount"]],
-  OS_FILE_MAX_DESC => ["Maximum number of open file descriptors", [ "java.lang:type=OperatingSystem", "MaxFileDescriptorCount"]],
+  OS_FILE_DESC_OPEN => ["Number of open file descriptors", [ "java.lang:type=OperatingSystem", "OpenFileDescriptorCount"]],
+  OS_FILE_DESC_MAX => ["Maximum number of open file descriptors", [ "java.lang:type=OperatingSystem", "MaxFileDescriptorCount"]],
   OS_CPU_TIME => ["The cpu time used by this process", [ "java.lang:type=OperatingSystem", "ProcessCpuTime"]],
   OS_INFO_PROCESSORS => ["Number of processors", [ "java.lang:type=OperatingSystem", "AvailableProcessors"]],
   OS_INFO_ARCH => ["Architecture", [ "java.lang:type=OperatingSystem", "Arch"]],
@@ -236,11 +236,15 @@ outdated, to get the current one, use
  CL_LOADED                      attr Number of currently loaded classes
  CL_TOTAL                       attr Number of classes loaded in total
  CL_UNLOADED                    attr Number of unloaded classes
+ JMX4PERL_DEBUG                 attr Switch on/off debugging by setting this boolean
+ JMX4PERL_DEBUG_INFO            oper Print out latest debug info
+ JMX4PERL_DEBUG_MAX_ENTRIES     attr Maximum number of entries for storing debug info
  JMX4PERL_HISTORY_MAX_ATTRIBUTE oper Set the size of the history for a specific attribute
  JMX4PERL_HISTORY_MAX_ENTRIES   attr Maximum number of entries per attribute/operation possible
  JMX4PERL_HISTORY_MAX_OPERATION oper Set the size of the history for a specific operation
  JMX4PERL_HISTORY_RESET         oper Reset the history for all attributes and operations
  JMX4PERL_HISTORY_SIZE          attr Size of the history of all attributes and operations in bytes
+ JMX4PERL_SERVER_INFO           oper Show information about registered MBeanServers
  MEMORY_GC                      oper Run a garbage collection
  MEMORY_HEAP                    attr Heap memory usage, multiple values
  MEMORY_HEAP_COMITTED           attr Committed heap memory. That's the memory currently available for this JVM
@@ -254,16 +258,16 @@ outdated, to get the current one, use
  MEMORY_NONHEAP_USED            attr Used non-heap memory (like a 'method area')
  MEMORY_VERBOSE                 attr Switch on/off verbose messages concerning the garbage collector
  OS_CPU_TIME                    attr The cpu time used by this process
- OS_FILE_MAX_DESC               attr Maximum number of open file descriptors
- OS_FILE_OPEN_DESC              attr Number of open file descriptors
+ OS_FILE_DESC_MAX               attr Maximum number of open file descriptors
+ OS_FILE_DESC_OPEN              attr Number of open file descriptors
  OS_INFO_ARCH                   attr Architecture
  OS_INFO_NAME                   attr Operating system name
  OS_INFO_PROCESSORS             attr Number of processors
  OS_INFO_VERSION                attr Operating system version
- OS_MEMORY_FREE_PHYSICAL        attr The amount of free physical memory for the OS
- OS_MEMORY_FREE_SWAP            attr The amount of free swap space for the OS
- OS_MEMORY_TOTAL_PHYSICAL       attr The amount of total physical memory for the OS
- OS_MEMORY_TOTAL_SWAP           attr The amount of total swap memory available
+ OS_MEMORY_PHYSICAL_FREE        attr The amount of free physical memory for the OS
+ OS_MEMORY_PHYSICAL_TOTAL       attr The amount of total physical memory for the OS
+ OS_MEMORY_SWAP_FREE            attr The amount of free swap space for the OS
+ OS_MEMORY_SWAP_TOTAL           attr The amount of total swap memory available
  OS_MEMORY_VIRTUAL              attr Size of virtual memory used by this process
  RUNTIME_ARGUMENTS              attr Arguments when starting the JVM
  RUNTIME_BOOTCLASSPATH          attr Bootclasspath
