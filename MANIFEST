@@ -1,10 +1,12 @@
 agent/build.xml
+agent/j4p-agent.war
 agent/lib/json_simple-1.1.jar
 agent/lib/servlet-api-2.4.jar
 agent/pom.xml
 agent/src/main/java/org/cpan/jmx4perl/AgentServlet.java
 agent/src/main/java/org/cpan/jmx4perl/config/Config.java
 agent/src/main/java/org/cpan/jmx4perl/config/ConfigMBean.java
+agent/src/main/java/org/cpan/jmx4perl/config/DebugStore.java
 agent/src/main/java/org/cpan/jmx4perl/converter/attribute/ArrayHandler.java
 agent/src/main/java/org/cpan/jmx4perl/converter/attribute/AttributeConverter.java
 agent/src/main/java/org/cpan/jmx4perl/converter/attribute/CompositeHandler.java
@@ -24,6 +26,7 @@ agent/src/main/java/org/cpan/jmx4perl/history/HistoryKey.java
 agent/src/main/java/org/cpan/jmx4perl/history/HistoryStore.java
 agent/src/main/java/org/cpan/jmx4perl/history/ValueEntry.java
 agent/src/main/java/org/cpan/jmx4perl/JmxRequest.java
+agent/src/main/java/org/cpan/jmx4perl/MBeanServerHandler.java
 agent/src/main/java/org/cpan/jmx4perl/Version.java
 agent/src/main/webapp/WEB-INF/web.xml
 Build.PL
@@ -59,4 +62,3 @@ t/20_alias.t
 t/30_request.t
 t/lib/ProductTest/Test1Handler.pm
 t/lib/ProductTest/Test2Handler.pm
-agent/j4p-agent.war
