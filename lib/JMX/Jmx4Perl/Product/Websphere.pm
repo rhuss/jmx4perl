@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::Product::JBoss;
+package JMX::Jmx4Perl::Product::Websphere;
 
 use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
@@ -9,54 +9,46 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::JBoss - Handler for JBoss
+JMX::Jmx4Perl::Product::Websphere - Handler for IBM Websphere
 
 =head1 DESCRIPTION
 
-This is the product handler support JBoss 4.x and JBoss 5.x (L<http://www.jboss.org/jbossas/>)
+This is the product handler support for IBM Websphere Application Server 6 and
+7 (L<http://www.ibm.com/>)
 
 =cut
 
 sub id {
-    return "jboss";
+    return "websphere";
 }
 
 sub name {
-    return "JBoss AS";
+    return "IBM Websphere Application Server";
+}
+
+
+sub version {
+    return shift->_version_or_vendor("version",qr/^Version\s+(\d.*)\s*$/m);
+}
+
+sub autodetect_pattern {
+    return (shift->original_version_sub,qr/IBM\s+WebSphere\s+Application\s+Server/i);
 }
 
 sub order { 
-    return -2;
+    return 100;
 }
 
 sub jsr77 {
     return 1;
 }
 
-sub version {
-    return shift->_version_or_vendor("version",qr/^(.*?)\s+/);
-}
-
-sub autodetect_pattern {
-    return ("vendor",qr/JBoss/i);
-}
-
 sub init_aliases {
     return 
     {
-     attributes => 
-   {
-    SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    SERVER_HOSTNAME => [ "jboss.system:type=ServerInfo", "HostName"],
-   },
-     operations => 
-   {
-    THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
-   }
-     # Alias => [ "mbean", "attribute", "path" ]
+
     };
 }
-
 
 =head1 LICENSE
 

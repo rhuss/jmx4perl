@@ -70,11 +70,8 @@ import java.util.*;
  *       a data structure</li>
  *    <li>Type: <b>version</b> ({@link Type#VERSION}<br/>
  *        Parameters: none
- *    <li>Type: <b>config</b> ({@link Type#CONFIG}<br/>
- *       Parameters: <code>param1</code> = "attribute/operation", <code>param2</code> = MBean name,
- *       <code>param3</code> = operation/attribute name <code>param4</code> = config key
- *       <code>param5</code> = config value
- *       <code>param6 .. paramN</code> = Inner path.
+ *    <li>Type: <b>search</b> ({@link Type#SEARCH}<br/>
+ *        Parameters: <code>param1</code> = MBean name pattern
  * </ul>
  * @author roland
  * @since Apr 19, 2009
@@ -88,13 +85,14 @@ public class JmxRequest extends JSONObject {
         // Supported:
         READ("read"),
         LIST("list"),
-
-        // Unsupported:
         WRITE("write"),
         EXEC("exec"),
-        REGISTER_NOTIFICATION("regnotif"),
-        REMOVE_NOTIFICATION("remnotif"),
         VERSION("version"),
+        SEARCH("search"),
+
+        // Unsupported:
+        REGNOTIF("regnotif"),
+        REMNOTIF("remnotif"),
         CONFIG("config");
 
         private String value;
@@ -345,6 +343,17 @@ public class JmxRequest extends JSONObject {
             }
 
             public void setupJSON(JmxRequest r) {
+            }
+        });
+
+        processorMap.put(Type.SEARCH,new Processor() {
+            public void process(JmxRequest r,Stack<String> e) throws MalformedObjectNameException {
+                r.objectNameS = e.pop();
+                r.objectName = new ObjectName(r.objectNameS);
+            }
+
+            public void setupJSON(JmxRequest r) {
+                r.put("mbean",r.objectName.getCanonicalName());
             }
         });
     }

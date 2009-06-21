@@ -9,7 +9,7 @@ package org.cpan.jmx4perl;
  */
 public class Version {
     private static String VERSION = "0.20_4";
-    
+
     public static String getVersion() {
         return VERSION;
     }

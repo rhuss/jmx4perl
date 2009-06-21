@@ -1,3 +1,12 @@
+2009-06-18  Roland Huss  <roland@consol.de>
+
+	* lib/JMX/Jmx4Perl/Agent.pm: added "search" command to agent for
+	looking up MBeans.
+
+2009-06-17  Roland Huss  <roland@consol.de>
+
+	* lib/JMX/Jmx4Perl/Agent.pm (_escape): fixed naming resolution.
+
 2009-06-11  Roland Huss  <roland@consol.de>
 
 	* lib/JMX/Jmx4Perl/Agent/Protocol.pod: added support for writing

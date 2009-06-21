@@ -2,7 +2,7 @@
 package JMX::Jmx4Perl::Agent;
 
 use JSON;
-use URI::Escape;
+use URI::Escape qw(uri_escape_utf8);
 use HTTP::Request;
 use Carp;
 use strict;
@@ -175,19 +175,21 @@ sub request_url {
     $url .= "/" unless $url =~ m|/$|;
     my $type = $request->get("type");
     $url .= $type . "/";
-    $url .= $self->_escape($request->get("mbean")) . "/";
+    $url .= $self->_escape($request->get("mbean"));
     if ($type eq READ) {
-        $url .= $self->_escape($request->get("attribute"));
+        $url .= "/" . $self->_escape($request->get("attribute"));
         $url .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
     } elsif ($type eq WRITE) {
-        $url .= $self->_escape($request->get("attribute"));
+        $url .= "/" . $self->_escape($request->get("attribute"));
         $url .= "/" . $self->_escape($self->_null_escape($request->get("value")));
         $url .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
     } elsif ($type eq LIST) {
-        $url .= $self->_escape($request->get("path")) if defined($request->get("path"));
+        $url .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
     } elsif ($type eq EXEC) {
-        $url .= $self->_escape($request->get("operation"));
+        $url .= "/" . $self->_escape($request->get("operation"));
         $url .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("args")};
+    } elsif ($type eq SEARCH) {
+        # Nothing further to append.
     }
     return $url;
 }
@@ -201,7 +203,7 @@ sub _escape {
     my $self = shift;
     my $input = shift;
     $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;    
-    return uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
+    return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
                                                               # default
                                                               # set. See L<URI>
 }

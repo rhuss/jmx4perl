@@ -385,6 +385,9 @@ sub _print_response {
 sub _get_attribute {
     my $jmx = shift;
     my ($mbean,$attribute,$path) = _extract_get_set_parameter($jmx,"get",@_);
+    if (ref($mbean) eq "CODE") {
+        return $jmx->delegate_to_handler($mbean,@args);
+    }
 
     my $req = new JMX::Jmx4Perl::Request(READ,$mbean,$attribute,$path);
     return $jmx->request($req);
@@ -393,6 +396,9 @@ sub _get_attribute {
 sub _set_attribute {
     my $jmx = shift;
     my ($mbean,$attribute,$path,$value) = _extract_get_set_parameter($jmx,"set",@_);
+    if (ref($mbean) eq "CODE") {
+        return $jmx->delegate_to_handler($mbean,@args);
+    }
 
     my $req = new JMX::Jmx4Perl::Request(WRITE,$mbean,$attribute,$value,$path);
     return $jmx->request($req);
@@ -400,18 +406,21 @@ sub _set_attribute {
 
 sub _exec_operation {
     my $jmx = shift;
-    my ($mbean,$operation,@args) = @_;
-    
+    my ($mbean,$operation,@args) = @_;    
     my $alias = JMX::Jmx4Perl::Alias->by_name($mbean);    
     if ($alias) {
         croak $alias->{alias}, " is not an operation alias" unless $alias->{type} eq "operation";
         unshift @args,$operation if $operation;
         ($mbean,$operation) = $jmx->resolve_alias($alias);
+        if (ref($mbean) eq "CODE") {
+            return $jmx->delegate_to_handler($mbean,@args);
+        }
         die "Alias ",$alias->{alias}," is not available for product ",$jmx->product,"\n" unless $mbean;
     } else {
         &_validate_mbean_name($mbean);
-        die "ERROR No operaration given for MBean $mbean given\n" unless $operation;
+        die "ERROR No operation given for MBean $mbean given\n" unless $operation;
     }    
+    print "$mbean $operation\n";
     my $req = new JMX::Jmx4Perl::Request(EXEC,$mbean,$operation,@args);
     return $jmx->request($req);
 }

@@ -34,8 +34,12 @@ sub _try_version {
       );
 }
 
+sub autodetect_pattern {
+    return ("version",1);
+}
+
 sub jsr77 {
-    return 1;
+    return 0;
 }
 
 sub init_aliases {

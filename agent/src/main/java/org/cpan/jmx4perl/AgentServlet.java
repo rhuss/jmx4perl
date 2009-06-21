@@ -228,7 +228,8 @@ public class AgentServlet extends HttpServlet {
                 new WriteHandler(attributeConverter),
                 new ExecHandler(stringToObjectConverter),
                 new ListHandler(),
-                new VersionHandler()
+                new VersionHandler(),
+                new SearchHandler()
         };
 
         requestHandlerMap = new HashMap<JmxRequest.Type,RequestHandler>();

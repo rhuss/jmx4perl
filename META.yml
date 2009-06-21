@@ -57,6 +57,8 @@ provides:
     file: lib/JMX/Jmx4Perl/Product/Unknown.pm
   JMX::Jmx4Perl::Product::Weblogic:
     file: lib/JMX/Jmx4Perl/Product/Weblogic.pm
+  JMX::Jmx4Perl::Product::Websphere:
+    file: lib/JMX/Jmx4Perl/Product/Websphere.pm
   JMX::Jmx4Perl::Request:
     file: lib/JMX/Jmx4Perl/Request.pm
   JMX::Jmx4Perl::Response:

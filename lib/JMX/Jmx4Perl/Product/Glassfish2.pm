@@ -25,10 +25,12 @@ sub name {
     return "Glassfish";
 }
 
-sub _try_version {
-    my $self = shift;
-    return $self->try_attribute("version","com.sun.appserv:category=runtime,j2eeType=J2EEDomain,name=com.sun.appserv",
-                                "applicationServerFullVersion");
+sub version {
+    return shift->_version_or_vendor("version",qr/([\d\.]+)/m);
+}
+
+sub autodetect_pattern {
+    return (shift->original_version_sub,qr/GlassFish/i);
 }
 
 sub jsr77 {

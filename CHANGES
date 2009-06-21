@@ -1,8 +1,9 @@
-0.20_3
+0.20_4
   - Support for writing attributes and executing operations 
   - Documentation fixes
   - Tested for WebLogic 9
-  - Added a "version" command to j4p-agent
+  - New "version" command to j4p-agent
+  - New "search" j4p-agent command for querying for MBean names
   - Added '--base-alias' to check_jmx4perl for using relative 
     thresholds
   - Added '--delta' to check_jmx4perl for using an incremental 
@@ -10,7 +11,9 @@
   - Cleaned up check_jmx4perl perfdata output
   - Added own j4p-agent MBean for configuration management 
     (history tracking and debugging info)
-
+  - JMX::Jmx4Perl has now request short-cuts 'set_attribute' and 
+    'execute'
+  
 0.16
   - Switched off debugging in agent servlet
   - Fixed syntax error when using 'jmx4perl -v attributes'

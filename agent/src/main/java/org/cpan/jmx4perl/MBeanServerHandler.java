@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * Handler for finding and merging various MBeanServers. 
+ * Handler for finding and merging various MBeanServers.
  *
  * @author roland
  * @since Jun 15, 2009
@@ -76,15 +76,24 @@ public class MBeanServerHandler {
      *
      * @param pMBean MBean to register
      */
-    public ObjectName registerMBean(Config pMBean)
+    public ObjectName registerMBean(Object pMBean)
             throws MalformedObjectNameException, NotCompliantMBeanException, MBeanRegistrationException, InstanceAlreadyExistsException {
         if (mBeanServers.size() > 0) {
-            ObjectInstance i= mBeanServers.iterator().next().registerMBean(pMBean,null);
-            return i.getObjectName();
+            Exception lastExp = null;
+            for (MBeanServer server : mBeanServers) {
+                try {
+                    ObjectInstance i= server.registerMBean(pMBean,null);
+                    return i.getObjectName();
+                } catch (Exception exp) {
+                    lastExp = exp;
+                }
+            }
+            if (lastExp != null) {
+                throw new IllegalStateException("Could not register " + pMBean + ": " + lastExp,lastExp);
+            }
             //ManagementFactory.getPlatformMBeanServer().registerMBean(configMBean,name);
-        } else {
-            throw new IllegalStateException("No MBeanServer initialized yet");
         }
+        throw new IllegalStateException("No MBeanServer initialized yet");
     }
 
     /**
