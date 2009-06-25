@@ -36,7 +36,14 @@ CHANGES
 it/it.pl
 it/lib/It.pm
 it/t/10_base.t
+it/t/30_naming.t
 it/t/40_alias.t
+it/test-servlet/build.xml
+it/test-servlet/pom.xml
+it/test-servlet/src/main/java/org/cpan/jmx4perl/it/ObjectNameChecking.java
+it/test-servlet/src/main/java/org/cpan/jmx4perl/it/ObjectNameCheckingMBean.java
+it/test-servlet/src/main/java/org/cpan/jmx4perl/it/TestMBeanRegisteringServlet.java
+it/test-servlet/src/main/webapp/WEB-INF/web.xml
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Protocol.pod
@@ -59,9 +66,14 @@ lib/JMX/Jmx4Perl/Response.pm
 LICENSE
 MANIFEST			This list of files
 META.yml
+pom.xml
 README
 scripts/check_jmx4perl
 scripts/jmx4perl
+src/main/java/org/cpan/jmx4perl/it/ObjectNameChecking.java
+src/main/java/org/cpan/jmx4perl/it/ObjectNameCheckingMBean.java
+src/main/java/org/cpan/jmx4perl/it/TestMBeanRegisteringServlet.java
+src/main/webapp/WEB-INF/web.xml
 t/10_handler.t
 t/20_alias.t
 t/30_request.t
