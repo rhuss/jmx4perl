@@ -75,15 +75,25 @@ public class MBeanServerHandler {
      * Register a MBean under a certain name to the first availabel MBeans server
      *
      * @param pMBean MBean to register
+     * @param pName optional name under which the bean should be registered. If not provided,
+     * it depends on whether the MBean to register implements {@link javax.management.MBeanRegistration} or
+     * not.
+     *
+     * @return the name under which the MBean is registered.
      */
-    public ObjectName registerMBean(Object pMBean)
+    public ObjectName registerMBean(Object pMBean,String ... pName)
             throws MalformedObjectNameException, NotCompliantMBeanException, MBeanRegistrationException, InstanceAlreadyExistsException {
         if (mBeanServers.size() > 0) {
             Exception lastExp = null;
             for (MBeanServer server : mBeanServers) {
                 try {
-                    ObjectInstance i= server.registerMBean(pMBean,null);
-                    return i.getObjectName();
+                    if (pName != null && pName.length > 0) {
+                        ObjectName oName = new ObjectName(pName[0]);
+                        return server.registerMBean(pMBean,oName).getObjectName();
+                    } else {
+                        // Needs to implement MBeanRegistration interface
+                        return server.registerMBean(pMBean,null).getObjectName();
+                    }
                 } catch (Exception exp) {
                     lastExp = exp;
                 }

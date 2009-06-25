@@ -3,28 +3,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 
-  <display-name>JSON JMX Agent</display-name>
+  <display-name>Webapp with test MBean for jmx4perl</display-name>
 
   <servlet>
-    <servlet-name>jmx4perl</servlet-name>
-    <servlet-class>org.cpan.jmx4perl.AgentServlet</servlet-class>
-    <init-param>
-      <param-name>debug</param-name>
-      <param-value>false</param-value>
-    </init-param>
-    <init-param>
-      <param-name>historyMaxEntries</param-name>
-      <param-value>10</param-value>
-    </init-param>
-    <init-param>
-      <param-name>debugMaxEntries</param-name>
-      <param-value>100</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
+    <servlet-name>j4p-it</servlet-name>
+    <servlet-class>org.cpan.jmx4perl.it.TestMBeanRegisteringServlet</servlet-class>
+     <load-on-startup>1</load-on-startup>
   </servlet>
 
   <servlet-mapping>
-    <servlet-name>jmx4perl</servlet-name>
+    <servlet-name>j4p-it</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
 

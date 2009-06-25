@@ -42,6 +42,14 @@ sub _try_version {
     return $ret;
 }
 
+sub autodetect_pattern {
+    return "version";
+}
+
+sub vendor {
+    return "Mortbay";
+} 
+
 sub jsr77 {
     return 0;
 }

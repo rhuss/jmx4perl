@@ -41,10 +41,8 @@ provides:
     file: lib/JMX/Jmx4Perl/Product/BaseHandler.pm
   JMX::Jmx4Perl::Product::Geronimo:
     file: lib/JMX/Jmx4Perl/Product/Geronimo.pm
-  JMX::Jmx4Perl::Product::Glassfish2:
-    file: lib/JMX/Jmx4Perl/Product/Glassfish2.pm
-  JMX::Jmx4Perl::Product::Glassfish3:
-    file: lib/JMX/Jmx4Perl/Product/Glassfish3.pm
+  JMX::Jmx4Perl::Product::Glassfish:
+    file: lib/JMX/Jmx4Perl/Product/Glassfish.pm
   JMX::Jmx4Perl::Product::JBoss:
     file: lib/JMX/Jmx4Perl/Product/JBoss.pm
   JMX::Jmx4Perl::Product::Jetty:

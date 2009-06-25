@@ -232,7 +232,7 @@ sub get_attribute {
     croak "No object name provided" unless $object;
 
     my $response;
-    if (ref($object) eq "CODE") {
+    if (ref($object) eq "CODE") {       
         $response = $self->delegate_to_handler($object);                
     } else {
         croak "No attribute provided for object $object" unless $attribute;        

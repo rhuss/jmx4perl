@@ -44,7 +44,18 @@ sub new {
     $self->{aliases} = $self->init_aliases();
     if ($self->{aliases} && $self->{aliases}->{attributes} 
         && !$self->{aliases}->{attributes}->{SERVER_VERSION}) {
-        $self->{aliases}->{attributes}->{SERVER_VERSION} = sub { shift->version() };
+        $self->{aliases}->{attributes}->{SERVER_VERSION} = sub { 
+            # A little bit nasty, I know, but we have to rebuild
+            # the response since it is burried to deep into the
+            # version fetching mechanism. Still thinking about 
+            # a cleaner solution .....
+            return new JMX::Jmx4Perl::Response
+              (
+               value => shift->version(),
+               status => 200,
+               timestamp => time
+              )
+        };
     }
     return $self;
 }
@@ -163,8 +174,8 @@ sub autodetect {
             die $@ if $@;
         }
         #print "V: $val";
-        return 1 if ($val && $pattern && ref($pattern) ne "Regexp");
-        return $val =~ $pattern if $val;
+        return 1 if ($val && (!$pattern || ref($pattern) ne "Regexp"));
+        return $val =~ $pattern if ($val && $pattern);
     }
     return undef;
 }
@@ -313,7 +324,8 @@ return an arrayref in the form described above.
 A coderef, which is executed when L<JMX::Jmx4Perl->get_attribute()> is called
 and which is supossed to do the complete lookup. This is the most flexible way
 for a handler to do anything he likes when an attribute value is requested or
-an operation is about to be executed. 
+an operation is about to be executed. You have to return a
+L<JMX::Jmx4Perl::Response> object. 
 
 =back
 
@@ -396,7 +408,7 @@ sub server_info {
     
     my $ret = "";
     $ret .= sprintf("%-10.10s %s\n","Name:",$self->name);
-    $ret .= sprintf("%-10.10s %s\n","Vendor:",$self->vendor);
+    $ret .= sprintf("%-10.10s %s\n","Vendor:",$self->vendor) if $self->vendor;
     $ret .= sprintf("%-10.10s %s\n","Version:",$self->version);
     return $ret;
 }
@@ -519,7 +531,7 @@ sub _append_info {
     } elsif ($type eq "duration") {
         $value = &_format_duration($value);
     } elsif ($type eq "time") {
-        $value = scalar(localtime($value));
+        $value = scalar(localtime($value/1000));
     }
     $$r .= sprintf("   %-20.20s: %s\n",$label,$value);
 }

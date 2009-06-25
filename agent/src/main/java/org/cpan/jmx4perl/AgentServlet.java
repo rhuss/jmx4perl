@@ -142,7 +142,11 @@ public class AgentServlet extends HttpServlet {
         try {
             jmxReq = new JmxRequest(pReq.getPathInfo());
             boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
-            if (debug)log("Request: " + jmxReq.toString());
+            if (debug) {
+                log("URI: " + pReq.getRequestURI());
+                log("Path-Info: " + pReq.getPathInfo());
+                log("Request: " + jmxReq.toString());
+            }
 
             Object retValue = callRequestHandler(jmxReq);
             if (debug) log("Return: " + retValue);

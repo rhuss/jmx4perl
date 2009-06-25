@@ -30,9 +30,13 @@ sub order {
     return 10;
 }
 
-sub _try_version {
+sub autodetect {
     my $self = shift;
-    return $self->try_attribute("version","geronimo:j2eeType=J2EEServer,name=geronimo","serverVersion");
+    my $info = shift;
+    my $jmx = $self->{jmx4perl};
+
+    my $servers = $jmx->search("geronimo:j2eeType=J2EEServer,*");
+    return $servers && @$servers;
 }
 
 sub jsr77 {

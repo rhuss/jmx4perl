@@ -1,6 +1,6 @@
-<project name="json-jmx-agent" default="main" basedir=".">
+<project name="j4p-test-mbeans" default="main" basedir=".">
   <property name="version" value="1.0"/>
-  <property name="war-name" value="j4p-agent.war"/>
+  <property name="war-name" value="j4p-it.war"/>
 
   <target name="main" depends="war"/>
 
@@ -23,26 +23,23 @@
             target="1.5"
             source="1.5">
       <classpath>
-        <fileset dir="lib">
+        <fileset dir="../../agent/lib">
           <include name="*.jar"/>
+        </fileset>
+     <fileset dir="../../agent/target">
+          <include name="j4p-agent.jar"/>
         </fileset>
       </classpath>
     </javac>
 
   </target>
 
-  <target name="jar" depends="compile">
-    <jar destfile="target/j4p-agent.jar" basedir="target/classes"/>
-  </target>
-
-  <target name="war" depends="jar">
+  <target name="war" depends="compile">
     <war destfile="target/${war-name}" webxml="src/main/webapp/WEB-INF/web.xml">
-      <lib dir="lib">
-        <exclude name="servlet-api*"/>
-      </lib>
-      <lib dir="target">
+      <lib dir="../../agent/target">
         <include name="j4p-agent.jar"/>
       </lib>
+      <classes dir="target/classes"/>
     </war>
     <copy file="target/${war-name}" todir="."/>
   </target>

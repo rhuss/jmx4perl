@@ -32,10 +32,19 @@ sub order {
 
 sub _try_version {
     my $self = shift;
+    my $ret = $self->try_attribute("version","Catalina:type=Server","serverInfo");
+    if ($ret) {
+        $self->{version} =~ s/^.*?\/?(\d.+)$/$1/;
+    }
+    return $ret;
+}
 
-    my $res = $self->try_attribute("version","Catalina:type=Server","serverInfo");
-    $self->{version} =~ s/^.*?\/?(.*)$/$1/;
-    return $res;
+sub autodetect_pattern {
+    return "version";
+}
+
+sub vendor { 
+    return "Apache";
 }
 
 sub jsr77 {

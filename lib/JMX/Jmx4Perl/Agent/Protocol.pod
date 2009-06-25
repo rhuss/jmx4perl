@@ -90,8 +90,8 @@ which returns a complex JSON structure like
  {
    "committed" : 18292736,
    "used" : 15348352,
-   "max" => 532742144,
-   "init" => 0
+   "max" : 532742144,
+   "init" : 0
  }
 
 In order to get to the value for used heap memory you should specify an inner
@@ -184,6 +184,18 @@ For example, to execute a garbage collection you use
 
   http://localhost:8080/j4p-agent/exec/java.lang:type=Memory/gc
 
+=head2 search
+
+This mode is used to query for certain MBean. It takes a single argument for
+specifying the search parameter like in 
+
+   http://localhost:8080/j4p-agent/search/*:j2eeType=J2EEServer,*
+
+You can use patterns as described in
+L<http://java.sun.com/j2se/1.5.0/docs/api/javax/management/ObjectName.html>,
+i.e. it may contain wildcars like C<*> and C<?>. The Mbean names matching the
+query are returned as a list within the response.
+
 =head2 list
 
 The list operation allows you to get information about the accessible
@@ -215,7 +227,19 @@ named C<jboss.jmx:alias=jmx/rmi/RMIAdaptor>, you should an URL like
 
   .../read/jboss.jmx:alias=jmx/-/rmi/-/RMIAdaptor/State
 
-L<JMX::Jmx4Perl::Agent> does this sort of escaping transparently.
+L<JMX::Jmx4Perl::Agent> does this sort of escaping transparently. If the part
+(e.g. MBean's name) I<ends> in a slash you need to use a C<+> instead of a
+minus, so j4p-agent can combine parts properly. The corresponding perl code for
+creating such a format looks like
+
+  $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
+  $input =~ s|-/$|+/|; # The last slash needs a special escape
+
+You might wonder, why simple URI encoding isn't enough for escaping
+slashes. The reason is rather simple: JBoss/Tomcat has a nasty bug, which
+returns an HTTP response C<HTTP/1.x 400 Invalid URI: noSlash> for any URL which
+contains an escaped slash in the path info (i.e. C<%2F>). Other appservers
+might croak as well, though not test. Try it yourself!
 
 =head1 RESPONSE
 
@@ -280,7 +304,7 @@ I<history tracking> is switched on. See L<jmx4perl> how to do this, in short,
 you have to execute an JMX operation on certain, jmx4perl specific MBean to
 turn it on. If this is the case, C<history> contains an array of json object,
 which have two attribute: C<value> containing the historical value (which can
-be as complex as any value) and C<timestamp> indicationg the time when this
+be as complex as any value) and C<timestamp> indicating the time when this
 value was current. 
 
 The C<request>'s attribute are:
@@ -423,7 +447,7 @@ The C<domain name> and the C<property list> together uniquely identify a single
 MBean. The property list is in the so called I<canonical order>, i.e. in the
 form "<key1>=<val1>,<key2>=<val2>,.." where the keys are ordered
 alphabetically. Each MBean has zero or more attributes and operations which can
-be reaced in an MBeans JSON object with the keys C<attr> and C<op>
+be reached in an MBeans JSON object with the keys C<attr> and C<op>
 respectively. Within these groups the contained information is explained above
 in the schema and consist of Java types for attributes, arguments and return
 values, descriptive information and whether an attribute is writable (C<rw ==

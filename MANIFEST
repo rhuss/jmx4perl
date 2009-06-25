@@ -36,12 +36,7 @@ CHANGES
 it/it.pl
 it/lib/It.pm
 it/t/10_base.t
-it/t/20_read_attribute.t
 it/t/40_alias.t
-it/test-agent/build.xml
-it/test-agent/pom.xml
-it/test-agent/src/main/java/org/cpan/jmx4perl/TestAgentServlet.java
-it/test-agent/src/main/webapp/WEB-INF/web.xml
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Protocol.pod
@@ -51,8 +46,7 @@ lib/JMX/Jmx4Perl/Alias/Object.pm
 lib/JMX/Jmx4Perl/Manual.pod
 lib/JMX/Jmx4Perl/Product/BaseHandler.pm
 lib/JMX/Jmx4Perl/Product/Geronimo.pm
-lib/JMX/Jmx4Perl/Product/Glassfish2.pm
-lib/JMX/Jmx4Perl/Product/Glassfish3.pm
+lib/JMX/Jmx4Perl/Product/Glassfish.pm
 lib/JMX/Jmx4Perl/Product/JBoss.pm
 lib/JMX/Jmx4Perl/Product/Jetty.pm
 lib/JMX/Jmx4Perl/Product/Jonas.pm

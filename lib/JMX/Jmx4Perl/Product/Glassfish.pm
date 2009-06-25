@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::Product::Glassfish2;
+package JMX::Jmx4Perl::Product::Glassfish;
 
 use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
@@ -9,7 +9,7 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Glassfish2 - Handler for Glassfish, Version 2
+JMX::Jmx4Perl::Product::Glassfish - Handler for Glassfish, Version 2
 
 =head1 DESCRIPTION
 
@@ -18,7 +18,7 @@ This handler supports glassfish version 2. (L<https://glassfish.dev.java.net/>)
 =cut
 
 sub id {
-    return "glassfish2";
+    return "glassfish";
 }
 
 sub name {

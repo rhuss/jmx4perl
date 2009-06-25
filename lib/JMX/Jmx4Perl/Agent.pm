@@ -202,7 +202,8 @@ sub request_url {
 sub _escape {
     my $self = shift;
     my $input = shift;
-    $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;    
+    $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
+    $input =~ s|-/$|+/|; # The last slash needs a special escape
     return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
                                                               # default
                                                               # set. See L<URI>

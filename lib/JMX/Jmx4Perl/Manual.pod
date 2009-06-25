@@ -31,7 +31,7 @@ in both worlds: HTTP and JSON.
 Another goal is to provide an abstraction for accessing certain, commonly known
 MBeans for various supported JEE application server, which differ in naming
 from brand to brand. For now, the JEE servers supported are JBoss 4 & 5, Oracle
-WebLogic 9 & 10, Glassfish 2 and 3, Jonas 4 and Geronimo 2 as well as the pure
+WebLogic 9 & 10, Glassfish 2, Jonas 4 and Geronimo 2 as well as the pure
 servlet containers Jetty 5 and 6, Tomcat 4, 5 & 6. Other platforms might work
 as well, however they are not yet tested. Please let me know, whether jmx4perl
 works for you on other servers as well (which is highly likely due to the
