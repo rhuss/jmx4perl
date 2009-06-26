@@ -7,13 +7,17 @@
 
   <target name="clean">
     <delete includeemptydirs="true">
-      <fileset dir="target" includes="**/*"/>
+      <fileset dir="modules/j4p-jar" includes="target"/>
+      <fileset dir="modules/j4p-war" includes="target"/>
+      <fileset dir="modules/j4p-it" includes="target"/>
       <fileset dir="." includes="*.war"/>
     </delete>
   </target>
 
   <target name="mkdir">
-    <mkdir dir="target/classes"/>
+    <mkdir dir="modules/j4p-jar/target/classes"/>
+    <mkdir dir="modules/j4p-war/target/"/>
+    <mkdir dir="modules/j4p-it/target/classes"/>
   </target>
 
   <target name="compile" depends="mkdir">

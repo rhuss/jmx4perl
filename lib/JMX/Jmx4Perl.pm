@@ -14,7 +14,7 @@ Simple:
 
    print "Memory Used: ",
           JMX::Jmx4Perl
-              ->new(url => "http://localhost:808get0/j4p-agent")
+              ->new(url => "http://localhost:808get0/j4p")
               ->get_attribute(MEMORY_HEAP_USED);
 
 Advanced:
@@ -23,7 +23,7 @@ Advanced:
    use JMX::Jmx4Perl;
    use JMX::Jmx4Perl::Request;   # Type constants are exported here
    
-   my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p-agent",
+   my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p",
                                product => "jboss");
    my $request = new JMX::Jmx4Perl::Request(type => READ,
                                             mbean => "java.lang:type=Memory",
@@ -50,7 +50,7 @@ role of a proxy, which on one side communicates with the MBeans server in the
 application server and transfers JMX related information via HTPP and JSON to
 the client (i.e. this module). Please refer to L<JMX::Jmx4Perl::Manual> for
 installation instructions howto deploy the agent servlet (which can be found in
-the distribution as F<agent/j4p-agent.war>).
+the distribution as F<agent/j4p.war>).
 
 An alternative, and more 'java like' approach, is the usage of JSR 160
 connectors. However, the default connectors provided by the Java Virtual
@@ -101,7 +101,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.20_4";
+$VERSION = "0.20_5";
 
 my $REGISTRY = {
                 # Agent based

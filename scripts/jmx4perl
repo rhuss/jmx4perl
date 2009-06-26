@@ -82,7 +82,7 @@ if ($opts{shell}) {
 
   jmx4perl
 
-  jmx4perl .... --shell http://server:8080/j4p-agent
+  jmx4perl .... --shell http://server:8080/j4p
 
   jmx4perl .... ["info"] <agent-url>
 
@@ -312,7 +312,7 @@ sub command_aliases {
 
 =head1 HISTORY TRACKING
 
-The agent j4p-agent knows about a history mode, which can remember a certain
+The agent j4p knows about a history mode, which can remember a certain
 amount return values from previous requests. This mode can be switched on/off
 on a per attribute (+ inner path) and operation basis. By default it is
 switched off completely. You can switch in on by executing the

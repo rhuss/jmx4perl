@@ -23,7 +23,7 @@ JMX::Jmx4Perl::Agent - JSON-HTTP based acess to a remote JMX agent
 
 =head1 SYNOPSIS
 
- my $agent = new JMX::Jmx4Perl(mode=>"agent", url => "http://jeeserver/j4p-agent");
+ my $agent = new JMX::Jmx4Perl(mode=>"agent", url => "http://jeeserver/j4p");
  my $answer = $agent->get_attribute("java.lang:type=Memory","HeapMemoryUsage");
  print Dumper($answer);
 
@@ -61,7 +61,7 @@ Creates a new local agent for a given url
 
 The url where the agent is deployed. This is a mandatory parameter. The url
 must include the context within the server, which is typically based on the
-name of the war archive. Example: C<http://localhost:8080/j4p-agent> for a drop
+name of the war archive. Example: C<http://localhost:8080/j4p> for a drop
 in deployment of the agent in a standard Tomcat's webapp directory.
 
 =item timeout => <timeout>

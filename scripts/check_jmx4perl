@@ -7,7 +7,7 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
 =head1 SYNOPSIS 
 
  # Check used heap memory for absolute values
- check_jmx4perl --url http://localhost:8888/j4p-agent \
+ check_jmx4perl --url http://localhost:8888/j4p \
                 --name memory_used \
                 --mbean java.lang:type=Memory \
                 --attribute HeapMemoryUsage \ 
@@ -16,19 +16,19 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --warning   5000000 
 
  # Check used heap memory for absolute values by using an alias
- check_jmx4perl --url http://localhost:8888/j4p-agent \
+ check_jmx4perl --url http://localhost:8888/j4p \
                 --alias MEMORY_HEAP_USED \
                 --critical 10000000 \
                 --warning   5000000 
 
  # Check that the used heap memory is below 80% of the available memory
- check_jmx4perl --url http://localhost:8888/j4p-agent \
+ check_jmx4perl --url http://localhost:8888/j4p \
                 --alias MEMORY_HEAP_USED \
                 --base-alias MEMORY_HEAP_MAX \ 
                 --critical 0.8
 
  # Check that no more than 5 threads are started in a minute
- check_jmx4perl --url http://localhost:8888/j4p-agent \
+ check_jmx4perl --url http://localhost:8888/j4p \
                 --alias THREAD_COUNT_STARTED \
                 --delta 60 \
                 --critical 5
@@ -73,13 +73,13 @@ my $np = Nagios::Plugin->
       url => "http://www.consol.com/opensource/nagios/",
       plugin => "check_jmx4perl",
       blurb => "This plugin checks for JMX attribute values on a remote Java application server",
-      extra => "\n\nYou need to deploy j4p-agent.war on the target application server.\n" .
+      extra => "\n\nYou need to deploy j4p.war on the target application server.\n" .
       "Please refer to the documentation for JMX::Jmx4Perl for further details"
      );
 $np->shortname(undef);
 $np->add_arg(
          spec => "url|u=s",
-         help => "URL to agent web application (e.g. http://server:8080/j4p-agent/)",
+         help => "URL to agent web application (e.g. http://server:8080/j4p/)",
          required => 1
         );
 $np->add_arg(

@@ -2,12 +2,12 @@
 
 =head1 NAME
 
-JMX::Jmx4Perl::Agent::Protocol - j4p-agent protocol specification 
+JMX::Jmx4Perl::Agent::Protocol - j4p agent protocol specification 
 
 =head1 DESCRIPTION
 
 This document defines the protocol format for exchanging informations between
-the Java-Agent C<j4p-agent.war> running in a Java Application Server and the
+the Java-Agent C<j4p.war> running in a Java Application Server and the
 Perl module L<JMX::Jmx4Perl::Agent> which is used on the client side. The
 communication is based on HTTP as the transport protocol and hence follows a
 request-response paradigmn. The request is performed by doing a simple restfule
@@ -17,7 +17,7 @@ request URL format and the JSON format of the response are described below.
 
 =head1 VERSION
 
-This document describes Version 0.20 of the j4p-agent protocol. This is the
+This document describes Version 0.20 of the j4p agent protocol. This is the
 initial version. 
 
 =head1 REQUEST 
@@ -29,11 +29,11 @@ like
 
  <base-url>/<mode of operation>/<operation specific parameter>/..../
 
-The I<C<E<lt>base-urlE<gt>>> specifies the URL under which the C<j4p-agent> is
+The I<C<E<lt>base-urlE<gt>>> specifies the URL under which the j4p agent is
 accessible in general. It typically looks like
-F<http://localhost:8080/j4p-agent>, but depends obviously on your deployment
+F<http://localhost:8080/j4p>, but depends obviously on your deployment
 setup. Normally, the last part of this URL is the name of the deployed
-Webapplication, which by default is based on the filename F<j4p-agent.war>.
+Webapplication, which by default is based on the filename F<j4p.war>.
 I<C<E<lt>mode of operationE<gt>>> specifies one of the supported operations
 after which operation specific parameters follow.
 
@@ -73,7 +73,7 @@ Example:
 =item C<inner path> (optional)
 
 This is an optional part which specifies an inner path within the attribute's
-type. j4p-agent knows how to serialize certain complex data types with JSON,
+type. j4p agent knows how to serialize certain complex data types with JSON,
 i.e. collections and C<CompoundData>. Please refer to the next section for more
 details about JSON serialization. An I<inner path> can be used to specify a
 certain substructure (plain value, array, hash) within the returned complex
@@ -83,7 +83,7 @@ explained by an example:
 The attribute C<HeapMemoryUsage> of the MBean C<java.lang:type=Memory> can be
 requested with the URL 
 
-  http://localhost:8080/j4p-agent/read/java.lang:type=Memory/HeapMemoryUsage
+  http://localhost:8080/j4p/read/java.lang:type=Memory/HeapMemoryUsage
 
 which returns a complex JSON structure like
 
@@ -97,7 +97,7 @@ which returns a complex JSON structure like
 In order to get to the value for used heap memory you should specify an inner
 path C<used>, so that the request 
 
- http://localhost:8080/j4p-agent/read/java.lang:type=Memory/HeapMemoryUsage/used
+ http://localhost:8080/j4p/read/java.lang:type=Memory/HeapMemoryUsage/used
 
 results in a response of
   
@@ -153,7 +153,7 @@ value. See L</"read"> for more on inner pathes.
 For example, you can set the garbage collector to verbose mode by using
 something like
 
-  http://localhost:8080/j4p-agent/write/java.lang:type=Memory/Verbose/true
+  http://localhost:8080/j4p/write/java.lang:type=Memory/Verbose/true
 
 =head2 exec
 
@@ -182,14 +182,14 @@ L</"write"> mode.
 
 For example, to execute a garbage collection you use
 
-  http://localhost:8080/j4p-agent/exec/java.lang:type=Memory/gc
+  http://localhost:8080/j4p/exec/java.lang:type=Memory/gc
 
 =head2 search
 
 This mode is used to query for certain MBean. It takes a single argument for
 specifying the search parameter like in 
 
-   http://localhost:8080/j4p-agent/search/*:j2eeType=J2EEServer,*
+   http://localhost:8080/j4p/search/*:j2eeType=J2EEServer,*
 
 You can use patterns as described in
 L<http://java.sun.com/j2se/1.5.0/docs/api/javax/management/ObjectName.html>,
@@ -229,8 +229,8 @@ named C<jboss.jmx:alias=jmx/rmi/RMIAdaptor>, you should an URL like
 
 L<JMX::Jmx4Perl::Agent> does this sort of escaping transparently. If the part
 (e.g. MBean's name) I<ends> in a slash you need to use a C<+> instead of a
-minus, so j4p-agent can combine parts properly. The corresponding perl code for
-creating such a format looks like
+minus, so the j4p agent can combine parts properly. The corresponding perl code
+for creating such a format looks like
 
   $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
   $input =~ s|-/$|+/|; # The last slash needs a special escape
@@ -261,7 +261,7 @@ specific parameters as given in the request URL.
 
 A typical response for an attribute read operation for an URL like 
 
- http://localhost:8080/j4p-agent/java.lang:type=Memory/HeapMemoryUsage/
+ http://localhost:8080/j4p/java.lang:type=Memory/HeapMemoryUsage/
 
 looks like 
 
@@ -293,8 +293,8 @@ looks like
 As you can see, the C<value> contains the attribute's value, either as a
 single, simple value if the attribute has a primitive type, or a complex JSON
 structure (containing maps and arrays) if the attribute has a more complex type
-understood by the F<j4p-agent>. For complex object types, which can not be
-serialized by the F<j4p-agent>, the stringified value (i.e. the output of the
+understood by the F<j4p> agent. For complex object types, which can not be
+serialized by the F<j4p> agent, the stringified value (i.e. the output of the
 object's C<toString()> method) is returned here. For a successul request the
 C<status> is always C<200>.  C<timestamp> contains the timestamp (i.e. epoch
 seconds) when the attribute was read on the server. 
@@ -334,7 +334,7 @@ an optional path, if provided in the request.
 As response for a writing operation you get back the old value if the value was
 set. For a request 
 
-  http://localhost:8080/j4p0-agent/write/java.lang:type=ClassLoading/Verbose/true
+  http://localhost:8080/j4p/write/java.lang:type=ClassLoading/Verbose/true
 
 you get the answer (supposed that verbose mode was switched off for class
 loading at the time this request was sent)
@@ -359,7 +359,7 @@ For an C<exec> operation, the response contains the return value of the
 opeartion. C<null> is returned if either the operation return a null value or
 the operation is declared as void. A typical response for an URL like
 
- http://localhost:8080/j4p-agent/exec/java.util.logging:type=Logging/setLoggerLevel/global/INFO
+ http://localhost:8080/j4p/exec/java.util.logging:type=Logging/setLoggerLevel/global/INFO
 
 looks like
 
@@ -383,7 +383,7 @@ Response will be returned in case no MBean matches this name.
 
 Example:
 
-  http://localhost:8888/j4p-agent/search/*:j2eeType=J2EEServer,*
+  http://localhost:8888/j4p/search/*:j2eeType=J2EEServer,*
 
 results in 
 
@@ -457,7 +457,7 @@ As for reading attributes you can fetch a subset of this information using an
 path. E.g a path of C<domain/prop-list> would return the value for a single
 bean only. For example, a request 
 
- http://localhost:8080/j4p-agent/list/java.lang/type=Memory
+ http://localhost:8080/j4p/list/java.lang/type=Memory
 
 results in an answer
 

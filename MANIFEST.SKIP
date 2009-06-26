@@ -56,3 +56,5 @@
 scripts/handlerTest.pl
 ^TODO$
 ^tmp
+^.git/.*
+.*/target/.*

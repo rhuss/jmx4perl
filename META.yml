@@ -1,12 +1,12 @@
 ---
 name: jmx4perl
-version: 0.20_4
+version: 0.20_5
 author:
   - Roland Huss (roland@cpan.org)
 abstract: Easy JMX access to Java Applications
 license: gpl
 resources:
-  license: http://opensource.org/licenses/gpl-license.php
+  license: http://www.gnu.org/licenses/old-licenses/gpl-1.0.txt
 requires:
   Carp: 0
   Data::Dumper: 0
@@ -27,7 +27,7 @@ recommends:
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.20_4
+    version: 0.20_5
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
@@ -61,7 +61,7 @@ provides:
     file: lib/JMX/Jmx4Perl/Request.pm
   JMX::Jmx4Perl::Response:
     file: lib/JMX/Jmx4Perl/Response.pm
-generated_by: Module::Build version 0.33
+generated_by: Module::Build version 0.31012
 meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

@@ -153,10 +153,10 @@ you need to have installed. Using
 
 will install the modules. If you have Java and "ant" (a Java build
 tool) installed, the Java agent will be compiled and packaged as
-well. However, this is not required. A precompiled F<j4p-agent.war>
+well. However, this is not required. A precompiled F<j4p.war>
 can be found in the F<agent> directory.
 
-For the module to work, you need to deploy F<j4p-agent.war> to the JEE Server
+For the module to work, you need to deploy F<j4p.war> to the JEE Server
 to monitor. The concrete steps depend on the specific way for deploying on the
 target server, which in most cases is as simple as copying the agent into a
 specific directory. Please consult the documentation of your Java application
@@ -165,7 +165,7 @@ server for the details (look for "deployment" and "web application" (or "war)))
 To test it, you can use L<jmx4perl> with the URL of the depolyed
 agent:
 
-  jmx4perl http://jeeserver:port/j4p-agent
+  jmx4perl http://jeeserver:port/j4p
       
 Consult L<jmx4perl> for further details. 
  
@@ -258,7 +258,7 @@ without worrying about aliasing at all.
 
 =head2 History Tracking
 
-The agent C<j4p-agent> can be switched into a history tracking mode, where it
+The agent C<j4p> can be switched into a history tracking mode, where it
 records the values for C<read>, C<write> and C<exec> operations (the return
 value for the late mode). You have to call a certain, jmx4perl specific, MBean
 to turn it on. If switched on, each request contains an additional history
