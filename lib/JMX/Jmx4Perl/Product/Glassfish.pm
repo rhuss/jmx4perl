@@ -9,7 +9,7 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Glassfish - Handler for Glassfish, Version 2
+JMX::Jmx4Perl::Product::Glassfish - Handler for Glassfish
 
 =head1 DESCRIPTION
 
