@@ -33,7 +33,7 @@ my $harness = new TAP::Harness
     color => 1,
     merge => 1,
     jobs => 1,
-    lib => [ "$FindBin::Bin/../lib", "$FindBin::Bin/lib" ]
+    lib => [ "$FindBin::Bin/../lib", "$FindBin::Bin/ilib" ]
    });
 
 $ENV{JMX4PERL_GATEWAY} = $gateway_url;
