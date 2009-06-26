@@ -1,4 +1,4 @@
-0.20_4
+0.20_5
   - Support for writing attributes and executing operations 
   - Documentation fixes
   - Tested for WebLogic 9
@@ -13,7 +13,12 @@
     (history tracking and debugging info)
   - JMX::Jmx4Perl has new request short-cuts 'set_attribute' and 
     'execute'
-  
+  - Renamed j4p-agent.war to j4p.war
+  - Started integration test suite below it/ and agent/modules/j4p-it 
+    for installing some test beans
+  - Cleaned up maven integration for the agent servlet
+  - Moved repository to git://github.com/rhuss/jmx4perl.git
+
 0.16
   - Switched off debugging in agent servlet
   - Fixed syntax error when using 'jmx4perl -v attributes'

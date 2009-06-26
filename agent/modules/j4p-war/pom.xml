@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jmx4perl</groupId>
+  <artifactId>j4p-agent</artifactId>
+  <version>${applicationVersion}</version>
+  <packaging>war</packaging>
+  <name>j4p-agent-war</name>
+  <description>j4p - agent web application</description>
+
+  <parent>
+    <groupId>org.jmx4perl</groupId>
+    <artifactId>j4p-agent-parent</artifactId>
+    <version>1</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.jmx4perl</groupId>
+      <artifactId>j4p</artifactId>
+      <version>${applicationVersion}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-war-plugin</artifactId>
+        <configuration>
+          <warName>j4p-agent</warName>
+        </configuration>
+      </plugin>
+    </plugins>    
+  </build>
+</project>

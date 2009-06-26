@@ -2,48 +2,34 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.cpan.jmx4perl</groupId>
-  <artifactId>j4p-agent</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>war</packaging>
+  <groupId>org.jmx4perl</groupId>
+  <artifactId>j4p-agent-parent</artifactId>
+  <version>1</version>
+  <name>j4p-agent-parent</name>
+  <description>j4p parent pom</description>
 
-  <dependencies>
+  <packaging>pom</packaging>
 
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-       <version>2.4</version>
-      <scope>provided</scope>
-    </dependency>
+  <modules>
+    <module>modules/j4p-jar</module>
+    <module>modules/j4p-war</module>
+    <module>modules/j4p-it</module>
+  </modules>
 
-    <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json-simple</artifactId>
-      <version>1.1</version>
-    </dependency>
+  <developers>
+    <developer>
+      <name>Roland Huss</name>
+      <id>roland</id>
+      <email>roland@cpan.org</email>
+      <organization>ConSol</organization>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+  </developers>
 
-  </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
-          </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.mortbay.jetty</groupId>
-        <artifactId>maven-jetty-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <artifactId>maven-war-plugin</artifactId>
-        <configuration>
-          <warName>j4p-agent</warName>
-        </configuration>
-      </plugin>
-    </plugins>
-    
-  </build>
+  <properties>
+    <applicationVersion>0.20-SNAPSHOT</applicationVersion>
+  </properties>
+  
 </project>

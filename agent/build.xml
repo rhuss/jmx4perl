@@ -1,8 +1,9 @@
 <project name="json-jmx-agent" default="main" basedir=".">
   <property name="version" value="1.0"/>
-  <property name="war-name" value="j4p-agent.war"/>
+  <property name="war-name" value="j4p.war"/>
+  <property name="it-war-name" value="j4p-it.war"/>
 
-  <target name="main" depends="war"/>
+  <target name="main" depends="war,it-war"/>
 
   <target name="clean">
     <delete includeemptydirs="true">
@@ -16,8 +17,8 @@
   </target>
 
   <target name="compile" depends="mkdir">
-    <javac 	srcdir="src/main/java"
-            destdir="target/classes"
+    <javac 	srcdir="modules/j4p-jar/src/main/java"
+            destdir="modules/j4p-jar/target/classes"
             includes="**/*.java"
             debug="true"
             target="1.5"
@@ -32,19 +33,51 @@
   </target>
 
   <target name="jar" depends="compile">
-    <jar destfile="target/j4p-agent.jar" basedir="target/classes"/>
+    <jar destfile="modules/j4p-jar/target/j4p-agent.jar" basedir="modules/j4p-jar/target/classes"/>
   </target>
 
   <target name="war" depends="jar">
-    <war destfile="target/${war-name}" webxml="src/main/webapp/WEB-INF/web.xml">
+    <war destfile="modules/j4p-war/target/${war-name}" webxml="modules/j4p-war/src/main/webapp/WEB-INF/web.xml">
       <lib dir="lib">
         <exclude name="servlet-api*"/>
       </lib>
-      <lib dir="target">
+      <lib dir="modules/j4p-jar/target">
         <include name="j4p-agent.jar"/>
       </lib>
     </war>
-    <copy file="target/${war-name}" todir="."/>
+    <copy file="modules/j4p-war/target/${war-name}" todir="."/>
   </target>
 
+  <target name="mkdir-it">
+    <mkdir dir="modules/j4p-it/target/classes"/>
+  </target>
+
+  <target name="compile-it" depends="mkdir-it,jar">
+    <javac 	srcdir="modules/j4p-it/src/main/java"
+            destdir="modules/j4p-it/target/classes"
+            includes="**/*.java"
+            debug="true"
+            target="1.5"
+            source="1.5">
+      <classpath>
+        <fileset dir="lib">
+          <include name="*.jar"/>
+        </fileset>
+     <fileset dir="modules/j4p-jar/target">
+          <include name="j4p-agent.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+
+  </target>
+
+  <target name="it-war" depends="jar,compile-it">
+    <war destfile="modules/j4p-it/target/${it-war-name}" webxml="modules/j4p-it/src/main/webapp/WEB-INF/web.xml">
+      <lib dir="modules/j4p-jar/target">
+        <include name="j4p-agent.jar"/>
+      </lib>
+      <classes dir="modules/j4p-it/target/classes"/>
+    </war>
+    <copy file="modules/j4p-it/target/${it-war-name}" todir="."/>
+  </target>
 </project>

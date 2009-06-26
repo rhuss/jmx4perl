@@ -6,7 +6,7 @@
   <display-name>JSON JMX Agent</display-name>
 
   <servlet>
-    <servlet-name>jmx4perl</servlet-name>
+    <servlet-name>j4p-agent</servlet-name>
     <servlet-class>org.cpan.jmx4perl.AgentServlet</servlet-class>
     <init-param>
       <param-name>debug</param-name>
@@ -24,7 +24,7 @@
   </servlet>
 
   <servlet-mapping>
-    <servlet-name>jmx4perl</servlet-name>
+    <servlet-name>j4p-agent</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
 
