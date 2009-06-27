@@ -5,7 +5,7 @@
   <display-name>JSON JMX Agent</display-name>
 
   <servlet>
-    <servlet-name>j4pagent</servlet-name>
+    <servlet-name>j4p-agent</servlet-name>
     <servlet-class>org.jmx4perl.AgentServlet</servlet-class>
     <init-param>
       <param-name>debug</param-name>

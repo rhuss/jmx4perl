@@ -21,7 +21,7 @@ my $class = Module::Build->subclass(
       my $self = shift;
       use FindBin;
 
-      my $version_java = "$FindBin::Bin/agent/modules/j4p-jar/src/main/java/org/cpan/jmx4perl/Version.java";
+      my $version_java = "$FindBin::Bin/agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java";
       my $version_perl = "$FindBin::Bin/lib/JMX/Jmx4Perl.pm";
       open(F,"$version_java") || die "Cannot open $version_java : $!";
       my $c = join "",<F>;

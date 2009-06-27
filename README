@@ -81,6 +81,11 @@ SUPPORTED APPLICATION SERVERS
   http://rt.cpan.org/Public/Bug/Report.html?Queue=jmx4perl if you
   encounter any problems.
 
+SOURCE REPOSITORY
+
+  Jmx4perl's source is hosted on github.com. You can clone the repository 
+  with git://github.com/rhuss/jmx4perl.git as URL
+
 LICENSE
   
   Copyright (C) 2009 Roland Huss (roland@cpan.org)

@@ -7,9 +7,9 @@
 
   <target name="clean">
     <delete includeemptydirs="true">
-      <fileset dir="modules/j4p-jar" includes="target"/>
-      <fileset dir="modules/j4p-war" includes="target"/>
-      <fileset dir="modules/j4p-it" includes="target"/>
+      <fileset dir="modules/j4p-jar/target" includes="**/*"/>
+      <fileset dir="modules/j4p-war/target" includes="**/*"/>
+      <fileset dir="modules/j4p-it/target" includes="**/*"/>
       <fileset dir="." includes="*.war"/>
     </delete>
   </target>
