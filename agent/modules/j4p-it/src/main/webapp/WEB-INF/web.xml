@@ -7,7 +7,7 @@
 
   <servlet>
     <servlet-name>j4p-it</servlet-name>
-    <servlet-class>org.cpan.jmx4perl.it.TestMBeanRegisteringServlet</servlet-class>
+    <servlet-class>org.jmx4perl.it.TestMBeanRegisteringServlet</servlet-class>
      <load-on-startup>1</load-on-startup>
   </servlet>
 
