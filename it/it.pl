@@ -14,7 +14,7 @@ GetOptions("dir=s" => \$dir,
            "user=s" => \$user,
            "password=s" => \$password,
            "product=s" => \$product);
-die "No gateway url given.\n" unless $gateway_url;
+die "No gateway url given. Please use option '--url' for pointing to the server with the agent installed\n" unless $gateway_url;
 
 my @testfiles;
 if (@ARGV) {

@@ -1,7 +1,8 @@
-0.20_5
+0.20 (2009-06-28)
   - Support for writing attributes and executing operations 
   - Documentation fixes
-  - Tested for WebLogic 9
+  - Tested for WebLogic 9. New initial support for Websphere 6.1 and 
+    7.0
   - New "version" command to j4p-agent
   - New "search" j4p-agent command for querying for MBean names
   - Added '--base-alias' to check_jmx4perl for using relative 
