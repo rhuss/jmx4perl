@@ -38,7 +38,6 @@ agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml
 Build.PL
-ChangeLog
 CHANGES
 it/it.pl
 it/t/10_base.t
