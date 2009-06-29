@@ -64,14 +64,6 @@ if (!@ARGV) {
     @args = ( @ARGV );
 }
 
-if ($opts{proxy}) {
-    # Extract scheme of gateway url and set the proper proxy
-    # hash
-    my $scheme = $1 if $url =~ m|^(.*?)://|;
-    $scheme = "http" unless $scheme;
-    $opts{proxy} = { $scheme => $opts{proxy} };
-}
-
 if ($opts{shell}) {
     print "Interactive shell mode not supported yet\n";
     exit 1;

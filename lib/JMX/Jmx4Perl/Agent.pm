@@ -106,7 +106,12 @@ sub init {
                 $ua->proxy($k,$proxy->{$k});
             }
         } else {
-            $ua->proxy('http',$proxy);
+            if ($self->cfg('url') =~ m|^(.*?)://|) {
+                # Set proxy for URL scheme used
+                $ua->proxy($1,$proxy);
+            } else {
+                $ua->proxy('http',$proxy);
+            }
         }
     }
     $self->{ua} = $ua;

@@ -68,7 +68,9 @@ my $np = Nagios::Plugin->
   new(
       usage => 
       "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning> -n <label>\n" . 
-      "                      [--alias <alias>] [--base-alias <alias>] [--user <user>] [--password <password>] [--product <product>] [-v] [--help]\n",
+      "                      [--alias <alias>] [--base-alias <alias>] [--delta <time-base>] [--product <product>]\n".
+      "                      [--user <user>] [--password <password>] [--proxy <proxy>]\n" .
+      "                      [-v] [--help]",
       version => "0.01",
       url => "http://www.consol.com/opensource/nagios/",
       plugin => "check_jmx4perl",
@@ -117,6 +119,10 @@ $np->add_arg(
          "for the threshold format.",
         );
 $np->add_arg(
+             spec => "proxy=s",
+             help => "Proxy to use"
+            );
+$np->add_arg(
          spec => "user=s",
          help => "User for HTTP authentication"
         );
@@ -147,7 +153,7 @@ eval {
 
     # Request
     my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $o->url, user => $o->user, password => $o->password,
-                                 ($o->product ? (product => $o->product) : ()));
+                                 product => $o->product, proxy => $o->proxy);
     my $request = JMX::Jmx4Perl::Request->new(READ,&_prepare_request_args($np,$jmx));
     my $resp = &_send_request($np,$jmx,$request);
     my $value = $resp->value;
