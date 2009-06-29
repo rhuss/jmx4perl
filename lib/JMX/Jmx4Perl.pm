@@ -101,7 +101,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.20";
+$VERSION = "0.21_1";
 
 my $REGISTRY = {
                 # Agent based
@@ -416,16 +416,21 @@ sub request {
 
 =item ($object,$attribute,$path) = $self->resolve_alias($alias)
 
-Resolve an alias for an attibute. This is done by querying registered product
-handlers for resolving an alias. This method will croak if a handler could be
-found but not such alias is known by C<jmx4perl>. 
+Resolve an alias for an attibute or operation. This is done by querying registered
+product handlers for resolving an alias. This method will croak if a handler
+could be found but not such alias is known by C<jmx4perl>.
 
 If the C<product> was not set during construction, the first call to this
 method will try to autodetect the server. If it cannot determine the proper
 server it will throw an exception. 
 
-Returns the object, attribute, path triple which can be used for requesting the
-server or C<undef> if the handler can not resolve this alias.
+For an attribute, this method returns the object, attribute, path triple which
+can be used for requesting the server or C<undef> if the handler can not
+handle this alias.
+
+For an operation, the MBean, method name and the (optional) path, which should be
+applied to the return value, is returned or C<undef> if the handler cannot
+handle this alias.
 
 A handler can decide to handle the fetching of the alias value directly. In
 this case, this metod returns the code reference which needs to be executed

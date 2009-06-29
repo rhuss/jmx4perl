@@ -24,8 +24,8 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
  # Check that the used heap memory is below 80% of the available memory
  check_jmx4perl --url http://localhost:8888/j4p \
                 --alias MEMORY_HEAP_USED \
-                --base-alias MEMORY_HEAP_MAX \ 
-                --critical 0.8
+                --base MEMORY_HEAP_MAX \ 
+                --critical :80
 
  # Check that no more than 5 threads are started in a minute
  check_jmx4perl --url http://localhost:8888/j4p \
@@ -33,16 +33,45 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --delta 60 \
                 --critical 5
 
+ # Execute a JMX operation on an MBean and use the return value for threshold
+ check_jmx4perl --url http://localhost:8888/j4p \
+                --mbean jmx4perl:type=Runtime \
+                --operation getNrQueriesFor \
+                --critical 10 \
+                "operation" \
+                "java.lang:type=Memory" \
+                "gc" 
+
 =head1 DESCRIPTION
 
-Command for providing Nagios conformant output for JMX response fetched via
+Command for providing Nagios conmpliant output for JMX response fetched via
 L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
 C<--warning>) thresholds. 
+
+Values obtained from the server can be interpreteted as relative values when
+C<--base> is given. The argument provided here is first tried as an alias name
+or checked as an absolute, numeric value. Alterntatively, you can use a fulle
+MBean/Attribute/Path specification by using a C</> as separator, e.g. 
+
+  ... --base java.lang:type=Memory/HeapMemoryUsage/max ...
+
+If one of these parts (the path is optional) contains a slash within it's name,
+the part must be URI encoded. I.e. all parts are URI decoded before usages as
+namng pattern. In any case, using an alias or direct MBean names, the base
+value is fetched first for calculating the relative value. For a numeric value
+given here this is of course not necessary.
 
 C<--delta> switches on incremental mode in which the difference between two
 following values is used. The optional argument are interpreted as seconds
 which are used for calculating the speed of growth. If not given, only the
-difference between the current and the latest value is taken.
+difference between the current and the latest value is taken. C<--delta>
+doesn't work with C<--base>.
+
+With the option C<--operation> a JMX operation is triggered and the return
+value used for threshold calculations. Additionally, if use an operation
+alias with C<--alias>, you can ommit C<--operation> and C<--mbean>. Any
+arguments required for the operation need to be provided as additional
+arguments. 
 
 =cut
 
@@ -57,6 +86,8 @@ use Data::Dumper;
 use Nagios::Plugin;
 use Time::HiRes qw(gettimeofday);
 use Carp;
+use Scalar::Util qw(looks_like_number);
+use URI::Escape;
 
 # Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
 # to the usual Nagios conventions
@@ -68,10 +99,10 @@ my $np = Nagios::Plugin->
   new(
       usage => 
       "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning> -n <label>\n" . 
-      "                      [--alias <alias>] [--base-alias <alias>] [--delta <time-base>] [--product <product>]\n".
+      "                      [--alias <alias>] [--base <alias/number/mbean>] [--delta <time-base>] [--product <product>]\n".
       "                      [--user <user>] [--password <password>] [--proxy <proxy>]\n" .
       "                      [-v] [--help]",
-      version => "0.01",
+      version => $JMX::Jmx4Perl::VERSION,
       url => "http://www.consol.com/opensource/nagios/",
       plugin => "check_jmx4perl",
       blurb => "This plugin checks for JMX attribute values on a remote Java application server",
@@ -86,7 +117,7 @@ $np->add_arg(
         );
 $np->add_arg(
          spec => "product=s",
-         help => "Name of app server product. \"jboss\")",
+         help => "Name of app server product. (e.g. \"jboss\")",
         );
 $np->add_arg(
          spec => "alias=s",
@@ -101,8 +132,12 @@ $np->add_arg(
          help => "Attribute name (e.g. \"HeapMemoryUsage\")",
         );
 $np->add_arg(
-         spec => "base-alias|b=s",
-         help => "Base alias name, which when given, interprets critical and warning values as relative",
+         spec => "operation|o=s",
+         help => "Operation to execute",
+        );
+$np->add_arg(
+         spec => "base|base-aliase|b=s",
+         help => "Base alias name, which when given, interprets critical and warning values as relative in the range 0 .. 100%",
         );
 $np->add_arg(
          spec => "delta|d:s",
@@ -110,7 +145,7 @@ $np->add_arg(
         );
 $np->add_arg(
          spec => "path|p=s",
-         help => "Inner path for extracting a single value from a complex attribute (e.g. \"used\")",
+         help => "Inner path for extracting a single value from a complex attribute or return value (e.g. \"used\")",
         );
 $np->add_arg(
          spec => "critical|c=s",
@@ -135,15 +170,12 @@ $np->add_arg(
          help => "Warning Threshold for value.",
         );
 $np->add_arg(
-         spec => "verbose|v",
-         help => "Print verbose output "
-        );
-$np->add_arg(
          spec => "name|n=s",
          help => "Name to use for output. Optional, by default a standard value based on the MBean ".
                  "and attribute will be used"
         );
 $np->getopts();
+
 
 &_verify_and_initialize($np);
 my $o = $np->opts;
@@ -154,39 +186,40 @@ eval {
     # Request
     my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $o->url, user => $o->user, password => $o->password,
                                  product => $o->product, proxy => $o->proxy);
-    my $request = JMX::Jmx4Perl::Request->new(READ,&_prepare_request_args($np,$jmx));
+    my $request;
+    my $do_read = $o->get("attribute");
+    if ($o->get("alias")) {
+        my $alias = JMX::Jmx4Perl::Alias->by_name($o->get("alias"));
+        die "No alias '",$o->get("alias")," known" unless $alias;
+        $do_read = $alias->type eq "attribute";
+    }
+    if ($do_read) {
+        $request = JMX::Jmx4Perl::Request->new(READ,&_prepare_read_args($np,$jmx));
+    } else {
+        $request = JMX::Jmx4Perl::Request->new(EXEC,&_prepare_exec_args($np,$jmx,@ARGV));
+    }
+    
     my $resp = &_send_request($np,$jmx,$request);
     my $value = $resp->value;
 
     # Delta handling
     my $delta = $o->get("delta");
     if (defined($delta)) {
-        my $history = $resp->history;
-        if (!$history) {
-            &_switch_on_history($jmx,$request);           
-            # No delta on the first run
-            $value = 0;
-        } else {
-            my $old_value = $history->[0]->{value};
-            my $old_time = $history->[0]->{timestamp};
-            if ($delta) {
-                $value = (($resp->value - $old_value) / ($resp->timestamp - $old_time)) * $delta;
-            } else {
-                $value = $resp->value - $old_value;
-            }
-        }
+        $value = &_delta_value($jmx,$request,$resp,$delta);
     }
 
     # Base value handling
-    if ($o->get("base-alias")) {
-        $request = new JMX::Jmx4Perl::Request(READ,$jmx->resolve_alias($o->get("base-alias")));
-        $resp = &_send_request($np,$jmx,$request);
-        $value = $value / $resp->value;
+    if ($o->get("base")) {
+        my $base_value = &_base_value($np,$jmx,$o->get("base"));
+        # Normalize to 2 digits preficison
+        $value = sprintf "%2.2f",(int((($value / $base_value) * 10000) + 0.5) / 100) ;
     };
 
     # Add Nagios perfdata
-    $np->add_perfdata(label => &get_name($o),value => $value, critical => $o->critical, warning => $o->warning);
-
+    $np->add_perfdata(label => &get_name($o),value => $value,
+                      critical => $o->critical, warning => $o->warning, 
+                      $o->base ? (uom => '%') : ());
+    
     # Verify thresholds
     my $code = $np->check_threshold($value);    
     $np->nagios_exit($code,&get_name($o). " : Threshold " . ($code == CRITICAL ? $o->critical : $o->warning) . 
@@ -208,14 +241,6 @@ sub get_name {
           "[".$o->mbean.",".$o->attribute.($o->path ? "," . $o->path : "")."]";
     }
 }
-
-sub print_mbeans {
-    my $resp = shift;
-    
-    
-    print Dumper($resp->value);    
-}
-
 
 sub _send_request {
     my ($np,$jmx,$request) = @_;
@@ -258,14 +283,14 @@ sub _switch_on_history {
     &_verify_response($np,$resp);
 }
 
-sub _prepare_request_args {
+sub _prepare_read_args {
     my $np = shift;
     my $jmx = shift;
     my $o = $np->opts;
 
     if ($o->alias) {
         my @req_args = $jmx->resolve_alias($o->alias);
-        $np->nagios_die("Cannot resolve alias ",$o->alias()) unless @req_args > 0;
+        $np->nagios_die("Cannot resolve attribute alias ",$o->alias()) unless @req_args > 0;
         if ($o->path) {
             @req_args == 2 ? $req_args[2] = $o->path : $req_args[2] .= "/" . $o->path;
         }
@@ -275,13 +300,28 @@ sub _prepare_request_args {
     }
 }
 
+sub _prepare_exec_args {
+    my $np = shift;
+    my $jmx = shift;
+    my @args = @_;
+    my $o = $np->opts;
+
+    if ($o->alias) {
+        my @req_args = $jmx->resolve_alias($o->alias);
+        $np->nagios_die("Cannot resolve operation alias ",$o->alias()) unless @req_args >= 2;
+        return (@req_args,@args);
+    } else {
+        return ($o->mbean,$o->operation,@args);
+    }
+}
+
 sub _verify_response {
     my ($np,$resp) = @_;
     if ($resp->is_error) {
         $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
     }
     if (!defined($resp->value)) {
-        $np->nagios_die("JMX Request " . &get_name($o) . " failed" . Dumper($resp));
+        $np->nagios_die("JMX Request " . &get_name($o) . " failed " . Dumper($resp));
     }
     if (ref($resp->value)) { 
         $np->nagios_die("Response value is a ".ref($resp->value).
@@ -305,6 +345,57 @@ sub _verify_and_initialize {
        $o->warning ? (warning => $o->warning) : ()
       );    
 }
+
+sub _delta_value {
+    my ($jmx,$request,$resp,$delta) = @_;
+    
+    my $history = $resp->history;
+    if (!$history) {
+        &_switch_on_history($jmx,$request);           
+        # No delta on the first run
+        return 0;
+    } else {
+        my $old_value = $history->[0]->{value};
+        my $old_time = $history->[0]->{timestamp};
+        if ($delta) {
+            return (($resp->value - $old_value) / ($resp->timestamp - $old_time)) * $delta;
+        } else {
+            return $resp->value - $old_value;
+        }
+    }    
+}
+
+sub _base_value {
+    my $np = shift;
+    my $jmx = shift;
+    my $name = shift;
+
+    if (looks_like_number($name)) {
+        # It looks like a number, so we suppose its  the base value itself
+        return $name;
+    }
+
+    my $alias = JMX::Jmx4Perl::Alias->by_name($name);
+    my $request;
+    if ($alias) {
+        $request = new JMX::Jmx4Perl::Request(READ,$jmx->resolve_alias($name));
+    } else {
+        my ($mbean,$attr,$path) = split m|/|,$name;
+        die "No MBean given in base name ",$name unless $mbean;
+        die "No Attribute given in base name ",$name unless $attr;
+        
+        $mbean = URI::Escape::uri_unescape($mbean);
+        $attr = URI::Escape::uri_unescape($attr);
+        $path = URI::Escape::uri_unescape($path) if $path;
+        $request = new JMX::Jmx4Perl::Request(READ,$mbean,$attr,$path);
+    }
+
+    my $resp = &_send_request($np,$jmx,$request);
+    die "Base value is not a plain value but ",Dumper($resp->value) if ref($resp->value);
+    return $resp->value;
+
+}
+
 
 =head1 LICENSE
 

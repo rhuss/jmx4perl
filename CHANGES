@@ -1,3 +1,14 @@
+0.21
+  - Added '--proxy' to check_jmx4perl and jmx4perl
+  - check_jmx4perl:
+    + use relative values in the range from 0 to 100%
+      (for --critical and --warning) instead of [0..1]
+    + Renamed '--base-value' to '--base' since it can take now
+      absolute values (numbers) or "mbean/alias/path" tuples as an
+      argument in addition to alias names.
+    + Added '--operation' which allows for using return values of
+      operations as check values
+
 0.20 (2009-06-28)
   - Support for writing attributes and executing operations 
   - Documentation fixes

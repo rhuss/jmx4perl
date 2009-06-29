@@ -2,3 +2,4 @@
 05 Additional Agents which start a JVM (e.g. with "Java::Import") 
    and call the appserver via JSR 160 connector
 06 WS-Management integration ?
+07 Path handling for operation return values
