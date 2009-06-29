@@ -32,6 +32,7 @@ my %COMMANDS =
 my %opts = ();
 my $result = GetOptions(\%opts,
                         "user|u=s","password|p=s",
+                        "proxy=s",
                         "proxy-user=s","proxy-password=s",
                         "product=s",
                         "verbose|v!",
@@ -63,13 +64,21 @@ if (!@ARGV) {
     @args = ( @ARGV );
 }
 
+if ($opts{proxy}) {
+    # Extract scheme of gateway url and set the proper proxy
+    # hash
+    my $scheme = $1 if $url =~ m|^(.*?)://|;
+    $scheme = "http" unless $scheme;
+    $opts{proxy} = { $scheme => $opts{proxy} };
+}
+
 if ($opts{shell}) {
     print "Interactive shell mode not supported yet\n";
     exit 1;
 } else {
     my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
     my @jmx_args = ("url" => $url);
-    for my $arg qw(product user password proxy-user proxy-password verbose) {
+    for my $arg qw(product user password proxy proxy-user proxy-password verbose) {
         my $cfg = $arg;
         $cfg =~ s/\-/_/g;
         push @jmx_args,( $cfg => $opts{$arg}) if $opts{$arg};
@@ -105,8 +114,9 @@ if ($opts{shell}) {
 Options:
 
    --product <id>          Product to use for aliasing (ommits autodetection)
-   --user <user>           Credential used for authentication
+   --user <user>           Credential used for authentication   
    --password <pwd>  
+   --proxy <url>           URL to proxy
    --proxy-user <user>     Authentication information for a proxy
    --proxy-password <pwd>
    --history               Print out the history of return values (if switched on and present)
