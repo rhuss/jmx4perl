@@ -4,12 +4,13 @@ use It;
 use strict;
 use warnings;
 use Test::More tests => 4;
+use File::Temp qw/tmpnam/;
 
 BEGIN { use_ok("JMX::Jmx4Perl"); }
 
 my $jmx = It->new->jmx4perl;
 
-my $name_p = "jmx4perl:type=naming,name=%s";
+my $name_p = "jmx4perl.it:type=naming,name=%s";
 my @names = 
   (
    "simple",
