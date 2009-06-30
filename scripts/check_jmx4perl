@@ -82,6 +82,7 @@ use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Response;
 use JMX::Jmx4Perl::Alias;
 use strict;
+use warnings;
 use Data::Dumper;
 use Nagios::Plugin;
 use Time::HiRes qw(gettimeofday);
@@ -91,9 +92,12 @@ use URI::Escape;
 
 # Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
 # to the usual Nagios conventions
-*Nagios::Plugin::Functions::get_shortname = sub {
-    return undef;
-};
+{
+    no warnings 'redefine';
+    *Nagios::Plugin::Functions::get_shortname = sub {
+        return undef;
+    };
+}
 
 my $np = Nagios::Plugin->
   new(
