@@ -38,7 +38,7 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
 
     private MBeanServerHandler mBeanHandler;
 
-    private String domain = "jmx4perl";
+    private String domain = "jmx4perl.it";
 
     private String[] strangeNames = {
             "simple",
@@ -47,37 +47,49 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
 //            "äöüßÄÖÜ"
 
     };
-    private List<ObjectName> nameTestBeans = new ArrayList<ObjectName>();
+    private List<ObjectName> testBeans = new ArrayList<ObjectName>();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         mBeanHandler = new MBeanServerHandler();
-        registerMBeansForNameTest();
+        registerMBeans();
 
 
     }
 
-    private void registerMBeansForNameTest() {
-        // Register my test mbeans
-        for (String name : strangeNames) {
-            try {
-                ObjectName oName = mBeanHandler.registerMBean(
-                        new ObjectNameChecking(),domain + ":type=naming,name=" + name);
-                nameTestBeans.add(oName);
-                System.out.println("Registered " + oName);
-            } catch (Exception e) {
-                System.out.println("Exception while registering " + name + e);
+    private void registerMBeans() throws ServletException {
+        String oName = "";
+        try {
+            // Register my test mbeans
+            for (String name : strangeNames) {
+                registerMBean(new ObjectNameChecking(),domain + ":type=naming,name=" + name);
             }
+
+            // Other MBeans
+            registerMBean(new OperationChecking(),domain + ":type=operation");
+
+        } catch (Exception exp) {
+        }
+    }
+
+    private ObjectName registerMBean(Object pObject, String pName) throws ServletException {
+        try {
+            ObjectName oName = mBeanHandler.registerMBean(pObject,pName);
+            System.out.println("Registered " + oName);
+            testBeans.add(oName);
+            return oName;
+        } catch (Exception e) {
+            throw new ServletException("Cannot register MBean " + pName,e);
         }
     }
 
     @Override
     public void destroy() {
-        unregisterMBeansForNameTest();
+        unregisterMBeans();
     }
 
-    private void unregisterMBeansForNameTest() {
-        for (ObjectName name : nameTestBeans) {
+    private void unregisterMBeans() {
+        for (ObjectName name : testBeans) {
             try {
                 mBeanHandler.unregisterMBean(name);
             } catch (Exception e) {
