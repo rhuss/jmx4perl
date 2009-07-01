@@ -1,6 +1,8 @@
 0.21
   - Added '--proxy' for check_jmx4perl and jmx4perl
   - check_jmx4perl:
+    + Refactored to work within the embedded Nagios Perl interpreter
+      (ePN)  
     + use relative values in the range from 0 to 100%
       (for --critical and --warning) instead of [0..1]
     + Renamed '--base-value' to '--base' since it can take now

@@ -12,7 +12,7 @@ use JMX::Jmx4Perl::Alias;
 my $jmx = It->new->jmx4perl;
 my ($ret,$content);
 
-0 && do {
+1 && do {
 ($ret,$content) = &exec_check_perl4jmx();
 is($ret,3,"No args --> UNKNOWN");
 
@@ -94,7 +94,7 @@ ok($content =~ /counter=(\d+)/ && $1 eq "1","Second operation returns 1");
 is($ret,2,"Third operation");
 ok($content =~ /counter=(\d+)/ && $1 eq "2","Third operation returns 2");
 
-print "R: $ret, C:\n$content\n";
+#print "R: $ret, C:\n$content\n";
 
 sub exec_check_perl4jmx {
     my @args;
@@ -106,7 +106,7 @@ sub exec_check_perl4jmx {
     push @args,("--user",$user,"--password",$password) if $user;
     push @args,("--product",$product) if $product;
     push @args,("--url",$url);
-
+    # push @args,("--verbose");
    
     my $cmd = "$FindBin::Bin/../../scripts/check_jmx4perl "
           .join(" ",map { '"' . $_ . '"' } @args); 
