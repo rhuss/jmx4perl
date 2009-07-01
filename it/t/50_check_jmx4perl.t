@@ -12,7 +12,6 @@ use JMX::Jmx4Perl::Alias;
 my $jmx = It->new->jmx4perl;
 my ($ret,$content);
 
-1 && do {
 ($ret,$content) = &exec_check_perl4jmx();
 is($ret,3,"No args --> UNKNOWN");
 
@@ -72,8 +71,6 @@ is($ret,0,"Initial history fetch returns OK for -c $c");
 ok($content =~ /mem=(\d+)/ && $1 ne "0","History fetch return non null Mem-Delta ($1)");
 
 $jmx->execute(JMX4PERL_HISTORY_RESET);
-
-};
 
 
 # ====================================================
