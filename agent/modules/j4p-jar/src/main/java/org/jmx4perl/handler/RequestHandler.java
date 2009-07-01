@@ -1,7 +1,7 @@
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
- * Copyright (C) 2009 Roland Hu§, roland@cpan.org
+ * Copyright (C) 2009 Roland HuÂ§, roland@cpan.org
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
