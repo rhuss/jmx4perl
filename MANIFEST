@@ -5,6 +5,8 @@ agent/lib/servlet-api-2.4.jar
 agent/modules/j4p-it/pom.xml
 agent/modules/j4p-it/src/main/java/org/jmx4perl/it/ObjectNameChecking.java
 agent/modules/j4p-it/src/main/java/org/jmx4perl/it/ObjectNameCheckingMBean.java
+agent/modules/j4p-it/src/main/java/org/jmx4perl/it/OperationChecking.java
+agent/modules/j4p-it/src/main/java/org/jmx4perl/it/OperationCheckingMBean.java
 agent/modules/j4p-it/src/main/java/org/jmx4perl/it/TestMBeanRegisteringServlet.java
 agent/modules/j4p-it/src/main/webapp/WEB-INF/web.xml
 agent/modules/j4p-jar/pom.xml
@@ -43,6 +45,7 @@ it/it.pl
 it/t/10_base.t
 it/t/30_naming.t
 it/t/40_alias.t
+it/t/50_check_jmx4perl.t
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Protocol.pod
@@ -50,6 +53,7 @@ lib/JMX/Jmx4Perl/Agent/UserAgent.pm
 lib/JMX/Jmx4Perl/Alias.pm
 lib/JMX/Jmx4Perl/Alias/Object.pm
 lib/JMX/Jmx4Perl/Manual.pod
+lib/JMX/Jmx4Perl/Nagios/CheckJmx4Perl.pm
 lib/JMX/Jmx4Perl/Product/BaseHandler.pm
 lib/JMX/Jmx4Perl/Product/Geronimo.pm
 lib/JMX/Jmx4Perl/Product/Glassfish.pm

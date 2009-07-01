@@ -1,6 +1,6 @@
 ---
 name: jmx4perl
-version: 0.20
+version: 0.21_1
 author:
   - Roland Huss (roland@cpan.org)
 abstract: Easy JMX access to Java Applications
@@ -27,7 +27,7 @@ recommends:
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.20
+    version: 0.21_1
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
@@ -37,6 +37,8 @@ provides:
     file: lib/JMX/Jmx4Perl/Alias.pm
   JMX::Jmx4Perl::Alias::Object:
     file: lib/JMX/Jmx4Perl/Alias/Object.pm
+  JMX::Jmx4Perl::Nagios::CheckJmx4Perl:
+    file: lib/JMX/Jmx4Perl/Nagios/CheckJmx4Perl.pm
   JMX::Jmx4Perl::Product::BaseHandler:
     file: lib/JMX/Jmx4Perl/Product/BaseHandler.pm
   JMX::Jmx4Perl::Product::Geronimo:
