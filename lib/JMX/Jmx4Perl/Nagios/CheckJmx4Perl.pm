@@ -21,7 +21,7 @@ L<check_jmx4perl>
 =head1 SYNOPSIS
 
   # One line in check_jmx4perl to rule them all
-  JMX::Jmx4Perl::CheckJmx4Perl->new(@ARGV)->execute();
+  JMX::Jmx4Perl::CheckJmx4Perl->new()->execute();
 
 =head1 DESCRIPTION
 
