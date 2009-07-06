@@ -21,6 +21,7 @@ my $class = Module::Build->subclass(
       my $self = shift;
       use FindBin;
 
+
       my $version_java = "$FindBin::Bin/agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java";
       my $version_perl = "$FindBin::Bin/lib/JMX/Jmx4Perl.pm";
       open(F,"$version_java") || die "Cannot open $version_java : $!";
@@ -35,9 +36,19 @@ my $class = Module::Build->subclass(
       $c =~ s/String\s+VERSION\s+=\s+"[^"]*"/String VERSION = "$version"/;
       print "Setting version to $version in Version.java\n";
 
+      my $changed_perm = undef;
+      if (! -w $version_java) {
+         $changed_perm = 1;
+         my $perm = (stat $version_java)[2] & 07777;
+         chmod($perm | 0200,$version_java) || die "Cannot change write permission for $version_java : $!";
+      }
       open(F,">$version_java") || die "Cannot open $version_java for writing: $!";
       print F $c;
       close F;
+      if ($changed_perm) {
+         my $perm = (stat $version_java)[2] & 0777;
+         chmod($perm & 0577,$version_java) || die "Cannot remove write permission from $version_java : $!";
+      }
 
       print "Cannot re-create agent.war" 
               unless $self->do_system(qw(ant -f agent/build.xml));
