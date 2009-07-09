@@ -153,7 +153,7 @@ sub import {
         no strict 'refs';
         for my $alias (keys %ALIAS_OBJECT_MAP) {
             my $object = $ALIAS_OBJECT_MAP{$alias};
-            *{$callpkg."::".$alias} = sub { return bless $object, "JMX::Jmx4Perl::Alias::Object"; };
+            *{$callpkg."::".$alias} = sub { $object };
         }
     };    
 }
@@ -212,13 +212,14 @@ sub _init {
             $name =~ s/_/:/g;
             $NAME_TO_ALIAS_MAP{$name} = $alias;
             $ALIAS_OBJECT_MAP{$alias} = 
-              bless {                                           
-                     alias => $alias,
-                     name => $name,
-                     type => $type,
-                     description => $ALIAS_MAP{$type}{$alias}[0],
-                     default => $ALIAS_MAP{$type}{$alias}[1],
-                    },"JMX::Jmx4Perl::Alias::Object";
+              new JMX::Jmx4Perl::Alias::Object
+                (
+                 alias => $alias,
+                 name => $name,
+                 type => $type,
+                 description => $ALIAS_MAP{$type}{$alias}[0],
+                 default => $ALIAS_MAP{$type}{$alias}[1],
+                );
         }
     }
     $initialized = 1;

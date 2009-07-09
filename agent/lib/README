@@ -1,0 +1,12 @@
+This directory contains the libs used for compiling the
+j4p-agent. servlet-api-2.4.jar and jsr77-1.1.jar are used for building
+only, whereas json_simple-1.1.jar is the JSON support library which
+gets bundled within j4p.war 
+
+servlet-api-2.4.jar and jsr77-1.1.jar are provided by Sun(TM) and are
+distributed under the GPL. You can find them within the JEE 5
+specification, e.g. bundled along with Glassfish 2 
+(https://glassfish.dev.java.net/downloads/v2ur2-b04.html)
+
+json-simple's is distributed under the Apache License V2 and can be
+found at http://code.google.com/p/json-simple/

@@ -24,7 +24,7 @@
 package org.jmx4perl.handler;
 
 import org.jmx4perl.JmxRequest;
-import org.jmx4perl.converter.attribute.AttributeConverter;
+import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
 
 import javax.management.*;
 import java.lang.reflect.InvocationTargetException;
@@ -35,10 +35,10 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class WriteHandler extends RequestHandler {
 
-    private AttributeConverter attributeConverter;
+    private ObjectToJsonConverter objectToJsonConverter;
 
-    public WriteHandler(AttributeConverter pAttributeConverter) {
-        attributeConverter = pAttributeConverter;
+    public WriteHandler(ObjectToJsonConverter pObjectToJsonConverter) {
+        objectToJsonConverter = pObjectToJsonConverter;
     }
 
     public JmxRequest.Type getType() {
@@ -82,7 +82,7 @@ public class WriteHandler extends RequestHandler {
                     " found for MBean " + request.getObjectNameAsString());
         }
         String type = aInfo.getType();
-        Object[] values = attributeConverter.getValues(type,oldValue,request);
+        Object[] values = objectToJsonConverter.getValues(type,oldValue,request);
         Attribute attribute = new Attribute(request.getAttributeName(),values[0]);
         server.setAttribute(request.getObjectName(),attribute);
         return values[1];

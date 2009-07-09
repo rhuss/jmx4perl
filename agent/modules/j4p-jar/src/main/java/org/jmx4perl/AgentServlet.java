@@ -28,7 +28,7 @@ package org.jmx4perl;
 import org.jmx4perl.config.Config;
 import org.jmx4perl.config.DebugStore;
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.jmx4perl.converter.attribute.AttributeConverter;
+import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
 import org.jmx4perl.handler.*;
 import org.jmx4perl.history.HistoryStore;
 import org.json.simple.JSONObject;
@@ -61,7 +61,7 @@ import java.util.Map;
  * like strings or numbers, collections, arrays and maps are also supported (which
  * translate into the corresponding JSON structure). Additional the OpenMBean types
  * {@link javax.management.openmbean.CompositeData} and {@link javax.management.openmbean.TabularData}
- * are supported as well. Refer to {@link org.jmx4perl.converter.attribute.AttributeConverter}
+ * are supported as well. Refer to {@link org.jmx4perl.converter.attribute.ObjectToJsonConverter}
  * for additional information.
  *
  * For the client part, please read the documentation of
@@ -74,7 +74,7 @@ public class AgentServlet extends HttpServlet {
 
     // Converter for converting various attribute object types
     // a JSON representation
-    private AttributeConverter attributeConverter;
+    private ObjectToJsonConverter objectToJsonConverter;
 
     // String to object converters for setting attributes and arguments
     // of operations
@@ -109,7 +109,7 @@ public class AgentServlet extends HttpServlet {
 
         // Central objects
         stringToObjectConverter = new StringToObjectConverter();
-        attributeConverter = new AttributeConverter(stringToObjectConverter);
+        objectToJsonConverter = new ObjectToJsonConverter(stringToObjectConverter);
 
         registerRequestHandler();
         registerOwnMBeans();
@@ -151,7 +151,7 @@ public class AgentServlet extends HttpServlet {
             Object retValue = callRequestHandler(jmxReq);
             if (debug) log("Return: " + retValue);
 
-            json = attributeConverter.convertToJson(retValue,jmxReq);
+            json = objectToJsonConverter.convertToJson(retValue,jmxReq);
             historyStore.updateAndAdd(jmxReq,json);
 
             json.put("status",200 /* success */);
@@ -229,7 +229,7 @@ public class AgentServlet extends HttpServlet {
     private void registerRequestHandler() {
         RequestHandler handlers[] = {
                 new ReadHandler(),
-                new WriteHandler(attributeConverter),
+                new WriteHandler(objectToJsonConverter),
                 new ExecHandler(stringToObjectConverter),
                 new ListHandler(),
                 new VersionHandler(),

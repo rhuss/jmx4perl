@@ -44,7 +44,7 @@ import java.lang.reflect.InvocationTargetException;
  * @author roland
  * @since Apr 19, 2009
  */
-public class AttributeConverter {
+public class ObjectToJsonConverter {
 
     List<Handler> handlers;
 
@@ -53,7 +53,7 @@ public class AttributeConverter {
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
 
-    public AttributeConverter(StringToObjectConverter pStringToObjectConverter) {
+    public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter) {
         handlers = new ArrayList<Handler>();
 
         handlers.add(new CompositeHandler());
@@ -194,7 +194,7 @@ public class AttributeConverter {
         // For more complex data types, it is converted into a JSON structure if possible
         // (and if 'jsonify' is true). pExtraArgs is not nul, this returns only a substructure,
         // specified by the path represented by this stack
-        Object extractObject(AttributeConverter pConverter,Object pValue,Stack<String> pExtraArgs,boolean jsonify)
+        Object extractObject(ObjectToJsonConverter pConverter,Object pValue,Stack<String> pExtraArgs,boolean jsonify)
                 throws AttributeNotFoundException;
 
         // Set an object value on a certrain attribute.

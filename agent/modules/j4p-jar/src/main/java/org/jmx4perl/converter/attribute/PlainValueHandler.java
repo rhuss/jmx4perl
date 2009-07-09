@@ -33,13 +33,13 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class PlainValueHandler implements AttributeConverter.Handler {
+public class PlainValueHandler implements ObjectToJsonConverter.Handler {
 
     public Class getType() {
         return Object.class;
     }
 
-    public Object extractObject(AttributeConverter pConverter, Object pValue, Stack pExtraArgs,boolean jsonify) {
+    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue, Stack pExtraArgs,boolean jsonify) {
         // TODO: Check extra args for an expression which should be applied to the
         // value object to get the 'real' value.
         // I.e. if pExtraArgs is not empty extract via an expression language the

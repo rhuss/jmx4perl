@@ -3,7 +3,7 @@
 use It;
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 5;
 use File::Temp qw/tmpnam/;
 
 BEGIN { use_ok("JMX::Jmx4Perl"); }
@@ -16,6 +16,7 @@ my @names =
    "simple",
    "/slash-simple/",
    "/--/",
+   "with%3acolon"
 #   "äöüßÄÖÜ"
   );
 

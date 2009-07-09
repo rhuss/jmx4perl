@@ -37,13 +37,13 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class CompositeHandler implements AttributeConverter.Handler {
+public class CompositeHandler implements ObjectToJsonConverter.Handler {
 
     public Class getType() {
         return CompositeData.class;
     }
 
-    public Object extractObject(AttributeConverter pConverter, Object pValue,
+    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
                          Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         CompositeData cd = (CompositeData) pValue;
 

@@ -18,10 +18,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-       <version>2.4</version>
-      <scope>provided</scope>
+      <groupId>javaee</groupId>
+      <artifactId>javaee-api</artifactId>
+      <version>5</version>
     </dependency>
 
     <dependency>
@@ -41,6 +40,14 @@
           <target>1.5</target>
           </configuration>
       </plugin>
-    </plugins>    
+    </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>java.net</id>
+      <url>http://download.java.net/maven/1</url>
+      <layout>legacy</layout>
+    </repository>
+  </repositories>
 </project>

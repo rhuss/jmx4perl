@@ -39,13 +39,13 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class TabularDataHandler implements AttributeConverter.Handler {
+public class TabularDataHandler implements ObjectToJsonConverter.Handler {
 
     public Class getType() {
         return TabularData.class;
     }
 
-    public Object extractObject(AttributeConverter pConverter, Object pValue,
+    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
                          Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         TabularData td = (TabularData) pValue;
 

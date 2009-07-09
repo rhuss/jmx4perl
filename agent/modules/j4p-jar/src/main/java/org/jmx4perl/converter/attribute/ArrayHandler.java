@@ -36,14 +36,14 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class ArrayHandler implements AttributeConverter.Handler {
+public class ArrayHandler implements ObjectToJsonConverter.Handler {
 
     public Class getType() {
         // Special handler, no specific Type
         return null;
     }
 
-    public Object extractObject(AttributeConverter pConverter, Object pValue, Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
+    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue, Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         int length = Array.getLength(pValue);
         if (!pExtraArgs.isEmpty()) {
             Object obj = Array.get(pValue, Integer.parseInt(pExtraArgs.pop()));

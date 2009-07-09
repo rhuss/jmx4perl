@@ -35,13 +35,13 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class MapHandler implements AttributeConverter.Handler {
+public class MapHandler implements ObjectToJsonConverter.Handler {
 
     public Class getType() {
         return Map.class;
     }
 
-    public Object extractObject(AttributeConverter pConverter, Object pValue,
+    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
                          Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         Map<Object,Object> map = (Map<Object,Object>) pValue;
 

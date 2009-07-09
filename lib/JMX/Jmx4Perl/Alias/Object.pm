@@ -52,6 +52,11 @@ sub equals {
     return (ref $_[0] eq ref $_[1] && refaddr $_[0] == refaddr $_[1]) ? 1 : 0;
 }
 
+sub new { 
+    my $class = shift;
+    return bless { @_ },ref($class) || $class;
+}
+
 sub as_string { return $_[0]->{alias}; }
 sub alias { return shift->{alias}; }
 sub name { return shift->{name}; }
