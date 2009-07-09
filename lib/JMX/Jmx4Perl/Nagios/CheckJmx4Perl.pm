@@ -325,7 +325,7 @@ sub _create_nagios_plugin {
                  help => "Operation to execute",
                 );
     $np->add_arg(
-                 spec => "base|base-aliase|b=s",
+                 spec => "base|base-alias|b=s",
                  help => "Base alias name, which when given, interprets critical and warning values as relative in the range 0 .. 100%",
                 );
     $np->add_arg(

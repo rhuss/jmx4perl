@@ -203,7 +203,7 @@ Read a JMX attribute. In the first form, you provide the MBean name, the
 attribute name and an optional path as positional arguments. The second
 variant uses named parameters from a hashref. 
 
-The Mbean name can be specified with the canoncial name (key C<mbean>), or with
+The Mbean name can be specified with the canonical name (key C<mbean>), or with
 a domain name (key C<domain>) and one or more properties (key C<properties> or
 C<props>) which contain key-value pairs in a Hashref. For more about naming of
 MBeans please refer to

@@ -58,7 +58,7 @@ MBean/Attribute/Path specification by using a C</> as separator, e.g.
 
 If one of these parts (the path is optional) contains a slash within it's name,
 the part must be URI encoded. I.e. all parts are URI decoded before usages as
-namng pattern. In any case, using an alias or direct MBean names, the base
+naming pattern. In any case, using an alias or direct MBean names, the base
 value is fetched first for calculating the relative value. For a numeric value
 given here this is of course not necessary.
 
