@@ -329,6 +329,7 @@ which match the given pattern.
 
 sub command_search {
     my $resp = &_search_attribute(@_);
+    return if $resp->status == 404;
     &_check_for_error($resp);
     my $val = $resp->value;
     $val = [ $val ] unless ref($val) eq "ARRAY";
