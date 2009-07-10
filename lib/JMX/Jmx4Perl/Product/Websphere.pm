@@ -44,10 +44,19 @@ sub jsr77 {
 }
 
 sub init_aliases {
-    return 
-    {
-
-    };
+    my $self = shift;
+    return {
+            attributes => { 
+                           OS_CPU_TIME => 0,   # Don't support these ones
+                           OS_FILE_DESC_MAX => 0,
+                           OS_FILE_DESC_OPEN => 0,
+                           OS_MEMORY_PHYSICAL_FREE => 0,
+                           OS_MEMORY_PHYSICAL_TOTAL => 0,
+                           OS_MEMORY_SWAP_FREE => 0,
+                           OS_MEMORY_SWAP_TOTAL => 0,
+                           OS_MEMORY_VIRTUAL => 0
+                          }
+           };
 }
 
 =head1 LICENSE

@@ -252,7 +252,14 @@ sub alias {
         $alias = JMX::Jmx4Perl::Alias->by_name($alias_or_name) 
           || croak "No alias $alias_or_name known";
     }
-    my $aliasref = $self->resolve_alias($alias) || $alias->default();
+    my $resolved_ref = $self->resolve_alias($alias);
+    # It has been defined by the handler, but set to 0. So it doesn't 
+    # support this particular alias
+    return undef if (defined($resolved_ref) && !$resolved_ref);
+    # If the handler doesn't define the ref (so it's undef),
+    # use the default
+    my $aliasref =  $resolved_ref || $alias->default();
+    # If there is no default, then there is no support, too.
     return undef unless defined($aliasref);
 
     return $aliasref if (ref($aliasref) eq "CODE"); # return coderefs directly

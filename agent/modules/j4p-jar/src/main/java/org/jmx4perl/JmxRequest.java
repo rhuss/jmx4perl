@@ -166,7 +166,7 @@ public class JmxRequest extends JSONObject {
     that the pathinfo has been already uri decoded (dont know by heart)
      */
     private Stack<String> extractElementsFromPath(String path) throws UnsupportedEncodingException {
-        String[] elements = (path.startsWith("/") ? path.substring(1) : path).split("/");
+        String[] elements = (path.startsWith("/") ? path.substring(1) : path).split("/+");
 
         Stack<String> ret = new Stack<String>();
         Stack<String> elementStack = new Stack<String>();

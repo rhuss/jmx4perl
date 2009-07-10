@@ -59,28 +59,27 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
     }
 
     private void registerMBeans() throws ServletException {
-        String oName = "";
         try {
             // Register my test mbeans
             for (String name : strangeNames) {
-                registerMBean(new ObjectNameChecking(),domain + ":type=naming,name=" + name);
+                registerMBean(new ObjectNameChecking(domain + ":type=naming,name=" + name));
             }
 
             // Other MBeans
-            registerMBean(new OperationChecking(),domain + ":type=operation");
+            registerMBean(new OperationChecking(domain + ":type=operation"));
 
         } catch (Exception exp) {
         }
     }
 
-    private ObjectName registerMBean(Object pObject, String pName) throws ServletException {
+    private ObjectName registerMBean(Object pObject, String ... pName) throws ServletException {
         try {
             ObjectName oName = mBeanHandler.registerMBean(pObject,pName);
             System.out.println("Registered " + oName);
             testBeans.add(oName);
             return oName;
         } catch (Exception e) {
-            throw new ServletException("Cannot register MBean " + pName,e);
+            throw new ServletException("Cannot register MBean " + (pName != null && pName.length > 0 ? pName[0] : pObject),e);
         }
     }
 

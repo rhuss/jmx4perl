@@ -285,17 +285,14 @@ public class AgentServlet extends HttpServlet {
 
     // Remove MBeans again.
     private void unregisterOwnMBeans() {
-        if (configMBean != null) {
-            ObjectName name = null;
+        if (configMBeanName != null) {
             try {
-                if (configMBean != null) {
-                    mBeanServerHandler.unregisterMBean(configMBeanName);
-                }
+                mBeanServerHandler.unregisterMBean(configMBeanName);
             } catch (MalformedObjectNameException e) {
                 // wont happen
                 log("Invalid name for config MBean: " + e,e);
             } catch (InstanceNotFoundException e) {
-                log("No Mbean registered with name " + name + ": " + e,e);
+                log("No Mbean registered with name " + configMBeanName + ": " + e,e);
             } catch (MBeanRegistrationException e) {
                 log("Cannot unregister MBean: " + e,e);
             }
