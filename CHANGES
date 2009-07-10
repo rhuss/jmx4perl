@@ -1,5 +1,9 @@
-0.22
+0.30
   - Fixed permission issue while running 'Build dist'
+  - Fixed URL generation for Websphere
+  - Added support for JSR77 Statistics and Stats JSON deserialization in the 
+    agent
+  - Added 'search' command to jmx4perl
 
 0.21 (2009-07-03)
   - Added '--proxy' for check_jmx4perl and jmx4perl

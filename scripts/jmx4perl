@@ -26,7 +26,8 @@ my %COMMANDS =
    write => \&command_write,
    set => \&command_write,
    exec => \&command_exec,
-   call => \&command_exec
+   call => \&command_exec,
+   search => \&command_search
 );
 
 my %opts = ();
@@ -65,8 +66,8 @@ if (!@ARGV) {
 }
 
 if ($opts{shell}) {
-    print "Interactive shell mode not supported yet\n";
-    exit 1;
+    print "Interactive shell mode not supported yet.\nPlease provide a command as argument\n\n";
+    &Getopt::Long::HelpMessage();
 } else {
     my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
     my @jmx_args = ("url" => $url);
@@ -96,6 +97,8 @@ if ($opts{shell}) {
   jmx4perl .... write <mbean-name> <attribute-name> <value> [path] <agent-url>
 
   jmx4perl .... exec <mbean-name> <operation> <arg1> <arg2> ... <agent-url>
+
+  jmx4perl .... search <mbean pattern> <agent-url>
 
   jmx4perl .... aliases
 
@@ -312,6 +315,28 @@ sub command_aliases {
     &JMX::Jmx4Perl::Alias::help;
 }
 
+=head2 search
+
+Search for a certain MBean. As argument you should provide a pattern like
+C<*:*,j2eeType=Servlet,*>. I.e you can use the wildcard C<*> for the domain
+name part, and properties as a whole (but not within a key=property tuple). See
+L<http://java.sun.com/j2se/1.5.0/docs/api/javax/management/ObjectName.html> for
+a complete explanation of how a pattern can look like. As a result of this
+operation, a list of fully qualified MBean names is printed out line by line
+which match the given pattern. 
+
+=cut
+
+sub command_search {
+    my $resp = &_search_attribute(@_);
+    &_check_for_error($resp);
+    my $val = $resp->value;
+    $val = [ $val ] unless ref($val) eq "ARRAY";
+    for my $l (@$val) {
+        print $l,"\n";
+    }
+}
+
 =head1 HISTORY TRACKING
 
 The agent j4p knows about a history mode, which can remember a certain
@@ -403,6 +428,13 @@ sub _set_attribute {
     }
 
     my $req = new JMX::Jmx4Perl::Request(WRITE,$mbean,$attribute,$value,$path);
+    return $jmx->request($req);
+}
+
+sub _search_attribute {
+    my $jmx = shift;
+    my ($pattern) = @_;
+    my $req = new JMX::Jmx4Perl::Request(SEARCH,$pattern);
     return $jmx->request($req);
 }
 
