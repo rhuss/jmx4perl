@@ -1,3 +1,17 @@
+package org.jmx4perl.converter.attribute;
+
+
+import org.jmx4perl.JmxRequest;
+import org.jmx4perl.converter.StringToObjectConverter;
+import org.jmx4perl.converter.attribute.stats.*;
+import org.json.simple.JSONObject;
+
+import javax.management.AttributeNotFoundException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -16,22 +30,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
  * A commercial license is available as well. Please contact roland@cpan.org for
  * further details.
  */
-
-package org.jmx4perl.converter.attribute;
-
-
-import org.jmx4perl.JmxRequest;
-import org.jmx4perl.converter.StringToObjectConverter;
-import org.json.simple.JSONObject;
-
-import javax.management.AttributeNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * A converter which convert attribute and return values
@@ -60,12 +62,39 @@ public class ObjectToJsonConverter {
         handlers.add(new TabularDataHandler());
         handlers.add(new ListHandler());
         handlers.add(new MapHandler());
+
+        if (knowsAboutJsr77()) {
+            // Order is important here since theses handle all
+            // Stats objets. It goes from the most specific to the
+            // least specific
+            handlers.add(new JmsProducerStatsHandler());
+            handlers.add(new JmsConsumerStatsHandler());
+            handlers.add(new JmsSessionStatsHandler());
+            handlers.add(new JmsConnectionStatsHandler());
+            handlers.add(new JmsStatsHandler());
+            handlers.add(new JcaStatsHandler());
+            handlers.add(new JdbcConnectionStatsHandler());
+            handlers.add(new JdbcStatsHandler());
+            handlers.add(new StatsHandler());
+
+            // Statistic objects
+            handlers.add(new BoundedRangeStatisticHandler());
+            handlers.add(new BoundaryStatisticHandler());
+            handlers.add(new RangeStatisticHandler());
+            handlers.add(new TimeStatisticHandler());
+            handlers.add(new CountStatisticHandler());
+            handlers.add(new StatisticHandler());
+        }
+
+        // Must be last ...
         handlers.add(new PlainValueHandler());
 
         arrayHandler = new ArrayHandler();
 
+
         stringToObjectConverter = pStringToObjectConverter;
     }
+
 
     public JSONObject convertToJson(Object pValue, JmxRequest pRequest)
             throws AttributeNotFoundException {
@@ -142,7 +171,7 @@ public class ObjectToJsonConverter {
     }
 
 
-    Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
+    public Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         if (pValue == null) {
             return null;
         }
@@ -182,6 +211,17 @@ public class ObjectToJsonConverter {
 
 
        }
+
+
+    // Check whether JSR77 classes are available
+    private boolean knowsAboutJsr77() {
+        try {
+            Class.forName("javax.management.j2ee.statistics.Stats");
+            return true;
+        } catch (ClassNotFoundException exp) {
+            return false;
+        }
+    }
 
     // =============================================================================
     // Handler interface for dedicated handler

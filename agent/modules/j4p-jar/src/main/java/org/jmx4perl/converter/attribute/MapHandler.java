@@ -1,3 +1,13 @@
+package org.jmx4perl.converter.attribute;
+
+import org.jmx4perl.converter.StringToObjectConverter;
+import org.json.simple.JSONObject;
+
+import javax.management.AttributeNotFoundException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
+import java.util.Stack;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -20,16 +30,6 @@
  * A commercial license is available as well. Please contact roland@cpan.org for
  * further details.
  */
-
-package org.jmx4perl.converter.attribute;
-
-import org.jmx4perl.converter.StringToObjectConverter;
-import org.json.simple.JSONObject;
-
-import javax.management.AttributeNotFoundException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
-import java.util.Stack;
 
 /**
  * @author roland

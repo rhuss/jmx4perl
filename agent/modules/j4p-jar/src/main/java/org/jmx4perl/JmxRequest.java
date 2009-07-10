@@ -1,3 +1,15 @@
+package org.jmx4perl;
+
+import org.json.simple.JSONObject;
+
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -20,18 +32,6 @@
  * A commercial license is available as well. Please contact roland@cpan.org for
  * further details.
  */
-
-package org.jmx4perl;
-
-import org.json.simple.JSONObject;
-
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A JMX request which knows how to translate from a REST Url. Additionally

@@ -1,6 +1,7 @@
-package org.jmx4perl.history;
+package org.jmx4perl.converter.attribute.stats;
 
-import java.io.Serializable;
+import javax.management.j2ee.statistics.BoundedRangeStatistic;
+import java.util.Arrays;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -27,22 +28,19 @@ import java.io.Serializable;
 
 /**
  * @author roland
-* @since Jun 12, 2009
-*/
-class ValueEntry implements Serializable {
-    private Object value;
-    private long timestamp;
+ * @since Jul 10, 2009
+ */
+public class BoundedRangeStatisticHandler extends StatisticHandler {
 
-    ValueEntry(Object pValue, long pTimestamp) {
-        value = pValue;
-        timestamp = pTimestamp;
+    public BoundedRangeStatisticHandler() {
+        super();
+        supportedAttributes.addAll(Arrays.asList(
+                "highWaterMark","lowWaterMark","current","upperBound","lowerBound"
+        ));
     }
 
-    public Object getValue() {
-        return value;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
+    @Override
+    public Class getType() {
+        return BoundedRangeStatistic.class;
     }
 }

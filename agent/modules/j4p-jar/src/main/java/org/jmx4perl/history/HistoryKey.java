@@ -1,5 +1,11 @@
 package org.jmx4perl.history;
 
+import org.jmx4perl.JmxRequest;
+import org.jmx4perl.JmxRequest.Type;
+import static org.jmx4perl.JmxRequest.Type.*;
+
+import java.io.Serializable;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -19,16 +25,9 @@ package org.jmx4perl.history;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * A commercial license is available as well. You can either apply the GPL or
- * obtain a commercial license for closed source development. Please contact
- * roland@cpan.org for further information.
+ * A commercial license is available as well. Please contact roland@cpan.org for
+ * further details.
  */
-
-import org.jmx4perl.JmxRequest;
-import org.jmx4perl.JmxRequest.Type;
-import static org.jmx4perl.JmxRequest.Type.*;
-
-import java.io.Serializable;
 
 /**
  * @author roland

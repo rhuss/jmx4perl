@@ -1,3 +1,12 @@
+package org.jmx4perl.handler;
+
+import org.jmx4perl.JmxRequest;
+
+import javax.management.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -17,18 +26,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * A commercial license is available as well. You can either apply the GPL or
- * obtain a commercial license for closed source development. Please contact
- * roland@cpan.org for further information.
+ * A commercial license is available as well. Please contact roland@cpan.org for
+ * further details.
  */
-package org.jmx4perl.handler;
-
-import org.jmx4perl.JmxRequest;
-
-import javax.management.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Handler responsible for searching for MBean names.
