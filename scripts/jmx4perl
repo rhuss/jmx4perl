@@ -467,7 +467,7 @@ sub _extract_get_set_parameter {
     $path = $path_or_value if $mode eq "get";
     $value = $path_or_value if $mode eq "set";
 
-    croak "No MBean name or alias given" unless $mbean;
+    croak "No MBean name or alias given\n" unless $mbean;
 
     # Try to resolve the MBean name as an alias. If this works, we are using
     # this alias.

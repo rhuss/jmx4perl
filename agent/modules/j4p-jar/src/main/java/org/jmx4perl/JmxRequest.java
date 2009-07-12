@@ -184,6 +184,9 @@ public class JmxRequest extends JSONObject {
     private void extractElements(Stack<String> ret, Stack<String> pElementStack,StringBuffer previousBuffer)
             throws UnsupportedEncodingException {
         if (pElementStack.isEmpty()) {
+            if (previousBuffer != null && previousBuffer.length() > 0) {
+                ret.push(decode(previousBuffer.toString()));
+            }
             return;
         }
         String element = pElementStack.pop();

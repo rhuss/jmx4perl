@@ -331,7 +331,8 @@ sub info {
 =item $mbean_list = $jmx->search($mbean_pattern)
 
 Search for MBean based on a pattern and return a reference to the list of found
-MBeans. If no MBean can be found, C<undef> is returned. For example, 
+MBeans names (as string). If no MBean can be found, C<undef> is returned. For
+example, 
 
  $jmx->search("*:j2eeType=J2EEServer,*")
 
@@ -348,6 +349,9 @@ sub search {
     my $response = $self->request($request);
 
     return undef if $response->status eq "404"; # nothing found
+    if ($response->is_error) {
+        croak "Error searching for $pattern: ",$response->error_text;
+    }
     return $response->value;    
 }
 
