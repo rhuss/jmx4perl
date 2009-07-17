@@ -108,7 +108,13 @@ sub print_modules {
                     &$handler($l,$mod);
                 } elsif ($handler && !ref($handler)) {
                     my $modules = $jmx->get_attribute($mod,$handler);
-                    &print_modules($l+1,ref($modules) eq "ARRAY" ? $modules : [ $modules ]) if $modules;
+                    if ($modules) {
+                        $modules = ref($modules) eq "ARRAY" ? $modules : [ $modules ];
+                        # Fix for Jonas 4.1.2 with jetty, which includes the
+                        # WebModule itself in the list of contained Servlets
+                        $modules = [ grep { $_ !~ /j2eeType=$k/} @$modules ];
+                        &print_modules($l+1,$modules) if scalar(@$modules);
+                    }
                 }
             }
         }
