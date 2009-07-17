@@ -217,6 +217,8 @@ public class ObjectToJsonConverter {
     private boolean knowsAboutJsr77() {
         try {
             Class.forName("javax.management.j2ee.statistics.Stats");
+            // This is for Weblogic 9, which seems to have "Stats" but not the rest            
+            Class.forName("javax.management.j2ee.statistics.JMSStats");
             return true;
         } catch (ClassNotFoundException exp) {
             return false;
