@@ -8,7 +8,7 @@ use JMX::Jmx4Perl::Response;
 use JMX::Jmx4Perl::Alias;
 use Data::Dumper;
 use Nagios::Plugin;
-use Time::HiRes qw(gettimeofday);
+use Time::HiRes qw(gettimeofday tv_interval);
 use Carp;
 use Scalar::Util qw(looks_like_number);
 use URI::Escape;
@@ -132,15 +132,14 @@ sub _send_request {
         if ($o->user) {
             print "Remote User: ",$o->user,"\n";
         }
-        $start_time = (gettimeofday)[1];    
+        $start_time = [gettimeofday];
     }
 
     my $resp = $jmx->request($request);
     $self->_verify_response($resp);
 
     if ($o->verbose) {
-        my $duration = int ((gettimeofday)[1] - $start_time) / 1000;
-        print "Result fetched in ",$duration,"ms:\n";
+        print "Result fetched in ",tv_interval($start_time) * 1000," ms:\n";
         print Dumper($resp);
     }
 
