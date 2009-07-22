@@ -184,13 +184,13 @@ sub request_url {
     $req .= $self->_escape($request->get("mbean"));
     if ($type eq READ) {
         $req .= "/" . $self->_escape($request->get("attribute"));
-        $req .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
+        $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq WRITE) {
         $req .= "/" . $self->_escape($request->get("attribute"));
         $req .= "/" . $self->_escape($self->_null_escape($request->get("value")));
-        $req .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
+        $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq LIST) {
-        $req .= "/" . $self->_escape($request->get("path")) if defined($request->get("path"));
+        $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq EXEC) {
         $req .= "/" . $self->_escape($request->get("operation"));
         $req .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("args")};
@@ -202,6 +202,14 @@ sub request_url {
     return $url . $req;
 }
 
+# Extract path by splitting it up at "/", escape the parts, and join them again
+sub _extract_path {
+    my $self = shift;
+    my $path = shift;
+    return "" unless $path;
+    return "/" . join("/",map { $self->_escape($_) } split(m|/|,$path));
+}
+
 # Escape '/' which are used as separators by using "/-/" as an escape sequence
 # URI Encoding doesn't work for slashes, since some Appserver tend to mangle
 # them up with pathinfo-slashes to early in the request cycle.
@@ -210,6 +218,7 @@ sub request_url {
 sub _escape {
     my $self = shift;
     my $input = shift;
+    my $opts = { @_ };
     $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
     $input =~ s|-/$|+/|; # The last slash needs a special escape
     return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
