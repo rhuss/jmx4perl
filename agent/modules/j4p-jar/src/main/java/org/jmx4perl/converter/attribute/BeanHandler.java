@@ -121,6 +121,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         Method method;
         try {
             method = pValue.getClass().getMethod(methodName);
+            method.setAccessible(true);
             return method.invoke(pValue);
         } catch (NoSuchMethodException e) {
             throw new AttributeNotFoundException(

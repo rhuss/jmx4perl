@@ -160,7 +160,8 @@ public class ObjectToJsonConverter {
         StackContext stackContext = stackContextLocal.get();
         try {
             if (pValue != null && stackContext.alreadyVisited(pValue)) {
-                return "[Reference to " + pValue + " (" + pValue.getClass() + ")]";
+                stackContext.push(pValue);
+                return "[Recurring " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
             }
             stackContext.push(pValue);
 
