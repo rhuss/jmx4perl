@@ -72,36 +72,10 @@ public class ObjectToJsonConverter {
         handlers.add(new ListHandler());
         handlers.add(new MapHandler());
 
-        /*
-        if (knowsAboutJsr77()) {
-            // Order is important here since theses handle all
-            // Stats objets. It goes from the most specific to the
-            // least specific
-            handlers.add(new JmsProducerStatsHandler());
-            handlers.add(new JmsConsumerStatsHandler());
-            handlers.add(new JmsSessionStatsHandler());
-            handlers.add(new JmsConnectionStatsHandler());
-            handlers.add(new JmsStatsHandler());
-            handlers.add(new JcaStatsHandler());
-            handlers.add(new JdbcConnectionStatsHandler());
-            handlers.add(new JdbcStatsHandler());
-            handlers.add(new StatsHandler());
-
-            // Statistic objects
-            handlers.add(new BoundedRangeStatisticHandler());
-            handlers.add(new BoundaryStatisticHandler());
-            handlers.add(new RangeStatisticHandler());
-            handlers.add(new TimeStatisticHandler());
-            handlers.add(new CountStatisticHandler());
-            handlers.add(new StatisticHandler());
-        }
-        */
-
-        // Must be last ...
+        // Must be last in handlers ...
         handlers.add(new BeanHandler());
 
         arrayHandler = new ArrayHandler();
-
 
         stringToObjectConverter = pStringToObjectConverter;
     }
