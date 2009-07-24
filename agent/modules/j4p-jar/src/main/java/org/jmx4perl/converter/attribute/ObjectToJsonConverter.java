@@ -98,7 +98,7 @@ public class ObjectToJsonConverter {
         */
 
         // Must be last ...
-        handlers.add(new PlainValueHandler());
+        handlers.add(new BeanHandler());
 
         arrayHandler = new ArrayHandler();
 

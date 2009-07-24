@@ -37,7 +37,7 @@ import java.util.*;
  * @author roland
  * @since Apr 19, 2009
  */
-public class PlainValueHandler implements ObjectToJsonConverter.Handler {
+public class BeanHandler implements ObjectToJsonConverter.Handler {
 
     final private static Set<Class> FINAL_CLASSES = new HashSet<Class>(Arrays.asList(
             String.class,
