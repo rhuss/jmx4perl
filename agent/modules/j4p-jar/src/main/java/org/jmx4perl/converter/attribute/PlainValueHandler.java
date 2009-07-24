@@ -1,10 +1,14 @@
 package org.jmx4perl.converter.attribute;
 
 import org.jmx4perl.converter.StringToObjectConverter;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
+import javax.management.AttributeNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Stack;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -35,19 +39,102 @@ import java.util.Stack;
  */
 public class PlainValueHandler implements ObjectToJsonConverter.Handler {
 
+    final private static Set<Class> FINAL_CLASSES = new HashSet<Class>(Arrays.asList(
+            String.class,
+            Number.class,
+            Long.class,
+            Integer.class,
+            Boolean.class,
+            Date.class
+    ));
+
+    final private static Set<String> IGNORE_METHODS = new HashSet<String>(Arrays.asList(
+            "getClass"
+    ));
+
+
     public Class getType() {
         return Object.class;
     }
 
-    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue, Stack pExtraArgs,boolean jsonify) {
-        // TODO: Check extra args for an expression which should be applied to the
-        // value object to get the 'real' value.
-        // I.e. if pExtraArgs is not empty extract via an expression language the
-        // next element.
-        return jsonify ? pValue.toString() : pValue;
+    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
+                                Stack<String> pExtraArgs,boolean jsonify)
+            throws AttributeNotFoundException {
+        if (!pExtraArgs.isEmpty()) {
+            String attribute = pExtraArgs.pop();
+            Object attributeValue = extractBeanAttribute(pValue,attribute);
+            return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);
+        } else {
+            if (!jsonify) {
+                return pValue;
+            }
+            if (pValue.getClass().isPrimitive() || FINAL_CLASSES.contains(pValue.getClass())) {
+                return pValue.toString();
+            } else {
+                List<String> attributes = extractBeanAttributes(pValue);
+                if (attributes != null && attributes.size() > 0) {
+                    Map ret = new JSONObject();
+                    for (String attribute : attributes) {
+                        Object value = extractBeanAttribute(pValue,attribute);
+                        if (value == null) {
+                            ret.put(attribute,null);
+                        } else if (value == pValue) {
+                            // Break Cycle
+                            ret.put(attribute,"[this]");
+                        } else {
+                            ret.put(attribute,
+                                    pConverter.extractObject(value,pExtraArgs,jsonify));
+                        }
+                    }
+                    return ret;
+                } else {
+                    // No further attributes, return string representation
+                    return pValue.toString();
+                }
+            }
+        }
     }
 
-    // Using standard sett semantics
+    private List<String> extractBeanAttributes(Object pValue) {
+        List<String> attrs = new ArrayList<String>();
+        for (Method method : pValue.getClass().getMethods()) {
+            if (Modifier.isStatic(method.getModifiers()) || IGNORE_METHODS.contains(method.getName())) {
+                continue;
+            }
+            String name = method.getName();
+            if (name.startsWith("get") && method.getParameterTypes().length == 0) {
+                String attribute =
+                        new StringBuffer(name.substring(3,4).toLowerCase()).
+                                append(name.substring(4)).toString();
+                attrs.add(attribute);
+            }
+        }
+        return attrs;
+    }
+
+    private Object extractBeanAttribute(Object pValue, String pAttribute)
+            throws AttributeNotFoundException {
+        String methodName =
+                new StringBuffer("get")
+                        .append(pAttribute.substring(0,1).toUpperCase())
+                        .append(pAttribute.substring(1)).toString();
+        Method method;
+        try {
+            method = pValue.getClass().getMethod(methodName);
+            return method.invoke(pValue);
+        } catch (NoSuchMethodException e) {
+            throw new AttributeNotFoundException(
+                    "No method name known " + methodName + " for class " + pValue.getClass().getName() + ": " + e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Internal Error while extracting " + pAttribute
+                    + " from " + pValue,e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException("Internal Error while extracting " + pAttribute
+                    + " from " + pValue,e);
+        }
+    }
+
+    // Using standard set semantics
     public Object setObjectValue(StringToObjectConverter pConverter,Object pInner, String pAttribute, String pValue)
             throws IllegalAccessException, InvocationTargetException {
         // Move this to plain object handler

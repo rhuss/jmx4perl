@@ -3,3 +3,6 @@
    and call the appserver via JSR 160 connector
 06 WS-Management integration ?
 07 Path handling for operation return values
+08 Security options in Agent to restrict operations
+09 User/Password authentication in web.xml
+10 Bean Path accessor.

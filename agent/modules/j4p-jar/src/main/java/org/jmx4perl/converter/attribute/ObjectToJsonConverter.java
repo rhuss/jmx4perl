@@ -3,12 +3,12 @@ package org.jmx4perl.converter.attribute;
 
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.jmx4perl.converter.attribute.stats.*;
 import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Stack;
 
@@ -48,9 +48,18 @@ import java.util.Stack;
  */
 public class ObjectToJsonConverter {
 
+    // List of dedicated handlers
     List<Handler> handlers;
 
     ArrayHandler arrayHandler;
+
+    // Thread-Local set in order to prevent infinite recursions
+    ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>() {
+        @Override
+        protected StackContext initialValue() {
+            return new StackContext();
+        }
+    };
 
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
@@ -63,6 +72,7 @@ public class ObjectToJsonConverter {
         handlers.add(new ListHandler());
         handlers.add(new MapHandler());
 
+        /*
         if (knowsAboutJsr77()) {
             // Order is important here since theses handle all
             // Stats objets. It goes from the most specific to the
@@ -85,6 +95,7 @@ public class ObjectToJsonConverter {
             handlers.add(new CountStatisticHandler());
             handlers.add(new StatisticHandler());
         }
+        */
 
         // Must be last ...
         handlers.add(new PlainValueHandler());
@@ -172,21 +183,36 @@ public class ObjectToJsonConverter {
 
 
     public Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
-        if (pValue == null) {
-            return null;
-        }
-        Class clazz = pValue.getClass();
-        if (clazz.isArray()) {
-            return arrayHandler.extractObject(this,pValue,pExtraArgs,jsonify);
-        }
-        for (Handler handler : handlers) {
-            if (handler.getType() != null && handler.getType().isAssignableFrom(clazz)) {
-                return handler.extractObject(this,pValue,pExtraArgs,jsonify);
+        StackContext stackContext = stackContextLocal.get();
+        try {
+            if (pValue != null && stackContext.alreadyVisited(pValue)) {
+                return "[Reference to " + pValue + " (" + pValue.getClass() + ")]";
+            }
+            stackContext.push(pValue);
+
+            if (pValue == null) {
+                return null;
+            }
+
+            Class clazz = pValue.getClass();
+            if (clazz.isArray()) {
+                return arrayHandler.extractObject(this,pValue,pExtraArgs,jsonify);
+            }
+            for (Handler handler : handlers) {
+                if (handler.getType() != null && handler.getType().isAssignableFrom(clazz)) {
+                    return handler.extractObject(this,pValue,pExtraArgs,jsonify);
+                }
+            }
+            throw new RuntimeException(
+                    "Internal error: No handler found for class " + clazz +
+                        " (object: " + pValue + ", extraArgs: " + pExtraArgs + ")");
+        } finally {
+            // Remove created set if we created it on our own
+            stackContext.pop();
+            if (stackContext.stackLevel() == 0) {
+                stackContextLocal.remove();
             }
         }
-        throw new RuntimeException(
-                "Internal error: No handler found for class " + clazz +
-                        " (object: " + pValue + ", extraArgs: " + pExtraArgs + ")");
     }
 
     // returns the old value
@@ -217,7 +243,7 @@ public class ObjectToJsonConverter {
     private boolean knowsAboutJsr77() {
         try {
             Class.forName("javax.management.j2ee.statistics.Stats");
-            // This is for Weblogic 9, which seems to have "Stats" but not the rest            
+            // This is for Weblogic 9, which seems to have "Stats" but not the rest
             Class.forName("javax.management.j2ee.statistics.JMSStats");
             return true;
         } catch (ClassNotFoundException exp) {
@@ -242,6 +268,38 @@ public class ObjectToJsonConverter {
         // Set an object value on a certrain attribute.
         Object setObjectValue(StringToObjectConverter pConverter,Object pInner, String pAttribute, String pValue)
                 throws IllegalAccessException, InvocationTargetException;
+    }
+
+    // =============================================================================
+    // Context used for detecting call loops and the like
+
+    private class StackContext {
+
+        private IdentityHashMap objectsInCallStack = new IdentityHashMap();
+        private Stack callStack = new Stack();
+
+        void push(Object object) {
+            callStack.push(object);
+            objectsInCallStack.put(object,1);
+        }
+
+        Object pop() {
+            Object ret = callStack.pop();
+            objectsInCallStack.remove(ret);
+            return ret;
+        }
+
+        boolean alreadyVisited(Object object) {
+            return objectsInCallStack.containsKey(object);
+        }
+
+        int stackLevel() {
+            return callStack.size();
+        }
+
+        public int size() {
+            return objectsInCallStack.size();
+        }
     }
 
 
