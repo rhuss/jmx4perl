@@ -7,10 +7,7 @@ import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -250,12 +247,12 @@ public class ObjectToJsonConverter {
 
     private class StackContext {
 
-        private IdentityHashMap objectsInCallStack = new IdentityHashMap();
+        private Set objectsInCallStack = new HashSet();
         private Stack callStack = new Stack();
 
         void push(Object object) {
             callStack.push(object);
-            objectsInCallStack.put(object,1);
+            objectsInCallStack.add(object);
         }
 
         Object pop() {
@@ -265,7 +262,7 @@ public class ObjectToJsonConverter {
         }
 
         boolean alreadyVisited(Object object) {
-            return objectsInCallStack.containsKey(object);
+            return objectsInCallStack.contains(object);
         }
 
         int stackLevel() {
