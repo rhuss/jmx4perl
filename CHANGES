@@ -3,9 +3,13 @@
   - Fixed URL generation for Websphere
   - Added support for JSR77 Statistics and Stats JSON deserialization
     in the agent
-  - Added support for Bean serialization in general
+  - Added support for generic Bean serialization
   - Added 'search' command to jmx4perl
   - Fixed bug when using pathes with multiple components
+  - Added additional parameters 'max_depth', 'max_list_size' and
+    'max_objects' to restrict the size of the JSON answer. Protocol
+    has changed as well.
+
 
 0.21 (2009-07-03)
   - Added '--proxy' for check_jmx4perl and jmx4perl

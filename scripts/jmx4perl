@@ -232,22 +232,27 @@ sub command_attributes {
             if ($attrs) {
                 for my $a (keys %{$attrs}) {
                     print "$d:$p -- $a";
-                    my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a,{max_depth => $max_depth,
-                                                                                     max_objects => $max_objects,
-                                                                                     max_list_size => $max_list_size});
-                    my $response = $jmx->request($request);
-                    if ($response->is_error) {
-                        print "\nERROR: ",$response->error_text,"\n";
-                        if ($opts{verbose} && $response->stacktrace) {
-                            print $response->stacktrace;
-                        }
-                    } else {
-                        my $val = $response->value;
-                        if (ref($val)) {
-                            print "\n   ",Dumper($val);
+                    eval {
+                        my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a,{max_depth => $max_depth,
+                                                                                         max_objects => $max_objects,
+                                                                                         max_list_size => $max_list_size});
+                        my $response = $jmx->request($request);
+                        if ($response->is_error) {
+                            print "\nERROR: ",$response->error_text,"\n";
+                            if ($opts{verbose} && $response->stacktrace) {
+                                print $response->stacktrace;
+                            }
                         } else {
-                            print " = ",$val,"\n";
+                            my $val = $response->value;
+                            if (ref($val)) {
+                                print "\n   ",Dumper($val);
+                            } else {
+                                print " = ",$val,"\n";
+                            }
                         }
+                    };
+                    if ($@) {
+                        print "\nERROR: ",$@,"\n";
                     }
                 }
             }
