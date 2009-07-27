@@ -63,7 +63,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         if (!pExtraArgs.isEmpty()) {
             String attribute = pExtraArgs.pop();
             Object attributeValue = extractBeanAttribute(pValue,attribute);
-            return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);            
+            return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);
         } else {
             if (!jsonify) {
                 return pValue;
@@ -103,7 +103,8 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
             }
             String name = method.getName();
             for (String pref : GETTER_PREFIX) {
-                if (name.startsWith(pref) && method.getParameterTypes().length == 0) {
+                if (name.startsWith(pref) && name.length() > pref.length()
+                        && method.getParameterTypes().length == 0) {
                     int len = pref.length();
                     String attribute =
                             new StringBuffer(name.substring(len,len+1).toLowerCase()).
@@ -143,10 +144,10 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
             method.setAccessible(true);
             return method.invoke(pValue);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Internal Error while extracting " + pAttribute
+            throw new IllegalStateException("Error while extracting " + pAttribute
                     + " from " + pValue,e);
         } catch (InvocationTargetException e) {
-            throw new IllegalStateException("Internal Error while extracting " + pAttribute
+            throw new IllegalStateException("Error while extracting " + pAttribute
                     + " from " + pValue,e);
         }
     }

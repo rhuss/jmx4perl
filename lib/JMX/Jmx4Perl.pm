@@ -586,7 +586,7 @@ sub formatted_list {
     @path = split m|/|,$path if $path;
     croak "A path can be used only for a domain name or MBean name" if @path > 2;
     my $intent = "";
-
+    print Dumper($list);
     my $ret = &_format_map("",$list,\@path,0);
 }
 

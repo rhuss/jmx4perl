@@ -84,11 +84,11 @@ public class MBeanServerHandler {
                 // Must be there, otherwise we would nave have left the loop
                 throw objNotFoundException;
             } catch (ReflectionException e) {
-                throw new RuntimeException("Internal error for " + pJmxReq.getAttributeName() +
-                        "' on object " + pJmxReq.getObjectName() + ": " + e);
+                throw new RuntimeException("Internal error for '" + pJmxReq.getAttributeName() +
+                        "' on object " + pJmxReq.getObjectName() + ": " + e,e);
             } catch (MBeanException e) {
                 throw new RuntimeException("Exception while fetching the attribute '" + pJmxReq.getAttributeName() +
-                        "' on object " + pJmxReq.getObjectName() + ": " + e);
+                        "' on object " + pJmxReq.getObjectName() + ": " + e,e);
             }
         }
     }

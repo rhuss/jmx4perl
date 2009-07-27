@@ -1,6 +1,7 @@
-package org.jmx4perl.converter;
+package org.jmx4perl.converter.attribute;
 
 import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
+import org.jmx4perl.converter.StringToObjectConverter;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -70,9 +71,14 @@ public class ObjectToJsonConverterTest {
         assertTrue("Recurence detected",c.contains("Reference"));
     }
 
-    @Test
-    public void contextMapTest() {
 
+    @Test
+    public void maxDepth() throws AttributeNotFoundException {
+        ObjectToJsonConverter.StackContext ctx = converter.stackContextLocal.get();
+        ctx.setMaxDepth(1);
+        Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
+        String c = (String) ((Map) result.get("bean2")).get("bean1");
+        assertTrue("Recurence detected",c.contains("Truncated"));
     }
 
     // ============================================================================

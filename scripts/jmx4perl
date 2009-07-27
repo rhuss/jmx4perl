@@ -88,10 +88,6 @@ if ($opts{shell}) {
 
   jmx4perl .... ["info"] <agent-url>
 
-  jmx4perl .... list <agent-url>
-
-  jmx4perl .... attributes <agent-url>
-
   jmx4perl .... read <mbean-name> <attribute-name> [path] <agent-url>
 
   jmx4perl .... write <mbean-name> <attribute-name> <value> [path] <agent-url>
@@ -99,6 +95,10 @@ if ($opts{shell}) {
   jmx4perl .... exec <mbean-name> <operation> <arg1> <arg2> ... <agent-url>
 
   jmx4perl .... search <mbean pattern> <agent-url>
+
+  jmx4perl .... list <agent-url>
+
+  jmx4perl .... attributes [max-depth max-list-size max-objects] <agent-url>
 
   jmx4perl .... aliases
 
@@ -192,10 +192,38 @@ attributes an error is returned (i.e. when this attribute is not implemented on
 the server side e.g. or an MXMbean). To see the full server side stacktrace for
 this errors, use C<--verbose> as command line option
 
+The attribute list can get quite large (moren than 200 MB for JBoss 5). To
+restrict the output you can use the following extra optional parameters (given
+in this order):
+
+=over
+
+=item max_depth
+
+Maximum nesting level of the returned JSON structure for a certain MBean
+(default: 5)
+
+=item max_list_size
+
+Maximum size of a collection after which it gets truncated (default: 150)
+
+=item max_objects
+
+Maximum overall objects to fetch for a certain MBean (default: 1000)
+
+=back
+
+In the case of truncation, the JSON answer contains marker entries like
+C<[Object limit exceeded]> or C<[Depth limit ...]>. Loops are detected, too
+which results in markers of the form C<[Reference ...]>
+
 =cut
 
 sub command_attributes {
     my $jmx = shift;
+    my $max_depth = defined($_[0]) ? $_[0] : 4;
+    my $max_list_size = defined($_[1]) ? $_[1] : 150;
+    my $max_objects = defined($_[2]) ? $_[2] : 1000;
     my $data = $jmx->list();
 
     for my $d (keys %$data) {
@@ -204,7 +232,9 @@ sub command_attributes {
             if ($attrs) {
                 for my $a (keys %{$attrs}) {
                     print "$d:$p -- $a";
-                    my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a);
+                    my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a,{max_depth => $max_depth,
+                                                                                     max_objects => $max_objects,
+                                                                                     max_list_size => $max_list_size});
                     my $response = $jmx->request($request);
                     if ($response->is_error) {
                         print "\nERROR: ",$response->error_text,"\n";

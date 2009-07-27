@@ -139,7 +139,7 @@ public class AgentServlet extends HttpServlet {
         int code = 200;
         Throwable throwable = null;
         try {
-            jmxReq = new JmxRequest(pReq.getPathInfo());
+            jmxReq = new JmxRequest(pReq.getPathInfo(),pReq.getParameterMap());
             boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
             if (debug) {
                 log("URI: " + pReq.getRequestURI());

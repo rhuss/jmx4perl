@@ -58,6 +58,14 @@ public class ExecHandler extends RequestHandler {
         for (int i = 0;i <  paramClazzes.length; i++) {
             params[i] = stringToObjectConverter.convertFromString(paramClazzes[i],args.get(i));
         }
+
+        // Remove args from request, so that the rest can be interpreted as path for the return
+        // value
+        for (int i = 0; i < paramClazzes.length; i++) {
+            // Remove from front
+            args.remove(0);
+        }
+
         return server.invoke(request.getObjectName(),request.getOperation(),params,paramClazzes);
     }
 

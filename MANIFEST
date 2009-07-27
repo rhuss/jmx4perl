@@ -23,6 +23,7 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/CompositeDa
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/ListHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/MapHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/ObjectToJsonConverter.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/ClassHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/DomElementHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/FileHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/SimplifierHandler.java
@@ -42,7 +43,7 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/history/ValueEntry.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/JmxRequest.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/MBeanServerHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java
-agent/modules/j4p-jar/src/test/java/org/jmx4perl/converter/ObjectToJsonConverterTest.java
+agent/modules/j4p-jar/src/test/java/org/jmx4perl/converter/attribute/ObjectToJsonConverterTest.java
 agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml

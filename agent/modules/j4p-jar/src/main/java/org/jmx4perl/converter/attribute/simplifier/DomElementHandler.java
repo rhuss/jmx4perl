@@ -67,10 +67,5 @@ public class DomElementHandler extends SimplifierHandler<Element> {
                 return element.hasChildNodes();
             }
         });
-        pExtractorMap.put("textContent",new Extractor<Element>() {
-            public Object extract(Element element) {
-                return element.getTextContent();
-            }
-        });
     }
 }

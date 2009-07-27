@@ -88,6 +88,14 @@ Credentials to use for accessing the proxy
 
 =cut
 
+# HTTP Parameters to be used for transmitting the request
+my %PARAM_MAPPING = (
+                     "max_depth" => "maxDepth",
+                     "max_list_size" => "maxCollectionSize",
+                     "max_objects" => "maxObjects"
+                    );
+
+
 # Init called by parent package within 'new' for specific initialization. See
 # above for the parameters recognized
 sub init {
@@ -199,8 +207,15 @@ sub request_url {
     }
     # Squeeze multiple slashes
     $req =~ s|/{2,}|/|g;
+    my @params;
+    for my $k (keys %PARAM_MAPPING) {
+        push @params, $PARAM_MAPPING{$k} . "=" . $request->get($k)
+          if $request->get($k);
+    }
+    $req .= "?" . join("&",@params) if @params;
     return $url . $req;
 }
+
 
 # Extract path by splitting it up at "/", escape the parts, and join them again
 sub _extract_path {

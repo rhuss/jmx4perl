@@ -5,7 +5,6 @@ import org.json.simple.JSONObject;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -118,9 +117,14 @@ public class JmxRequest extends JSONObject {
     private String operation;
     private Type type;
 
+    // Max depth of returned JSON structure when deserializing.
+    private int maxDepth = 0;
+    private int maxCollectionSize = 0;
+    private int maxObjects = 0;
+
     private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^-*\\+?$");
 
-    JmxRequest(String pPathInfo) {
+    JmxRequest(String pPathInfo, Map pParameterMap) {
         try {
             if (pPathInfo != null && pPathInfo.length() > 0) {
 
@@ -145,6 +149,17 @@ public class JmxRequest extends JSONObject {
                 // Setup JSON representation
                 put("type",type.getValue());
                 processor.setupJSON(this);
+            }
+            if (pParameterMap != null) {
+                if (pParameterMap.get("maxDepth") != null) {
+                    maxDepth = Integer.parseInt( ((String []) pParameterMap.get("maxDepth"))[0]);
+                }
+                if (pParameterMap.get("maxCollectionSize") != null) {
+                    maxCollectionSize = Integer.parseInt(((String []) pParameterMap.get("maxCollectionSize"))[0]);
+                }
+                if (pParameterMap.get("maxObjects") != null) {
+                    maxObjects = Integer.parseInt(((String []) pParameterMap.get("maxObjects"))[0]);
+                }
             }
         } catch (NoSuchElementException exp) {
             throw new IllegalArgumentException("Invalid path info " + pPathInfo,exp);
@@ -272,9 +287,6 @@ public class JmxRequest extends JSONObject {
         }
     }
 
-
-
-
     public String getValue() {
         return value;
     }
@@ -287,6 +299,17 @@ public class JmxRequest extends JSONObject {
         return operation;
     }
 
+    public int getMaxDepth() {
+        return maxDepth;
+    }
+
+    public int getMaxCollectionSize() {
+        return maxCollectionSize;
+    }
+
+    public int getMaxObjects() {
+        return maxObjects;
+    }
 
     @Override
     public String toString() {
@@ -398,5 +421,6 @@ public class JmxRequest extends JSONObject {
                 r.put("mbean",r.objectName.getCanonicalName());
             }
         });
+
     }
 }

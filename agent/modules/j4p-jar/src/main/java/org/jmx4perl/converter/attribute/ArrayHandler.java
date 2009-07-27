@@ -44,7 +44,7 @@ public class ArrayHandler implements ObjectToJsonConverter.Handler {
     }
 
     public Object extractObject(ObjectToJsonConverter pConverter, Object pValue, Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
-        int length = Array.getLength(pValue);
+        int length = pConverter.getCollectionLength(Array.getLength(pValue));
         if (!pExtraArgs.isEmpty()) {
             Object obj = Array.get(pValue, Integer.parseInt(pExtraArgs.pop()));
             return pConverter.extractObject(obj,pExtraArgs,jsonify);

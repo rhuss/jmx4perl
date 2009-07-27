@@ -69,6 +69,15 @@ So, to fetch the C<"used"> value only, specify C<used> as path within the
 request. You can access deeper nested values by building up a path with "/" as
 separator. This looks a bit like a simplified form of XPath.
 
+=item max_depth, max_objects, max_list_size
+
+With these objects you can restrict the size of the JSON structure
+returned. C<max_depth> gives the maximum nesting level of the JSON
+object,C<max_objects> returns the maximum number of objects to be returned in
+total and C<max_list_size> restrict the number of all arrays and collections
+(maps, lists) in the answer. Note, that you should use this restrictions if you
+are doing massive bulk operations.
+
 =back 
 
 =head1 METHODS
@@ -105,9 +114,9 @@ my $TYPES =
 
 =item  $req = new JMX::Jmx4Perl::Request(....);
 
- $req = new JMX::Jmx4Perl::Request(READ,$mbean,$attribute,$path);
- $req = new JMX::Jmx4Perl::Request(READ,{ mbean => $mbean,... } );
- $req = new JMX::Jmx4Perl::Request({type => READ, mbean => $mbean, ... } );
+ $req = new JMX::Jmx4Perl::Request(READ,$mbean,$attribute,$path, { ... options ... } );
+ $req = new JMX::Jmx4Perl::Request(READ,{ mbean => $mbean,... });
+ $req = new JMX::Jmx4Perl::Request({type => READ, mbean => $mbean, ... });
 
 The constructor can be used in various way. In the simplest form, you provide
 the type as first argument and depending on the type one or more additional
@@ -115,6 +124,10 @@ attributes which specify the request. The second form uses the type as first
 parameter and a hashref containing named parameter for the request parameters
 (for the names, see above). Finally you can specify the arguments completely as
 a hashref, using 'type' for the entry specifying the request type.
+
+For the options C<max_depth>, C<max_objects> and C<max_list_size>, you can mix
+them in into the hashref if using the hashed argument format. For the first
+format, these options are given as a final hashref.
 
 Note, depending on the type, some parameters are mandatory. The mandatory
 parameters and the order of the arguments for the constructor variant without
@@ -171,6 +184,12 @@ sub new {
         } else {
             # Unnamed arguments
             $self = {type =>  $type};
+            my $opts = $_[scalar(@_)-1];
+            if (ref($opts) eq "HASH") {
+                pop @_;
+                map { $self->{$_} = $opts->{$_} } keys %$opts;
+            } else {
+            }
             if ($type eq READ) {
                 $self->{mbean} = shift;
                 $self->{attribute} = shift;

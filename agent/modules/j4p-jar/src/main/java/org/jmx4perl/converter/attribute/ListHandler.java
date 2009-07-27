@@ -5,9 +5,11 @@ import org.json.simple.JSONArray;
 
 import javax.management.AttributeNotFoundException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
+import java.util.Collection;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -45,6 +47,7 @@ public class ListHandler implements ObjectToJsonConverter.Handler {
     public Object extractObject(ObjectToJsonConverter pConverter, Object pValue, Stack<String> pExtraArgs,boolean jsonify)
             throws AttributeNotFoundException {
         List list = (List) pValue;
+        int length = pConverter.getCollectionLength(list.size());
         List ret;
         Iterator it = list.iterator();
         if (!pExtraArgs.isEmpty()) {
@@ -53,7 +56,7 @@ public class ListHandler implements ObjectToJsonConverter.Handler {
         } else {
             if (jsonify) {
                 ret = new JSONArray();
-                for (int i = 0;i < list.size(); i++) {
+                for (int i = 0;i < length; i++) {
                     Object val = it.next();
                     ret.add(pConverter.extractObject(val,pExtraArgs,jsonify));
                 }
@@ -85,4 +88,5 @@ public class ListHandler implements ObjectToJsonConverter.Handler {
         list.set(idx,value);
         return oldValue;
     }
+
 }

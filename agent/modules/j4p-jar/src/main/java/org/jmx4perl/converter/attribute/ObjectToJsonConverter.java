@@ -6,6 +6,7 @@ import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.attribute.simplifier.ClassHandler;
 import org.jmx4perl.converter.attribute.simplifier.DomElementHandler;
 import org.jmx4perl.converter.attribute.simplifier.FileHandler;
+import org.jmx4perl.converter.attribute.simplifier.UrlHandler;
 import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
@@ -54,12 +55,7 @@ public class ObjectToJsonConverter {
     ArrayHandler arrayHandler;
 
     // Thread-Local set in order to prevent infinite recursions
-    ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>() {
-        @Override
-        protected StackContext initialValue() {
-            return new StackContext();
-        }
-    };
+    ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>();
 
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
@@ -75,6 +71,7 @@ public class ObjectToJsonConverter {
         handlers.add(new ClassHandler());
         handlers.add(new FileHandler());
         handlers.add(new DomElementHandler());
+        handlers.add(new UrlHandler());
 
         handlers.add(new CompositeDataHandler());
         handlers.add(new TabularDataHandler());
@@ -92,11 +89,20 @@ public class ObjectToJsonConverter {
             throws AttributeNotFoundException {
         Stack<String> extraStack = reverseArgs(pRequest);
 
-        Object jsonResult = extractObject(pValue,extraStack,true);
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("value",jsonResult);
-        jsonObject.put("request",pRequest);
-        return jsonObject;
+        StackContext stackContext = new StackContext(pRequest.getMaxDepth(),
+                                                     pRequest.getMaxCollectionSize(),
+                                                     pRequest.getMaxObjects());
+        stackContextLocal.set(stackContext);
+
+        try {
+            Object jsonResult = extractObject(pValue,extraStack,true);
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("value",jsonResult);
+            jsonObject.put("request",pRequest);
+            return jsonObject;
+        } finally {
+            stackContextLocal.remove();
+        }
     }
 
     /**
@@ -163,13 +169,22 @@ public class ObjectToJsonConverter {
     }
 
 
-    public Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
+    public Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean jsonify)
+            throws AttributeNotFoundException {
         StackContext stackContext = stackContextLocal.get();
+        int maxDepth = stackContext.getMaxDepth();
+        if (maxDepth != 0 && stackContext.size() > maxDepth) {
+            return "[Depth limit " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
+        }
         if (pValue != null && stackContext.alreadyVisited(pValue)) {
             return "[Reference " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
         }
+        if (exceededMaxObjects()) {
+            return "[Object limit exceeded]";
+        }
         try {
             stackContext.push(pValue);
+            stackContext.incObjectCount();
 
             if (pValue == null) {
                 return null;
@@ -188,11 +203,7 @@ public class ObjectToJsonConverter {
                     "Internal error: No handler found for class " + clazz +
                         " (object: " + pValue + ", extraArgs: " + pExtraArgs + ")");
         } finally {
-            // Remove created set if we created it on our own
             stackContext.pop();
-            if (stackContext.stackLevel() == 0) {
-                stackContextLocal.remove();
-            }
         }
     }
 
@@ -251,6 +262,30 @@ public class ObjectToJsonConverter {
                 throws IllegalAccessException, InvocationTargetException;
     }
 
+
+    // =============================================================================
+
+    int getCollectionLength(int originalLength) {
+        ObjectToJsonConverter.StackContext ctx = stackContextLocal.get();
+        int maxSize = ctx.getMaxCollectionSize();
+        if (maxSize > 0 && originalLength > maxSize) {
+            return maxSize;
+        } else {
+            return originalLength;
+        }
+    }
+
+    void incObjectCount() {
+        ObjectToJsonConverter.StackContext ctx = stackContextLocal.get();
+        ctx.incObjectCount();
+    }
+
+
+    boolean exceededMaxObjects() {
+        ObjectToJsonConverter.StackContext ctx = stackContextLocal.get();
+        return ctx.getMaxObjects() > 0 && ctx.getObjectCount() > ctx.getMaxObjects();
+    }
+
     // =============================================================================
     // Context used for detecting call loops and the like
 
@@ -263,10 +298,21 @@ public class ObjectToJsonConverter {
             Date.class
     ));
 
-    private class StackContext {
+    class StackContext {
 
         private Set objectsInCallStack = new HashSet();
         private Stack callStack = new Stack();
+        private int maxDepth;
+        private int maxCollectionSize;
+        private int maxObjects;
+
+        private int objectCount = 0;
+
+        public StackContext(int pMaxDepth, int pMaxCollectionSize, int pMaxObjects) {
+            maxDepth = pMaxDepth;
+            maxCollectionSize = pMaxCollectionSize;
+            maxObjects = pMaxObjects;
+        }
 
         void push(Object object) {
             callStack.push(object);
@@ -294,6 +340,38 @@ public class ObjectToJsonConverter {
 
         public int size() {
             return objectsInCallStack.size();
+        }
+
+        public void setMaxDepth(int pMaxDepth) {
+            maxDepth = pMaxDepth;
+        }
+
+        public int getMaxDepth() {
+            return maxDepth;
+        }
+
+        public void setMaxCollectionSize(int pMaxCollectionSize) {
+            maxCollectionSize = pMaxCollectionSize;
+        }
+
+        public int getMaxCollectionSize() {
+            return maxCollectionSize;
+        }
+
+        public void incObjectCount() {
+            objectCount++;
+        }
+
+        public int getObjectCount() {
+            return objectCount;
+        }
+
+        public int getMaxObjects() {
+            return maxObjects;
+        }
+
+        public void setMaxObjects(int pMaxObjects) {
+            maxObjects = pMaxObjects;
         }
     }
 

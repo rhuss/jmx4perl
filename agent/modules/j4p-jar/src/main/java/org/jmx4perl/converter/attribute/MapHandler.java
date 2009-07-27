@@ -44,7 +44,7 @@ public class MapHandler implements ObjectToJsonConverter.Handler {
     public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
                          Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         Map<Object,Object> map = (Map<Object,Object>) pValue;
-
+        int length = pConverter.getCollectionLength(map.size());
         if (!pExtraArgs.isEmpty()) {
             String decodedKey = pExtraArgs.pop();
             for (Map.Entry entry : map.entrySet()) {
@@ -60,9 +60,14 @@ public class MapHandler implements ObjectToJsonConverter.Handler {
         } else {
             if (jsonify) {
                 JSONObject ret = new JSONObject();
+                int i = 0;
                 for(Map.Entry entry : map.entrySet()) {
                     ret.put(entry.getKey(),
                             pConverter.extractObject(entry.getValue(),pExtraArgs,jsonify));
+                    i++;
+                    if (i > length) {
+                        break;
+                    }
                 }
                 return ret;
             } else {
