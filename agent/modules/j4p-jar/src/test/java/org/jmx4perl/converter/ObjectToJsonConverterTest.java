@@ -7,6 +7,7 @@ import static org.junit.Assert.*;
 import javax.management.AttributeNotFoundException;
 import java.util.Stack;
 import java.util.Map;
+import java.io.File;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -47,11 +48,31 @@ public class ObjectToJsonConverterTest {
     }
 
     @Test
+    public void basics() throws AttributeNotFoundException {
+        Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
+        assertNotNull("Bean2 is set",result.get("bean2"));
+        assertNotNull("Binary attribute is set",result.get("strong"));
+    }
+
+    @Test
     public void checkDeadLockDetection() throws AttributeNotFoundException {
         Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
         assertNotNull("Bean 2 is set",result.get("bean2"));
         assertNotNull("Bean2:Bean1 is set",((Map)result.get("bean2")).get("bean1"));
         assertEquals("Reference breackage",((Map)result.get("bean2")).get("bean1").getClass(),String.class);
+        assertTrue("Bean 3 should be resolved",result.get("bean3") instanceof Map);
+    }
+
+    public void stackOverflowTest() throws AttributeNotFoundException {
+        File test = new File(".");
+        Map result = (Map) converter.extractObject(test,new Stack<String>(),true);
+        String c = (String) ((Map) result.get("canonicalFile")).get("canonicalFile");
+        assertTrue("Recurence detected",c.contains("Reference"));
+    }
+
+    @Test
+    public void contextMapTest() {
+
     }
 
     // ============================================================================
@@ -60,21 +81,52 @@ public class ObjectToJsonConverterTest {
     class SelfRefBean1 {
 
         SelfRefBean2 bean2;
+        SelfRefBean3 bean3;
+
+        boolean strong;
 
         SelfRefBean1() {
-            bean2 = new SelfRefBean2(this);
+            bean3 = new SelfRefBean3(this);
+            bean2 = new SelfRefBean2(this,bean3);
         }
 
         public SelfRefBean2 getBean2() {
             return bean2;
+        }
+
+        public SelfRefBean3 getBean3() {
+            return bean3;
+        }
+
+        public boolean isStrong() {
+            return strong;
         }
     }
 
     class SelfRefBean2 {
 
         SelfRefBean1 bean1;
+        SelfRefBean3 bean3;
 
-        SelfRefBean2(SelfRefBean1 pBean1) {
+        SelfRefBean2(SelfRefBean1 pBean1,SelfRefBean3 pBean3) {
+            bean1 = pBean1;
+            bean3 = pBean3;
+        }
+
+        public SelfRefBean1 getBean1() {
+            return bean1;
+        }
+
+        public SelfRefBean3 getBean3() {
+            return bean3;
+        }
+    }
+
+    class SelfRefBean3 {
+
+        SelfRefBean1 bean1;
+
+        SelfRefBean3(SelfRefBean1 pBean1) {
             bean1 = pBean1;
         }
 

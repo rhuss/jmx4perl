@@ -3,6 +3,9 @@ package org.jmx4perl.converter.attribute;
 
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
+import org.jmx4perl.converter.attribute.simplifier.ClassHandler;
+import org.jmx4perl.converter.attribute.simplifier.DomElementHandler;
+import org.jmx4perl.converter.attribute.simplifier.FileHandler;
 import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
@@ -64,12 +67,19 @@ public class ObjectToJsonConverter {
     public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter) {
         handlers = new ArrayList<Handler>();
 
-        handlers.add(new CompositeHandler());
-        handlers.add(new TabularDataHandler());
+        // Collection handlers
         handlers.add(new ListHandler());
         handlers.add(new MapHandler());
 
-        // Must be last in handlers ...
+        // Special, well known objects
+        handlers.add(new ClassHandler());
+        handlers.add(new FileHandler());
+        handlers.add(new DomElementHandler());
+
+        handlers.add(new CompositeDataHandler());
+        handlers.add(new TabularDataHandler());
+
+        // Must be last in handlers, used default algorithm
         handlers.add(new BeanHandler());
 
         arrayHandler = new ArrayHandler();
@@ -155,11 +165,10 @@ public class ObjectToJsonConverter {
 
     public Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         StackContext stackContext = stackContextLocal.get();
+        if (pValue != null && stackContext.alreadyVisited(pValue)) {
+            return "[Reference " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
+        }
         try {
-            if (pValue != null && stackContext.alreadyVisited(pValue)) {
-                stackContext.push(pValue);
-                return "[Recurring " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
-            }
             stackContext.push(pValue);
 
             if (pValue == null) {
@@ -245,6 +254,15 @@ public class ObjectToJsonConverter {
     // =============================================================================
     // Context used for detecting call loops and the like
 
+    final private static Set<Class> SIMPLE_TYPES = new HashSet<Class>(Arrays.asList(
+            String.class,
+            Number.class,
+            Long.class,
+            Integer.class,
+            Boolean.class,
+            Date.class
+    ));
+
     private class StackContext {
 
         private Set objectsInCallStack = new HashSet();
@@ -252,12 +270,17 @@ public class ObjectToJsonConverter {
 
         void push(Object object) {
             callStack.push(object);
-            objectsInCallStack.add(object);
+
+            if (object != null && !SIMPLE_TYPES.contains(object.getClass())) {
+                objectsInCallStack.add(object);
+            }
         }
 
         Object pop() {
             Object ret = callStack.pop();
-            objectsInCallStack.remove(ret);
+            if (ret != null && !SIMPLE_TYPES.contains(ret.getClass())) {
+                objectsInCallStack.remove(ret);
+            }
             return ret;
         }
 

@@ -37,7 +37,7 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class CompositeHandler implements ObjectToJsonConverter.Handler {
+public class CompositeDataHandler implements ObjectToJsonConverter.Handler {
 
     public Class getType() {
         return CompositeData.class;

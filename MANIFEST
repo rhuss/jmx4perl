@@ -19,10 +19,13 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/ConfigMBean.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/DebugStore.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/ArrayHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/BeanHandler.java
-agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/CompositeHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/CompositeDataHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/ListHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/MapHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/ObjectToJsonConverter.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/DomElementHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/FileHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/SimplifierHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/TabularDataHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/StringToObjectConverter.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ExecHandler.java

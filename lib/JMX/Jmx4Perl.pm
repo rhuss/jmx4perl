@@ -746,7 +746,7 @@ my $CURRENT_DOMAIN = "";
 
 sub _format_map { 
     my ($ret,$map,$path,$level) = @_;
-    
+
     my $p = shift @$path;
     my $sep = $SEPS[$level] ? $SEPS[$level] : "";
     if ($p) {

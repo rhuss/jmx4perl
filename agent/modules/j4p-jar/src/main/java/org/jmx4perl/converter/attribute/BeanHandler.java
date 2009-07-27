@@ -1,7 +1,6 @@
 package org.jmx4perl.converter.attribute;
 
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
@@ -51,6 +50,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
     final private static Set<String> IGNORE_METHODS = new HashSet<String>(Arrays.asList(
             "getClass"
     ));
+    private static final String[] GETTER_PREFIX = new String[] { "get", "is"};
 
 
     public Class getType() {
@@ -63,7 +63,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         if (!pExtraArgs.isEmpty()) {
             String attribute = pExtraArgs.pop();
             Object attributeValue = extractBeanAttribute(pValue,attribute);
-            return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);
+            return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);            
         } else {
             if (!jsonify) {
                 return pValue;
@@ -102,11 +102,14 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
                 continue;
             }
             String name = method.getName();
-            if (name.startsWith("get") && method.getParameterTypes().length == 0) {
-                String attribute =
-                        new StringBuffer(name.substring(3,4).toLowerCase()).
-                                append(name.substring(4)).toString();
-                attrs.add(attribute);
+            for (String pref : GETTER_PREFIX) {
+                if (name.startsWith(pref) && method.getParameterTypes().length == 0) {
+                    int len = pref.length();
+                    String attribute =
+                            new StringBuffer(name.substring(len,len+1).toLowerCase()).
+                                    append(name.substring(len+1)).toString();
+                    attrs.add(attribute);
+                }
             }
         }
         return attrs;
@@ -114,18 +117,31 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
 
     private Object extractBeanAttribute(Object pValue, String pAttribute)
             throws AttributeNotFoundException {
-        String methodName =
-                new StringBuffer("get")
-                        .append(pAttribute.substring(0,1).toUpperCase())
-                        .append(pAttribute.substring(1)).toString();
-        Method method;
+        Class clazz = pValue.getClass();
+
+        Method method = null;
+
+        for (String pref : GETTER_PREFIX) {
+            String methodName =
+                    new StringBuffer(pref)
+                            .append(pAttribute.substring(0,1).toUpperCase())
+                            .append(pAttribute.substring(1)).toString();
+            try {
+                method = clazz.getMethod(methodName);
+            } catch (NoSuchMethodException e) {
+                // Try next one
+                continue;
+            }
+            // We found a valid method
+            break;
+        }
+        if (method == null) {
+            throw new AttributeNotFoundException(
+                    "No getter known for attribute " + pAttribute + " for class " + pValue.getClass().getName());
+        }
         try {
-            method = pValue.getClass().getMethod(methodName);
             method.setAccessible(true);
             return method.invoke(pValue);
-        } catch (NoSuchMethodException e) {
-            throw new AttributeNotFoundException(
-                    "No method name known " + methodName + " for class " + pValue.getClass().getName() + ": " + e);
         } catch (IllegalAccessException e) {
             throw new IllegalStateException("Internal Error while extracting " + pAttribute
                     + " from " + pValue,e);
