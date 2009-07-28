@@ -60,8 +60,9 @@ if (!@ARGV) {
     $command = "info";
     $url = $ARGV[0];
 } else {
+    $url = shift @ARGV;
+    &_verify_url($url,$ARGV[$#ARGV]);
     $command = lc shift @ARGV;
-    $url = pop @ARGV || croak "No url given for command '",$command,"'. See --help for assistance";    
     @args = ( @ARGV );
 }
 
@@ -86,19 +87,19 @@ if ($opts{shell}) {
 
   jmx4perl .... --shell http://server:8080/j4p
 
-  jmx4perl .... ["info"] <agent-url>
+  jmx4perl .... <agent-url> ["info"] 
 
-  jmx4perl .... read <mbean-name> <attribute-name> [path] <agent-url>
+  jmx4perl .... <agent-url> read <mbean-name> <attribute-name> [path] 
 
-  jmx4perl .... write <mbean-name> <attribute-name> <value> [path] <agent-url>
+  jmx4perl .... <agent-url> write <mbean-name> <attribute-name> <value> [path]
 
-  jmx4perl .... exec <mbean-name> <operation> <arg1> <arg2> ... <agent-url>
+  jmx4perl .... <agent-url> exec <mbean-name> <operation> <arg1> <arg2> ...
 
-  jmx4perl .... search <mbean pattern> <agent-url>
+  jmx4perl .... <agent-url> search <mbean pattern>
 
-  jmx4perl .... list <agent-url>
+  jmx4perl .... <agent-url> list 
 
-  jmx4perl .... attributes [max-depth max-list-size max-objects] <agent-url>
+  jmx4perl .... <agent-url> attributes [max-depth max-list-size max-objects] 
 
   jmx4perl .... aliases
 
@@ -531,6 +532,19 @@ sub _validate_mbean_name {
     my $mbean = shift;
     die "ERROR: Invalid format for MBean name $mbean (Did you misspelled an alias name ?)\n" if 
       ($mbean !~ /^[^:]+:[^:]+$/ || $mbean !~ /:([^=]+)=/);    
+}
+
+sub _verify_url {
+    my $url = shift;
+    my $last = shift;
+    
+    unless ($url =~ m|^\w+://|) {
+        my $text = "No url given for command. See --help for assistance.\n";
+        if ($last =~ m|^\w+://|) {
+            $text .= "Please note, that the URL must be given as first argument, not as last.\n";
+        }
+        die $text;
+    }
 }
 
 =head1 SHELL MODE

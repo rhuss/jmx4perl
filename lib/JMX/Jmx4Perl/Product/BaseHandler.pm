@@ -173,7 +173,6 @@ sub autodetect {
             eval "\$val = \$self->$what";
             die $@ if $@;
         }
-        #print "V: $val";
         return 1 if ($val && (!$pattern || ref($pattern) ne "Regexp"));
         return $val =~ $pattern if ($val && $pattern);
     }
@@ -416,7 +415,6 @@ specific information
 sub server_info { 
     my $self = shift;
     my $jmx4perl = $self->{jmx4perl};
-    
     my $ret = "";
     $ret .= sprintf("%-10.10s %s\n","Name:",$self->name);
     $ret .= sprintf("%-10.10s %s\n","Vendor:",$self->vendor) if $self->vendor;
