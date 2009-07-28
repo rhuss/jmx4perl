@@ -3,6 +3,7 @@ package JMX::Jmx4Perl::Product::Weblogic;
 
 use JMX::Jmx4Perl::Product::BaseHandler;
 use JMX::Jmx4Perl::Request;
+use Data::Dumper;
 use strict;
 use base "JMX::Jmx4Perl::Product::BaseHandler";
 
@@ -33,7 +34,6 @@ sub order {
 
 sub _try_version {
     my $self = shift;
-    
     my $is_weblogic = $self->_try_server_domain;
     return undef unless $is_weblogic;
     return $self->try_attribute("version",$self->{server_domain},"ConfigurationVersion");
@@ -54,7 +54,8 @@ sub _try_server_domain {
     return $self->try_attribute
       ("server_domain",
        "com.bea:Name=RuntimeService,Type=weblogic.management.mbeanservers.runtime.RuntimeServiceMBean",
-       "DomainConfiguration");
+       "DomainConfiguration",
+       "canonicalName");
 }
 
 sub jsr77 {
