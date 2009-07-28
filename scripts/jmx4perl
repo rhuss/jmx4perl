@@ -61,8 +61,8 @@ if (!@ARGV) {
     $url = $ARGV[0];
 } else {
     $url = shift @ARGV;
+    &_verify_url($url,$ARGV[$#ARGV]);
     $command = lc shift @ARGV;
-    $url = pop @ARGV || croak "No url given for command '",$command,"'. See --help for assistance";    
     @args = ( @ARGV );
 }
 
@@ -497,6 +497,19 @@ sub _validate_mbean_name {
     my $mbean = shift;
     die "ERROR: Invalid format for MBean name $mbean (Did you misspelled an alias name ?)\n" if 
       ($mbean !~ /^[^:]+:[^:]+$/ || $mbean !~ /:([^=]+)=/);    
+}
+
+sub _verify_url {
+    my $url = shift;
+    my $last = shift;
+    
+    unless ($url =~ m|^\w+://|) {
+        my $text = "No url given for command. See --help for assistance.\n";
+        if ($last =~ m|^\w+://|) {
+            $text .= "Please note, that the URL must be given as first argument, not as last.\n";
+        }
+        die $text;
+    }
 }
 
 =head1 SHELL MODE
