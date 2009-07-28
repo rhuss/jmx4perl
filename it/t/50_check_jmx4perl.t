@@ -19,8 +19,8 @@ is($ret,3,"No args --> UNKNOWN");
 # Basic checks
 my %s = (
          ":10000000000" => [ 0, "OK" ],
-         "1:" => [ 0, "OK" ],
-         ":1" => [ 2, "CRITICAL" ],
+         "0.2:" => [ 0, "OK" ],
+         ":0.2" => [ 2, "CRITICAL" ],
          "5:6" => [ 2, "CRITICAL" ]
 );
 for my $k (keys %s) {
@@ -42,9 +42,9 @@ for my $k (keys %s) {
 # Relative value checks
 %s = (
       ":90" => [ 0, "OK" ],
-      "1:" => [ 0, "OK" ],
-      ":1" => [ 1, "WARNING" ],
-      "56:57" => [ 1, "WARNING" ]      
+      "0.2:" => [ 0, "OK" ],
+      ":0.2" => [ 1, "WARNING" ],
+      "81:82" => [ 1, "WARNING" ]      
 );
 
 for my $base (qw(MEMORY_HEAP_MAX java.lang:type=Memory/HeapMemoryUsage/max 1000000000)) {
@@ -62,13 +62,13 @@ $jmx->execute(JMX4PERL_HISTORY_RESET);
 
 ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c 10 --name mem");
 is($ret,0,"Initial history fetch returns OK");
-ok($content =~ /mem=(\d+)/ && $1 eq "0","Initial history fetch returns 0 Threads");
+ok($content =~ /mem=(\d+)/ && $1 eq "0","Initial history fetch returns 0 mem delta");
 
 my $mem = $jmx->get_attribute(MEMORY_HEAP_USED);
-my $c = 0.05 * $mem;
+my $c = 0.10 * $mem;
 ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c -$c:$c --name mem");
-is($ret,0,"Initial history fetch returns OK for -c $c");
-ok($content =~ /mem=(\d+)/ && $1 ne "0","History fetch return non null Mem-Delta ($1)");
+is($ret,0,"Second history fetch returns OK for -c $c");
+ok($content =~ /mem=(\d+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
 
 $jmx->execute(JMX4PERL_HISTORY_RESET);
 
@@ -107,6 +107,7 @@ sub exec_check_perl4jmx {
    
     my $cmd = "$FindBin::Bin/../../scripts/check_jmx4perl "
           .join(" ",map { '"' . $_ . '"' } @args); 
+    print $cmd,"\n" if 1;
     open (F,"$cmd 2>&1 |") 
       || die "Cannot open check_jmx4perl: $!";
     my $content = join "",<F>;
