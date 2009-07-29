@@ -1,23 +1,33 @@
+<!-- =====================================================================================  -->
+<!-- Agent build -->
+<!-- =====================================================================================  -->
+
+
 <project name="json-jmx-agent" default="main" basedir=".">
-  <property name="version" value="1.0"/>
+
   <property name="war-name" value="j4p.war"/>
   <property name="it-war-name" value="j4p-it.war"/>
 
   <target name="main" depends="war,it-war"/>
 
-  <target name="clean">
-    <delete includeemptydirs="true">
-      <fileset dir="modules/j4p-jar/target" includes="**/*"/>
-      <fileset dir="modules/j4p-war/target" includes="**/*"/>
-      <fileset dir="modules/j4p-it/target" includes="**/*"/>
-      <fileset dir="." includes="*.war"/>
-    </delete>
-  </target>
-
+  <!-- Preparations -->
   <target name="mkdir">
     <mkdir dir="modules/j4p-jar/target/classes"/>
     <mkdir dir="modules/j4p-war/target/"/>
+    <mkdir dir="modules/j4p-war/target/classes"/>
     <mkdir dir="modules/j4p-it/target/classes"/>
+  </target>
+
+  <!-- =====================================================================================  -->
+  <!-- Agent WAR -->
+
+  <!-- Copy over access policy file if present -->
+  <target name="check_for_access_policy">
+    <available file="j4p-access.xml" property="j4p-access.available"/>
+  </target>
+
+  <target name="copy_access_policy" depends="check_for_access_policy" if="j4p-access.available" >
+    <copy file="j4p-access.xml" todir="modules/j4p-war/target/classes"/>
   </target>
 
   <target name="compile" depends="mkdir">
@@ -40,7 +50,7 @@
     <jar destfile="modules/j4p-jar/target/j4p-agent.jar" basedir="modules/j4p-jar/target/classes"/>
   </target>
 
-  <target name="war" depends="jar">
+  <target name="war" depends="jar,copy_access_policy">
     <war destfile="modules/j4p-war/target/${war-name}" webxml="modules/j4p-war/src/main/webapp/WEB-INF/web.xml">
       <lib dir="lib">
         <exclude name="servlet-api*"/>
@@ -50,10 +60,14 @@
       <lib dir="modules/j4p-jar/target">
         <include name="j4p-agent.jar"/>
       </lib>
+      <classes dir="modules/j4p-war/target/classes"/>      
     </war>
     <copy file="modules/j4p-war/target/${war-name}" todir="."/>
   </target>
 
+  <!-- ===============================================================  -->
+  <!-- Integration Test WAR -->
+  
   <target name="mkdir-it">
     <mkdir dir="modules/j4p-it/target/classes"/>
   </target>
@@ -69,7 +83,7 @@
         <fileset dir="lib">
           <include name="*.jar"/>
         </fileset>
-     <fileset dir="modules/j4p-jar/target">
+        <fileset dir="modules/j4p-jar/target">
           <include name="j4p-agent.jar"/>
         </fileset>
       </classpath>
@@ -86,4 +100,18 @@
     </war>
     <copy file="modules/j4p-it/target/${it-war-name}" todir="."/>
   </target>
+
+  <!-- =======================================================  -->
+  <!-- Cleanup -->
+
+  <target name="clean">
+    <delete includeemptydirs="true">
+      <fileset dir="modules/j4p-jar/target" includes="**/*"/>
+      <fileset dir="modules/j4p-war/target" includes="**/*"/>
+      <fileset dir="modules/j4p-it/target" includes="**/*"/>
+      <fileset dir="." includes="*.war"/>
+    </delete>
+  </target>
+
+
 </project>

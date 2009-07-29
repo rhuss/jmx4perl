@@ -40,6 +40,6 @@
           <warName>j4p-agent</warName>
         </configuration>
       </plugin>
-    </plugins>    
+    </plugins>
   </build>
 </project>

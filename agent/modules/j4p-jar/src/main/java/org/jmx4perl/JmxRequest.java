@@ -130,7 +130,9 @@ public class JmxRequest extends JSONObject {
 
                 // Get all path elements as a reverse stack
                 Stack<String> elements = extractElementsFromPath(pPathInfo);
-
+                if (elements.size() == 0) {
+                    throw new IllegalArgumentException("No request type given");
+                }
                 type = extractType(elements.pop());
 
                 Processor processor = processorMap.get(type);
@@ -169,6 +171,8 @@ public class JmxRequest extends JSONObject {
                             "\": " + e.getMessage(),e);
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Internal: Illegal encoding for URL conversion: " + e,e);
+        } catch (EmptyStackException exp) {
+            throw new IllegalArgumentException("Invalid arguments in pathinfo " + pPathInfo + " for command " + type,exp);
         }
     }
 

@@ -2,6 +2,7 @@ package org.jmx4perl.handler;
 
 
 import org.jmx4perl.JmxRequest;
+import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
 import java.util.*;
@@ -38,13 +39,17 @@ public class ListHandler extends RequestHandler {
         return JmxRequest.Type.LIST;
     }
 
+    public ListHandler(Restrictor pRestrictor) {
+        super(pRestrictor);
+    }
+
     @Override
     public boolean handleAllServersAtOnce() {
         return true;
     }
 
     @Override
-    public Object handleRequest(Set<MBeanServer> pServers, JmxRequest request)
+    public Object doHandleRequest(Set<MBeanServer> pServers, JmxRequest request)
             throws InstanceNotFoundException {
         try {
             Map<String /* domain */,
@@ -130,10 +135,9 @@ public class ListHandler extends RequestHandler {
 
     // will not be called
     @Override
-    public Object handleRequest(MBeanServer server, JmxRequest request) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public Object doHandleRequest(MBeanServer server, JmxRequest request) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         return null;
     }
-
 
 
 }

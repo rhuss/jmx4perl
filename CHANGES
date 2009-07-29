@@ -11,6 +11,8 @@
     has changed as well.
   - jmx4perl: URL now as first argument for easier workflow when using
     bash history for multiple usages.
+  - Added support for restricting MBean access via a policy file
+    (j4p-access.xml)  
 
 0.21 (2009-07-03)
   - Added '--proxy' for check_jmx4perl and jmx4perl

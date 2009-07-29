@@ -1,9 +1,6 @@
-package org.jmx4perl.handler;
+package org.jmx4perl.config;
 
-import org.jmx4perl.JmxRequest;
-import org.jmx4perl.config.Restrictor;
-
-import javax.management.*;
+import java.io.InputStream;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -29,28 +26,29 @@ import javax.management.*;
  */
 
 /**
+ * Factory for obtaining the proper {@link org.jmx4perl.config.Restrictor}
+ *
  * @author roland
- * @since Jun 12, 2009
+ * @since Jul 28, 2009
  */
-public class ReadHandler extends RequestHandler {
+public class RestrictorFactory {
 
-    public ReadHandler(Restrictor pRestrictor) {
-        super(pRestrictor);
-    }
+    private RestrictorFactory() { }
 
-    @Override
-    public JmxRequest.Type getType() {
-        return JmxRequest.Type.READ;
-    }
+    /**
+     * Get the installed restrictor or the {@link org.jmx4perl.config.AllowAllRestrictor}
+     * is no restrictions are in effect.
+     *
+     * @return the restrictor
+     */
+    static public Restrictor buildRestrictor() {
 
-    @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
-        if (!restrictor.isAttributeReadAllowed(request.getObjectName(),request.getAttributeName())) {
-            throw new SecurityException("Reading attribute " + request.getAttributeName() +
-                    " is forbidden for MBean " + request.getObjectNameAsString());
+        InputStream is =
+                Thread.currentThread().getContextClassLoader().getResourceAsStream("/j4p-access.xml");
+        if (is != null) {
+            return new PolicyBasedRestrictor(is);
+        } else {
+            return new AllowAllRestrictor();
         }
-
-        return server.getAttribute(request.getObjectName(), request.getAttributeName());
     }
 }

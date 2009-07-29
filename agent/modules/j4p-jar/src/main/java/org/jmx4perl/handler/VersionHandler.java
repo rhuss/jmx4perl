@@ -2,6 +2,7 @@ package org.jmx4perl.handler;
 
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.Version;
+import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
 
@@ -33,11 +34,18 @@ import javax.management.*;
  * @since Jun 12, 2009
  */
 public class VersionHandler extends RequestHandler {
+
+    public VersionHandler(Restrictor pRestrictor) {
+        super(pRestrictor);
+    }
+
+    @Override
     public JmxRequest.Type getType() {
         return JmxRequest.Type.VERSION;
     }
 
-    public Object handleRequest(MBeanServer server, JmxRequest request)
+    @Override
+    public Object doHandleRequest(MBeanServer server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         return Version.getVersion();
     }

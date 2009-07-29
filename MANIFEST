@@ -1,5 +1,6 @@
 agent/build.xml
 agent/ext-src/jsr77-src.jar
+agent/j4p-access.xml.template
 agent/j4p.war
 agent/lib/json_simple-1.1.jar
 agent/lib/jsr77-1.1.jar
@@ -14,9 +15,13 @@ agent/modules/j4p-it/src/main/java/org/jmx4perl/it/TestMBeanRegisteringServlet.j
 agent/modules/j4p-it/src/main/webapp/WEB-INF/web.xml
 agent/modules/j4p-jar/pom.xml
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/AgentServlet.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/AllowAllRestrictor.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/Config.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/ConfigMBean.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/DebugStore.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/PolicyBasedRestrictor.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/Restrictor.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/RestrictorFactory.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/ArrayHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/BeanHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/CompositeDataHandler.java
@@ -27,6 +32,7 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/DomElementHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/FileHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/SimplifierHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/simplifier/UrlHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/attribute/TabularDataHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/StringToObjectConverter.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ExecHandler.java
@@ -44,6 +50,10 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/JmxRequest.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/MBeanServerHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/converter/attribute/ObjectToJsonConverterTest.java
+agent/modules/j4p-jar/src/test/java/org/jmx4perl/converter/attribute/PolicyBasedRestrictorTest.java
+agent/modules/j4p-jar/src/test/resources/access-sample1.xml
+agent/modules/j4p-jar/src/test/resources/access-sample2.xml
+agent/modules/j4p-jar/src/test/resources/access-sample3.xml
 agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml

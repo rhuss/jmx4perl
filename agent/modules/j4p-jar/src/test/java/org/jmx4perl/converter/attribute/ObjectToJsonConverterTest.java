@@ -4,11 +4,14 @@ import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.After;
 import static org.junit.Assert.*;
 import javax.management.AttributeNotFoundException;
 import java.util.Stack;
 import java.util.Map;
 import java.io.File;
+
+import sun.security.x509.CertificateExtensions;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -46,6 +49,12 @@ public class ObjectToJsonConverterTest {
     @Before
     public void setup() {
         converter = new ObjectToJsonConverter(new StringToObjectConverter());
+        converter.setupContext(0,0,0);
+    }
+
+    @After
+    public void tearDown() {
+        converter.clearContext();
     }
 
     @Test
@@ -78,7 +87,7 @@ public class ObjectToJsonConverterTest {
         ctx.setMaxDepth(1);
         Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
         String c = (String) ((Map) result.get("bean2")).get("bean1");
-        assertTrue("Recurence detected",c.contains("Truncated"));
+        assertTrue("Recurence detected",c.contains("Depth limit"));
     }
 
     // ============================================================================

@@ -1,6 +1,7 @@
 package org.jmx4perl.handler;
 
 import org.jmx4perl.JmxRequest;
+import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
 import java.util.ArrayList;
@@ -36,13 +37,18 @@ import java.util.Set;
  * @since Jun 18, 2009
  */
 public class SearchHandler extends RequestHandler {
+
+    public SearchHandler(Restrictor pRestrictor) {
+        super(pRestrictor);
+    }
+
     @Override
     public JmxRequest.Type getType() {
         return JmxRequest.Type.SEARCH;
     }
 
     @Override
-    public Object handleRequest(MBeanServer server, JmxRequest request)
+    public Object doHandleRequest(MBeanServer server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         Set<ObjectName> names = server.queryNames(request.getObjectName(),null);
         if (names == null || names.size() == 0) {

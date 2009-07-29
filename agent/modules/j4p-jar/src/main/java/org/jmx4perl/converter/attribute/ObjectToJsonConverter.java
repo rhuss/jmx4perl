@@ -89,10 +89,9 @@ public class ObjectToJsonConverter {
             throws AttributeNotFoundException {
         Stack<String> extraStack = reverseArgs(pRequest);
 
-        StackContext stackContext = new StackContext(pRequest.getMaxDepth(),
-                                                     pRequest.getMaxCollectionSize(),
-                                                     pRequest.getMaxObjects());
-        stackContextLocal.set(stackContext);
+        setupContext(pRequest.getMaxDepth(),
+                     pRequest.getMaxCollectionSize(),
+                     pRequest.getMaxObjects());
 
         try {
             Object jsonResult = extractObject(pValue,extraStack,true);
@@ -101,7 +100,7 @@ public class ObjectToJsonConverter {
             jsonObject.put("request",pRequest);
             return jsonObject;
         } finally {
-            stackContextLocal.remove();
+            clearContext();
         }
     }
 
@@ -286,6 +285,16 @@ public class ObjectToJsonConverter {
         return ctx.getMaxObjects() > 0 && ctx.getObjectCount() > ctx.getMaxObjects();
     }
 
+    void clearContext() {
+        stackContextLocal.remove();
+    }
+
+    void setupContext(int maxDepth, int maxCollectionSize, int maxObjects) {
+        StackContext stackContext = new StackContext(maxDepth,maxCollectionSize,maxObjects);
+        stackContextLocal.set(stackContext);
+    }
+
+
     // =============================================================================
     // Context used for detecting call loops and the like
 
@@ -298,7 +307,7 @@ public class ObjectToJsonConverter {
             Date.class
     ));
 
-    class StackContext {
+    static class StackContext {
 
         private Set objectsInCallStack = new HashSet();
         private Stack callStack = new Stack();

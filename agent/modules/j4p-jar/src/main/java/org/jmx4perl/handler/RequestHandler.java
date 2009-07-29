@@ -1,6 +1,7 @@
 package org.jmx4perl.handler;
 
 import org.jmx4perl.JmxRequest;
+import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
 import java.util.Set;
@@ -34,6 +35,19 @@ import java.util.Set;
  */
 public abstract class RequestHandler {
 
+    // Restrictor for restricting operations
+    protected Restrictor restrictor;
+
+    protected RequestHandler(Restrictor pRestrictor) {
+        restrictor = pRestrictor;
+    }
+
+    protected void checkForType() {
+        if (!restrictor.isTypeAllowed(getType())) {
+            throw new SecurityException("Command type " +
+                    getType() + " not allowed due to policy used");
+        }
+    }
     /**
      * The type of request which can be served by this handler
      * @return the request typ of this handler
@@ -46,9 +60,9 @@ public abstract class RequestHandler {
      * are done for you
      *
      * @return whether you want to have
-     * {@link #handleRequest(javax.management.MBeanServer, org.jmx4perl.JmxRequest)}
+     * {@link #doHandleRequest(javax.management.MBeanServer, org.jmx4perl.JmxRequest)}
      * (<code>false</code>) or
-     * {@link #handleRequest(java.util.Set, org.jmx4perl.JmxRequest)} (<code>true</code>) called.
+     * {@link #doHandleRequest(java.util.Set, org.jmx4perl.JmxRequest)} (<code>true</code>) called.
      */
     public boolean handleAllServersAtOnce() {
         return false;
@@ -57,7 +71,8 @@ public abstract class RequestHandler {
     /**
      * Handle a request for a single server and throw an
      * {@link javax.management.InstanceNotFoundException}
-     * if the request cannot be handle by the provided server
+     * if the request cannot be handle by the provided server.
+     * Does a check for restrictions as well
      *
      * @param server server to try
      * @param request reqiest to process
@@ -68,7 +83,26 @@ public abstract class RequestHandler {
      * @throws ReflectionException
      * @throws MBeanException
      */
-    abstract public Object handleRequest(MBeanServer server,JmxRequest request)
+    public Object handleRequest(MBeanServer server,JmxRequest request)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+        checkForType();
+        return doHandleRequest(server,request);
+    }
+
+    /**
+     * Abstract method to be subclassed by a concrete handler for performing the
+     * request.
+     *
+     * @param server server to try
+     * @param request reqiest to process
+     * @return the object result from the request
+     *
+     * @throws InstanceNotFoundException
+     * @throws AttributeNotFoundException
+     * @throws ReflectionException
+     * @throws MBeanException
+     */
+    abstract protected Object doHandleRequest(MBeanServer server,JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException;
 
     /**
@@ -81,6 +115,12 @@ public abstract class RequestHandler {
      * @return the object found
      */
     public Object handleRequest(Set<MBeanServer> servers, JmxRequest request)
+            throws ReflectionException, InstanceNotFoundException, MBeanException, AttributeNotFoundException {
+        checkForType();
+        return doHandleRequest(servers,request);
+    }
+
+    public Object doHandleRequest(Set<MBeanServer> servers, JmxRequest request)
                 throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException    {
         return null;
     }

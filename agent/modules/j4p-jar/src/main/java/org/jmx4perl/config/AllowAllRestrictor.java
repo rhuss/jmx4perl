@@ -1,9 +1,8 @@
-package org.jmx4perl.handler;
+package org.jmx4perl.config;
 
 import org.jmx4perl.JmxRequest;
-import org.jmx4perl.config.Restrictor;
 
-import javax.management.*;
+import javax.management.ObjectName;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -29,28 +28,26 @@ import javax.management.*;
  */
 
 /**
+ * A restrictor which simply allows everything. Used, when no restrict-access.xml is
+ * present.
+ *
  * @author roland
- * @since Jun 12, 2009
+ * @since Jul 28, 2009
  */
-public class ReadHandler extends RequestHandler {
-
-    public ReadHandler(Restrictor pRestrictor) {
-        super(pRestrictor);
+public class AllowAllRestrictor implements Restrictor {
+    public boolean isTypeAllowed(JmxRequest.Type pType) {
+        return true;
     }
 
-    @Override
-    public JmxRequest.Type getType() {
-        return JmxRequest.Type.READ;
+    public boolean isAttributeReadAllowed(ObjectName pName, String pAttribute) {
+        return true;
     }
 
-    @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
-        if (!restrictor.isAttributeReadAllowed(request.getObjectName(),request.getAttributeName())) {
-            throw new SecurityException("Reading attribute " + request.getAttributeName() +
-                    " is forbidden for MBean " + request.getObjectNameAsString());
-        }
+    public boolean isAttributeWriteAllowed(ObjectName pName, String pAttribute) {
+        return true;
+    }
 
-        return server.getAttribute(request.getObjectName(), request.getAttributeName());
+    public boolean isOperationAllowed(ObjectName pName, String pOperation) {
+        return true;
     }
 }

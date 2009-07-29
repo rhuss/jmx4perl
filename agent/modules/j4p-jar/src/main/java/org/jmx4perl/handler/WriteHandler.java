@@ -1,6 +1,7 @@
 package org.jmx4perl.handler;
 
 import org.jmx4perl.JmxRequest;
+import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
 
 import javax.management.*;
@@ -37,16 +38,25 @@ public class WriteHandler extends RequestHandler {
 
     private ObjectToJsonConverter objectToJsonConverter;
 
-    public WriteHandler(ObjectToJsonConverter pObjectToJsonConverter) {
+    public WriteHandler(Restrictor pRestrictor, ObjectToJsonConverter pObjectToJsonConverter) {
+        super(pRestrictor);
         objectToJsonConverter = pObjectToJsonConverter;
     }
 
+    @Override
     public JmxRequest.Type getType() {
         return JmxRequest.Type.WRITE;
     }
 
-    public Object handleRequest(MBeanServer server, JmxRequest request)
+    @Override
+    public Object doHandleRequest(MBeanServer server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+
+        if (!restrictor.isAttributeWriteAllowed(request.getObjectName(),request.getAttributeName())) {
+            throw new SecurityException("Writing attribute " + request.getAttributeName() +
+                    " forbidden for MBean " + request.getObjectNameAsString());
+        }
+
         try {
             return setAttribute(request, server);
         } catch (IntrospectionException exp) {
