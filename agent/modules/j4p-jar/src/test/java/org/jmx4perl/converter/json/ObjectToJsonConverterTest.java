@@ -1,6 +1,6 @@
-package org.jmx4perl.converter.attribute;
+package org.jmx4perl.converter.json;
 
-import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
+import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.junit.Before;
 import org.junit.Test;

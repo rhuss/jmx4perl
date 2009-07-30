@@ -1,4 +1,4 @@
-package org.jmx4perl.converter.attribute;
+package org.jmx4perl.converter.json;
 
 import org.junit.Test;
 import org.jmx4perl.config.PolicyBasedRestrictor;

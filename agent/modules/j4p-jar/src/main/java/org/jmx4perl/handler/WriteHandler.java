@@ -2,7 +2,7 @@ package org.jmx4perl.handler;
 
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.Restrictor;
-import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
+import org.jmx4perl.converter.json.ObjectToJsonConverter;
 
 import javax.management.*;
 import java.lang.reflect.InvocationTargetException;

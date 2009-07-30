@@ -1,6 +1,6 @@
-package org.jmx4perl.converter.attribute.simplifier;
+package org.jmx4perl.converter.json.simplifier;
 
-import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
+import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.json.simple.JSONObject;
 

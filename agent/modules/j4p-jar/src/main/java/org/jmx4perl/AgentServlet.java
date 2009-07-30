@@ -6,7 +6,7 @@ import org.jmx4perl.config.DebugStore;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.config.RestrictorFactory;
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
+import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.handler.*;
 import org.jmx4perl.history.HistoryStore;
 import org.json.simple.JSONObject;
@@ -62,7 +62,7 @@ import java.util.Map;
  * like strings or numbers, collections, arrays and maps are also supported (which
  * translate into the corresponding JSON structure). Additional the OpenMBean types
  * {@link javax.management.openmbean.CompositeData} and {@link javax.management.openmbean.TabularData}
- * are supported as well. Refer to {@link org.jmx4perl.converter.attribute.ObjectToJsonConverter}
+ * are supported as well. Refer to {@link org.jmx4perl.converter.json.ObjectToJsonConverter}
  * for additional information.
  *
  * For the client part, please read the documentation of

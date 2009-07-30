@@ -1,17 +1,8 @@
-package org.jmx4perl.converter.attribute.simplifier;
+package org.jmx4perl.converter.json.simplifier;
 
-import org.jmx4perl.converter.StringToObjectConverter;
-import org.jmx4perl.converter.attribute.ObjectToJsonConverter;
-import org.json.simple.JSONObject;
 import org.w3c.dom.Element;
 
-import javax.management.AttributeNotFoundException;
-import java.util.Stack;
 import java.util.Map;
-import java.util.HashMap;
-import java.lang.reflect.InvocationTargetException;
-import java.io.File;
-import java.io.IOException;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON

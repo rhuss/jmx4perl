@@ -1,11 +1,11 @@
-package org.jmx4perl.converter.attribute;
+package org.jmx4perl.converter.json;
 
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.json.simple.JSONArray;
 
 import javax.management.AttributeNotFoundException;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
@@ -36,50 +36,55 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class ArrayHandler implements ObjectToJsonConverter.Handler {
+public class ListHandler implements ObjectToJsonConverter.Handler {
 
     public Class getType() {
-        // Special handler, no specific Type
-        return null;
+        return List.class;
     }
 
-    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue, Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
-        int length = pConverter.getCollectionLength(Array.getLength(pValue));
+    public Object extractObject(ObjectToJsonConverter pConverter, Object pValue, Stack<String> pExtraArgs,boolean jsonify)
+            throws AttributeNotFoundException {
+        List list = (List) pValue;
+        int length = pConverter.getCollectionLength(list.size());
+        List ret;
+        Iterator it = list.iterator();
         if (!pExtraArgs.isEmpty()) {
-            Object obj = Array.get(pValue, Integer.parseInt(pExtraArgs.pop()));
-            return pConverter.extractObject(obj,pExtraArgs,jsonify);
+            int idx = Integer.parseInt(pExtraArgs.pop());
+            return pConverter.extractObject(list.get(idx),pExtraArgs,jsonify);
         } else {
             if (jsonify) {
-                List<Object> ret = new JSONArray();
-                for (int i=0;i<length;i++) {
-                    Object obj = Array.get(pValue, i);
-                    ret.add(pConverter.extractObject(obj,pExtraArgs,jsonify));
+                ret = new JSONArray();
+                for (int i = 0;i < length; i++) {
+                    Object val = it.next();
+                    ret.add(pConverter.extractObject(val,pExtraArgs,jsonify));
                 }
                 return ret;
             } else {
-                return pValue;
+                return list;
             }
         }
     }
 
     public Object setObjectValue(StringToObjectConverter pConverter, Object pInner, String pAttribute, String pValueS)
             throws IllegalAccessException, InvocationTargetException {
-        Class clazz = pInner.getClass();
-        if (!clazz.isArray()) {
-            throw new IllegalArgumentException("Not an array to set a value, but " + clazz +
-                    ". (index = " + pAttribute + ", value = " + pValueS + ")");
-        }
+        List list = (List) pInner;
         int idx;
         try {
             idx = Integer.parseInt(pAttribute);
         } catch (NumberFormatException exp) {
-            throw new IllegalArgumentException("Non-numeric index for accessing array " + pInner +
+            throw new IllegalArgumentException("Non-numeric index for accessing collection " + pInner +
                     ". (index = " + pAttribute + ", value to set = " + pValueS + ")");
         }
-        Class type = clazz.getComponentType();
-        Object value = pConverter.convertFromString(type.getName(),pValueS);
-        Object oldValue = Array.get(pInner, idx);
-        Array.set(pInner, idx, value);
+
+        // For a collection, we can infer the type within the collection. We are trying to fetch
+        // the old value, and if set, we use its type. Otherwise, we simply use string as value.
+        Object oldValue = list.get(idx);
+        Object value =
+                oldValue != null ?
+                        pConverter.convertFromString(oldValue.getClass().getName(),pValueS) :
+                        pValueS;
+        list.set(idx,value);
         return oldValue;
     }
+
 }

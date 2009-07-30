@@ -1,4 +1,4 @@
-package org.jmx4perl.converter.attribute.simplifier;
+package org.jmx4perl.converter.json.simplifier;
 
 import java.util.Map;
 
