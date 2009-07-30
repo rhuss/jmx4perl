@@ -252,6 +252,7 @@ public class ObjectToJsonConverter {
 
 
     // Check whether JSR77 classes are available
+    // Not used for the moment, but left here for reference
     private boolean knowsAboutJsr77() {
         try {
             Class.forName("javax.management.j2ee.statistics.Stats");

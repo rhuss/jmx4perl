@@ -54,7 +54,6 @@
     <war destfile="modules/j4p-war/target/${war-name}" webxml="modules/j4p-war/src/main/webapp/WEB-INF/web.xml">
       <lib dir="lib">
         <exclude name="servlet-api*"/>
-        <exclude name="jsr77*"/>
         <exclude name="README"/>
       </lib>
       <lib dir="modules/j4p-jar/target">

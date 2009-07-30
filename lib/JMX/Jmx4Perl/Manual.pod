@@ -371,17 +371,6 @@ API.
 Support for attribute writing, execution of operations and (maybe)
 notifications.
 
-=head1 ROADMAP
-
-=over
-
-=item *
-
-JSR-77 support
-
-=back
-
-
 =head1 LICENSE
 
 Copyright (C) 2009 Roland Huss
