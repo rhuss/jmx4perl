@@ -339,7 +339,7 @@ contains a string representation of the next object one level deeper.
 
 =item [Reference .... ]
 
-If during the traversal an object is visited the second time, this label is
+If during the traversal an object is visited a second time, this label is
 used in order to break the cycle. 
 
 =item [Object limit exceeded]
