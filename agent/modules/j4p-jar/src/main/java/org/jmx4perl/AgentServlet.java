@@ -98,8 +98,8 @@ public class AgentServlet extends HttpServlet {
     private ObjectName configMBeanName;
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init(ServletConfig pConfig) throws ServletException {
+        super.init(pConfig);
 
         // Get all MBean servers we can find. This is done by a dedicated
         // handler object
@@ -110,7 +110,7 @@ public class AgentServlet extends HttpServlet {
 
         // Central objects
         stringToObjectConverter = new StringToObjectConverter();
-        objectToJsonConverter = new ObjectToJsonConverter(stringToObjectConverter);
+        objectToJsonConverter = new ObjectToJsonConverter(stringToObjectConverter,pConfig);
 
         registerRequestHandler();
         registerOwnMBeans();

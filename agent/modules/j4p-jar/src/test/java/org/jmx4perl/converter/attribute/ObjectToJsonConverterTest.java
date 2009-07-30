@@ -11,8 +11,6 @@ import java.util.Stack;
 import java.util.Map;
 import java.io.File;
 
-import sun.security.x509.CertificateExtensions;
-
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -48,7 +46,7 @@ public class ObjectToJsonConverterTest {
 
     @Before
     public void setup() {
-        converter = new ObjectToJsonConverter(new StringToObjectConverter());
+        converter = new ObjectToJsonConverter(new StringToObjectConverter(), pConfig);
         converter.setupContext(0,0,0);
     }
 

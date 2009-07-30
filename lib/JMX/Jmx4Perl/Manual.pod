@@ -205,6 +205,10 @@ Oracle WebLogic 9 & 10 (L<http://www.oracle.com/appserver/>)
 
 =item *
 
+IBM Websphere 6 & 7 (L<http://www.oracle.com/appserver/>)
+
+=item *
+
 Glassfish 2 and 3 (L<https://glassfish.dev.java.net/>)
 
 =item *
@@ -233,15 +237,11 @@ with jmx4perl on any OS. Please open a bug at
 L<http://rt.cpan.org/Public/Bug/Report.html?Queue=jmx4perl> if you encounter
 any problems.
 
-I would like to support IBM Websphere as well, but unfortunately setting up a
-testing environment takes to much effort. If someone has a IBM Websphere
-testing environment which I could use, I would be glad to setup a Websphere
-Handler as well.
-
 Please note, that autodetection is not for free with respect to performance. It
 takes some considerable time to probe various servers. So, if you have the
-chance to provide the application server id, you should do this. This is only
-relevant if you are going to use the aliasing feature.
+chance to provide the application server type in advance, you should do
+this. Said this, please note this is only relevant if you are going to use the
+aliasing feature.
 
 =head2 Aliasing
 
@@ -272,20 +272,94 @@ A full functional Nagios plugin called C<check_jmx4perl> is provided in the
 scripts directory. It can be used to monitor any JMX Mbean's attribute with a
 numeric value. Thresholds for warning and critical values can be provided in
 the formas as defined by L<Nagios::Plugin>. You can use autodetection and
-aliasing here as well.
+aliasing here as well. C<check_jmx4perl> can use relative critical and warning
+thresholds which refer to some base value taken from another MBean's
+attribute. An incremental mode can be used to measure the growth rate of
+certain value (like number of threads). Finally, it can monitor the return
+value of some JMX operations as well. Please refer to L<check_jmx4perl> for a
+detailed documentation.
 
 =head1 WHAT'S NEXT ?
 
 There are several entry points for jmx4perl. The easiest is to start to play
-around with F<check_jmx4perl>. This is a complete command lines tool tailored
-for usage with Nagios. Read its man page for the usage.
+around with L<jmx4perl>. This is a complete command lines for exploring the
+MBeans on your JEE Server. 
 
-Next, L<JMX::Jmx4Perl> is the entry module. Use it, if you need
-programmatically access to JMX. 
+If you want to use the Nagios Plugin L<check_jmx4perl> start reading its
+documentation. A Nagios cookbook is on the roadmap. If you want to restrict
+access to you JMX MBeanServer read the next chapter in this manual which
+describes a way to build a custom agent containing a policy file. 
+
+Next, L<JMX::Jmx4Perl> is the entry module. Use it, if you need programmatical
+access to JMX. Don't forget to have a look into the F<examples> directory which
+contains some usage examples for L<JMX::Jmx4Perl>
 
 Of course, you are free to access the agent servlet directly without the usage
-of the provided modules. A description of the request and response format can
-be found in the protocol description L<JMX::Jmx4Perl::Agent::Protocol>. 
+of the provided module. Even in Java ;-) A description of the request and
+response format can be found in the protocol description
+L<JMX::Jmx4Perl::Agent::Protocol>.
+
+=head1 ACCESS POLICY
+
+The deployed agent servlet is quite mighty in the default installation as you
+can perform any operation exposed by an MBean via JMX. Of course, you should
+secure the agent via standard mechanism (e.g via Basich Authentication) to
+allow only certain users access. But even then, you might not want you
+monitoring guys to access the heart of the JEE Server. Therefor, you can
+restrict access to certain MBeans only by using a so called I<policy> file. You
+have to rebuild the agent if you want to use this feature, though. To do this,
+here's the recipe:
+
+=over
+
+=item 1.
+
+Change into the directory F<agent>. There you will find a template policy file
+called F<j4p-access.xml.template>
+
+=item 2. 
+
+Copy this template to F<j4p-access.xml> (all within the agent directory). 
+
+=item 3. 
+
+Edit F<j4p-access.xml> to your needs. In the section C<commands> you can
+restrict the request types, only those present here are allowed to be
+called. If the complete C<commands> section is missing, no restriction on a
+request type is in effect. In the C<mbeans> part you can provide MBeans by name
+and the allowed attributes and operations. If this section is present, only the
+MBeans listed can be accessed with the attributes and operations listed. Access
+to an attribute can be restricted further by giving a C<mode="read"> attribute to the
+C<attribute> tag in which case only reading the attribute is allowed. 
+
+=item 4.
+
+Call C<ant>. Ah, yes, you need C<ant> installed (L<http://ant.apache.org>). To
+be do an C<ant clean> before calling C<ant> without argument.
+
+=item 5.
+
+Deploy the F<j4p.war> which was created in Step 4.   
+
+=back
+
+A typical (initial) workflow looks like
+
+ $ cd agent/
+ $ cp j4p-access.xml.template j4p-access.xml
+ $ vi j4p-access.xml
+ $ ant clean
+ $ ant
+ $ jar tvf j4p.war
+      0 Thu Jul 30 10:42:24 CEST 2009 META-INF/
+     95 Thu Jul 30 10:42:22 CEST 2009 META-INF/MANIFEST.MF
+      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/
+   1872 Tue Jul 28 09:09:32 CEST 2009 WEB-INF/web.xml
+      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/lib/
+  16046 Wed Jul 01 22:26:42 CEST 2009 WEB-INF/lib/json_simple-1.1.jar
+  85124 Thu Jul 30 10:42:22 CEST 2009 WEB-INF/lib/j4p-agent.jar
+      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/classes/j4p-agent.xml
+ $ cp j4p.war $DEPLOYMENT_DIR/
 
 =head1 FURTHER DIRECTIONS
 

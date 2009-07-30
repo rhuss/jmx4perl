@@ -17,7 +17,7 @@ request URL format and the JSON format of the response are described below.
 
 =head1 VERSION
 
-This document describes Version 0.20 of the j4p agent protocol. This is the
+This document describes Version 0.30 of the j4p agent protocol. This is the
 initial version. 
 
 =head1 REQUEST 
@@ -36,6 +36,10 @@ setup. Normally, the last part of this URL is the name of the deployed
 Webapplication, which by default is based on the filename F<j4p.war>.
 I<C<E<lt>mode of operationE<gt>>> specifies one of the supported operations
 after which operation specific parameters follow.
+
+In addition to the command provided as a path, the agent knows about some query
+parameters which influence the value returned. These are described in section
+L</"Query Parameters">
 
 The supported operations are described now in the following sections. 
 
@@ -294,10 +298,59 @@ As you can see, the C<value> contains the attribute's value, either as a
 single, simple value if the attribute has a primitive type, or a complex JSON
 structure (containing maps and arrays) if the attribute has a more complex type
 understood by the F<j4p> agent. For complex object types, which can not be
-serialized by the F<j4p> agent, the stringified value (i.e. the output of the
-object's C<toString()> method) is returned here. For a successul request the
-C<status> is always C<200>.  C<timestamp> contains the timestamp (i.e. epoch
-seconds) when the attribute was read on the server. 
+serialized by the F<j4p> agent directly, bean properties (i.e public,
+no-argument C<get> methods on the Java objects) are examined recursively up to
+a maximum depth. You can influence the traversal by providing regular HTTP
+query parameters to the request URL. The known parameters are 
+
+=over 
+
+=item maxDepth
+
+Maximum depth of the tree traversal into a bean's properties. The maximum value
+as configured in the agent's F<web.xml> is a hard limit and cannot be exceeded
+by a query parameter (5)
+
+=item maxCollectionSize
+
+For collections (lists, maps) this is the maximum size. By default, no limit
+applies to collections
+
+=item maxObjects
+
+Number of objects to visit in total. A hard limit can be configured in the
+agent's F<web.xml> deployment descriptor. (10000)
+
+=back
+
+If bean serialization is used, certain special values indicate some special
+treatment: 
+
+=over
+
+=item [this]
+
+This label is used when a property contains a self reference 
+
+=item [Depth limit .... ]
+
+When a depth limit is used or the hard depth limit is exceeded, this label
+contains a string representation of the next object one level deeper. 
+
+=item [Reference .... ]
+
+If during the traversal an object is visited the second time, this label is
+used in order to break the cycle. 
+
+=item [Object limit exceeded]
+
+The total limit of object has been exceeded and hence the object are not
+deserialized further.
+
+=back 
+
+For a successul request the C<status> is always C<200>.  C<timestamp> contains
+the timestamp (i.e. epoch seconds) when the attribute was read on the server.
 
 Optionally, a C<history> entry might be present. This is the case, when
 I<history tracking> is switched on. See L<jmx4perl> how to do this, in short,

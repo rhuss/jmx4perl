@@ -10,6 +10,7 @@ import org.jmx4perl.converter.attribute.simplifier.UrlHandler;
 import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
+import javax.servlet.ServletConfig;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -60,7 +61,12 @@ public class ObjectToJsonConverter {
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
 
-    public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter) {
+    int hardMaxDepth,hardMaxCollectionSize,hardMaxObjects;
+
+    public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter,
+                                 ServletConfig pServletConfig) {
+        initLimits(pServletConfig);
+
         handlers = new ArrayList<Handler>();
 
         // Collection handlers
@@ -83,7 +89,6 @@ public class ObjectToJsonConverter {
 
         stringToObjectConverter = pStringToObjectConverter;
     }
-
 
     public JSONObject convertToJson(Object pValue, JmxRequest pRequest)
             throws AttributeNotFoundException {
@@ -154,6 +159,22 @@ public class ObjectToJsonConverter {
     }
 
     // =================================================================================
+
+    private void initLimits(ServletConfig pServletConfig) {
+        // Max traversal depth
+        String v = pServletConfig.getInitParameter("maxDepth");
+        hardMaxDepth = v != null ? Integer.parseInt(v) : 0;
+
+        // Max size of collections
+        v = pServletConfig.getInitParameter("maxCollectionSize");
+        hardMaxCollectionSize = v != null ? Integer.parseInt(v) : 0;
+
+        // Maximum of overal objects returned by one traversal.
+        v = pServletConfig.getInitParameter("maxObjects");
+        hardMaxObjects = v != null ? Integer.parseInt(v) : 0;
+    }
+
+
 
     private Stack<String> reverseArgs(JmxRequest pRequest) {
         Stack<String> extraStack = new Stack<String>();
@@ -289,9 +310,21 @@ public class ObjectToJsonConverter {
         stackContextLocal.remove();
     }
 
-    void setupContext(int maxDepth, int maxCollectionSize, int maxObjects) {
+    void setupContext(int pMaxDepth, int pMaxCollectionSize, int pMaxObjects) {
+        int maxDepth = getLimit(pMaxDepth,hardMaxDepth);
+        int maxCollectionSize = getLimit(pMaxCollectionSize,hardMaxCollectionSize);
+        int maxObjects = getLimit(pMaxObjects,hardMaxObjects);
+
         StackContext stackContext = new StackContext(maxDepth,maxCollectionSize,maxObjects);
         stackContextLocal.set(stackContext);
+    }
+
+    private int getLimit(int pReqValue, int pHardLimit) {
+        if (pHardLimit != 0) {
+            return pReqValue > pHardLimit ? pHardLimit : pReqValue;
+        } else {
+            return pReqValue;
+        }
     }
 
 

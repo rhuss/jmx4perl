@@ -29,7 +29,7 @@
     <mbean>
       <name>java.lang:type=Memory</name>
       <attribute>HeapMemoryUsage</attribute>
-      <attribute>Verbose</attribute>
+      <attribute mode="read">Verbose</attribute>
       <operation>gc</operation>
     </mbean>
     <mbean>
