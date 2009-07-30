@@ -101,7 +101,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.30_1";
+$VERSION = "0.30_2";
 
 my $REGISTRY = {
                 # Agent based
@@ -723,6 +723,7 @@ sub _create_handler {
 sub _autodetect_product {
     my $self = shift;
     for my $id (@PRODUCT_HANDLER_ORDERING) {
+
         my $handler = $self->_new_handler($id);
         return $id if $handler->autodetect();
     }

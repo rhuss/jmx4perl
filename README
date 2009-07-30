@@ -74,6 +74,7 @@ SUPPORTED APPLICATION SERVERS
   * Glassfish 2.1
   * Apache Tomcat 4.1.39, 5.5.27 & 6.0.18
   * Jetty 5.1.15 & 6.1.18 (with JMX enabled)
+  * IBM Websphere 6.1 & 7.0
 
   It is expected that every Java application server which runs with at
   least Java 1.5 and conforms to at least version 2.4 of the Servlet
