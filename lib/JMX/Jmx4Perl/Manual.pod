@@ -355,7 +355,7 @@ A typical workflow looks like
       0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/lib/
   16046 Wed Jul 01 22:26:42 CEST 2009 WEB-INF/lib/json_simple-1.1.jar
   85124 Thu Jul 30 10:42:22 CEST 2009 WEB-INF/lib/j4p-agent.jar
-      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/classes/j4p-agent.xml
+      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/classes/j4p-access.xml
  $ cp j4p.war $DEPLOYMENT_DIR/
 
 =head1 FURTHER DIRECTIONS
