@@ -365,8 +365,11 @@ of using a JVM for remote communication would be a nice additional option. With
 help of modules like C<Java::Import> this should fit nicely in the provided
 API. 
 
-Support for attribute writing, execution of operations and (maybe)
-notifications.
+Maybe support notifications.
+
+Readline support for jmx4perl would be cool, too.
+
+Any other suggestions ?
 
 =head1 LICENSE
 
