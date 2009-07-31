@@ -501,6 +501,9 @@ sub jvm_info {
         my $sys_props = $self->_get_attribute(RUNTIME_SYSTEM_PROPERTIES);
         if ($sys_props) {
             $ret .= "System Properties:\n";
+            if (ref($sys_props) eq "HASH") {
+                $sys_props = [ values %$sys_props ];
+            }
             for my $prop (@{$sys_props}) {
                 $ret .= sprintf("   %-40.40s = %s\n",$prop->{key},$prop->{value});
             }

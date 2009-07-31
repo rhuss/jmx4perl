@@ -305,6 +305,8 @@ public class AgentServlet extends HttpServlet {
             } catch (MBeanRegistrationException e) {
                 log("Cannot unregister MBean: " + e,e);
             }
+        } else {
+            log("Internal Problem: No ConfigMBean name !");
         }
     }
 

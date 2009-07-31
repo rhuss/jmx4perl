@@ -1,4 +1,4 @@
-0.30
+0.30 (2009-07-31)
   - Fixed permission issue while running 'Build dist'
   - Fixed URL generation for Websphere
   - Added support for JSR77 Statistics and Stats JSON deserialization
@@ -8,9 +8,9 @@
   - Fixed bug when using pathes with multiple components
   - Added additional parameters 'max_depth', 'max_list_size' and
     'max_objects' to restrict the size of the JSON answer. Protocol
-    has changed as well.
+    has changed as well a bit.
   - jmx4perl: URL now as first argument for easier workflow when using
-    bash history for multiple usages.
+    bash history for repeated usage.
   - Added support for restricting MBean access via a policy file
     (j4p-access.xml)  
 
