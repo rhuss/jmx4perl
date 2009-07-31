@@ -45,13 +45,13 @@ INSTALLATION
 
   will install the modules. If you have Java and "ant" (a Java build
   tool) installed, the Java agent will be compiled and packaged as
-  well. However, this is not required. A precompiled "j4p.war"
-  can be found in the "agent" directory.
+  well when you use 'Build dist'. However, this is not required. A
+  precompiled "j4p.war" can be found in the "agent" directory.
 
-  For the module to work, you need to deploy "j4p.war" to the
-  JEE Server to monitor. The concrete steps depend on the specific way
-  for deploying on the targeted server, which in most cases is a
-  simple copying in to a specific directory. Please consult the
+  For the module to work, you need to deploy "j4p.war" to the JEE
+  Server to monitor. The concrete steps depend on the specific
+  deploying mechanism of your target server, which in most cases is a
+  simple copy in to a specific directory. Please consult the
   documentation of your Java application server for the details (look
   for "deployment" and "war")
 

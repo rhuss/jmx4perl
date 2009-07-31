@@ -1,8 +1,6 @@
 0.30 (2009-07-31)
   - Fixed permission issue while running 'Build dist'
   - Fixed URL generation for Websphere
-  - Added support for JSR77 Statistics and Stats JSON deserialization
-    in the agent
   - Added support for generic Bean serialization
   - Added 'search' command to jmx4perl
   - Fixed bug when using pathes with multiple components
