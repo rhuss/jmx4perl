@@ -31,16 +31,13 @@ in both worlds: HTTP and JSON.
 Another goal is to provide an abstraction for accessing certain, commonly known
 MBeans for various supported JEE application server, which differ in naming
 from brand to brand. For now, the JEE servers supported are JBoss 4 & 5, Oracle
-WebLogic 9 & 10, Glassfish 2, Jonas 4 and Geronimo 2 as well as the pure
-servlet containers Jetty 5 and 6, Tomcat 4, 5 & 6. Other platforms might work
-as well, however they are not yet tested. Please let me know, whether jmx4perl
-works for you on other servers as well (which is highly likely due to the
-simplistic nature of the agent webapp). I got reports, that it works on IBM
-Websphere 6.1 and 7 as well, but unfortunately I can't verify this on my own
-due to the lack of a proper testing environment.
-
-B<jmx4perl> is not an academic exercise. In fact it originates from the need
-to let Nagios (a hopefully well known open source monitoring solution, see
+WebLogic 9 & 10, Websphere 6 & 7, Glassfish 2, Jonas 4 and Geronimo 2 as well
+as the pure servlet containers Jetty 5 and 6, Tomcat 4, 5 & 6. Other platforms
+might work as well, however they are not yet tested. Please let me know,
+whether jmx4perl works for you on other servers as well (which is highly likely
+due to the simplistic nature of the agent webapp).  B<jmx4perl> is not an
+academic exercise. In fact it originates from the need to let Nagios (a
+hopefully well known open source monitoring solution, see
 L<http://www.nagios.org>) access JEE appliation servers in a painless way. You
 can find a nagios check in the scripts directory, which is a prefactored check
 directly usable in a Nagios setup.
@@ -205,7 +202,7 @@ Oracle WebLogic 9 & 10 (L<http://www.oracle.com/appserver/>)
 
 =item *
 
-IBM Websphere 6 & 7 (L<http://www.oracle.com/appserver/>)
+IBM Websphere 6 & 7 (L<http://www.ibm.com/websphere>)
 
 =item *
 
@@ -301,11 +298,11 @@ L<JMX::Jmx4Perl::Agent::Protocol>.
 
 =head1 ACCESS POLICY
 
-The deployed agent servlet is quite mighty in the default installation as you
-can perform any operation exposed by an MBean via JMX. Of course, you should
-secure the agent via standard mechanism (e.g via Basich Authentication) to
-allow only certain users access. But even then, you might not want you
-monitoring guys to access the heart of the JEE Server. Therefor, you can
+The deployed agent servlet is quite mighty in the default distribution as you
+can perform any operation exposed by a MBean via JMX. Of course, you should
+secure the agent via standard mechanism (e.g via Basic Authentication) to allow
+only access to certain users. But even then, you might not want your
+monitoring guys to access the heart of the JEE Server. Therefore, you can
 restrict access to certain MBeans only by using a so called I<policy> file. You
 have to rebuild the agent if you want to use this feature, though. To do this,
 here's the recipe:
@@ -330,12 +327,12 @@ request type is in effect. In the C<mbeans> part you can provide MBeans by name
 and the allowed attributes and operations. If this section is present, only the
 MBeans listed can be accessed with the attributes and operations listed. Access
 to an attribute can be restricted further by giving a C<mode="read"> attribute to the
-C<attribute> tag in which case only reading the attribute is allowed. 
+C<attribute> tag in which case the attribute can be accessed read-only.
 
 =item 4.
 
 Call C<ant>. Ah, yes, you need C<ant> installed (L<http://ant.apache.org>). To
-be do an C<ant clean> before calling C<ant> without argument.
+be on the save side do an C<ant clean> before calling C<ant> without argument.
 
 =item 5.
 
@@ -343,7 +340,7 @@ Deploy the F<j4p.war> which was created in Step 4.
 
 =back
 
-A typical (initial) workflow looks like
+A typical workflow looks like
 
  $ cd agent/
  $ cp j4p-access.xml.template j4p-access.xml
