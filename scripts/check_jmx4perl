@@ -16,6 +16,15 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --critical 10000000 \
                 --warning   5000000 
 
+ 
+ # Check for string values by comparing them literally
+ check_jmx4perl --url http://localhost::8888/j4p \
+                --mbean myDomain:name=myMBean \
+                --attribute stringAttribute \
+                --string \
+                --critical 'Stopped' \
+                --warning '!Started'
+
  # Check used heap memory for absolute values by using an alias
  check_jmx4perl --url http://localhost:8888/j4p \
                 --alias MEMORY_HEAP_USED \
@@ -49,9 +58,19 @@ Command for providing Nagios conmpliant output for JMX response fetched via
 L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
 C<--warning>) thresholds. 
 
+You can use direct string comparison when providing the option
+C<--string>. In this case C<--critical> and C<--warning> are not treated as
+numerical values but as string types. They are compared literally against the
+value retrieved and yield the corresponding Nagios status if matched. If the
+threshold is given with a leading C<!>, the condition is negated. E.g. a
+C<--critical '!Runnint'> given returns a C<CRITICAL> if the value is I<not>
+equals to C<Running>. As a final option you can also use a regular expression
+by using C<qr/.../> as threshold value (substitute C<...> with the pattern to
+used for comparison).
+
 Values obtained from the server can be interpreteted as relative values when
 C<--base> is given. The argument provided here is first tried as an alias name
-or checked as an absolute, numeric value. Alterntatively, you can use a fulle
+or checked as an absolute, numeric value. Alterntatively, you can use a ful
 MBean/Attribute/Path specification by using a C</> as separator, e.g. 
 
   ... --base java.lang:type=Memory/HeapMemoryUsage/max ...
