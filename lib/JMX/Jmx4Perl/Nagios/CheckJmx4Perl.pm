@@ -284,15 +284,14 @@ sub _check_threshhold {
           $self->_check_string_threshold($value,CRITICAL,$o->critical) ||
             $self->_check_string_threshold($value,WARNING,$o->warning) ||
               OK;
-    } elsif ($o->critical && $o->critical =~ /(true|false)/i) {
-        if (lc($1) eq "false") {
-            return !$value ? CRITICAL : OK;
-        } else {
-            return $value ? CRITICAL : OK;
-        }
+    } elsif ($self->_check_for_boolean_check) {
+        return 
+          $self->_check_boolean_threshold($value,CRITICAL,$o->critical) ||
+            $self->_check_boolean_threshold($value,WARNING,$o->warning) ||
+              OK;
     } elsif ($o->warning && $o->warning =~ /(true|false)/i && !$o->critical) {
         if (lc($1) eq "false") {
-            return !$value ? WARNING : OK;
+            return !$value || $value eq "false" ? WARNING : OK;
         } else {
             return $value ? WARNING : OK;
         }        
@@ -307,15 +306,29 @@ sub _check_threshhold {
     }
 }
 
-sub _is_boolean_check {
+sub _check_for_boolean_check {
     my $self = shift;
     my $o = $self->{opts};
     return 
+      ($o->critical && $o->critical =~ /^(true|false)$/i) ||
+        ($o->warning && $o->warning =~ /^(true|false)$/i);      
+}
+
+sub _check_boolean_threshold {
+    my $self = shift;
+    my ($value,$level,$check_value) = @_;
+    return undef unless $check_value;
+    if (lc($check_value) eq "false") {
+        return !$value || $value eq "false" ? $level : undef;
+    } else {
+        return $value ? $level : undef;
+    }   
 }
 
 sub _check_string_threshold {
     my $self = shift;
     my ($value,$level,$check_value) = @_;
+    return undef unless $check_value;
     if ($check_value =~ m|^\s*qr(.)(.*)\1\s*$|) {
         return $value =~ m/$2/ ? $level : undef;
     }
@@ -383,7 +396,7 @@ sub _create_nagios_plugin {
                  help => "Inner path for extracting a single value from a complex attribute or return value (e.g. \"used\")",
                 );
     $np->add_arg(
-                 spec => "string|s=s",
+                 spec => "string|s!",
                  help => "Use string comparisation for critical and warning checks"
                 );
     $np->add_arg(

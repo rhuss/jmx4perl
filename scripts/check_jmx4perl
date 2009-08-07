@@ -63,10 +63,16 @@ C<--string>. In this case C<--critical> and C<--warning> are not treated as
 numerical values but as string types. They are compared literally against the
 value retrieved and yield the corresponding Nagios status if matched. If the
 threshold is given with a leading C<!>, the condition is negated. E.g. a
-C<--critical '!Runnint'> given returns a C<CRITICAL> if the value is I<not>
+C<--critical '!Running'> given returns a C<CRITICAL> if the value is I<not>
 equals to C<Running>. As a final option you can also use a regular expression
 by using C<qr/.../> as threshold value (substitute C<...> with the pattern to
 used for comparison).
+
+If the option C<--critical> or C<--warning> is either C<false> or C<true>, then
+the check switches into boolean mode. In this case the attribute or operation
+return value should be of boolean type which is compared against the
+threshold. E.g. a 'C<--critical false>' will trigger a C<CRITICAL> status when
+the return value is C<false>.
 
 Values obtained from the server can be interpreteted as relative values when
 C<--base> is given. The argument provided here is first tried as an alias name

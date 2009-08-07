@@ -1,5 +1,6 @@
 0.40
   - Added example 'threadDump.pl'
+  - check_jmx4perl: Added support for checking string and boolean values
 
 0.30 (2009-07-31)
   - Fixed permission issue while running 'Build dist'

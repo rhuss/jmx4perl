@@ -68,6 +68,7 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
 
             // Other MBeans
             registerMBean(new OperationChecking(domain + ":type=operation"));
+            registerMBean(new AttributeChecking(domain + ":type=attribute"));
 
         } catch (Exception exp) {
         }
