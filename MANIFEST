@@ -5,6 +5,8 @@ agent/lib/json_simple-1.1.jar
 agent/lib/README
 agent/lib/servlet-api-2.4.jar
 agent/modules/j4p-it/pom.xml
+agent/modules/j4p-it/src/main/java/org/jmx4perl/it/AttributeChecking.java
+agent/modules/j4p-it/src/main/java/org/jmx4perl/it/AttributeCheckingMBean.java
 agent/modules/j4p-it/src/main/java/org/jmx4perl/it/ObjectNameChecking.java
 agent/modules/j4p-it/src/main/java/org/jmx4perl/it/ObjectNameCheckingMBean.java
 agent/modules/j4p-it/src/main/java/org/jmx4perl/it/OperationChecking.java
@@ -58,6 +60,7 @@ agent/pom.xml
 Build.PL
 CHANGES
 examples/jsr77.pl
+examples/threadDump.pl
 it/it.pl
 it/t/10_base.t
 it/t/30_naming.t
