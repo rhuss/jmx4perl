@@ -30,8 +30,10 @@ package org.jmx4perl.it;
 public interface AttributeCheckingMBean {
 
     public void reset();
-    
+
     public boolean getState();
 
     public String getString();
+
+    public String getNull();
 }

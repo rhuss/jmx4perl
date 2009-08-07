@@ -62,6 +62,10 @@ public class AttributeChecking implements AttributeCheckingMBean, MBeanRegistrat
         return strings[idx++ % 2];
     }
 
+    public String getNull() {
+        return null;
+    }
+
     public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws Exception {
         return new ObjectName(name);
     }

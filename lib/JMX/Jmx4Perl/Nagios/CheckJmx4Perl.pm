@@ -71,7 +71,6 @@ sub execute {
         
         my $resp = $self->_send_request($jmx,$request);
         my $value = $resp->value;
-        
         # Delta handling
         my $delta = $o->get("delta");
         if (defined($delta)) {
@@ -203,7 +202,8 @@ sub _verify_response {
         $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
     }
     if (!defined($resp->value)) {
-        $np->nagios_die("JMX Request " . $self->_get_name() . " failed " . Dumper($resp));
+        $np->nagios_die("JMX Request " . $self->_get_name() . " returned a null value which can't be used yet. " . 
+                        "Please let me know, whether you need such check for a null value");
     }
     if (ref($resp->value)) { 
         $np->nagios_die("Response value is a ".ref($resp->value).
@@ -279,23 +279,13 @@ sub _check_threshhold {
     my $value = shift;
     my $np = $self->{np};
     my $o = $self->{opts};
-    if ($o->string) {
-        return
-          $self->_check_string_threshold($value,CRITICAL,$o->critical) ||
-            $self->_check_string_threshold($value,WARNING,$o->warning) ||
-              OK;
-    } elsif ($self->_check_for_boolean_check) {
-        return 
-          $self->_check_boolean_threshold($value,CRITICAL,$o->critical) ||
-            $self->_check_boolean_threshold($value,WARNING,$o->warning) ||
-              OK;
-    } elsif ($o->warning && $o->warning =~ /(true|false)/i && !$o->critical) {
-        if (lc($1) eq "false") {
-            return !$value || $value eq "false" ? WARNING : OK;
-        } else {
-            return $value ? WARNING : OK;
-        }        
+    my $numeric_check;
+    if ($o->numeric || $o->string) {
+        $numeric_check = $o->numeric ? 1 : 0;
     } else {
+        $numeric_check = looks_like_number($value);
+    }
+    if ($numeric_check) {
         # Verify numeric thresholds
         my @ths = 
           (
@@ -303,26 +293,12 @@ sub _check_threshhold {
            $o->warning ? (warning => $o->warning) : ()
           );            
         return $np->check_threshold(check => $value,@ths);    
-    }
-}
-
-sub _check_for_boolean_check {
-    my $self = shift;
-    my $o = $self->{opts};
-    return 
-      ($o->critical && $o->critical =~ /^(true|false)$/i) ||
-        ($o->warning && $o->warning =~ /^(true|false)$/i);      
-}
-
-sub _check_boolean_threshold {
-    my $self = shift;
-    my ($value,$level,$check_value) = @_;
-    return undef unless $check_value;
-    if (lc($check_value) eq "false") {
-        return !$value || $value eq "false" ? $level : undef;
     } else {
-        return $value ? $level : undef;
-    }   
+        return
+          $self->_check_string_threshold($value,CRITICAL,$o->critical) ||
+            $self->_check_string_threshold($value,WARNING,$o->warning) ||
+              OK;
+    }
 }
 
 sub _check_string_threshold {
@@ -396,8 +372,12 @@ sub _create_nagios_plugin {
                  help => "Inner path for extracting a single value from a complex attribute or return value (e.g. \"used\")",
                 );
     $np->add_arg(
-                 spec => "string|s!",
-                 help => "Use string comparisation for critical and warning checks"
+                 spec => "string",
+                 help => "Force string comparison for critical and warning checks"
+                );
+    $np->add_arg(
+                 spec => "numeric",
+                 help => "Force numeric comparison for critical and warning checks"
                 );
     $np->add_arg(
                  spec => "critical|c=s",
