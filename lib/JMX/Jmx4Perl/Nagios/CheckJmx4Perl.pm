@@ -8,6 +8,7 @@ use JMX::Jmx4Perl::Response;
 use JMX::Jmx4Perl::Alias;
 use Data::Dumper;
 use Nagios::Plugin;
+use Nagios::Plugin::Functions qw(:codes %STATUS_TEXT);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Carp;
 use Scalar::Util qw(looks_like_number);
@@ -76,25 +77,35 @@ sub execute {
         if (defined($delta)) {
             $value = $self->_delta_value($jmx,$request,$resp,$delta);
         }
+
+        # Normalize value 
+        my ($value_conv,$unit) = $self->_normalize_value($value);
         
-        # Base value handling
+        # Common args
+        my @perf_args = (label => "'".$self->_get_name(cleanup => 1)."'",
+                         critical => $o->critical, warning => $o->warning);                         
         if ($o->get("base")) {
+            # Calc relative value 
             my $base_value = $self->_base_value($jmx,$o->get("base"));
-            # Normalize to 2 digits preficison
-            $value = sprintf "%2.2f",(int((($value / $base_value) * 10000) + 0.5) / 100) ;
-        };
-        
-        # Add Nagios perfdata
-        $np->add_perfdata(label => $self->_get_name(),value => $value,
-                          critical => $o->critical, warning => $o->warning, 
-                          $o->base ? (uom => '%') : ());
+            my $rel_value = sprintf "%2.2f",(int((($value / $base_value) * 10000) + 0.5) / 100) ;
 
-        my $code = $self->_check_threshhold($value);
+            my ($base_conv) = $self->_normalize_value($base_value);
 
-        return $np->nagios_exit($code,$self->_get_name(). " : Threshold " . 
-                         ($code == CRITICAL ? $o->critical : $o->warning) . 
-                         " failed for value $value") if $code != OK;
-        return $np->nagios_exit(OK,$self->_get_name() . " : $value in range");
+            # Performance data
+            $np->add_perfdata(@perf_args,value => $rel_value, uom => "%");
+
+            # Do the real check.
+            my ($code,$mode) = $self->_check_threshhold($rel_value);
+            return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
+                                                               value => $value_conv, unit => $unit,base => $base_conv));            
+        } else {
+            # Performance data
+            $np->add_perfdata(@perf_args,value => $value,$o->{unit} ? (uom => $o->{unit}) : ());
+
+            # Do the real check.
+            my ($code,$mode) = $self->_check_threshhold($value);
+            return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit));                    
+        }
     };
     if ($@) {
         # p1.pl, the executing script of the embedded nagios perl interpreted
@@ -110,15 +121,21 @@ sub execute {
 
 sub _get_name { 
     my $self = shift;
+    my $args = { @_ };
     my $o = $self->{opts};
+    my $name;
     if ($o->name) {
-        return $o->name;
+        $name = $o->name;
     } else {
         # Default name
-        return $o->alias ? 
+        $name = $o->alias ? 
           "[".$o->alias.($o->path ? "," . $o->path : "") ."]" : 
             "[".$o->mbean.",".$o->attribute.($o->path ? "," . $o->path : "")."]";
     }
+    if ($args->{cleanup}) {
+        $name =~ s/=/#/g;
+    }
+    return $name;
 }
 
 sub _send_request {
@@ -217,7 +234,7 @@ sub _verify_and_initialize {
     my $o = $np->opts;
 
     $np->nagios_die("An MBean name and a attribute must be provided")
-      if ((!$o->mbean && !$o->attribute) && !$o->alias);
+      if ((!$o->mbean || !$o->attribute) && !$o->alias);
     
     $np->nagios_die("At least a critical or warning threshold must be given") 
       if ((!defined($o->critical) && !defined($o->warning)));
@@ -292,12 +309,13 @@ sub _check_threshhold {
            $o->critical ? (critical => $o->critical) : (),
            $o->warning ? (warning => $o->warning) : ()
           );            
-        return $np->check_threshold(check => $value,@ths);    
+        return ($np->check_threshold(check => $value,@ths),"numeric");    
     } else {
         return
-          $self->_check_string_threshold($value,CRITICAL,$o->critical) ||
+          ($self->_check_string_threshold($value,CRITICAL,$o->critical) ||
             $self->_check_string_threshold($value,WARNING,$o->warning) ||
-              OK;
+              OK,
+           $value =~ /^true|false$/i ? "boolean" : "string");
     }
 }
 
@@ -313,6 +331,158 @@ sub _check_string_threshold {
     } else {
         return $value eq $check_value ? $level : undef;
     }    
+}
+
+
+# =========================================================================================== 
+  
+# Prepare an exit message depending on the result of
+# the check itself
+sub _exit_message {
+    my $self = shift;
+    my $args = { @_ };       
+    my $o = $self->{opts};
+    # Custom label has precedence
+    return $self->_format_label($o->{label},$args) if $o->{label};
+
+    my $code = $args->{code};
+    my $mode = $args->{mode};
+    if ($code == CRITICAL || $code == WARNING) {
+        if ($o->{base}) {
+            return $self->_format_label('%n : Threshold \'%t\' failed for value %.2r% (%.2v %u / %.2b %u)',$args);
+        } else {
+            if ($mode ne "numeric") {
+                return $self->_format_label('%n : \'%v\' matches threshold \'%t\'',$args);
+            } else {
+                return $self->_format_label('%n : Threshold \'%t\' failed for value %.2v %u',$args);
+            }
+        }
+    } else {
+        if ($o->{base}) {
+            return $self->_format_label('%n : In range %.2r% (%.2v %u / %.2b %u)',$args);
+        } else {
+            if ($mode ne "numeric") {
+                return $self->_format_label('%n : \'%v\' as expected',$args);
+            } else {
+                return $self->_format_label('%n : Value %.2v %u in range',$args);
+            }
+        }
+
+    }
+}
+
+sub _format_label {
+    my $self = shift;
+    my $label = shift;
+    my $args = shift;
+    my $o = $self->{opts};
+    # %r : relative value
+    # %v : value
+    # %u : unit
+    # %b : base value
+    # %t : threshold failed ("" for OK or UNKNOWN)
+    # %c : code ("OK", "WARNING", "CRITICAL", "UNKNOWN")
+
+    my @parts = split /(\%[\w\.\-]*\w)/,$label;
+    my $ret = "";
+    foreach my $p (@parts) {
+        if ($p =~ /^(\%[\w\.\-]*)(\w)$/) {
+            my ($format,$what) = ($1,$2);
+            if ($what eq "r") {
+                $ret .= sprintf $format . "f",($args->{rel_value} || 0);
+            } elsif ($what eq "b") {
+                $ret .= sprintf $format . &_format_char($args->{base}),($args->{base} || 0);
+            } elsif ($what eq "u") {
+                $ret .= sprintf $format . "s",($args->{unit} || "");
+                $ret =~ s/\s$//;
+            } elsif ($what eq "v") {
+                if ($args->{mode} ne "numeric") {
+                    $ret .= sprintf $format . "s",$args->{value};
+                } else {
+                    $ret .= sprintf $format . &_format_char($args->{value}),$args->{value};
+                }
+            } elsif ($what eq "t") {
+                my $code = $args->{code};
+                $ret .= sprintf $format . "s",$code == CRITICAL ? $o->critical : ($code == WARNING ? $o->warning : "");
+            } elsif ($what eq "c") {
+                $ret .= sprintf $format . "s",$STATUS_TEXT{$args->{code}};
+            } elsif ($what eq "n") {
+                $ret .= sprintf $format . "s",$self->_get_name();
+            }
+        } else {
+            $ret .= $p;
+        }
+    }
+    return $ret;
+}
+
+sub _format_char {
+    my $val = shift;
+    $val =~ /\./ ? "f" : "d";
+}
+
+
+# =========================================================================================== 
+
+# Units and how to convert from one level to the next
+my @UNITS = ([ qw(us ms s m h d) ],[qw(B KB MB GB TB)]);
+my %UNITS = 
+  (
+   us => 10**3,
+   ms => 10**3,
+   s => 1,
+   m => 60,
+   h => 60,
+   d => 24,
+
+   B => 1,
+   KB => 2**10,
+   MB => 2**10,
+   GB => 2**10,
+   TB => 2**10   
+  );
+
+# Normalize value if a unit-of-measurement is given.
+sub _normalize_value {
+    my $self = shift;
+    my $value = shift;
+    my $o = $self->{opts};
+
+    my $unit = shift || $o->{unit} || return ($value,undef);
+    
+    for my $units (@UNITS) {
+        for my $i (0 .. $#{$units}) {
+            next unless $units->[$i] eq $unit;
+            my $ret = $value;
+            my $u = $unit;
+            if ($ret > 1) {
+                # Go up the scale ...
+                return ($value,$unit) if $i == $#{$units};
+                for my $j ($i+1 .. $#{$units}) {
+                    if ($ret / $UNITS{$units->[$j]} >= 1) {                    
+                        $ret /= $UNITS{$units->[$j]};
+                        $u = $units->[$j];
+                    } else {
+                        return ($ret,$u);
+                    }
+                }             
+            } else {
+                # Go down the scale ...
+                return ($value,$unit) if $i == 0;
+                for my $j (reverse(0 .. $i-1)) {
+                    if ($ret <= 1) {     
+                        $ret *= $UNITS{$units->[$j+1]};
+                        $u = $units->[$j];
+                    } else {
+                        return ($ret,$u);
+                    }
+                }
+                
+            }
+            return ($ret,$u);
+        }
+    }
+    die "Unknown unit '$unit' for value $value";
 }
 
 # =========================================================================================== 
@@ -405,6 +575,14 @@ sub _create_nagios_plugin {
                  spec => "name|n=s",
                  help => "Name to use for output. Optional, by default a standard value based on the MBean ".
                  "and attribute will be used"
+                );
+    $np->add_arg(
+                 spec => "unit=s",
+                 help => "Unit of measurement of the data retreived. Recognized values are [B|KB|MN|GB|TB] for memory values and [us|ms|s|m|h|d] for time values"
+                );
+    $np->add_arg(
+                 spec => "label|l=s",
+                 help => "Label to be used for printing out the result of the check. Placeholders can be used."
                 );
     $np->getopts();
     return $np;

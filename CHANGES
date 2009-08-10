@@ -1,6 +1,10 @@
 0.35
   - Added example 'threadDump.pl'
-  - check_jmx4perl: Added support for checking string and boolean values
+  - check_jmx4perl: 
+    * Added support for checking string and boolean values
+    * Escaping performance data
+    * Include units-of-measurement in the plugin output
+    * Custom labeling of the plugin output
 
 0.30 (2009-07-31)
   - Fixed permission issue while running 'Build dist'

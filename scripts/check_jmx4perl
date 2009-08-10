@@ -58,21 +58,20 @@ Command for providing Nagios conmpliant output for JMX response fetched via
 L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
 C<--warning>) thresholds. 
 
-You can use direct string comparison when providing the option
-C<--string>. In this case C<--critical> and C<--warning> are not treated as
-numerical values but as string types. They are compared literally against the
-value retrieved and yield the corresponding Nagios status if matched. If the
-threshold is given with a leading C<!>, the condition is negated. E.g. a
-C<--critical '!Running'> given returns a C<CRITICAL> if the value is I<not>
-equals to C<Running>. As a final option you can also use a regular expression
-by using C<qr/.../> as threshold value (substitute C<...> with the pattern to
-used for comparison).
+You can also use direct string comparison. In this case C<--critical> and
+C<--warning> are not treated as numerical values but as string types. They are
+compared literally against the value retrieved and yield the corresponding
+Nagios status if matched. If the threshold is given with a leading C<!>, the
+condition is negated. E.g. a C<--critical '!Running'> given returns a
+C<CRITICAL> if the value is I<not> equals to C<Running>. As a final option you
+can also use a regular expression by using C<qr/.../> as threshold value
+(substitute C<...> with the pattern to used for comparison). Boolean values are
+returned as C<true> or C<false> strings from the agen, so you can check for
+them as well.
 
-If the option C<--critical> or C<--warning> is either C<false> or C<true>, then
-the check switches into boolean mode. In this case the attribute or operation
-return value should be of boolean type which is compared against the
-threshold. E.g. a 'C<--critical false>' will trigger a C<CRITICAL> status when
-the return value is C<false>.
+Whether string comparison or a numerical check is used is determined
+automatically based on the value returned. You can enforce a particular mode by
+providing the option C<--numeric> or C<--string> respectively.
 
 Values obtained from the server can be interpreteted as relative values when
 C<--base> is given. The argument provided here is first tried as an alias name
@@ -98,6 +97,58 @@ value used for threshold calculations. Additionally, if use an operation
 alias with C<--alias>, you can ommit C<--operation> and C<--mbean>. Any
 arguments required for the operation need to be provided as additional
 arguments. 
+
+The output of C<check_jmx4perl> can be highly customized. First of all, you can
+provide a unit-of-measurement with the option C<--unit>. This specifies how the
+the attribute or an operation's return value should be interepreted. The
+units available are
+
+  B  - Byte
+  KB - Kilo Byte
+  MB - Mega Byte
+  GM - Giga Byte
+  TM - Terra Byte
+  
+  us - Microseconds
+  ms - Milliseconds
+  s  - Seconds
+  m  - Minutes
+  h  - Hours
+  d  - Days
+
+The unit will be used for performance data as well as for the Nagious
+output. For the Nagios output, large number are converted to larger units (and
+reverse for small number that are smaller than 1). E.g. C<2048 KB> is converted
+to C<2 MB>. 
+
+Beside unit hadling, you can provide you own label for the Nagios output via
+C<--label>. The provided option is interpreted as a pattern with the following
+placeholders: 
+
+ %v   the absolute value
+ %r   the relative value for relative calculations (--base)
+ %u   the unit if provided with --unit
+ %b   the absolut base value as it is used with --base
+ %c   the Nagios exit code in the Form "OK", "WARNING", "CRITICAL" 
+      or "UNKNOWN"
+ %t   Thresshold value which fails ("" when the check doesn't fail)
+ %n   name, either calulated automatically or given with --name
+
+You can use the same modifiers as for C<sprintf> to fine tune the output.
+
+Example: 
+
+ check_jmx4perl --url http://localhost:8888/j4p \
+                --alias MEMORY_HEAP_USED \
+                --base MEMORY_HEAP_MAX \ 
+                --critical :80 \
+                --label "Heap-Memory: %.2r% used (%.2v %u / %.2b %u)" \
+                --unit B
+
+will result in an output like
+
+ OK - Heap-Memory: 3.48% used (17.68 MB / 508.06 MB) | '[MEMORY_HEAP_USED]'=3.48%;;:80
+
 
 =cut
 
