@@ -100,7 +100,7 @@ arguments.
 
 The output of C<check_jmx4perl> can be highly customized. First of all, you can
 provide a unit-of-measurement with the option C<--unit>. This specifies how the
-the attribute or an operation's return value should be interepreted. The
+the attribute or an operation's return value should be interpreted. The
 units available are
 
   B  - Byte
@@ -116,12 +116,11 @@ units available are
   h  - Hours
   d  - Days
 
-The unit will be used for performance data as well as for the Nagious
-output. For the Nagios output, large number are converted to larger units (and
-reverse for small number that are smaller than 1). E.g. C<2048 KB> is converted
-to C<2 MB>. 
+The unit will be used for performance data as well as for the plugin's
+output. Large numbers are converted to larger units (and reverse for small
+number that are smaller than 1). E.g. C<2048 KB> is converted to C<2 MB>.
 
-Beside unit hadling, you can provide you own label for the Nagios output via
+Beside unit handling, you can provide your own label for the Nagios output via
 C<--label>. The provided option is interpreted as a pattern with the following
 placeholders: 
 
@@ -131,7 +130,7 @@ placeholders:
  %b   the absolut base value as it is used with --base
  %c   the Nagios exit code in the Form "OK", "WARNING", "CRITICAL" 
       or "UNKNOWN"
- %t   Thresshold value which fails ("" when the check doesn't fail)
+ %t   Threshold value which fails ("" when the check doesn't fail)
  %n   name, either calulated automatically or given with --name
 
 You can use the same modifiers as for C<sprintf> to fine tune the output.
