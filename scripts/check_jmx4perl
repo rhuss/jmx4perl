@@ -118,7 +118,9 @@ units available are
 
 The unit will be used for performance data as well as for the plugin's
 output. Large numbers are converted to larger units (and reverse for small
-number that are smaller than 1). E.g. C<2048 KB> is converted to C<2 MB>.
+number that are smaller than 1). E.g. C<2048 KB> is converted to C<2
+MB>. However, beautifying by conversion is I<only> performed for the plugin
+output, B<not> for the performance data for which no conversions happens at all.
 
 Beside unit handling, you can provide your own label for the Nagios output via
 C<--label>. The provided option is interpreted as a pattern with the following
