@@ -36,4 +36,11 @@ public interface AttributeCheckingMBean {
     public String getString();
 
     public String getNull();
+
+    public long getBytes();
+
+    public float getLongSeconds();
+
+    public double getSmallMinutes();
+
 }

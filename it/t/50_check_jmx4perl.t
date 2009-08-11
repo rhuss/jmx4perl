@@ -16,6 +16,7 @@ my ($ret,$content);
 is($ret,3,"No args --> UNKNOWN");
 
 
+
 # ====================================================
 # Basic checks
 my %s = (
@@ -63,13 +64,13 @@ $jmx->execute(JMX4PERL_HISTORY_RESET);
 
 ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c 10 --name mem");
 is($ret,0,"Initial history fetch returns OK");
-ok($content =~ /mem=(\d+)/ && $1 eq "0","Initial history fetch returns 0 mem delta");
+ok($content =~ /'mem'=(\d+)/ && $1 eq "0","Initial history fetch returns 0 mem delta");
 
 my $mem = $jmx->get_attribute(MEMORY_HEAP_USED);
 my $c = 0.10 * $mem;
 ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c -$c:$c --name mem");
 is($ret,0,"Second history fetch returns OK for -c $c");
-ok($content =~ /mem=(\d+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
+ok($content =~ /'mem'=(\d+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
 
 $jmx->execute(JMX4PERL_HISTORY_RESET);
 
@@ -82,15 +83,17 @@ $jmx->execute("jmx4perl.it:type=operation","reset");
 ($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=operation --operation fetchNumber",
                                        "-c 1 --name counter inc");
 is($ret,0,"Initial operation");
-ok($content =~ /counter=(\d+)/ && $1 eq "0","Initial operation returns 0");
+ok($content =~ /'counter'=(\d+)/ && $1 eq "0","Initial operation returns 0");
 ($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=operation --operation fetchNumber",
                                        "-c 1 --name counter inc");
 is($ret,0,"Second operation");
-ok($content =~ /counter=(\d+)/ && $1 eq "1","Second operation returns 1");
+ok($content =~ /'counter'=(\d+)/ && $1 eq "1","Second operation returns 1");
 ($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=operation --operation fetchNumber",
                                        "-c 1 --name counter inc");
 is($ret,2,"Third operation");
-ok($content =~ /counter=(\d+)/ && $1 eq "2","Third operation returns 2");
+ok($content =~ /'counter'=(\d+)/ && $1 eq "2","Third operation returns 2");
+
+$jmx->execute("jmx4perl.it:type=operation","reset");
 
 # ====================================================
 # Non-numerice Attributes return value check
@@ -126,6 +129,38 @@ is($ret,2,"String: CRITICAL");
 # Check for a null value
 ($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=attribute --attribute Null --critical null");
 is($ret,3,"null: UNKNOWN");
+
+# ================================================================================ 
+# Unit conversion checking
+
+($ret,$content) = &exec_check_perl4jmx
+  ("--mbean jmx4perl.it:type=attribute --attribute Bytes --critical 10000:");
+is($ret,0,"Bytes: OK");
+ok($content =~ /3670016/,"Bytes: Perfdata");
+ok($content !~ /3\.50 MB/,"Bytes: Output");
+
+($ret,$content) = &exec_check_perl4jmx
+  ("--mbean jmx4perl.it:type=attribute --attribute Bytes --critical 10000: --unit B");
+is($ret,0,"Bytes: OK");
+ok($content =~ /3670016B/,"Bytes Unit: Perfdata");
+ok($content =~ /3\.50 MB/,"Bytes Unit: Output");
+
+($ret,$content) = &exec_check_perl4jmx
+  ("--mbean jmx4perl.it:type=attribute --attribute LongSeconds --critical :10000 ");
+is($ret,2,"SecondsLong: CRITICAL");
+ok($content =~ /172800.0/,"SecondsLong: Perfdata");
+ok($content !~ /2 d/,"SecondsLong: Output");
+
+($ret,$content) = &exec_check_perl4jmx
+  ("--mbean jmx4perl.it:type=attribute --attribute LongSeconds --critical :10000 --unit s");
+is($ret,2,"SecondsLong: CRITICAL");
+ok($content =~ /172800.0/,"SecondsLong: Perfdata");
+ok($content =~ /2 d/,"SecondsLong: Output");
+
+($ret,$content) = &exec_check_perl4jmx
+  ("--mbean jmx4perl.it:type=attribute --attribute SmallMinutes --critical :10000 --unit m");
+is($ret,0,"SmallMinutes: OK");
+ok($content =~ /10.00 us/,"SmallMinutes: Output");
 
 #print "R: $ret, C:\n$content\n";
 

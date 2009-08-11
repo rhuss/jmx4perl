@@ -41,7 +41,11 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
     final private static Set<Class> FINAL_CLASSES = new HashSet<Class>(Arrays.asList(
             String.class,
             Number.class,
+            Byte.class,
+            Double.class,
+            Float.class,
             Long.class,
+            Short.class,
             Integer.class,
             Boolean.class,
             Date.class

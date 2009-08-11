@@ -166,11 +166,13 @@ sub _switch_on_history {
     my ($self,$jmx,$orig_request) = @_;
     my ($mbean,$operation) = $jmx->resolve_alias(JMX4PERL_HISTORY_MAX_ATTRIBUTE);
     # Set history to 1 (we need only the last
-    my $switch_request = new JMX::Jmx4Perl::Request(EXEC,$mbean,$operation,
-                                     $orig_request->get("mbean"),$orig_request->get("attribute"),$orig_request->get("path"),1);
+    my $switch_request = new JMX::Jmx4Perl::Request
+      (EXEC,$mbean,$operation,
+       $orig_request->get("mbean"),$orig_request->get("attribute"),$orig_request->get("path"),1);
     my $resp = $jmx->request($switch_request);
     if ($resp->is_error) {
-        $self->{np}->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
+        $self->{np}->nagios_die("Error: ".$resp->status." ".$resp->error_text.
+                                "\nStacktrace:\n".$resp->stacktrace);
     }
 
     # Refetch value to initialize the history
@@ -219,12 +221,14 @@ sub _verify_response {
         $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
     }
     if (!defined($resp->value)) {
-        $np->nagios_die("JMX Request " . $self->_get_name() . " returned a null value which can't be used yet. " . 
+        $np->nagios_die("JMX Request " . $self->_get_name() . 
+                        " returned a null value which can't be used yet. " . 
                         "Please let me know, whether you need such check for a null value");
     }
     if (ref($resp->value)) { 
         $np->nagios_die("Response value is a ".ref($resp->value).
-                        ", not a plain value. Did you forget a --path parameter ?","Value: " . Dumper($resp->value));
+                        ", not a plain value. Did you forget a --path parameter ?","Value: " . 
+                        Dumper($resp->value));
     }
 }
 
@@ -234,7 +238,7 @@ sub _verify_and_initialize {
     my $o = $np->opts;
 
     $np->nagios_die("An MBean name and a attribute must be provided")
-      if ((!$o->mbean || !$o->attribute) && !$o->alias);
+      if ((!$o->mbean || (!$o->attribute && !$o->operation)) && !$o->alias);
     
     $np->nagios_die("At least a critical or warning threshold must be given") 
       if ((!defined($o->critical) && !defined($o->warning)));
@@ -337,7 +341,7 @@ sub _check_string_threshold {
 # =========================================================================================== 
   
 # Prepare an exit message depending on the result of
-# the check itself
+# the check itself. Quite evolved, you can overwrite this always via '--label'.
 sub _exit_message {
     my $self = shift;
     my $args = { @_ };       
@@ -349,26 +353,41 @@ sub _exit_message {
     my $mode = $args->{mode};
     if ($code == CRITICAL || $code == WARNING) {
         if ($o->{base}) {
-            return $self->_format_label('%n : Threshold \'%t\' failed for value %.2r% (%.2v %u / %.2b %u)',$args);
+            return $self->_format_label
+              ('%n : Threshold \'%t\' failed for value %.2r% ('. &_placeholder($args,"v") .' %u / '.
+               &_placeholder($args,"b") . ' %u)',$args);
         } else {
             if ($mode ne "numeric") {
                 return $self->_format_label('%n : \'%v\' matches threshold \'%t\'',$args);
             } else {
-                return $self->_format_label('%n : Threshold \'%t\' failed for value %.2v %u',$args);
+                return $self->_format_label
+                  ('%n : Threshold \'%t\' failed for value '.&_placeholder($args,"v").' %u',$args);
             }
         }
     } else {
         if ($o->{base}) {
-            return $self->_format_label('%n : In range %.2r% (%.2v %u / %.2b %u)',$args);
+            return $self->_format_label('%n : In range %.2r% ('. &_placeholder($args,"v") .' %u / '.
+                                        &_placeholder($args,"b") . ' %u)',$args);
         } else {
             if ($mode ne "numeric") {
                 return $self->_format_label('%n : \'%v\' as expected',$args);
             } else {
-                return $self->_format_label('%n : Value %.2v %u in range',$args);
+                return $self->_format_label('%n : Value '.&_placeholder($args,"v").' %u in range',$args);
             }
         }
 
     }
+}
+
+sub _placeholder {
+    my ($args,$c) = @_;
+    my $val;
+    if ($c eq "v") {
+        $val = $args->{value};
+    } else {
+        $val = $args->{base};
+    }
+    return ($val =~ /\./ ? "%.2" : "%") . $c;
 }
 
 sub _format_label {

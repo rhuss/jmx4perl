@@ -1,5 +1,6 @@
 0.35
   - Added example 'threadDump.pl'
+  - Fixed bug when serializing floats and doubles.
   - check_jmx4perl: 
     * Added support for checking string and boolean values
     * Escaping performance data

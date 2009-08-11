@@ -66,6 +66,23 @@ public class AttributeChecking implements AttributeCheckingMBean, MBeanRegistrat
         return null;
     }
 
+    public long getBytes() {
+        // 3.5 MB
+        return 3 * 1024 * 1024 +  1024 * 512;
+    }
+
+    public float getLongSeconds() {
+        // 2 days
+        return 60*60*24*2;
+    }
+
+    public double getSmallMinutes() {
+        // 10 ms
+        return  1f/60 * 0.01;
+    }
+
+    // ============================================================================
+
     public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws Exception {
         return new ObjectName(name);
     }
