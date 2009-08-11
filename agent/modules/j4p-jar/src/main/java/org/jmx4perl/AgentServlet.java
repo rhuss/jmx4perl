@@ -314,17 +314,21 @@ public class AgentServlet extends HttpServlet {
     @Override
     public void log(String msg) {
         super.log(msg);
-        debugStore.log(msg);
+        if (debugStore != null) {
+            debugStore.log(msg);
+        }
     }
 
     @Override
     public void log(String message, Throwable t) {
         super.log(message,t);
-        debugStore.log(message, t);
+        if (debugStore != null) {
+            debugStore.log(message, t);
+        }
     }
 
     private boolean isDebug() {
-        return debugStore.isDebug();
+        return debugStore != null ? debugStore.isDebug() : false;
     }
 
 }

@@ -55,8 +55,8 @@ public class MapHandler implements ObjectToJsonConverter.Handler {
                     return pConverter.extractObject(entry.getValue(),pExtraArgs,jsonify);
                 }
             }
-            throw new IllegalArgumentException("Map key " + decodedKey +
-                    " is unknown for map " + trimString(pValue.toString()));
+            throw new IllegalArgumentException("Map key '" + decodedKey +
+                    "' is unknown for map " + trimString(pValue.toString()));
         } else {
             if (jsonify) {
                 JSONObject ret = new JSONObject();

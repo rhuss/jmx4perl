@@ -350,7 +350,7 @@ sub search {
 
     return undef if $response->status eq "404"; # nothing found
     if ($response->is_error) {
-        croak "Error searching for $pattern: ",$response->error_text;
+        die "Error searching for $pattern: ",$response->error_text,Dumper($response);
     }
     return $response->value;    
 }
