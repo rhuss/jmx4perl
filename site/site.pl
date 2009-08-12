@@ -38,7 +38,6 @@ sub make_pods {
     find(sub {
              push @pms,$File::Find::name if /.pm$/;
              push @pods,$File::Find::name if /.pod$/;
-
          },$libdir);
     
     print Dumper(\@pms,\@pods);
