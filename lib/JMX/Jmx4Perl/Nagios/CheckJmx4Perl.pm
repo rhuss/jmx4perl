@@ -82,30 +82,34 @@ sub execute {
         my ($value_conv,$unit) = $self->_normalize_value($value);
         
         # Common args
-        my @perf_args = (label => "'".$self->_get_name(cleanup => 1)."'",
-                         critical => $o->critical, warning => $o->warning);                         
+        my $label = "'".$self->_get_name(cleanup => 1)."'";
         if ($o->get("base")) {
             # Calc relative value 
             my $base_value = $self->_base_value($jmx,$o->get("base"));
             my $rel_value = sprintf "%2.2f",(int((($value / $base_value) * 10000) + 0.5) / 100) ;
 
-            my ($base_conv) = $self->_normalize_value($base_value);
 
-            # Performance data
-            $np->add_perfdata(@perf_args,value => $rel_value, uom => "%");
+            # Performance data. Convert to absolute values before
+            my ($critical,$warning) = $self->_convert_relative_to_absolute($base_value,$o->critical,$o->warning);
+            $np->add_perfdata(label => $label,value => $value,
+                              critical => $critical,warning => $warning,
+                              min => 0,max => $base_value,
+                              $o->{unit} ? (uom => $o->{unit}) : ());
 
             # Do the real check.
             my ($code,$mode) = $self->_check_threshhold($rel_value);
+            my ($base_conv) = $self->_normalize_value($base_value);
             return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
                                                                value => $value_conv, unit => $unit,base => $base_conv));            
         } else {
             # Performance data
-            $np->add_perfdata(@perf_args,value => $value,$o->{unit} ? (uom => $o->{unit}) : ());
+            $np->add_perfdata(label => $label,
+                              critical => $o->critical, warning => $o->warning,
+                              value => $value,$o->{unit} ? (uom => $o->{unit}) : ());
 
             # Do the real check.
             my ($code,$mode) = $self->_check_threshhold($value);
-            return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit));                    
-        }
+            return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit));                    }
     };
     if ($@) {
         # p1.pl, the executing script of the embedded nagios perl interpreted
@@ -123,17 +127,20 @@ sub _get_name {
     my $self = shift;
     my $args = { @_ };
     my $o = $self->{opts};
-    my $name;
-    if ($o->name) {
-        $name = $o->name;
-    } else {
-        # Default name
-        $name = $o->alias ? 
+    my $name = $args->{name};
+    if (!$name) {
+        if ($o->name) {
+            $name = $o->name;
+        } else {
+            # Default name
+            $name = $o->alias ? 
           "[".$o->alias.($o->path ? "," . $o->path : "") ."]" : 
             "[".$o->mbean.",".$o->attribute.($o->path ? "," . $o->path : "")."]";
+        }
     }
     if ($args->{cleanup}) {
-        $name =~ s/=/#/g;
+        # Enable this when '=' gets forbidden
+        #$name =~ s/=/#/g;
     }
     return $name;
 }
@@ -262,6 +269,17 @@ sub _delta_value {
             return $resp->value - $old_value;
         }
     }    
+}
+
+sub _convert_relative_to_absolute { 
+    my $self = shift;
+    my ($base_value,@to_convert) = @_;
+    my @ret = ();
+    for my $v (@to_convert) {
+        $v =~ s|([\d\.]+)|($1 / 100) * $base_value|eg if $v;
+        push @ret,$v;
+    }
+    return @ret;
 }
 
 sub _base_value {
