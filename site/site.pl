@@ -8,6 +8,9 @@ use File::Find;
 use strict;
 use warnings;
 use Data::Dumper;
+use Pod::Simple::Search;
+use Pod::POM;
+use Pod::POM::View::HTML;
 
 my $config = 
   { new Config::General(-f "$Bin/site_local.cfg" ? "$Bin/site_local.cfg" : "$Bin/site.cfg")->getall };
@@ -33,15 +36,16 @@ mkdir "$Bin/target";
 
 sub make_pods {
     print ":::: Making POD documentation\n";
-    my $libdir = realpath("$Bin/../lib");
-    my (@pms,@pods);
-    find(sub {
-             push @pms,$File::Find::name if /.pm$/;
-             push @pods,$File::Find::name if /.pod$/;
-         },$libdir);
-    
-    print Dumper(\@pms,\@pods);
-    
+    my $pod_search = new Pod::Simple::Search()->limit_glob("JMX::*");
+    my $n2p = $pod_search->survey(realpath("$Bin/../lib"));
+    print Dumper($n2p);
+    my $t = (%$n2p)[3];
+    my $pom = Pod::POM->new();
+    $pom->parse($t);
+    #print Dumper($pod);
+    print $pom->present('Pod::POM::View::HTML');
+
+    #print Dumper(new Pod::Simple::Search()->limit_glob("Pod::*")->survey());
 }
 
 sub make_blog {
