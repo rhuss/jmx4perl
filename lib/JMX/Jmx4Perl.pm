@@ -14,7 +14,7 @@ Simple:
 
    print "Memory Used: ",
           JMX::Jmx4Perl
-              ->new(url => "http://localhost:808get0/j4p")
+              ->new(url => "http://localhost:8080/j4p")
               ->get_attribute(MEMORY_HEAP_USED);
 
 Advanced:
@@ -101,7 +101,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.35_3";
+$VERSION = "0.35";
 
 my $REGISTRY = {
                 # Agent based

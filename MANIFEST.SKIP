@@ -64,3 +64,4 @@ x.pl
 agent/j4p-it.war
 agent/j4p-access.xml$
 jboss_attr.txt
+site/.*
