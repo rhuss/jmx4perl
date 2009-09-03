@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+jp4sh - A JMX Shell
+
+=cut
+
+use Term::ReadLine;
+use Term::ANSIColor;
+
+# Menu
+my $MENU = 
+  [
+     {
+      command => "incoming",
+      shortcut => "inc",
+      submenu => [
+                    { command => "show", exec => \&cmd_incoming_show, regexp => qr/^(\d+)$/ },
+                    { command => "failed", exec => \&cmd_incoming_failed, },
+                    { command => "activate", exec => \&cmd_incoming_activate, },
+                    { command => "delete", exec => \&cmd_incoming_delete }
+                 ],
+     },
+     { 
+      label => "Message",
+      command => "message",
+      shortcut => "m",
+      submenu => [
+                    { command => "show", exec => \&cmd_message_show, regexp => qr/^(\d+)$/ },
+                    { command => "activate", exec => \&cmd_message_activate }
+                 ]
+     },
+     {
+      label => "Incident",
+      command =>  "incident",
+      shortcut => "i",
+      submenu => [
+                    { command => "show", exec => \&cmd_incident_show, regexp => qr/^(\d+)$/ },
+                 ]
+     },
+     {
+      label => "Logging",
+      command => "log" 
+     },
+     { 
+      label => "Statistics",
+      command =>  "stats" 
+     },
+  ];
+
+my $GLOBAL_COMMANDS =
+  [
+     { 
+      command => "cd",
+      exec => \&cmd_cd
+     },
+     { 
+      command => "ls"
+     },
+     { 
+      command => "set"
+     },
+     {
+      command => "get"
+     },
+     { 
+      command => "exec"
+     },
+     { 
+      command => "info"
+     },
+     {        
+      command => "quit",
+      exec => sub { exit 0; } 
+     },
+     {        
+      command => "quit",
+      exec => sub { exit 0; } 
+     }
+  ];
+
+
