@@ -25,10 +25,10 @@ Advanced:
    
    my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p",
                                product => "jboss");
-   my $request = new JMX::Jmx4Perl::Request(type => READ,
-                                            mbean => "java.lang:type=Memory",
-                                            attribute => "HeapMemoryUsage",
-                                            path => "used");
+   my $request = new JMX::Jmx4Perl::Request({type => READ,
+                                             mbean => "java.lang:type=Memory",
+                                             attribute => "HeapMemoryUsage",
+                                             path => "used"});
    my $response = $jmx->request($request);
    print "Memory used: ",$response->value(),"\n";
 
@@ -43,22 +43,22 @@ transparent access to the Java Management Extensions (JMX) from the perl side.
 It uses a traditional request-response paradigma for performing JMX operations
 on a remote Java Virtual machine. 
 
-There a various ways how JMX information can be transfered. For now, a single
-operational mode is supported. It is based on an I<agent>, a small (< 100k) Java
-Servlet, which needs to deployed on a Java application server. It plays the
-role of a proxy, which on one side communicates with the MBeans server in the
-application server and transfers JMX related information via HTPP and JSON to
-the client (i.e. this module). Please refer to L<JMX::Jmx4Perl::Manual> for
-installation instructions howto deploy the agent servlet (which can be found in
-the distribution as F<agent/j4p.war>).
+There a various ways how JMX information can be transfered. Jmx4Perl is based
+on an I<agent>, a small (< 100k) Java Servlet, which needs to deployed on a
+Java application server. It plays the role of a proxy, which on one side
+communicates with the MBeanServer within in the application server and
+transfers JMX related information via HTTP and JSON to the client (i.e. this
+module). Please refer to L<JMX::Jmx4Perl::Manual> for installation instructions
+for how to deploy the agent servlet (which can be found in the distribution as
+F<agent/j4p.war>).
 
-An alternative, and more 'java like' approach, is the usage of JSR 160
+An alternative and more 'java like' approach is the usage of JSR 160
 connectors. However, the default connectors provided by the Java Virtual
-Machine (JVM) since version 1.5 support only propriertary protocols which
+Machine (JVM) since version 1.5 support only proprietary protocols which
 require serialized Java objects to be exchanged. This implies that a JVM needs
-to be started on the client side, adding quite some overhead if used from
-within Perl. Nevertheless, plans are underway to support this operational mode
-as well, which allows for monitoring of Java application which are not running
+to be started on the client side adding quite some overhead if used from
+within Perl. Nevertheless plans are underway to support this operational mode
+as well, which allows for monitoring Java applications which are not running
 in a servlet container.
 
 For further discussion comparing both approaches, please refer to
@@ -72,7 +72,7 @@ management functions:
 
 =item * 
 
-Reading an writing of attributes of an MBean (like memory usage or connected
+Reading and writing of attributes of an MBean (like memory usage or connected
 users) 
 
 =item *
