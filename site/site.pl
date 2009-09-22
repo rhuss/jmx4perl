@@ -13,6 +13,7 @@ use Pod::Simple::Search;
 use Pod::POM;
 use Pod::POM::View::HTML;
 use Template;
+use File::NCopy qw(copy);
 
 use JMX::Jmx4Perl::Site::PodHtml;
 
@@ -22,6 +23,9 @@ my $config =
 # Target directory, each time afresh
 (-d "$Bin/target" && rmtree("$Bin/target"));
 mkdir "$Bin/target";
+
+# Copy resources
+&make_resources;
 
 # Pod documentation
 &make_pods;
@@ -38,6 +42,13 @@ mkdir "$Bin/target";
 
 # ========================================================================
 
+sub make_resources { 
+    print ":::: Copying resources\n";
+
+    # Copy over stylesheet an CSS files
+    copy \1,"$Bin/style","$Bin/target/";
+}
+
 sub make_pods {
     print ":::: Making POD documentation\n";
     my $target = "$Bin/target/pod";
@@ -52,10 +63,10 @@ sub make_pods {
         INTERPOLATE => 1,
         DEBUG => 1
        })
-      || die Tempate->error(),"\n";    
+      || die Template->error(),"\n";    
     my $tt_args = 
     { 
-     css_base_url => "../css/",
+     css_base_url => "../style/",
      top_navigation => [
                       { label => "Home", link => "../index.html" },
                       { label => "Documentation", link => "../doc/index.html", selected => 1}
@@ -71,6 +82,13 @@ sub make_pods {
         $template->process("main.tt",{ %$tt_args, content => $pod_html }, "$target/" . &module2filename($name) . ".html")
           || die $template->error,"\n";
     }
+
+    # TODO: 
+    # - Linking (external and internal)
+    # - Code sections beautified (possibly using a Syntax Higlighter). 
+    #   At least, fix font width
+    # - Right side boxes
+
     #print Dumper($pod);
     #print $pom->present('Pod::POM::View::HTML');
 
