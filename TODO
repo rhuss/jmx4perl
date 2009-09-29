@@ -2,7 +2,13 @@
 05 Additional Agents which start a JVM (e.g. with "Java::Import") 
    and call the appserver via JSR 160 connector
 06 WS-Management integration ?
+09 User/Password authentication in web.xml
+11 Special jar with integrated servlet container for environments 
+   without a servlet container
+
+==============================================================
+Done:
+
 07 Path handling for operation return values
 08 Security options in Agent to restrict operations
-09 User/Password authentication in web.xml
 10 Bean Path accessor.
