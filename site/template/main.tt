@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr">
+[%#
+
+Main template which requires the following variables
+
+ css_base_url: Base URL where to find CSS files
+ top_navigation: ArrayRef containing the top navigation
+ sub_navigation: ArrayRef containing second level navigation
+ boxes: ArrayRef of boxes to be used as right side navigation
+%]
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+	<meta name="description" content="JMX access tools and modules for Perl and Java"/>
+	<meta name="keywords" content="JMX JMX4Perl Perl Nagios Monitoring" />
+	<meta name="author" content="Roland Huss" />
+	<link rel="stylesheet" type="text/css" href="[% css_base_url %]style.css" media="screen" />
+	<title>Jmx4Perl</title>
+</head>
+
+<body id="top">
+  
+  <div id="layout_wrapper_outer">
+    <div id="layout_wrapper">
+      
+      <div id="layout_top">
+        
+        <div id="site_title">
+          <h1><a href="#">Jmx<span>4</span>Perl</a></h1>
+          <h2>Easy JMX access to your JEE Servers</h2>
+        </div>
+        
+      </div>
+      
+      <div id="layout_body_outer">
+        <div id="layout_body">
+          
+          <div id="navigation">
+            <div id="nav1">
+              <ul>
+                [% FOREACH nav IN top_navigation %]
+                [% IF nav.selected %]
+                    <li class="current_page_item"><a href="[% nav.link %]">[% nav.label %]</a></li>
+                    [% ELSE %]
+                    <li><a href="[% nav.link %]">[% nav.label %]</a></li>
+                    [% END %]
+                [% END %]
+              </ul>
+              <div class="clearer">&nbsp;</div>
+            </div>
+            
+            <div id="nav2">
+              <ul>
+                [% FOREACH nav IN sub_navigation %]
+                  [% IF nav.selected %]
+                    <li class="current_page_item"><a href="[% nav.link %]">[% nav.label %]</a></li>
+                  [% ELSE %]
+                    <li><a href="[% nav.link %]">[% nav.label %]</a></li>
+                  [% END %]
+                [% END %]
+              </ul>              
+              <div class="clearer">&nbsp;</div>              
+            </div>            
+          </div>
+          
+          <div id="main">
+            <div class="left" id="content_outer">
+              <div id="content">
+                [% content %]
+              </div>
+            </div>
+            
+            <div class="right" id="sidebar_outer">
+              <div id="sidebar">
+                [% FOREACH box in boxes %]
+                   [% INCLUDE "$box.include" box = $box%]
+                [% END %]
+              </div>
+            </div>
+            <div class="clearer">&nbsp;</div>
+          </div>
+        </div>
+        
+        <div id="footer">
+          
+          <div class="left">
+            &copy; 2009 Roland Hu&szlig; - <a href="http://labs.consol.de">labs.consol.de</a>
+          </div>
+          <div class="right">
+            <a href="http://templates.arcsin.se/">Website template</a> by <a href="http://arcsin.se/">Arcsin</a> 
+          </div>        
+          <div class="clearer">&nbsp;</div>        
+        </div>    
+      </div>
+    </div>
+    
+  </body>
+</html>

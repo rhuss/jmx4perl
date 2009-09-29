@@ -1,0 +1,14 @@
+<div class="box">
+  <div class="box_title">[% box.title %]</div>
+  <div class="box_content">
+    <ul>
+      [% FOREACH item in box.items %]
+        [% IF item.selected %]
+          <li><a href="[% item.link %]">[% item.label %]</a></li>  
+        [% ELSE %]
+          <li class="current_box_item"><a href="[% item.link %]">[% item.label %]</a></li>  
+        [% END %]
+      [% END %]
+    </ul>
+  </div>                  
+</div>

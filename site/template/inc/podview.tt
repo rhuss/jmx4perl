@@ -1,0 +1,33 @@
+[% VIEW podview %]
+
+[% BLOCK head1 %]
+  <h1>[% item.title.present(view) %]</h1>
+  [% item.content.present(view) %]
+[% END %]
+ 
+[% BLOCK head2 %]
+  <h2>[% item.title.present(view) %]</h2>
+  [% item.content.present(view) %]
+[% END %]
+
+[% BLOCK seq_text %]
+[% item.text.present(view) %]
+[% END %]
+
+[% BLOCK textblock %]
+<p>[% item.text.present(view) %]</p>
+[% END %]
+
+[% BLOCK verbatim %]
+<pre>[% item.text.present(view) %]</pre>
+[% END %]
+
+[% BLOCK seq_link %]
+<a href="...">[% item.text.present(view) %]</a>
+[% END %]
+
+[% BLOCK seq_code %]
+<code>[% item.text.present(view) %]</code>
+[% END %]
+
+[% END %]   

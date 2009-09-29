@@ -1,0 +1,537 @@
+/*  
+Template name: Cerulean Elegance
+Template URI: http://templates.arcsin.se/cerulean-elegance-website-template/
+Release date: 2009-04-01
+Last updated: 2009-08-10
+Description: A dark, clean and simple two-column template.
+Author: Viktor Persson
+Author URI: http://arcsin.se/
+
+This template is licensed under a Creative Commons Attribution 2.5 License:
+http://templates.arcsin.se/license/
+*/
+
+
+/* 
+   Reset
+------------------------------------------------------------------- */
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, 
+blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, 
+img, ins, kbd, q, s, samp, small, strike, strong, sub, tt, var, b, u, i, 
+center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, 
+tbody, tfoot, thead, tr, th, td { margin: 0; padding: 0; border: 0; outline: 0; 
+font-size: 100%; vertical-align: baseline; background: transparent; } body { 
+line-height: 1; } ol, ul { list-style: none; } blockquote, q { quotes: none; } 
+blockquote:before, blockquote:after, q:before, q:after { content: ''; content: 
+none; } :focus { outline: 0; } ins { text-decoration: none; } del { text-decoration: line-through; }
+table { border-collapse: collapse; border-spacing: 0; }
+
+
+/* 
+   General 
+------------------------------------------------------------------- */
+
+html {
+	height: 100%;
+	padding-bottom: 1px; /* force scrollbars */
+}
+
+body {
+	background: #202020 url('img/body.gif') repeat-x left top;
+	color: #5A5A50;
+	font: normal 0.8em sans-serif;
+	line-height: 1.5em;	
+}
+
+
+/* 
+   Typography 
+------------------------------------------------------------------- */
+
+p {padding: 0.2em 0 1em;}
+
+h1 {font: normal 2em sans-serif;}
+h2 {font: normal 1.8em sans-serif;}
+h3 {font: normal 1.6em sans-serif;}
+h4 {font: normal 1.4em sans-serif;}
+h5 {font: bold 1.2em sans-serif;}
+h6 {font: bold 1em sans-serif;}
+
+h1,h2,h3,h4,h5,h6 {
+	color: #456;
+	margin-bottom: 0.3em;
+}
+
+
+blockquote {
+	background: #F6F6F6 url('img/quote.gif') no-repeat;
+	border-bottom: 1px solid #DDD;
+	border-top: 1px solid #DDD;
+	color: #332;
+	display: block;
+	margin: 0.6em 0 1.6em;
+	padding: 0.8em 1em 0.2em 46px;
+}
+
+
+/* 
+   Tables
+------------------------------------------------------------------- */
+
+table.data_table {
+	border: 1px solid #CCB;
+	margin-bottom: 2em;
+	width: 100%;
+}
+table.data_table th {
+	background: #E5E5E5;
+	border: 1px solid #D5D5D5;
+	color: #555;
+	text-align: left;
+}
+table.data_table tr {border-bottom: 1px solid #DDD;}
+table.data_table td, table th {padding: 10px;}
+table.data_table td {
+	background: #F5F5F5;
+	border: 1px solid #E0E0E0;
+}
+
+
+/* 
+   Lists
+------------------------------------------------------------------- */
+
+dl {margin-bottom: 2em;}
+dt,dd {padding: 8px 10px;}
+dt {
+	border-bottom: 1px solid #D5D5D5;
+	background: #E5E5E5;
+	color: #555;
+	font-weight: bold;
+}
+dd {
+	background: #F5F5F5;
+	border-bottom: 1px solid #E5E5E5;
+	padding-left: 16px;
+}
+
+
+/* 
+   Links 
+------------------------------------------------------------------- */
+
+a {color: #456;}
+a:hover {
+	color: #D60;
+	text-decoration: underline;
+}
+
+
+/* 
+   Forms 
+------------------------------------------------------------------- */
+
+fieldset {
+	border: 1px solid #CCC;
+	border-bottom: none;	
+	font-size: 0.9em;
+	margin: 1em 0 1.2em;
+}
+
+input, textarea, select {
+	background-color: #FFF;
+	border: 1px solid #777;
+	border-color: #777 #CCC #CCC #777;
+	font: normal 1em Verdana,sans-serif;
+	padding: 5px 6px;
+}
+
+input.button {
+	background: #FAFAFA;
+	border: 1px solid #AAA;
+	border-color: #DDD #AAA #AAA #EEE;
+	color: #444;
+	cursor: pointer;
+	font: normal 1em Verdana,sans-serif;
+	margin-top: 5px;
+	padding: 6px;
+	width: auto;
+}
+input:focus,input:active,textarea:focus,textarea:active,select:focus,select:active,input.button:hover,input.button:focus {background: #FFFFF5;}
+input.button:hover, input.button:focus {
+	color: #123;
+	cursor: pointer;
+}
+
+textarea {overflow: auto;}
+
+input.image {
+	border: 0;
+	padding: 0;
+}
+
+/* Specific */
+
+.form_row {
+	background: #F5F5F5;
+	border-top: 1px solid #FFF;
+	border-bottom: 1px solid #E1E1E1;
+	padding: 10px 0;
+}
+.form_required {font-weight: bold;}
+.form_row_submit, .legend {
+	background: #E5E5E5;
+	border-bottom: 1px solid #CCC;
+	border-top: 1px solid #FAFAFA;
+	padding: 4px 0 8px;
+}
+.legend {padding: 8px 18px 6px;}
+.form_property, .form_value {float: left;}
+.form_property {
+	font-size: 1.1em;
+	text-align: right;
+	width: 110px;
+}
+.form_value {padding-left: 24px;}
+.form_row_submit .form_value {padding-left: 132px;}
+
+
+/* 
+   Images 
+------------------------------------------------------------------- */
+
+img.bordered,img.alignleft,img.alignright,img.aligncenter {
+	background-color: #FFF;
+	border: 1px solid #DDD;
+	padding: 3px;
+}
+
+img.left,img.alignleft {margin: 0 15px 12px 0;}
+img.right,img.alignright {margin: 0 0 15px 12px;}
+
+
+/* 
+   Floats
+------------------------------------------------------------------- */
+
+.left,.alignleft {float: left;}
+.right,.alignright {float: right;}
+.center,.aligncenter {margin: 0 auto;}
+
+.clear,.clearer {clear: both;}
+.clearer {
+	display: block;
+	font-size: 0;
+	line-height: 0;
+	height: 0;
+}
+
+
+/* 
+   Misc 
+------------------------------------------------------------------- */
+
+/* Separators */
+.content_separator, .archive_separator {
+	background: #D5D5D5;
+	clear: both;
+	color: #FFE;
+	display: block;
+	font-size: 0;
+	height: 1px;
+	line-height: 0;
+	margin: 12px 0 24px;
+}
+.archive_separator {margin: 0 0 14px;}
+
+/* Messages */
+.error, .notice, .success {
+	border: 1px solid #DDD;
+	margin-bottom: 1em;
+	padding: 0.6em 0.8em;
+}
+
+.error {background: #FBE3E4; color: #8A1F11; border-color: #FBC2C4;}
+.error a {color: #8A1F11;}
+
+.notice {background: #FFF6BF; color: #514721; border-color: #FFD324;}
+.notice a {color: #514721;}
+
+.success {background: #E6EFC2; color: #264409; border-color: #C6D880;}
+.success a {color: #264409;}
+
+
+/* 
+   Layout 
+------------------------------------------------------------------- */
+
+/* General */
+#layout_wrapper_outer {background: url('img/layout_wrapper_outer.jpg') no-repeat center top;}
+#layout_wrapper {
+	color: #FFF;
+	margin: 0 auto;
+	width: 906px;
+}
+
+#layout_top {height: 114px;}
+
+#layout_body_outer {background: #373737 url('img/layout_body_outer.jpg') repeat-x;}
+#layout_body {
+	background: url('img/layout_body.gif') no-repeat;
+	padding: 8px 8px 0;
+}
+
+/* Site title */
+#site_title {padding: 28px 12px 0;}
+#site_title a {
+	color: #73BCD1;
+	text-decoration: none;
+}
+#site_title a:hover {color: #FFF;}
+#site_title h1 {
+	font-size: 2.4em;
+	margin-bottom: 6px;
+}
+#site_title h1 span {color: #C0C6CF;}
+#site_title h2 {
+	color: #789;
+	font-size: 1.2em;
+}
+
+
+/* Navigation */
+#navigation {
+	background: #3A3A3A url('img/navigation.gif') no-repeat;
+	font: bold 1.3em sans-serif;
+	padding: 0 8px;
+}
+#navigation ul, #navigation li {display: inline;}
+#navigation li {display: inline;}
+#navigation a {
+	float: left;
+	margin-right: 1px;
+	text-align: center;
+	text-decoration: none;
+}
+
+#nav1 a {
+	color: #BBB;
+	padding: 10px 12px 12px;
+}
+#nav1 a:hover {color: #EEE;}
+#nav1 li.current_page_item a,#nav1 li.current_page_parent a {
+	background: url('img/nav1_arrow.gif') no-repeat center bottom;
+	color: #ADE7F6;	
+}
+
+#nav2 a {
+	color: #D0D6DA;
+	padding: 10px;
+}
+#nav2 {
+	background: #5090AE url('img/nav2.gif') repeat-x;
+	margin: 0 -8px;
+	padding: 0 8px;
+}
+#nav2 a:hover {color: #FFF;}
+#nav2 li.current_page_item a {color: #FFF;}
+
+
+/* Main */
+#main {
+	background: url('img/main.gif') repeat-y;
+	border-bottom: 1px solid #C5C5C5;
+}
+#main ol, #main ul {margin: 0 0 1.2em 1.6em;}
+#main ul li {list-style: disc;}
+#main ol li {list-style: decimal;}
+#main li {padding: 2px 0;}
+
+#content_outer {
+	border-top: 1px solid #FFF;
+	width: 629px;
+}
+#content {	
+	color: #444;
+	padding: 16px;
+}
+
+/* Sidebar */
+#sidebar_outer {
+	border-top: 1px solid #EEE;
+	width: 259px;
+}
+#sidebar {
+	color: #555;
+	padding: 16px 12px;	
+}
+#sidebar a {color: #555;}
+#sidebar a:hover {color: #000;}
+
+/* Dashboard */
+#dashboard {
+	background: #CCC;
+	border-top: 1px solid #D5D5D5;
+	font-size: 0.9em;
+}
+#dashboard_inner {padding: 16px 20px 6px;}
+
+#dashboard .col3 {width: 255px;}
+#dashboard .col3mid {width: 337px;}
+#dashboard .col3mid .col3_content {
+	border-left: 1px solid #B5B5B5;
+	border-right: 1px solid #B5B5B5;
+	padding: 0 20px;
+	margin: 0 20px;
+}
+#dashboard .col_title {
+	color: #666;
+	font-size: 1.4em;
+	font-weight: bold;
+	padding-bottom: 5px;
+}
+
+#dashboard li {
+	color: #777;
+	padding: 4px 0;
+}
+#dashboard li {border-top: 1px solid #BEBEBE;}
+#dashboard li a {
+	color: #666;
+	text-decoration: none;
+}
+#dashboard li a:hover {
+	color: #333;
+	text-decoration: underline;
+}
+
+
+/* Footer links */
+#footer {
+	background: url('img/footer.gif') no-repeat;
+	color: #777;
+	font-size: 0.9em;
+	padding: 22px 8px 10px;
+}
+#footer a {color: #999;}
+#footer .right, #footer .right a {
+	color: #666;
+	text-decoration: none;
+}
+#footer a:hover {color: #999;}
+
+
+/* 
+   Posts 
+------------------------------------------------------------------- */
+
+.post {margin-bottom: 24px;}
+
+.post_title a,.post_date a,.post_meta a {text-decoration: none;}
+.post_date a:hover,.post_meta a:hover,.post_meta a:hover {text-decoration: underline;}
+
+.post_date {
+	border-top: 1px solid #D5D5D5;
+	color: #777;
+	font-size: 0.9em;
+	padding: 8px 0 12px;
+}
+.post_date a {color: #444;}
+
+.post_meta {
+	background: #E7E7E7;
+	border: 1px solid #D7D7D7;
+	color: #777;
+	font-size: 0.9em;
+	padding: 6px 10px;
+}
+.post_meta a {color: #345; }
+.post_meta a:hover {color: #001;}
+
+/* Archives */
+.archive_pagination {margin-bottom: 1.6em;}
+.archive_post {margin-bottom: 14px;}
+.archive_post_date {
+	background: #F5F5F5;
+	border-bottom: 1px solid #C5C5C5;
+	border-right: 1px solid #CFCFCF;
+	float: left;
+	margin-right: 12px;
+	padding: 2px 0 5px;
+	text-align: center;
+	width: 46px;
+}
+.archive_post .post_date {
+	border: none;
+	padding: 0;
+}
+.archive_post_day {font: normal 1.6em Georgia,serif;}
+
+
+/* 
+   Thumbnails
+------------------------------------------------------------------- */
+
+.thumbnails {margin: 0 -0 2em -8px;}
+.thumbnails a.thumb {	
+	background: #D5D5D5;
+	display: block;
+	float: left;
+	margin: 0 0 8px 8px;
+	padding: 3px;
+}
+.thumbnails a.thumb:hover {background: #C0C0C0;}
+.thumbnails .thumb img {display: block;}
+
+
+/* 
+   Box
+------------------------------------------------------------------- */
+
+.box {margin-bottom: 0.6em;}
+.box_title {
+	background: #E5E5E5;
+	border: 1px solid #EAEAEA;
+	border-color: #EAEAEA #D5D5D5 #D5D5D5 #E5E5E5;
+	color: #777;
+	font: bold 1.3em sans-serif;
+	padding: 6px 10px;
+}
+.box_content {padding: 8px 0 8px;}
+.box li:first-child {border-top: none;}
+
+
+/* 
+   Comments 
+------------------------------------------------------------------- */
+
+div.comment_list {
+	border-top: 1px solid #D6D6D6; 
+	margin: 1em 0 2em;
+}
+
+.comment {
+	border-bottom: 1px solid #D6D6D6;
+	padding-top: 10px;
+}
+.comment_date {font-size: 0.9em;}
+.comment_date a {
+	color: #567;
+	text-decoration: none;
+}
+.comment_date a:hover {
+	color: #001;
+	text-decoration: underline;
+}
+.comment_body {padding-top: 4px;}
+
+.comment_gravatar {width: 48px;}
+.comment_gravatar img {
+	background: #FFF;
+	border: 1px solid #DDD;
+	padding: 2px;
+}
+
+/* Single Line IE Fixes */
+* html #nav1, * html #nav2, * html #layout_body, * html #dashboard_inner, * html #footer {height: 0.01%; min-height: 0.01%;}

@@ -1,0 +1,13 @@
+[% # Render a pod page
+   USE Pod;
+   pom = Pod.parse_file("$file");
+   USE dumper;
+   PROCESS podview.tt
+%]
+
+[% FOREACH section IN pom.head1 %]
+  [% section.present(podview) %]
+[% END %]
+
+
+
