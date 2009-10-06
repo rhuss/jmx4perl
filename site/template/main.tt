@@ -72,8 +72,8 @@ Main template which requires the following variables
             
             <div class="right" id="sidebar_outer">
               <div id="sidebar">
-                [% FOREACH box in boxes %]
-                   [% INCLUDE "$box.include" box = $box%]
+                [% FOREACH ibox IN boxes %]
+                  [% INCLUDE $ibox.include box = ibox %]
                 [% END %]
               </div>
             </div>
