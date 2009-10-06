@@ -97,6 +97,9 @@ public class AgentServlet extends HttpServlet {
     private Config configMBean;
     private ObjectName configMBeanName;
 
+    // Handling access restrictions
+    private Restrictor restrictor;
+
     @Override
     public void init(ServletConfig pConfig) throws ServletException {
         super.init(pConfig);
@@ -111,6 +114,9 @@ public class AgentServlet extends HttpServlet {
         // Central objects
         stringToObjectConverter = new StringToObjectConverter();
         objectToJsonConverter = new ObjectToJsonConverter(stringToObjectConverter,pConfig);
+
+        // Access restrictor
+        restrictor = RestrictorFactory.buildRestrictor();
 
         registerRequestHandler();
         registerOwnMBeans();
@@ -141,6 +147,7 @@ public class AgentServlet extends HttpServlet {
         int code = 200;
         Throwable throwable = null;
         try {
+            checkClientIPAccess(pReq);
             jmxReq = new JmxRequest(pReq.getPathInfo(),pReq.getParameterMap());
             boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
             if (debug) {
@@ -195,6 +202,12 @@ public class AgentServlet extends HttpServlet {
         }
     }
 
+    private void checkClientIPAccess(HttpServletRequest pReq) {
+        if (!restrictor.isRemoteAccessAllowed(pReq.getRemoteHost(),pReq.getRemoteAddr())) {
+            throw new SecurityException("No access from client " + pReq.getRemoteAddr() + " allowed");
+        }
+    }
+
     private Object callRequestHandler(JmxRequest pJmxReq)
             throws ReflectionException, InstanceNotFoundException, MBeanException, AttributeNotFoundException {
         JmxRequest.Type type = pJmxReq.getType();
@@ -232,8 +245,6 @@ public class AgentServlet extends HttpServlet {
 
 
     private void registerRequestHandler() {
-
-        Restrictor restrictor = RestrictorFactory.buildRestrictor();
 
         RequestHandler handlers[] = {
                 new ReadHandler(restrictor),

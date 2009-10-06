@@ -42,12 +42,7 @@ public abstract class RequestHandler {
         restrictor = pRestrictor;
     }
 
-    protected void checkForType() {
-        if (!restrictor.isTypeAllowed(getType())) {
-            throw new SecurityException("Command type " +
-                    getType() + " not allowed due to policy used");
-        }
-    }
+
     /**
      * The type of request which can be served by this handler
      * @return the request typ of this handler
@@ -87,6 +82,16 @@ public abstract class RequestHandler {
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         checkForType();
         return doHandleRequest(server,request);
+    }
+
+    /**
+     * Check whether there is a restriction on the type to apply
+     */
+    protected void checkForType() {
+        if (!restrictor.isTypeAllowed(getType())) {
+            throw new SecurityException("Command type " +
+                    getType() + " not allowed due to policy used");
+        }
     }
 
     /**

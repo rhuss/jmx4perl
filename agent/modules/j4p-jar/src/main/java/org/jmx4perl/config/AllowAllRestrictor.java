@@ -50,4 +50,8 @@ public class AllowAllRestrictor implements Restrictor {
     public boolean isOperationAllowed(ObjectName pName, String pOperation) {
         return true;
     }
+
+    public boolean isRemoteAccessAllowed(String... pHostOrAddress) {
+        return true;
+    }
 }

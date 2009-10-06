@@ -10,6 +10,17 @@
 -->
 
 <j4p-restrict>
+
+  <!-- List of remote hosts which are allowed to access this agent. The name can be
+       given as IP or FQDN. If any of the given hosts matches, access will be allowed
+      (respecting further restrictions, though). If <remote> ... </remote> is given
+      without any host no access is allowed at all (probably not what you want)
+  -->
+  <remote>
+    <host>127.0.0.1</host>
+    <host>localhost</host>
+  </remote>
+
   <!-- List of allowed commands. Remove the commands you dont want to
        be called. If the section <commands> is missing completely, all
        commands are allowed -->
