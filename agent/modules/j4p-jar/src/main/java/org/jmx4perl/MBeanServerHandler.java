@@ -246,10 +246,11 @@ public class MBeanServerHandler {
 
     // At the time being we dont need this one, but keep this method as reference.
     private void wokaroundJBossBug(JmxRequest pJmxReq) throws ReflectionException, InstanceNotFoundException {
-        if (isJBoss || isWebsphere) {
+        if ((isJBoss || isWebsphere)
+                && "lang.java".equals(pJmxReq.getObjectName().getDomain())) {
             try {
                 // invoking getMBeanInfo() works around a bug in getAttribute() that fails to
-                // refetch the domains from the platform (JDK) bean server
+                // refetch the domains from the platform (JDK) bean server (e.g. for MXMBeans)
                 for (MBeanServer s : mBeanServers) {
                     try {
                         s.getMBeanInfo(pJmxReq.getObjectName());
