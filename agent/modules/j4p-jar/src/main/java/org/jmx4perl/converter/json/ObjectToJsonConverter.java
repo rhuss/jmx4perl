@@ -162,19 +162,21 @@ public class ObjectToJsonConverter {
 
     private void initLimits(ServletConfig pServletConfig) {
         // Max traversal depth
-        String v = pServletConfig.getInitParameter("maxDepth");
-        hardMaxDepth = v != null ? Integer.parseInt(v) : 0;
+        if (pServletConfig != null) {
+            String v = pServletConfig.getInitParameter("maxDepth");
+            hardMaxDepth = v != null ? Integer.parseInt(v) : 0;
 
-        // Max size of collections
-        v = pServletConfig.getInitParameter("maxCollectionSize");
-        hardMaxCollectionSize = v != null ? Integer.parseInt(v) : 0;
+            // Max size of collections
+            v = pServletConfig.getInitParameter("maxCollectionSize");
+            hardMaxCollectionSize = v != null ? Integer.parseInt(v) : 0;
 
-        // Maximum of overal objects returned by one traversal.
-        v = pServletConfig.getInitParameter("maxObjects");
-        hardMaxObjects = v != null ? Integer.parseInt(v) : 0;
+            // Maximum of overal objects returned by one traversal.
+            v = pServletConfig.getInitParameter("maxObjects");
+            hardMaxObjects = v != null ? Integer.parseInt(v) : 0;
+        } else {
+            hardMaxDepth = hardMaxCollectionSize = hardMaxObjects = 0;
+        }
     }
-
-
 
     private Stack<String> reverseArgs(JmxRequest pRequest) {
         Stack<String> extraStack = new Stack<String>();
