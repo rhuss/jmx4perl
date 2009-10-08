@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -54,6 +55,11 @@ public class PolicyBasedRestrictor implements Restrictor {
     private Map<ObjectName, Set<String>> mBeanWriteAttributes;
     private Map<ObjectName, Set<String>> mBeanOperations;
     private Set<String> allowedHostsSet;
+    private Set<String> allowedSubnetsSet;
+
+    // Simple patterns, could be mor specific
+    private static final Pattern IP_PATTERN = Pattern.compile("^[\\d.]+$");
+    private static final Pattern SUBNET_PATTERN = Pattern.compile("^[\\d.]+/[\\d.]+$");
 
     public PolicyBasedRestrictor(InputStream pInput) {
         Exception exp = null;
@@ -94,13 +100,21 @@ public class PolicyBasedRestrictor implements Restrictor {
         return lookupMBean(mBeanOperations,pName, pOperation);
     }
 
-    public boolean isRemoteAccessAllowed(String... pHostOrAddress) {
+    public boolean isRemoteAccessAllowed(String ... pHostOrAddress) {
         if (allowedHostsSet == null) {
             return true;
         }
         for (String addr : pHostOrAddress) {
             if (allowedHostsSet.contains(addr)) {
                 return true;
+            }
+            if (allowedSubnetsSet != null && addr.matches("")) {
+                for (String subnet : allowedSubnetsSet) {
+                    if (IP_PATTERN.matcher(addr).matches() &&
+                            IpChecker.matches(subnet,addr)) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -241,7 +255,15 @@ public class PolicyBasedRestrictor implements Restrictor {
                     continue;
                 }
                 assertNodeName(hostNode,"host");
-                allowedHostsSet.add(hostNode.getTextContent().trim().toLowerCase());
+                String host = hostNode.getTextContent().trim().toLowerCase();
+                if (SUBNET_PATTERN.matcher(host).matches()) {
+                    if (allowedSubnetsSet == null) {
+                        allowedSubnetsSet = new HashSet<String>();
+                    }
+                    allowedSubnetsSet.add(host);
+                } else {
+                    allowedHostsSet.add(host);
+                }
             }
         }
     }

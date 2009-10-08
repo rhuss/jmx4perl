@@ -1,6 +1,6 @@
 0.36
   - Added <remote> to j4p-access.xml for restricting 
-    access to certain hosts only.
+    access to certain hosts or subnets only.
 
 0.35 (2009-08-15)
   - Added example 'threadDump.pl'

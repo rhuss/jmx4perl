@@ -1,15 +1,15 @@
 package org.jmx4perl.converter.json;
 
-import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.After;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+
 import javax.management.AttributeNotFoundException;
-import java.util.Stack;
-import java.util.Map;
 import java.io.File;
+import java.util.Map;
+import java.util.Stack;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
