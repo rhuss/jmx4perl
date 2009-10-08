@@ -24,7 +24,7 @@ my $config =
 my $TOP_LEVEL_NAVI_ITEMS = 
   [
      { label => "Home", link => "../index.html" },
-     { label => "Documentation", link => "../doc/index.html"},
+     { label => "Documentation", link => "../pod/JMX_Jmx4Perl_Manual.html"},
      { label => "Nagios", link => "../nagios/index.html" },
      { label => "Platforms", link => "../platforms/index.html" },
      { label => "Agent", link => "../agent/index.html" },
@@ -79,26 +79,39 @@ sub make_pods {
        })
       || die Template->error(),"\n";    
     my $module_map = &extract_module_map($n2p,$target);
+    #print Dumper($module_map);
     my $tt_args = 
     { 
      css_base_url => "../style/",
      top_navigation => $top_navigation,
      sub_navigation => [
-                       { label => "Manual", link => "../doc/manual/index.html" },
-                       { label => "Modules", link => "../doc/modules/index.html", selected => 1},
-                       { label => "Protocol", link => "../doc/manual/protocol.html", selected => 1}
+                       { label => "Manual", link => "JMX_Jmx4Perl_Manual.html" },
+                       { label => "Modules", link => "modules.html" },
+                       { label => "Protocol", link => "JMX_Jmx4Perl_Agent_Protocol.html" }
                         ],
     };
     
     for my $e (values %$module_map) {
         my $pom = $pod->parse_file($e->{pod});
         my $pod_html = $pom->present('JMX::Jmx4Perl::Site::PodHtml');
-        my $boxes = [ &extract_module_sidebar_box($module_map,$e->{name}) ];
         #print Dumper($boxes);
+        my $type = $e->{name} =~ /::(Manual|Protocol)$/ ? lc($1) : "modules";
+        my $boxes = [ &extract_module_sidebar_box($module_map,$e->{name}) ] if $type eq "modules";
+        &sub_navigation_select($tt_args,$type);
         $template->process("main.tt",{ %$tt_args, boxes => $boxes, content => $pod_html },$e->{path})
           || die $template->error,"\n";
     }
 
+    # Make modules.html
+    &sub_navigation_select($tt_args,"modules");
+    for my $e (sort { $a->{name} cmp $b->{name} } values %$module_map) {
+        push @{$tt_args->{modules}},{ "link" => $e->{link},"name" => $e->{name}, "description" => "Bla" };
+    }
+    my $modules_html;
+    $template->process("modules.tt",$tt_args,\$modules_html);
+    $template->process("main.tt",{ %$tt_args, content => $modules_html },"$target/modules.html")
+      || die $template->error,"\n";
+    
     # TODO: 
     # - Linking (external and internal)
     # - Code sections beautified (possibly using a Syntax Higlighter). 
@@ -112,6 +125,14 @@ sub make_pods {
     #print Dumper(new Pod::Simple::Search()->limit_glob("Pod::*")->survey());
 }
 
+sub sub_navigation_select { 
+    my $pars = shift;
+    my $label = shift;
+    for my $e (@{$pars->{sub_navigation}}) {
+        $e->{selected} = lc($e->{label}) eq lc($label) ? 1 : 0;
+    }
+}
+
 sub extract_module_map {
     my $n2p = shift;
     my $target = shift;
@@ -121,7 +142,7 @@ sub extract_module_map {
         $ret->{$name} = 
             { 
              path => "$target/$html_name",
-             rel_path => $html_name,
+             link => $html_name,
              name => $name,
              pod => $n2p->{$name}
             };
@@ -168,12 +189,14 @@ sub extract_module_sidebar_box {
     my $selected = shift;
     my @items = ();
     for my $e (sort { $a->{name} cmp $b->{name} } values %$map) {
-        push @items,
-            {
-             label => $e->{name},
-             link => $e->{rel_path},
-             $e->{name} eq $selected ? (selected => 1) : ()
-            };
+        unless ($e->{name} =~ /::(Protocol|Manual)$/) {
+            push @items,
+                {
+                 label => $e->{name},
+                 link => $e->{link},
+                 $e->{name} eq $selected ? (selected => 1) : ()
+                };
+        }
     }
     return { 
             title => "Modules",

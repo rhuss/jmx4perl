@@ -1,0 +1,5 @@
+<ul>
+[% FOREACH module IN modules %]
+   <li><a href="[% module.link %]">[% module.name %]</a> - [% module.description %]</li>  
+[% END %]
+</ul>
