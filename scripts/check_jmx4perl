@@ -66,8 +66,8 @@ condition is negated. E.g. a C<--critical '!Running'> given returns a
 C<CRITICAL> if the value is I<not> equals to C<Running>. As a final option you
 can also use a regular expression by using C<qr/.../> as threshold value
 (substitute C<...> with the pattern to used for comparison). Boolean values are
-returned as C<true> or C<false> strings from the agen, so you can check for
-them as well.
+returned as C<true> or C<false> strings from the agent, so you can check for
+them as well with this kind of string comparison.
 
 Whether string comparison or a numerical check is used is determined
 automatically based on the value returned. You can enforce a particular mode by
@@ -75,12 +75,12 @@ providing the option C<--numeric> or C<--string> respectively.
 
 Values obtained from the server can be interpreteted as relative values when
 C<--base> is given. The argument provided here is first tried as an alias name
-or checked as an absolute, numeric value. Alterntatively, you can use a ful
+or checked as an absolute, numeric value. Alternatively, you can use a full
 MBean/Attribute/Path specification by using a C</> as separator, e.g. 
 
   ... --base java.lang:type=Memory/HeapMemoryUsage/max ...
 
-If one of these parts (the path is optional) contains a slash within it's name,
+If one of these parts (the path is optional) contains a slash within its name,
 the part must be URI encoded. I.e. all parts are URI decoded before usages as
 naming pattern. In any case, using an alias or direct MBean names, the base
 value is fetched first for calculating the relative value. For a numeric value
