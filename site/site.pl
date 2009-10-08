@@ -41,7 +41,7 @@ mkdir "$Bin/target";
 &make_resources;
 
 # Pod documentation
-&make_pods;
+&make_module_docs;
 
 # Fetch blog entries for main site
 # and convert to static pages
@@ -62,8 +62,8 @@ sub make_resources {
     copy \1,"$Bin/style","$Bin/target/";
 }
 
-sub make_pods {
-    print ":::: Making POD documentation\n";
+sub make_module_docs {
+    print ":::: Making Module documentation\n";
     my $target = "$Bin/target/pod";
     mkdir $target;
 
