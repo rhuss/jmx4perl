@@ -14,7 +14,7 @@ use Pod::POM;
 use Pod::POM::View::HTML;
 use Template;
 use File::NCopy qw(copy);
-
+use Pod::POM::View::Text;
 use JMX::Jmx4Perl::Site::PodHtml;
 
 my $config = 
@@ -23,11 +23,11 @@ my $config =
 
 my $TOP_LEVEL_NAVI_ITEMS = 
   [
-     { label => "Home", link => "../index.html" },
-     { label => "Documentation", link => "../pod/JMX_Jmx4Perl_Manual.html"},
-     { label => "Nagios", link => "../nagios/index.html" },
-     { label => "Platforms", link => "../platforms/index.html" },
-     { label => "Agent", link => "../agent/index.html" },
+     { label => "Home", link => &make_link("../index.html") },
+     { label => "Documentation", link => &make_link("../pod/JMX_Jmx4Perl_Manual.html")},
+     { label => "Nagios", link => &make_link("../nagios/index.html") },
+     { label => "Platforms", link => &make_link("../platforms/index.html") },
+     { label => "Agent", link => &make_link("../agent/index.html") },
   ];
 
 #my $TOP_LEVEL_NAVI = {};
@@ -85,14 +85,15 @@ sub make_pods {
      css_base_url => "../style/",
      top_navigation => $top_navigation,
      sub_navigation => [
-                       { label => "Manual", link => "JMX_Jmx4Perl_Manual.html" },
-                       { label => "Modules", link => "modules.html" },
-                       { label => "Protocol", link => "JMX_Jmx4Perl_Agent_Protocol.html" }
+                       { label => "Manual", link => &make_link("JMX_Jmx4Perl_Manual.html") },
+                       { label => "Modules", link => &make_link("modules.html") },
+                       { label => "Protocol", link => &make_link("JMX_Jmx4Perl_Agent_Protocol.html") }
                         ],
     };
     
     for my $e (values %$module_map) {
         my $pom = $pod->parse_file($e->{pod});
+        $module_map->{$e->{name}}->{pom} = $pom;
         my $pod_html = $pom->present('JMX::Jmx4Perl::Site::PodHtml');
         #print Dumper($boxes);
         my $type = $e->{name} =~ /::(Manual|Protocol)$/ ? lc($1) : "modules";
@@ -104,8 +105,9 @@ sub make_pods {
 
     # Make modules.html
     &sub_navigation_select($tt_args,"modules");
-    for my $e (sort { $a->{name} cmp $b->{name} } values %$module_map) {
-        push @{$tt_args->{modules}},{ "link" => $e->{link},"name" => $e->{name}, "description" => "Bla" };
+    for my $e (grep { $_->{name} !~ /::(Manual|Protocol)$/ } sort { $a->{name} cmp $b->{name} } values %$module_map) {
+        push @{$tt_args->{modules}},{ "link" => $e->{link},"name" => $e->{name}, 
+                                      "description" => &extract_description($e->{pom}) };
     }
     my $modules_html;
     $template->process("modules.tt",$tt_args,\$modules_html);
@@ -125,6 +127,14 @@ sub make_pods {
     #print Dumper(new Pod::Simple::Search()->limit_glob("Pod::*")->survey());
 }
 
+sub extract_description {
+    my $pom = shift;
+    my $head = $pom->head1()->[0];
+    my $txt = $head->present('Pod::POM::View::Text');
+    $txt =~ /^.*?\-\s*(.*)$/s;
+    return $1;
+}
+
 sub sub_navigation_select { 
     my $pars = shift;
     my $label = shift;
@@ -142,7 +152,7 @@ sub extract_module_map {
         $ret->{$name} = 
             { 
              path => "$target/$html_name",
-             link => $html_name,
+             link => &make_link($html_name),
              name => $name,
              pod => $n2p->{$name}
             };
@@ -166,7 +176,6 @@ sub make_index {
 sub deploy {
 
 }
-
 
 sub top_navi_with_selected {
     my $label = shift;
@@ -204,6 +213,11 @@ sub extract_module_sidebar_box {
             include => "nav_box.tt"
            };
 }
+
+sub make_link { 
+    my $link = shift;
+    # return $link . "#start";
+    return $link;
+}
+
 __END__
-    my $text = "";
-    print ">>>> ",(%$n2p)[3],"\n";

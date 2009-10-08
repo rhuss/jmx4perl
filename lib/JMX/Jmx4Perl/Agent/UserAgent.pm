@@ -9,7 +9,7 @@ use vars qw(@ISA);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Agent::UserAgent - Specialized L<LWP::UserAgent> adding
+JMX::Jmx4Perl::Agent::UserAgent - A LWP::UserAgent adding
 authentication support
 
 =head1 DESCRIPTION

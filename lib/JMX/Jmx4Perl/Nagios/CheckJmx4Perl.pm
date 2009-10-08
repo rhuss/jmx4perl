@@ -16,8 +16,7 @@ use URI::Escape;
 
 =head1 NAME
 
-JMX::Jmx4Perl::CheckJmx4Perl - Module for encapsulating the functionality of
-L<check_jmx4perl> 
+JMX::Jmx4Perl::CheckJmx4Perl - Heart of the jmx4perl Nagios Plugin 
 
 =head1 SYNOPSIS
 

@@ -36,6 +36,7 @@ Main template which requires the following variables
         <div id="layout_body">
           
           <div id="navigation">
+            <a name="start">
             <div id="nav1">
               <ul>
                 [% FOREACH nav IN top_navigation %]
@@ -48,7 +49,7 @@ Main template which requires the following variables
               </ul>
               <div class="clearer">&nbsp;</div>
             </div>
-            
+            </a>
             <div id="nav2">
               <ul>
                 [% FOREACH nav IN sub_navigation %]
