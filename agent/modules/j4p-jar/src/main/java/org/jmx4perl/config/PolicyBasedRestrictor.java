@@ -108,10 +108,9 @@ public class PolicyBasedRestrictor implements Restrictor {
             if (allowedHostsSet.contains(addr)) {
                 return true;
             }
-            if (allowedSubnetsSet != null && addr.matches("")) {
+            if (allowedSubnetsSet != null && IP_PATTERN.matcher(addr).matches()) {
                 for (String subnet : allowedSubnetsSet) {
-                    if (IP_PATTERN.matcher(addr).matches() &&
-                            IpChecker.matches(subnet,addr)) {
+                    if (IpChecker.matches(subnet,addr)) {
                         return true;
                     }
                 }

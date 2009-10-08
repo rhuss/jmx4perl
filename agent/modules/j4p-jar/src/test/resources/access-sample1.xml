@@ -10,6 +10,15 @@
 -->
 
 <j4p-restrict>
+
+  <!-- Hosts allowed -->
+  <remote>
+    <host>planck</host>
+    <host>10.0.11.125</host>
+    <host>11.0.0.0/16</host>
+    <host>192.168.15.3/255.255.255.0</host>
+  </remote>
+
   <!-- List of allowed commands. Remove the commands you dont want to
        be called. If the section <commands> is missing completely, all
        commands are allowed -->

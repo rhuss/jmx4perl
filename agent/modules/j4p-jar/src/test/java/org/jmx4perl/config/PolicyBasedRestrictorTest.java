@@ -1,4 +1,4 @@
-package org.jmx4perl.converter.json;
+package org.jmx4perl.config;
 
 import org.junit.Test;
 import org.jmx4perl.config.PolicyBasedRestrictor;
@@ -50,6 +50,31 @@ public class PolicyBasedRestrictorTest {
         assertTrue(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Memory"),"gc"));
         assertFalse(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Threading"),"gc"));
         assertTrue(restrictor.isTypeAllowed(JmxRequest.Type.READ));
+    }
+
+    @Test
+    public void restrictIp() {
+        InputStream is = getClass().getResourceAsStream("/access-sample1.xml");
+        PolicyBasedRestrictor restrictor = new PolicyBasedRestrictor(is);
+
+        String ips[][] = {
+                { "11.0.18.32", "true" },
+                { "planck", "true" },
+                { "heisenberg", "false" },
+                { "10.0.11.125", "true" },
+                { "10.0.11.126", "false" },
+                { "11.1.18.32", "false" },
+                { "192.168.15.3", "true" },
+                { "192.168.15.8", "true" },
+                { "192.168.16.3", "false" }
+        };
+
+        for (String check[] : ips) {
+            String res = restrictor.isRemoteAccessAllowed(check[0]) ? "true" : "false";
+            assertEquals("Ip " + check[0] + " is " +
+                    (check[1].equals("false") ? "not " : "") +
+                    "allowed",check[1],res);
+        }
     }
 
     @Test
