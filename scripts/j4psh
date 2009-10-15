@@ -53,26 +53,43 @@ my $GLOBAL_COMMANDS =
   [
      { 
       command => "cd",
-      exec => \&cmd_cd
+      exec => \&cmd_cd,
+      desc => "Change current operation level"
      },
      { 
-      command => "ls"
+      command => "ls",
+      exec => \&cmd_ls,
+      desc => "Show content of current level"
      },
      { 
-      command => "set"
+      command => "set",
+      exec => \&cmd_set,
+      desc => "Set the value of an attribute"
      },
      {
-      command => "get"
+      command => "get",
+      exec => \&cmd_get,
+      desc => "Get the value of an attribute"
      },
      { 
-      command => "exec"
+      command => "exec",
+      exec => \&cmd_exec,
+      desc  => "Execute an operation showing the result"
      },
      { 
       command => "info"
+      exec => \&cmd_info,
+      desc => "Show information of the connected server"
      },
      {        
       command => "quit",
-      exec => sub { exit 0; } 
+      exec => sub { exit 0; },
+      desc => "Quit this shell"
+     },
+     {        
+      command => "server",
+      exec => \&cmd_server,
+      desc => "Change the server"
      },
      {        
       command => "quit",
