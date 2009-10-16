@@ -76,6 +76,7 @@ my $build = $class->new
                 "Carp" => 0,
                 "Module::Find" => 0,
                 "Scalar::Util" => 0,
+                "Config::General" => 0,
                },
    recommends => {
                    "Nagios::Plugin" => "0.27"
