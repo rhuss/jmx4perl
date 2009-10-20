@@ -142,8 +142,7 @@ BEGIN {
 }
 
 
-=item $jmx = JMX::Jmx4Perl->new(mode => <access module>, product => <id>,
-server => <name>, ....)
+=item $jmx = JMX::Jmx4Perl->new(mode => <access module>, ....)
 
 Create a new instance. The call is dispatched to an Jmx4Perl implementation by
 selecting an appropriate mode. For now, the only mode supported is "agent",
@@ -151,7 +150,7 @@ which uses the L<JMX::Jmx4Perl::Agent> backend. Hence, the mode can be
 submitted for now.
 
 Options can be given via key value pairs (or via a hash). Recognized options
-are 
+are:
 
 =over
 
@@ -163,8 +162,13 @@ default, C<.j4p> in the users home directory is used.
 
 =item config_file
 
+Path to a configuration file to use
+
 =item config
 
+A L<JMX::Jmx4Perl::Config> object which is used for 
+configuraton. Use this is you already read in the 
+configuration on your own. 
 
 =item product
 
@@ -188,14 +192,12 @@ sub new {
 
     # Merge in config from a configuration file if a server name is given
     if ($cfg->{server}) {
-        if (-e $file) {
-            my $config = $cfg->{config} ? 
-              $cfg->{config} : 
-                new JMX::Jmx4Perl::Config($cfg->{config_file});
-            my $server_cfg = $config->get_server_config($cfg->{server});
-            if (defined($server_cfg)) {
-                $cfg = { %$server_cfg, %$cfg };
-            }
+        my $config = $cfg->{config} ? 
+          $cfg->{config} : 
+            new JMX::Jmx4Perl::Config($cfg->{config_file});
+        my $server_cfg = $config->get_server_config($cfg->{server});
+        if (defined($server_cfg)) {
+            $cfg = { %$server_cfg, %$cfg };
         }
     }
     

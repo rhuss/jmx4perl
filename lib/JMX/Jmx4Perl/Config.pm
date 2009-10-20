@@ -1,41 +1,40 @@
 #!/usr/bin/perl
 package JMX::Jmx4Perl::Config;
 use Config::General;
+use Data::Dumper;
 
 =head1 NAME 
 
-JMX::Jmx4Perl - Access to JMX via Perl
+JMX::Jmx4Perl::Config - Configuration file support for Jmx4Perl
 
 =head1 SYNOPSIS
 
-Simple:
+=over
 
-   use strict;
-   use JMX::Jmx4Perl;
-   use JMX::Jmx4Perl::Alias;   # Import certains aliases for MBeans
+=item Configuration file format
 
-   print "Memory Used: ",
-          JMX::Jmx4Perl
-              ->new(url => "http://localhost:8080/j4p")
-              ->get_attribute(MEMORY_HEAP_USED);
+  # ================================================================
+  # Sample configuration for jmx4perl
 
-Advanced:
+  <Server>
+    # Name how this config could accessed
+    Name = localhost
 
-   use strict;
-   use JMX::Jmx4Perl;
-   use JMX::Jmx4Perl::Request;   # Type constants are exported here
-   
-   my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p",
-                               product => "jboss");
-   my $request = new JMX::Jmx4Perl::Request({type => READ,
-                                             mbean => "java.lang:type=Memory",
-                                             attribute => "HeapMemoryUsage",
-                                             path => "used"});
-   my $response = $jmx->request($request);
-   print "Memory used: ",$response->value(),"\n";
+    # Options for JMX::Jmx4Perl->new, case is irrelevant
+    Url  = http://localhost:8080/j4p
+    User = roland
+    Password = test
+    Product = JBoss
+  # Proxy_User = ....
+  # Proxy_Password = ....
+  </Server>
 
-   # Get general server information
-   print "Server Info: ",$jmx->info();
+=item Usage
+
+  my $config = new JMX::Jmx4Perl::Config($config_file);
+
+=back
+
 
 =head1 DESCRIPTION
 
@@ -59,9 +58,9 @@ sub new {
     $file = $ENV{HOME} . "/.j4p" unless $file;
     my $self = {};
     if (-e $file) {
-        $self->{config} = 
+        $self->{config} = {
           new Config::General(-ConfigFile => $file,  
-                              -LowerCaseNames => 1)->getall;
+                              -LowerCaseNames => 1)->getall };
     } else {
         $self->{config} = {};
     }
@@ -102,14 +101,13 @@ sub get_server_config {
 
 sub _get_configured_servers {
     my $self = shift;
-    my $servers = $self->{config}->{servers};
+    my $servers = $self->{config}->{server};
     return [] unless $servers;
     if (ref($servers) eq "HASH") {
-        return [ map { $servers->{$_}->{name} = $_ && $servers->{$_} } keys %$servers ];
-    } else if (!ref($servers)) {
         return [ $servers ];
+    } else {
+        return $servers;
     }
-    return $servers;
 }
 
 =back 

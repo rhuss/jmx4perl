@@ -36,6 +36,7 @@ my $result = GetOptions(\%opts,
                         "proxy=s",
                         "proxy-user=s","proxy-password=s",
                         "product=s",
+                        "config=s",
                         "verbose|v!",
                         "shell|s=s",
                         "version!",
@@ -61,7 +62,6 @@ if (!@ARGV) {
     $url = $ARGV[0];
 } else {
     $url = shift @ARGV;
-    &_verify_url($url,$ARGV[$#ARGV]);
     $command = lc shift @ARGV;
     @args = ( @ARGV );
 }
@@ -71,13 +71,9 @@ if ($opts{shell}) {
     &Getopt::Long::HelpMessage();
 } else {
     my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
-    my @jmx_args = ("url" => $url);
-    for my $arg qw(product user password proxy proxy-user proxy-password verbose) {
-        my $cfg = $arg;
-        $cfg =~ s/\-/_/g;
-        push @jmx_args,( $cfg => $opts{$arg}) if $opts{$arg};
-    }
-    my $jmx4perl = new JMX::Jmx4Perl(@jmx_args);
+
+    my $jmx_args = &_get_args_for_jmx4perl($url,\%opts);
+    my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
     &{$sub}($jmx4perl,@args);
 }
 
@@ -115,6 +111,7 @@ Options:
    --proxy <url>           URL to proxy
    --proxy-user <user>     Authentication information for a proxy
    --proxy-password <pwd>
+   --config                Path to an optional configuration file (default: ~/.j4p)
    --history               Print out the history of return values (if switched on and present)
    --verbose               Print out more information
 
@@ -534,13 +531,45 @@ sub _validate_mbean_name {
       ($mbean !~ /^[^:]+:[^:]+$/ || $mbean !~ /:([^=]+)=/);    
 }
 
+sub _get_args_for_jmx4perl {
+    my $url = shift;
+    my $opts = shift;
+    # Try provided first argument as server name first in a 
+    # given configuration
+    my $ret;
+    my $config = new JMX::Jmx4Perl::Config($opts->{config});
+    my $server_config = $config->get_server_config($url);
+    if ($server_config && $server_config->{url}) {
+        print "Taking ",$server_config->{url}, " from configuration for $url" if $opts->{verbose};
+        &_verify_url($server_config->{url},$ARGV[$#ARGV]);
+        # Use server configs as default
+        $ret = { server => $url, config => $config };
+    } else {
+        &_verify_url($url,$ARGV[$#ARGV]);
+        $ret = { url => $url };
+    }
+
+    for my $arg qw(product user password proxy proxy-user proxy-password verbose) {
+        my $cfg = $arg;
+        $cfg =~ s/\-/_/g;
+        if (defined($opts->{$arg})) {
+            if (length($opts->{$arg})) {
+                $ret->{$cfg} = $opts->{$arg};
+            } else {
+                delete $ret->{$cfg};
+            }
+        }
+    }
+    return $ret;
+}
+
 sub _verify_url {
     my $url = shift;
     my $last = shift;
     
     unless ($url =~ m|^\w+://|) {
-        my $text = "No url given for command. See --help for assistance.\n";
-        if ($last =~ m|^\w+://|) {
+        my $text = "No url or server name given for command. See --help for assistance.\n";
+        if ($last =~ m|^\w+://| && $last ne $url) {
             $text .= "Please note, that the URL must be given as first argument, not as last.\n";
         }
         die $text;

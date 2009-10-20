@@ -51,7 +51,7 @@ is backed up by this module. Other implementations (e.g.
 
 =over 4 
 
-=item $jjagent = JMX::Jmx4Perl::Agent->new(url => $url)
+=item $jjagent = JMX::Jmx4Perl::Agent->new(url => $url, ....)
 
 Creates a new local agent for a given url 
 
