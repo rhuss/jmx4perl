@@ -248,7 +248,7 @@ public class MBeanServerHandler {
         // if ((isJBoss || isWebsphere)
         // The workaround was enabled for websphere as well, but it seems
         // to work without it for WAS 7.0
-        if (isJBoss && "lang.java".equals(pJmxReq.getObjectName().getDomain())) {
+        if (isJBoss && "java.lang".equals(pJmxReq.getObjectName().getDomain())) {
             try {
                 // invoking getMBeanInfo() works around a bug in getAttribute() that fails to
                 // refetch the domains from the platform (JDK) bean server (e.g. for MXMBeans)
