@@ -128,14 +128,18 @@ placeholders:
 
  %v   the absolute value
  %r   the relative value for relative calculations (--base)
- %u   the unit if provided with --unit
- %b   the absolut base value as it is used with --base
+ %u   the value's unit for the output when --unit is used
+ %w   the the base value's for the output unit when --unit is used
+ %b   the absolut base value as it is used with --base 
  %c   the Nagios exit code in the Form "OK", "WARNING", "CRITICAL" 
       or "UNKNOWN"
  %t   Threshold value which fails ("" when the check doesn't fail)
  %n   name, either calulated automatically or given with --name
 
-You can use the same modifiers as for C<sprintf> to fine tune the output.
+Note that C<%u> and C<%w> are typically I<not> the same as the C<--unit>
+option. They specify the unit I<after> the conversion for the plugin output as
+described above. You can use the same modifiers as for C<sprintf> to fine tune
+the output.
 
 Example: 
 

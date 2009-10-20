@@ -98,9 +98,10 @@ sub execute {
 
             # Do the real check.
             my ($code,$mode) = $self->_check_threshhold($rel_value);
-            my ($base_conv) = $self->_normalize_value($base_value);
+            my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
             return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
-                                                               value => $value_conv, unit => $unit,base => $base_conv));            
+                                                               value => $value_conv, unit => $unit,base => $base_conv, 
+                                                               base_unit => $base_unit));            
         } else {
             # Performance data
             $np->add_perfdata(label => $label,
@@ -385,7 +386,7 @@ sub _exit_message {
     } else {
         if ($o->{base}) {
             return $self->_format_label('%n : In range %.2r% ('. &_placeholder($args,"v") .' %u / '.
-                                        &_placeholder($args,"b") . ' %u)',$args);
+                                        &_placeholder($args,"b") . ' %w)',$args);
         } else {
             if ($mode ne "numeric") {
                 return $self->_format_label('%n : \'%v\' as expected',$args);
@@ -429,8 +430,8 @@ sub _format_label {
                 $ret .= sprintf $format . "f",($args->{rel_value} || 0);
             } elsif ($what eq "b") {
                 $ret .= sprintf $format . &_format_char($args->{base}),($args->{base} || 0);
-            } elsif ($what eq "u") {
-                $ret .= sprintf $format . "s",($args->{unit} || "");
+            } elsif ($what eq "u" || $what eq "w") {
+                $ret .= sprintf $format . "s",($what eq "u" ? $args->{unit} : $args->{base_unit}) || "";
                 $ret =~ s/\s$//;
             } elsif ($what eq "v") {
                 if ($args->{mode} ne "numeric") {
@@ -484,7 +485,6 @@ sub _normalize_value {
     my $self = shift;
     my $value = shift;
     my $o = $self->{opts};
-
     my $unit = shift || $o->{unit} || return ($value,undef);
     
     for my $units (@UNITS) {
