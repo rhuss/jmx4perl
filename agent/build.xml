@@ -108,8 +108,8 @@
     <delete includeemptydirs="true">
       <fileset dir="modules/j4p-jar/target" includes="**/*"/>
       <fileset dir="modules/j4p-war/target" includes="**/*"/>
-      <fileset dir="modules/jdk14/j4p-jar/target" includes="**/*"/>
-      <fileset dir="modules/jdk14/j4p-war/target" includes="**/*"/>
+      <fileset dir="modules/jdk14/j4p14-jar/target" includes="**/*"/>
+      <fileset dir="modules/jdk14/j4p14-war/target" includes="**/*"/>
       <fileset dir="modules/j4p-it/target" includes="**/*"/>
       <fileset dir="." includes="*.war"/>
     </delete>
