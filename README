@@ -55,7 +55,7 @@ INSTALLATION
   documentation of your Java application server for the details (look
   for "deployment" and "war")
 
-  To test it, you can use 'jmx4perl' with the URL of the depolyed
+  To test it, you can use 'jmx4perl' with the URL of the deployed
   agent:
 
       jmx4perl http://jeeserver:port/j4p
@@ -81,6 +81,19 @@ SUPPORTED APPLICATION SERVERS
   specification should work out of the box.  Please open a bug at
   http://rt.cpan.org/Public/Bug/Report.html?Queue=jmx4perl if you
   encounter any problems.
+
+LEGACY JDK 1.4 SUPPORT
+
+  For legacy application servers like Weblogic 8.1 a JDK 1.4 backport
+  for the agent is provided. However, you need to build the agent on
+  your own by using 'ant jdk14' within the "agent" directory which
+  builds a j4p14.war. A maven build is provided as well, you will find
+  the wars in agent/modules/j4p-war/target and
+  agent/modules/jdk14/j4p14-war/target, respectively. Please note the
+  this support is experimentally and it is very likely, that no new
+  features will be added to the backported j4p14.war in the
+  future. j4p14.war has been successfully tested with Weblogic 8.1
+  only. 
 
 SOURCE REPOSITORY
 
