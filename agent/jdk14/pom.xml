@@ -12,7 +12,7 @@
     <groupId>org.jmx4perl</groupId>
     <artifactId>j4p-agent-parent</artifactId>
     <version>1</version>
-    <relativePath>../../pom.xml</relativePath>
+    <relativePath>../modules/pom.xml</relativePath>
   </parent>
 
   <packaging>pom</packaging>
