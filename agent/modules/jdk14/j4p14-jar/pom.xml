@@ -11,9 +11,9 @@
 
   <parent>
     <groupId>org.jmx4perl</groupId>
-    <artifactId>j4p-agent-parent</artifactId>
+    <artifactId>j4p14-parent</artifactId>
     <version>1</version>
-    <relativePath>../../../pom.xml</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <dependencies>

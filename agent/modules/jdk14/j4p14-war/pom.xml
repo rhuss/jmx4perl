@@ -6,14 +6,14 @@
   <artifactId>j4p14-agent</artifactId>
   <version>${applicationVersion}</version>
   <packaging>war</packaging>
-  <name>j4p14-agent-war</name>
-  <description>j4p15-agent-war - agent web application backported for Java 1.4</description>
+  <name>j4p14-war</name>
+  <description>j4p14-war - agent web application backported for Java 1.4</description>
 
   <parent>
     <groupId>org.jmx4perl</groupId>
-    <artifactId>j4p-agent-parent</artifactId>
+    <artifactId>j4p14-parent</artifactId>
     <version>1</version>
-    <relativePath>../../../pom.xml</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <dependencies>

@@ -87,13 +87,11 @@ LEGACY JDK 1.4 SUPPORT
   For legacy application servers like Weblogic 8.1 a JDK 1.4 backport
   for the agent is provided. However, you need to build the agent on
   your own by using 'ant jdk14' within the "agent" directory which
-  builds a j4p14.war. A maven build is provided as well, you will find
-  the wars in agent/modules/j4p-war/target and
-  agent/modules/jdk14/j4p14-war/target, respectively. Please note the
-  this support is experimentally and it is very likely, that no new
-  features will be added to the backported j4p14.war in the
-  future. j4p14.war has been successfully tested with Weblogic 8.1
-  only. 
+  builds a j4p14.war. A maven build is provided as well within
+  agent/modules/jdk14. Please note the this support is experimentally
+  and it is very likely, that no new features will be added to the
+  backported j4p14.war in the future. j4p14.war has been successfully
+  tested with Weblogic 8.1.
 
 SOURCE REPOSITORY
 
