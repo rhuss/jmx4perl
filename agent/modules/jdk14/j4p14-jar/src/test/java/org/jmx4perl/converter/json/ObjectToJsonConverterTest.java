@@ -1,15 +1,13 @@
 package org.jmx4perl.converter.json;
 
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.junit.After;
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Test;
 
 import javax.management.AttributeNotFoundException;
 import java.io.File;
 import java.util.Map;
 import java.util.Stack;
+
+import junit.framework.TestCase;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -40,44 +38,39 @@ import java.util.Stack;
  * @author roland
  * @since Jul 24, 2009
  */
-public class ObjectToJsonConverterTest {
+public class ObjectToJsonConverterTest extends TestCase {
 
     private ObjectToJsonConverter converter;
 
-    @Before
-    public void setup() {
+    public void setUp() {
         converter = new ObjectToJsonConverter(new StringToObjectConverter(),null);
         converter.setupContext(0,0,0);
     }
 
-    @After
     public void tearDown() {
         converter.clearContext();
     }
 
-    @Test
-    public void basics() throws AttributeNotFoundException {
-        Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
+    public void testBasics() throws AttributeNotFoundException {
+        Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack(),true);
         assertNotNull("Bean2 is set",result.get("bean2"));
         assertNotNull("Binary attribute is set",result.get("strong"));
     }
 
-    @Test
-    public void checkDeadLockDetection() throws AttributeNotFoundException {
-        Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
+    public void testCheckDeadLockDetection() throws AttributeNotFoundException {
+        Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack(),true);
         assertNotNull("Bean 2 is set",result.get("bean2"));
         assertNotNull("Bean2:Bean1 is set",((Map)result.get("bean2")).get("bean1"));
         assertEquals("Reference breackage",((Map)result.get("bean2")).get("bean1").getClass(),String.class);
         assertTrue("Bean 3 should be resolved",result.get("bean3") instanceof Map);
     }
 
-    @Test
-    public void maxDepth() throws AttributeNotFoundException {
-        ObjectToJsonConverter.StackContext ctx = converter.stackContextLocal.get();
+    public void testMaxDepth() throws AttributeNotFoundException {
+        ObjectToJsonConverter.StackContext ctx = (ObjectToJsonConverter.StackContext) converter.stackContextLocal.get();
         ctx.setMaxDepth(1);
-        Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
+        Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack(),true);
         String c = (String) ((Map) result.get("bean2")).get("bean1");
-        assertTrue("Recurence detected",c.contains("Depth limit"));
+        assertTrue("Recurence detected",c.indexOf("Depth limit") > 0);
     }
 
     // ============================================================================

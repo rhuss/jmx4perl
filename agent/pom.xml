@@ -14,6 +14,8 @@
     <module>modules/j4p-jar</module>
     <module>modules/j4p-war</module>
     <module>modules/j4p-it</module>
+    <module>modules/jdk14/j4p14-jar</module>
+    <module>modules/jdk14/j4p14-war</module>
   </modules>
 
   <developers>
@@ -29,7 +31,7 @@
   </developers>
 
   <properties>
-    <applicationVersion>0.35</applicationVersion>
+    <applicationVersion>0.36</applicationVersion>
   </properties>
   
 </project>
