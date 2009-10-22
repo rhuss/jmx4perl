@@ -120,7 +120,8 @@ Options:
 B<jmx4perl> is a command line utility for easily accessing an instrumented
 application server. Before you can use this tool, you need to deploy a small
 agent application. In the following C<agent-url> is the URL for accessing this
-agent. See L<JMX::Jmx4Perl::Manual> for details. 
+agent. If you use a configuration file, you can use also a symbolic name as
+stored in the configuration file. See L<JMX::Jmx4Perl::Manual> for details.
 
 You can use B<jmx4perl> in two modes: Directly by providing an C<agent-url> or
 enter an interactive mode if you ommit the agent-url or provide the the command
@@ -553,11 +554,7 @@ sub _get_args_for_jmx4perl {
         my $cfg = $arg;
         $cfg =~ s/\-/_/g;
         if (defined($opts->{$arg})) {
-            if (length($opts->{$arg})) {
-                $ret->{$cfg} = $opts->{$arg};
-            } else {
-                delete $ret->{$cfg};
-            }
+            $ret->{$cfg} = $opts->{$arg};
         }
     }
     return $ret;

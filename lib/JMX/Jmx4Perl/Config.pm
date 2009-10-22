@@ -1,7 +1,15 @@
 #!/usr/bin/perl
 package JMX::Jmx4Perl::Config;
-use Config::General;
 use Data::Dumper;
+
+my $HAS_CONFIG_GENERAL;
+
+BEGIN {
+    eval { 
+        require "Config/General.pm";
+    };
+    $HAS_CONFIG_GENERAL = $@ ? 0 : 1;
+}
 
 =head1 NAME 
 
@@ -58,9 +66,14 @@ sub new {
     $file = $ENV{HOME} . "/.j4p" unless $file;
     my $self = {};
     if (-e $file) {
-        $self->{config} = {
-          new Config::General(-ConfigFile => $file,  
-                              -LowerCaseNames => 1)->getall };
+        if ($HAS_CONFIG_GENERAL) {
+            $self->{config} =           
+                { new Config::General(-ConfigFile => $file,  
+                                      -LowerCaseNames => 1)->getall };
+        } else {
+            warn "Configuration file $file found, but Config::General is not installed.\n" . 
+              "Please install Config::General, for the moment we are ignoring the content of $file\n\n";
+        }
     } else {
         $self->{config} = {};
     }

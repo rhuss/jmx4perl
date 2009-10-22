@@ -120,6 +120,7 @@ lib/JMX/Jmx4Perl/Agent/Protocol.pod
 lib/JMX/Jmx4Perl/Agent/UserAgent.pm
 lib/JMX/Jmx4Perl/Alias.pm
 lib/JMX/Jmx4Perl/Alias/Object.pm
+lib/JMX/Jmx4Perl/Config.pm
 lib/JMX/Jmx4Perl/Manual.pod
 lib/JMX/Jmx4Perl/Nagios/CheckJmx4Perl.pm
 lib/JMX/Jmx4Perl/Product/BaseHandler.pm

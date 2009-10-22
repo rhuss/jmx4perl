@@ -6,6 +6,9 @@
     You need a 1.4 agent for running withing Weblogic 8.1
   - Cleaned up j4p agent with help of sonar and associated 
     metric checkers like PMD, check_style and FindBugs.
+  - Added support for config files in jmx4perl and JMX::Jmx4Perl 
+    which allows for shortcuts for agent URL as well as storing 
+    user and credentials information.
 
 0.35 (2009-08-15)
   - Added example 'threadDump.pl'

@@ -79,7 +79,8 @@ my $build = $class->new
                 "Config::General" => 0,
                },
    recommends => {
-                   "Nagios::Plugin" => "0.27"
+                   "Nagios::Plugin" => "0.27",
+                   "Config::General" => "0"
                   },
    build_requires => {
                       "Module::Build" => "0",
