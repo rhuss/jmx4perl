@@ -14,6 +14,7 @@ build_requires:
   Test::More: 0
 requires:
   Carp: 0
+  Config::General: 0
   Data::Dumper: 0
   Getopt::Long: 0
   JSON: 2.12
@@ -23,6 +24,7 @@ requires:
   Scalar::Util: 0
   URI: 1.35
 recommends:
+  Config::General: 0
   Nagios::Plugin: 0.27
 configure_requires:
   Module::Build: 0.35
@@ -39,6 +41,8 @@ provides:
     file: lib/JMX/Jmx4Perl/Alias.pm
   JMX::Jmx4Perl::Alias::Object:
     file: lib/JMX/Jmx4Perl/Alias/Object.pm
+  JMX::Jmx4Perl::Config:
+    file: lib/JMX/Jmx4Perl/Config.pm
   JMX::Jmx4Perl::Nagios::CheckJmx4Perl:
     file: lib/JMX/Jmx4Perl/Nagios/CheckJmx4Perl.pm
   JMX::Jmx4Perl::Product::BaseHandler:
