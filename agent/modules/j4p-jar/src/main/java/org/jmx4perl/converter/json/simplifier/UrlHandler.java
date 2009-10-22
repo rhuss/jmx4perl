@@ -37,10 +37,10 @@ public class UrlHandler extends SimplifierHandler<URL> {
 
     @Override
     void init(Map<String, Extractor<URL>> pStringExtractorMap) {
-        pStringExtractorMap.put("url",new Extractor<URL>() {
-            public Object extract(URL value) {
-                return value.toExternalForm();
-            }
-        });
+        addExtractors(new Object[][] {{ "url", new UrlExtractor() }});
+    }
+
+    private static class UrlExtractor implements Extractor<URL> {
+        public Object extract(URL pUrl) { return pUrl.toExternalForm(); }
     }
 }

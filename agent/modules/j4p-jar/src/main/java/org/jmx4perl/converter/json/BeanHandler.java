@@ -38,7 +38,7 @@ import java.util.*;
  */
 public class BeanHandler implements ObjectToJsonConverter.Handler {
 
-    final private static Set<Class> FINAL_CLASSES = new HashSet<Class>(Arrays.asList(
+    private static final Set<Class> FINAL_CLASSES = new HashSet<Class>(Arrays.asList(
             String.class,
             Number.class,
             Byte.class,
@@ -51,7 +51,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
             Date.class
     ));
 
-    final private static Set<String> IGNORE_METHODS = new HashSet<String>(Arrays.asList(
+    private static final Set<String> IGNORE_METHODS = new HashSet<String>(Arrays.asList(
             "getClass"
     ));
     private static final String[] GETTER_PREFIX = new String[] { "get", "is"};
@@ -61,6 +61,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         return Object.class;
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
                                 Stack<String> pExtraArgs,boolean jsonify)
             throws AttributeNotFoundException {

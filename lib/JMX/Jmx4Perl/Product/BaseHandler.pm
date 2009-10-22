@@ -558,6 +558,7 @@ sub _get_attribute {
     my $response = $jmx4perl->request($request);
     return undef if $response->status == 404;     # Ignore attributes not found
     return $response->value if $response->is_ok;
+    print Dumper($response);
     die "Error fetching attribute ","@_",": ",$response->error_text;
 }
 

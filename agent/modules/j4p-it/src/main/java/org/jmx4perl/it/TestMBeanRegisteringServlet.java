@@ -36,6 +36,8 @@ import java.util.ArrayList;
 
 public class TestMBeanRegisteringServlet extends HttpServlet {
 
+    private static final long serialVersionUID = 42L;
+
     private MBeanServerHandler mBeanHandler;
 
     private String domain = "jmx4perl.it";
@@ -70,16 +72,22 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
             registerMBean(new OperationChecking(domain + ":type=operation"));
             registerMBean(new AttributeChecking(domain + ":type=attribute"));
 
+        } catch (RuntimeException e) {
+            throw new ServletException("Error",e);
         } catch (Exception exp) {
+            throw new ServletException("Error",exp);
         }
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")
     private ObjectName registerMBean(Object pObject, String ... pName) throws ServletException {
         try {
             ObjectName oName = mBeanHandler.registerMBean(pObject,pName);
             System.out.println("Registered " + oName);
             testBeans.add(oName);
             return oName;
+        } catch (RuntimeException e) {
+            throw new ServletException("Cannot register MBean " + (pName != null && pName.length > 0 ? pName[0] : pObject),e);
         } catch (Exception e) {
             throw new ServletException("Cannot register MBean " + (pName != null && pName.length > 0 ? pName[0] : pObject),e);
         }
@@ -90,6 +98,7 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
         unregisterMBeans();
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")
     private void unregisterMBeans() {
         for (ObjectName name : testBeans) {
             try {

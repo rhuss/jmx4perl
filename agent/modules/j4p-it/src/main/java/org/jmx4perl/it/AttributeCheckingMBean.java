@@ -29,18 +29,17 @@ package org.jmx4perl.it;
  */
 public interface AttributeCheckingMBean {
 
-    public void reset();
+    void reset();
 
-    public boolean getState();
+    boolean getState();
 
-    public String getString();
+    String getString();
 
-    public String getNull();
+    String getNull();
 
-    public long getBytes();
+    long getBytes();
 
-    public float getLongSeconds();
+    float getLongSeconds();
 
-    public double getSmallMinutes();
-
+    double getSmallMinutes();
 }

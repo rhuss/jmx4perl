@@ -3,6 +3,7 @@ package org.jmx4perl.it;
 import javax.management.MBeanRegistration;
 import javax.management.ObjectName;
 import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -47,7 +48,7 @@ public class AttributeChecking implements AttributeCheckingMBean, MBeanRegistrat
         reset();
     }
 
-    public void reset() {
+    public final void reset() {
         state = false;
         idx = 0;
     }
@@ -83,14 +84,14 @@ public class AttributeChecking implements AttributeCheckingMBean, MBeanRegistrat
 
     // ============================================================================
 
-    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws Exception {
+    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws MalformedObjectNameException {
         return new ObjectName(name);
     }
 
     public void postRegister(Boolean pBoolean) {
     }
 
-    public void preDeregister() throws Exception {
+    public void preDeregister() {
     }
 
     public void postDeregister() {

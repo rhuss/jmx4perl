@@ -31,7 +31,7 @@ package org.jmx4perl.config;
  * @since Oct 8, 2009
  */
 
-public class IpChecker {
+public final class IpChecker {
 
     private IpChecker() { }
 
@@ -44,7 +44,7 @@ public class IpChecker {
      * @return true if either the address to check is the same as the address expected
      *         of falls within the subnet if a netmask is given
      */
-    static public boolean matches(String pExpected, String pToCheck) {
+    public static boolean matches(String pExpected, String pToCheck) {
         String[] parts = pExpected.split("/",2);
         if (parts.length == 1) {
             // No Net part given, check for equality ...
@@ -72,7 +72,7 @@ public class IpChecker {
         }
 	}
 
-	static private int[] transformCidrToNetmask(String pCidrString) {
+	private static int[] transformCidrToNetmask(String pCidrString) {
         try {
             int pCidr = Integer.parseInt(pCidrString);
             if (pCidr < 0 || pCidr > 32) {
@@ -94,12 +94,12 @@ public class IpChecker {
             }
             return ret;
         } catch (NumberFormatException exp) {
-            throw new IllegalArgumentException("Invalid netmask specification " + pCidrString);
+            throw new IllegalArgumentException("Invalid netmask specification " + pCidrString,exp);
         }
     }
 
 
-    static private int[] convertToIntTuple(String pAddress) {
+    private static int[] convertToIntTuple(String pAddress) {
         String[] parts = pAddress.split("\\.");
         if (parts.length != 4) {
             throw new IllegalArgumentException("Invalid IP-Adresse " + pAddress);
@@ -112,7 +112,7 @@ public class IpChecker {
                     throw new IllegalArgumentException("Invalid IP-Adresse " + pAddress);
                 }
             } catch (NumberFormatException exp) {
-                throw new IllegalArgumentException("Invalid IP-Adresse " + pAddress);
+                throw new IllegalArgumentException("Invalid IP-Adresse " + pAddress,exp);
             }
         }
         return ret;

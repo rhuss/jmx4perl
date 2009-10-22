@@ -63,7 +63,7 @@ public class WriteHandler extends RequestHandler {
             throw new IllegalArgumentException("Cannot get info for MBean " + request.getObjectName() + ": " +exp,exp);
         } catch (InvalidAttributeValueException e) {
             throw new IllegalArgumentException("Invalid value " + request.getValue() + " for attribute " +
-                    request.getAttributeName() + ", MBean " + request.getObjectNameAsString());
+                    request.getAttributeName() + ", MBean " + request.getObjectNameAsString(),e);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException("Cannot set value " + request.getValue() + " for attribute " +
                     request.getAttributeName() + ", MBean " + request.getObjectNameAsString(),e);

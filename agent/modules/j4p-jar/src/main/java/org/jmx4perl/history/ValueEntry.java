@@ -30,6 +30,9 @@ import java.io.Serializable;
 * @since Jun 12, 2009
 */
 class ValueEntry implements Serializable {
+
+    private static final long serialVersionUID = 42L;
+
     private Object value;
     private long timestamp;
 

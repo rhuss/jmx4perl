@@ -51,17 +51,17 @@ import java.util.*;
 public class ObjectToJsonConverter {
 
     // List of dedicated handlers
-    List<Handler> handlers;
+    private List<Handler> handlers;
 
-    ArrayHandler arrayHandler;
+    private ArrayHandler arrayHandler;
 
     // Thread-Local set in order to prevent infinite recursions
-    ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>();
+    private ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>();
 
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
 
-    int hardMaxDepth,hardMaxCollectionSize,hardMaxObjects;
+    private int hardMaxDepth,hardMaxCollectionSize,hardMaxObjects;
 
     public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter,
                                  ServletConfig pServletConfig) {
@@ -194,15 +194,9 @@ public class ObjectToJsonConverter {
     public Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean jsonify)
             throws AttributeNotFoundException {
         StackContext stackContext = stackContextLocal.get();
-        int maxDepth = stackContext.getMaxDepth();
-        if (maxDepth != 0 && stackContext.size() > maxDepth) {
-            return "[Depth limit " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
-        }
-        if (pValue != null && stackContext.alreadyVisited(pValue)) {
-            return "[Reference " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
-        }
-        if (exceededMaxObjects()) {
-            return "[Object limit exceeded]";
+        String limitReached = checkForLimits(pValue,stackContext);
+        if (limitReached != null) {
+            return limitReached;
         }
         try {
             stackContext.push(pValue);
@@ -212,21 +206,41 @@ public class ObjectToJsonConverter {
                 return null;
             }
 
-            Class clazz = pValue.getClass();
-            if (clazz.isArray()) {
+            if (pValue.getClass().isArray()) {
+                // Special handling for arrays
                 return arrayHandler.extractObject(this,pValue,pExtraArgs,jsonify);
             }
-            for (Handler handler : handlers) {
-                if (handler.getType() != null && handler.getType().isAssignableFrom(clazz)) {
-                    return handler.extractObject(this,pValue,pExtraArgs,jsonify);
-                }
-            }
-            throw new RuntimeException(
-                    "Internal error: No handler found for class " + clazz +
-                        " (object: " + pValue + ", extraArgs: " + pExtraArgs + ")");
+            return callHandler(pValue, pExtraArgs, jsonify);
         } finally {
             stackContext.pop();
         }
+    }
+
+    private String checkForLimits(Object pValue, StackContext pStackContext) {
+        int maxDepth = pStackContext.getMaxDepth();
+        if (maxDepth != 0 && pStackContext.size() > maxDepth) {
+            return "[Depth limit " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
+        }
+        if (pValue != null && pStackContext.alreadyVisited(pValue)) {
+            return "[Reference " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
+        }
+        if (exceededMaxObjects()) {
+            return "[Object limit exceeded]";
+        }
+        return null;
+    }
+
+    private Object callHandler(Object pValue, Stack<String> pExtraArgs, boolean jsonify)
+            throws AttributeNotFoundException {
+        Class pClazz = pValue.getClass();
+        for (Handler handler : handlers) {
+            if (handler.getType() != null && handler.getType().isAssignableFrom(pClazz)) {
+                return handler.extractObject(this,pValue,pExtraArgs,jsonify);
+            }
+        }
+        throw new IllegalStateException(
+                "Internal error: No handler found for class " + pClazz +
+                    " (object: " + pValue + ", extraArgs: " + pExtraArgs + ")");
     }
 
     // returns the old value
@@ -245,16 +259,22 @@ public class ObjectToJsonConverter {
             }
         }
 
-        throw new RuntimeException(
+        throw new IllegalStateException(
                 "Internal error: No handler found for class " + clazz + " for getting object value." +
                         " (object: " + pInner + ", attribute: " + pAttribute + ", value: " + pValue + ")");
 
 
        }
 
+    // Used for testing only. Hence final and package local
+    final ThreadLocal<StackContext> getStackContextLocal() {
+        return stackContextLocal;
+    }
+
 
     // Check whether JSR77 classes are available
     // Not used for the moment, but left here for reference
+    /*
     private boolean knowsAboutJsr77() {
         try {
             Class.forName("javax.management.j2ee.statistics.Stats");
@@ -265,6 +285,7 @@ public class ObjectToJsonConverter {
             return false;
         }
     }
+    */
 
     // =============================================================================
     // Handler interface for dedicated handler
@@ -334,7 +355,7 @@ public class ObjectToJsonConverter {
     // =============================================================================
     // Context used for detecting call loops and the like
 
-    final private static Set<Class> SIMPLE_TYPES = new HashSet<Class>(Arrays.asList(
+    private static final Set<Class> SIMPLE_TYPES = new HashSet<Class>(Arrays.asList(
             String.class,
             Number.class,
             Long.class,

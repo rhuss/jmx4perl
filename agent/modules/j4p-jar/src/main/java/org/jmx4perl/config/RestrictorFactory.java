@@ -31,7 +31,7 @@ import java.io.InputStream;
  * @author roland
  * @since Jul 28, 2009
  */
-public class RestrictorFactory {
+public final class RestrictorFactory {
 
     private RestrictorFactory() { }
 
@@ -41,7 +41,7 @@ public class RestrictorFactory {
      *
      * @return the restrictor
      */
-    static public Restrictor buildRestrictor() {
+    public static Restrictor buildRestrictor() {
 
         InputStream is =
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("/j4p-access.xml");

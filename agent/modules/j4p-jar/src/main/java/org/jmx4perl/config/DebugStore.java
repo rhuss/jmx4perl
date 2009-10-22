@@ -36,9 +36,10 @@ import java.util.LinkedList;
  */
 public class DebugStore {
 
-    LinkedList<Entry> debugEntries = new LinkedList<Entry>();
-    int maxDebugEntries;
-    boolean isDebug;
+    @SuppressWarnings("PMD.LooseCoupling")
+    private LinkedList<Entry> debugEntries = new LinkedList<Entry>();
+    private int maxDebugEntries;
+    private boolean isDebug;
 
     public DebugStore(int pMaxDebugEntries, boolean pDebug) {
         maxDebugEntries = pMaxDebugEntries;
@@ -116,10 +117,10 @@ public class DebugStore {
 
     // ========================================================================
 
-    private class Entry {
-        long timestamp;
-        String message;
-        Throwable throwable;
+    private static final class Entry {
+        private long timestamp;
+        private String message;
+        private Throwable throwable;
 
         private Entry(long pTimestamp, String pMessage, Throwable pThrowable) {
             timestamp = pTimestamp;
@@ -127,7 +128,7 @@ public class DebugStore {
             throwable = pThrowable;
         }
 
-        Entry(long pTime, String pMessage) {
+        private Entry(long pTime, String pMessage) {
             timestamp = pTime;
             message = pMessage;
         }

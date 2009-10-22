@@ -35,7 +35,7 @@ import java.util.Set;
  */
 public abstract class RequestHandler {
 
-    // Restrictor for restricting operations
+    // RestriOctor for restricting operations
     protected Restrictor restrictor;
 
     protected RequestHandler(Restrictor pRestrictor) {
@@ -47,7 +47,7 @@ public abstract class RequestHandler {
      * The type of request which can be served by this handler
      * @return the request typ of this handler
      */
-    abstract public JmxRequest.Type getType();
+    public abstract JmxRequest.Type getType();
 
     /**
      * Override this if you want all servers as list in the argument, e.g.
@@ -107,7 +107,7 @@ public abstract class RequestHandler {
      * @throws ReflectionException
      * @throws MBeanException
      */
-    abstract protected Object doHandleRequest(MBeanServer server,JmxRequest request)
+    protected abstract Object doHandleRequest(MBeanServer server,JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException;
 
     /**

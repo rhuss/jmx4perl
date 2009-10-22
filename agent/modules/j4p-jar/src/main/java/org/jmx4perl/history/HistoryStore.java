@@ -40,6 +40,8 @@ import java.io.Serializable;
  */
 public class HistoryStore implements Serializable {
 
+    private static final long serialVersionUID = 42L;
+
     // Hard limit for number of entries for a single history track
     private int globalMaxEntries;
 
@@ -76,15 +78,13 @@ public class HistoryStore implements Serializable {
             return;
         }
 
-        if (pMaxEntries > globalMaxEntries) {
-            pMaxEntries = globalMaxEntries;
-        }
+        int maxEntries = pMaxEntries > globalMaxEntries ? globalMaxEntries : pMaxEntries;
 
         if (entry != null) {
-            entry.setMaxEntries(pMaxEntries);
+            entry.setMaxEntries(maxEntries);
             entry.trim();
         } else {
-            entry = new HistoryEntry(pMaxEntries);
+            entry = new HistoryEntry(maxEntries);
             historyStore.put(pKey,entry);
         }
     }
@@ -96,7 +96,7 @@ public class HistoryStore implements Serializable {
         historyStore = new HashMap<HistoryKey, HistoryEntry>();
     }
 
-    public void updateAndAdd(JmxRequest pJmxReq, JSONObject pJson) {
+    public synchronized void updateAndAdd(JmxRequest pJmxReq, JSONObject pJson) {
         long timestamp = System.currentTimeMillis() / 1000;
         pJson.put("timestamp",timestamp);
 

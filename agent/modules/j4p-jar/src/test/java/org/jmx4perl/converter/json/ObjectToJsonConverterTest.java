@@ -73,7 +73,7 @@ public class ObjectToJsonConverterTest {
 
     @Test
     public void maxDepth() throws AttributeNotFoundException {
-        ObjectToJsonConverter.StackContext ctx = converter.stackContextLocal.get();
+        ObjectToJsonConverter.StackContext ctx = converter.getStackContextLocal().get();
         ctx.setMaxDepth(1);
         Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
         String c = (String) ((Map) result.get("bean2")).get("bean1");

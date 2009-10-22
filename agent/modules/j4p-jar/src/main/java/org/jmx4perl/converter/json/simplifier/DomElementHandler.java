@@ -43,20 +43,23 @@ public class DomElementHandler extends SimplifierHandler<Element> {
     // ==================================================================================
     @Override
     void init(Map<String, SimplifierHandler.Extractor<Element>> pExtractorMap) {
-        pExtractorMap.put("value",new Extractor<Element>() {
-            public Object extract(Element element) {
-                return element.getNodeValue();
-            }
-        });
-        pExtractorMap.put("name",new Extractor<Element>() {
-            public Object extract(Element element) {
-                return element.getNodeName();
-            }
-        });
-        pExtractorMap.put("hasChildNodes",new Extractor<Element>() {
-            public Object extract(Element element) {
-                return element.hasChildNodes();
-            }
-        });
+        Object[][] pAttrs = {
+                { "name", new NameExtractor() },
+                { "value", new ValueExtractor() },
+                { "hasChildNodes", new ChildExtractor() }
+        };
+        addExtractors(pAttrs);
     }
+
+    // ==================================================================================
+    private static class ValueExtractor implements Extractor<Element> {
+        public Object extract(Element element) { return element.getNodeValue(); }
+    }
+    private static class NameExtractor implements Extractor<Element> {
+        public Object extract(Element element) { return element.getNodeName(); }
+    }
+    private static class ChildExtractor implements Extractor<Element> {
+        public Object extract(Element element) { return element.hasChildNodes(); }
+    }
+
 }

@@ -35,21 +35,18 @@ import java.io.Serializable;
  */
 public class HistoryKey implements Serializable {
 
+    private static final long serialVersionUID = 42L;
+
     private String type;
     private String mBean;
     private String secondary;
     private String path;
 
     HistoryKey(JmxRequest pJmxReq) {
+        validate(pJmxReq);
         Type rType = pJmxReq.getType();
-        if (rType != EXEC && rType != READ && rType != WRITE) {
-            throw new IllegalArgumentException(
-                    "History supports only READ/WRITE/EXEC commands (and not " + rType + ")");
-        }
+
         mBean = pJmxReq.getObjectNameAsString();
-        if (mBean == null) {
-            throw new IllegalArgumentException("Mbean name must not be null");
-        }
         if (rType == EXEC) {
             type = "operation";
             secondary = pJmxReq.getOperation();
@@ -60,8 +57,18 @@ public class HistoryKey implements Serializable {
             path = pJmxReq.getExtraArgsAsPath();
         }
         if (secondary == null) {
+            throw new IllegalArgumentException(type + " name must not be null");
+        }
+    }
+
+    private void validate(JmxRequest pJmxRequest) {
+        Type rType = pJmxRequest.getType();
+        if (rType != EXEC && rType != READ && rType != WRITE) {
             throw new IllegalArgumentException(
-                    (rType == EXEC ? "Operation" : "Attribute") + " name must not be null");
+                    "History supports only READ/WRITE/EXEC commands (and not " + rType + ")");
+        }
+        if (pJmxRequest.getObjectNameAsString() == null) {
+            throw new IllegalArgumentException("Mbean name must not be null");
         }
     }
 

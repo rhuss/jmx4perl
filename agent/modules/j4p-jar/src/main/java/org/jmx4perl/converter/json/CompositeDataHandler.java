@@ -43,6 +43,7 @@ public class CompositeDataHandler implements ObjectToJsonConverter.Handler {
         return CompositeData.class;
     }
 
+    @SuppressWarnings("PMD.PreserveStackTrace")
     public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
                          Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
         CompositeData cd = (CompositeData) pValue;

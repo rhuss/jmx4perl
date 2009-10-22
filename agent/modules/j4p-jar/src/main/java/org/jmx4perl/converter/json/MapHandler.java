@@ -36,6 +36,7 @@ import java.util.Stack;
  * @since Apr 19, 2009
  */
 public class MapHandler implements ObjectToJsonConverter.Handler {
+    private static final int MAX_STRING_LENGTH = 400;
 
     public Class getType() {
         return Map.class;
@@ -100,8 +101,8 @@ public class MapHandler implements ObjectToJsonConverter.Handler {
     }
 
     private String trimString(String pString) {
-        if (pString.length() > 400) {
-            return pString.substring(0,400) + " ...";
+        if (pString.length() > MAX_STRING_LENGTH) {
+            return pString.substring(0, MAX_STRING_LENGTH) + " ...";
         } else {
             return pString;
         }

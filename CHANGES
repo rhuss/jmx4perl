@@ -4,6 +4,8 @@
   - Added support for a JDK 1.4 agent war. The feature base for 
     this agent is frozen. It might even vanish in the future.
     You need a 1.4 agent for running withing Weblogic 8.1
+  - Cleaned up j4p agent with help of sonar and associated 
+    metric checkers like PMD, check_style and FindBugs.
 
 0.35 (2009-08-15)
   - Added example 'threadDump.pl'

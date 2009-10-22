@@ -34,6 +34,11 @@ import java.io.Serializable;
 * @since Jun 12, 2009
 */
 public class HistoryEntry implements Serializable {
+
+    private static final long serialVersionUID = 42L;
+
+
+    @SuppressWarnings("PMD.LooseCoupling")
     private LinkedList<ValueEntry> values;
     private int maxEntries;
 

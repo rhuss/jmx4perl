@@ -74,7 +74,7 @@ public class ArrayHandler implements ObjectToJsonConverter.Handler {
             idx = Integer.parseInt(pAttribute);
         } catch (NumberFormatException exp) {
             throw new IllegalArgumentException("Non-numeric index for accessing array " + pInner +
-                    ". (index = " + pAttribute + ", value to set = " + pValueS + ")");
+                    ". (index = " + pAttribute + ", value to set = " + pValueS + ")",exp);
         }
         Class type = clazz.getComponentType();
         Object value = pConverter.convertFromString(type.getName(),pValueS);

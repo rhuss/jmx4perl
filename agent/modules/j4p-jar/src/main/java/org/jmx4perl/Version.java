@@ -33,6 +33,8 @@ package org.jmx4perl;
 public class Version {
     private static String VERSION = "0.36_1";
 
+    private Version() {}
+
     public static String getVersion() {
         return VERSION;
     }
