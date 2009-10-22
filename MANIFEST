@@ -145,6 +145,8 @@ t/10_handler.t
 t/20_alias.t
 t/30_request.t
 t/40_check_jmx4perl.t
+t/50_config.t
+t/j4p_test.cfg
 t/lib/It.pm
 t/lib/ProductTest/Test1Handler.pm
 t/lib/ProductTest/Test2Handler.pm
