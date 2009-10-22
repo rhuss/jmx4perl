@@ -68,8 +68,8 @@ sub new {
     if (-e $file) {
         if ($HAS_CONFIG_GENERAL) {
             $self->{config} =           
-                { new Config::General(-ConfigFile => $file,  
-                                      -LowerCaseNames => 1)->getall };
+                 &_prepare_server_hash({
+                     new Config::General(-ConfigFile => $file,-LowerCaseNames => 1)->getall});
         } else {
             warn "Configuration file $file found, but Config::General is not installed.\n" . 
               "Please install Config::General, for the moment we are ignoring the content of $file\n\n";
@@ -105,16 +105,22 @@ if no such configuration exist.
 sub get_server_config {
     my $self = shift;
     my $name = shift || die "No server name given to reference to get config for";
-    my $servers = $self->_get_configured_servers();
-    for my $s (@$servers) {
-        return $s if lc($s->{name}) eq $name;
-    }
-    return undef;    
+    return $self->{config}->{$name};
+}
+
+sub _prepare_server_hash {
+    my $config = shift;
+    my $servers = &_get_configured_servers($config);
+    my $ret = {};
+    for my $server (@$servers) {
+        $ret->{$server->{name}} = $server;
+    };
+    return $ret;
 }
 
 sub _get_configured_servers {
-    my $self = shift;
-    my $servers = $self->{config}->{server};
+    my $config = shift;
+    my $servers = $config->{server};
     return [] unless $servers;
     if (ref($servers) eq "HASH") {
         return [ $servers ];
