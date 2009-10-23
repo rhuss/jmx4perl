@@ -426,7 +426,7 @@ sub _print_response {
     if (ref($val)) {
         print Dumper($val);
     } else {
-        print $val;
+        print $val,"\n";
     }
     if ($opts{history} && $resp->history) {
         print "\nHistory:\n";
