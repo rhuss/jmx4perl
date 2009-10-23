@@ -104,7 +104,7 @@ sub init {
     croak "No URL provided" unless $self->cfg('url');
     my $ua = JMX::Jmx4Perl::Agent::UserAgent->new();
     $ua->jjagent_config($self->{cfg});
-    $ua->timeout($self->cfg-('timeout')) if $self->cfg('timeout');
+    $ua->timeout($self->cfg('timeout')) if $self->cfg('timeout');
     $ua->agent("JMX::Jmx4Perl::Agent $VERSION");
     # $ua->env_proxy;
     my $proxy = $self->cfg('proxy');
