@@ -79,6 +79,8 @@ import java.util.regex.Pattern;
  */
 public class JmxRequest extends JSONObject {
 
+    private static final long serialVersionUID = 42L;
+
     /**
      * Enumeration for encapsulationg the request mode.
      */
@@ -130,9 +132,6 @@ public class JmxRequest extends JSONObject {
 
                 // Get all path elements as a reverse stack
                 Stack<String> elements = extractElementsFromPath(pPathInfo);
-                if (elements.size() == 0) {
-                    throw new IllegalArgumentException("No request type given");
-                }
                 type = extractType(elements.pop());
 
                 Processor processor = processorMap.get(type);
@@ -140,40 +139,48 @@ public class JmxRequest extends JSONObject {
                     throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
                 }
 
+                // Parse request
                 processor.process(this,elements);
 
                 // Extract all additional args from the remaining path info
-                extraArgs = new ArrayList<String>();
-                while (!elements.isEmpty()) {
-                    extraArgs.add(elements.pop());
-                }
+                extraArgs = toList(elements);
 
                 // Setup JSON representation
                 put("type",type.getValue());
                 processor.setupJSON(this);
             }
-            if (pParameterMap != null) {
-                if (pParameterMap.get("maxDepth") != null) {
-                    maxDepth = Integer.parseInt( ((String []) pParameterMap.get("maxDepth"))[0]);
-                }
-                if (pParameterMap.get("maxCollectionSize") != null) {
-                    maxCollectionSize = Integer.parseInt(((String []) pParameterMap.get("maxCollectionSize"))[0]);
-                }
-                if (pParameterMap.get("maxObjects") != null) {
-                    maxObjects = Integer.parseInt(((String []) pParameterMap.get("maxObjects"))[0]);
-                }
-            }
+            extractParameters(pParameterMap);
         } catch (NoSuchElementException exp) {
             throw new IllegalArgumentException("Invalid path info " + pPathInfo,exp);
         } catch (MalformedObjectNameException e) {
-            throw new IllegalArgumentException(
-                    "Invalid object name \"" + objectNameS +
-                            "\": " + e.getMessage(),e);
+            throw new IllegalArgumentException("Invalid object name \"" + objectNameS + "\": " + e.getMessage(),e);
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Internal: Illegal encoding for URL conversion: " + e,e);
         } catch (EmptyStackException exp) {
             throw new IllegalArgumentException("Invalid arguments in pathinfo " + pPathInfo + " for command " + type,exp);
         }
+    }
+
+    private void extractParameters(Map pParameterMap) {
+        if (pParameterMap != null) {
+            if (pParameterMap.get("maxDepth") != null) {
+                maxDepth = Integer.parseInt( ((String []) pParameterMap.get("maxDepth"))[0]);
+            }
+            if (pParameterMap.get("maxCollectionSize") != null) {
+                maxCollectionSize = Integer.parseInt(((String []) pParameterMap.get("maxCollectionSize"))[0]);
+            }
+            if (pParameterMap.get("maxObjects") != null) {
+                maxObjects = Integer.parseInt(((String []) pParameterMap.get("maxObjects"))[0]);
+            }
+        }
+    }
+
+    private List<String> toList(Stack<String> pElements) {
+        List<String> p = new ArrayList<String>();
+        while (!pElements.isEmpty()) {
+            p.add(pElements.pop());
+        }
+        return p;
     }
 
     /*
@@ -195,8 +202,13 @@ public class JmxRequest extends JSONObject {
         }
 
         extractElements(ret,elementStack,null);
+        if (ret.size() == 0) {
+            throw new IllegalArgumentException("No request type given");
+        }
+
         // Reverse stack
         Collections.reverse(ret);
+
         return ret;
     }
 
@@ -324,7 +336,7 @@ public class JmxRequest extends JSONObject {
             ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(attributeName)
                     .append(", value=").append(value);
         } else if (type == Type.EXEC) {
-            ret.append("EXEC mbean=").append(objectNameS).append(", operation=").append(operation);
+            ret.append("EXEC mbean=").append(objectNameS).append(", " + OPERATION_KEY + "=").append(operation);
         } else {
             ret.append(type).append(" mbean=").append(objectNameS);
         }
@@ -337,13 +349,21 @@ public class JmxRequest extends JSONObject {
 
     // ==================================================================================
     // Dedicated parser for the various operations. They are installed as static processors.
-    interface Processor {
+
+    private interface Processor {
         void process(JmxRequest r,Stack<String> e)
                 throws MalformedObjectNameException;
         void setupJSON(JmxRequest r);
     }
 
     private static Map<Type,Processor> processorMap;
+
+    private static final String ATTRIBUTE_KEY = "attribute";
+    private static final String MBEAN_KEY = "mbean";
+    private static final String PATH_KEY = "path";
+    private static final String VALUE_KEY = "value";
+    private static final String ARGUMENTS_KEY = "arguments";
+    private static final String OPERATION_KEY = "operation";
 
     static {
         processorMap = new HashMap<Type, Processor>();
@@ -355,11 +375,11 @@ public class JmxRequest extends JSONObject {
             }
 
             public void setupJSON(JmxRequest r) {
-                r.put("mbean",r.objectName.getCanonicalName());
-                r.put("attribute",r.attributeName);
+                r.put(MBEAN_KEY,r.objectName.getCanonicalName());
+                r.put(ATTRIBUTE_KEY,r.attributeName);
                 String path = r.getExtraArgsAsPath();
                 if (path != null) {
-                    r.put("path",path);
+                    r.put(PATH_KEY,path);
                 }
             }
         });
@@ -373,13 +393,13 @@ public class JmxRequest extends JSONObject {
             }
 
             public void setupJSON(JmxRequest r) {
-                r.put("mbean",r.objectName.getCanonicalName());
-                r.put("attribute",r.attributeName);
+                r.put(MBEAN_KEY,r.objectName.getCanonicalName());
+                r.put(ATTRIBUTE_KEY,r.attributeName);
                 String path = r.getExtraArgsAsPath();
                 if (path != null) {
-                    r.put("path",path);
+                    r.put(PATH_KEY,path);
                 }
-                r.put("value",r.value);
+                r.put(VALUE_KEY,r.value);
             }
         });
         processorMap.put(Type.EXEC,new Processor() {
@@ -391,10 +411,10 @@ public class JmxRequest extends JSONObject {
             }
 
             public void setupJSON(JmxRequest r) {
-                r.put("mbean",r.objectName.getCanonicalName());
-                r.put("operation",r.operation);
+                r.put(MBEAN_KEY,r.objectName.getCanonicalName());
+                r.put(OPERATION_KEY,r.operation);
                 if (r.extraArgs.size() > 0) {
-                    r.put("arguments",r.extraArgs);
+                    r.put(ARGUMENTS_KEY,r.extraArgs);
                 }
             }
         });
@@ -422,7 +442,7 @@ public class JmxRequest extends JSONObject {
             }
 
             public void setupJSON(JmxRequest r) {
-                r.put("mbean",r.objectName.getCanonicalName());
+                r.put(MBEAN_KEY,r.objectName.getCanonicalName());
             }
         });
 

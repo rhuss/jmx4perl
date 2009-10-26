@@ -45,8 +45,8 @@ public class MBeanServerHandler {
     private Set<MBeanServer> mBeanServers;
 
     // Whether we are running under JBoss
-    boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
-    boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
+    private boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
+    // boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
 
     public MBeanServerHandler() {
         mBeanServers = findMBeanServers();
@@ -84,10 +84,10 @@ public class MBeanServerHandler {
                 // Must be there, otherwise we would nave have left the loop
                 throw objNotFoundException;
             } catch (ReflectionException e) {
-                throw new RuntimeException("Internal error for '" + pJmxReq.getAttributeName() +
+                throw new IllegalStateException("Internal error for '" + pJmxReq.getAttributeName() +
                         "' on object " + pJmxReq.getObjectName() + ": " + e,e);
             } catch (MBeanException e) {
-                throw new RuntimeException("Exception while fetching the attribute '" + pJmxReq.getAttributeName() +
+                throw new IllegalStateException("Exception while fetching the attribute '" + pJmxReq.getAttributeName() +
                         "' on object " + pJmxReq.getObjectName() + ": " + e,e);
             }
         }
@@ -194,7 +194,9 @@ public class MBeanServerHandler {
             if (server != null) {
                 servers.add(server);
             }
-        } catch (NamingException e) { /* can happen on non-Weblogic platforms */ }
+        } catch (NamingException e) {
+            // expected and can happen on non-Weblogic platforms
+        }
     }
 
     private void addWebsphereMBeanServer(Set<MBeanServer> servers) {
@@ -212,12 +214,12 @@ public class MBeanServerHandler {
             // Expected if not running under WAS
 		}
 		catch (InvocationTargetException ex) {
-            // CNFE should be earluer
-            throw new IllegalArgumentException("Internal: Found AdminServiceFactory but can not call methods on it (wrong WAS version ?)");
-		} catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("Internal: Found AdminServiceFactory but can not call methods on it (wrong WAS version ?)");
-        } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException("Internal: Found AdminServiceFactory but can not call methods on it (wrong WAS version ?)");
+            // CNFE should be earlier
+            throw new IllegalArgumentException("Internal: Found AdminServiceFactory but can not call methods on it (wrong WAS version ?)",ex);
+		} catch (IllegalAccessException ex) {
+            throw new IllegalArgumentException("Internal: Found AdminServiceFactory but can not call methods on it (wrong WAS version ?)",ex);
+        } catch (NoSuchMethodException ex) {
+            throw new IllegalArgumentException("Internal: Found AdminServiceFactory but can not call methods on it (wrong WAS version ?)",ex);
         }
     }
 
@@ -248,7 +250,7 @@ public class MBeanServerHandler {
         // if ((isJBoss || isWebsphere)
         // The workaround was enabled for websphere as well, but it seems
         // to work without it for WAS 7.0
-        if (isJBoss && "lang.java".equals(pJmxReq.getObjectName().getDomain())) {
+        if (isJBoss && "java.lang".equals(pJmxReq.getObjectName().getDomain())) {
             try {
                 // invoking getMBeanInfo() works around a bug in getAttribute() that fails to
                 // refetch the domains from the platform (JDK) bean server (e.g. for MXMBeans)
@@ -262,7 +264,7 @@ public class MBeanServerHandler {
                     }
                 }
             } catch (IntrospectionException e) {
-                throw new RuntimeException("Workaround for JBoss failed for object " + pJmxReq.getObjectName() + ": " + e);
+                throw new IllegalStateException("Workaround for JBoss failed for object " + pJmxReq.getObjectName() + ": " + e);
             }
         }
     }

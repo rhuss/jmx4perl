@@ -43,44 +43,44 @@ public class FileHandler extends SimplifierHandler<File> {
     // ==================================================================================
     @Override
     void init(Map<String, SimplifierHandler.Extractor<File>> pExtractorMap) {
-        extractorMap.put("name",new Extractor<File>() {
-            public Object extract(File file) {
-                return file.getName();
-            }
-        });
 
-        extractorMap.put("modified",new Extractor<File>() {
-            public Object extract(File file) {
-                return file.lastModified();
-            }
-        });
+        Object[][] attrExtractors = {
+                { "name", new NameExtractor() },
+                { "modified", new ModifiedExtractor() },
+                { "length", new LengthExtractor() },
+                { "directory", new IsDirectoryExtractor() },
+                { "canonicalPath", new PathExtractor() },
+                { "exists", new ExistsExtractor() }
+        };
 
-        extractorMap.put("length",new Extractor<File>() {
-            public Object extract(File file) {
-                return file.length();
-            }
-        });
-
-        extractorMap.put("directory",new Extractor<File>() {
-            public Object extract(File file) {
-                return file.isDirectory();
-            }
-        });
-
-        extractorMap.put("canonicalPath",new Extractor<File>() {
-            public Object extract(File file) {
-                try {
-                    return file.getCanonicalPath();
-                } catch (IOException exp) {
-                    return null;
-                }
-            }
-        });
-
-        extractorMap.put("exists",new Extractor<File>() {
-            public Object extract(File file) {
-                return file.exists();
-            }
-        });
+        addExtractors(attrExtractors);
     }
+
+    // ==========================================================================
+    // Static inner classes as usage extractors
+    private static class NameExtractor implements Extractor<File> {
+        public Object extract(File file) { return file.getName(); }
+    }
+    private static class ModifiedExtractor implements Extractor<File> {
+        public Object extract(File file) { return file.lastModified(); }
+    }
+    private static class LengthExtractor implements Extractor<File> {
+        public Object extract(File file) { return file.length(); }
+    }
+    private static class IsDirectoryExtractor implements Extractor<File> {
+        public Object extract(File file) { return file.isDirectory(); }
+    }
+    private static class PathExtractor implements Extractor<File> {
+        public Object extract(File file) {
+            try {
+                return file.getCanonicalPath();
+            } catch (IOException e) {
+                return null;
+            }
+        }
+    }
+    private static class ExistsExtractor implements Extractor<File> {
+        public Object extract(File file) { return file.exists(); }
+    }
+
 }

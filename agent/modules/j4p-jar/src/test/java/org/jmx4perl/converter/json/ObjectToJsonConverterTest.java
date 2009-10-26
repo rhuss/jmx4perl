@@ -71,17 +71,9 @@ public class ObjectToJsonConverterTest {
         assertTrue("Bean 3 should be resolved",result.get("bean3") instanceof Map);
     }
 
-    public void stackOverflowTest() throws AttributeNotFoundException {
-        File test = new File(".");
-        Map result = (Map) converter.extractObject(test,new Stack<String>(),true);
-        String c = (String) ((Map) result.get("canonicalFile")).get("canonicalFile");
-        assertTrue("Recurence detected",c.contains("Reference"));
-    }
-
-
     @Test
     public void maxDepth() throws AttributeNotFoundException {
-        ObjectToJsonConverter.StackContext ctx = converter.stackContextLocal.get();
+        ObjectToJsonConverter.StackContext ctx = converter.getStackContextLocal().get();
         ctx.setMaxDepth(1);
         Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
         String c = (String) ((Map) result.get("bean2")).get("bean1");

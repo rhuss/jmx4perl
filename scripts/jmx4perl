@@ -36,6 +36,7 @@ my $result = GetOptions(\%opts,
                         "proxy=s",
                         "proxy-user=s","proxy-password=s",
                         "product=s",
+                        "config=s",
                         "verbose|v!",
                         "shell|s=s",
                         "version!",
@@ -61,7 +62,6 @@ if (!@ARGV) {
     $url = $ARGV[0];
 } else {
     $url = shift @ARGV;
-    &_verify_url($url,$ARGV[$#ARGV]);
     $command = lc shift @ARGV;
     @args = ( @ARGV );
 }
@@ -70,14 +70,10 @@ if ($opts{shell}) {
     print "Interactive shell mode not supported yet.\nPlease provide a command as argument\n\n";
     &Getopt::Long::HelpMessage();
 } else {
-    my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
-    my @jmx_args = ("url" => $url);
-    for my $arg qw(product user password proxy proxy-user proxy-password verbose) {
-        my $cfg = $arg;
-        $cfg =~ s/\-/_/g;
-        push @jmx_args,( $cfg => $opts{$arg}) if $opts{$arg};
-    }
-    my $jmx4perl = new JMX::Jmx4Perl(@jmx_args);
+    my $sub = $COMMANDS{$command} || die "No command '",$command,"' known. See --help for assistance.\n";
+
+    my $jmx_args = &_get_args_for_jmx4perl($url,\%opts);
+    my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
     &{$sub}($jmx4perl,@args);
 }
 
@@ -115,6 +111,7 @@ Options:
    --proxy <url>           URL to proxy
    --proxy-user <user>     Authentication information for a proxy
    --proxy-password <pwd>
+   --config                Path to an optional configuration file (default: ~/.j4p)
    --history               Print out the history of return values (if switched on and present)
    --verbose               Print out more information
 
@@ -123,7 +120,8 @@ Options:
 B<jmx4perl> is a command line utility for easily accessing an instrumented
 application server. Before you can use this tool, you need to deploy a small
 agent application. In the following C<agent-url> is the URL for accessing this
-agent. See L<JMX::Jmx4Perl::Manual> for details. 
+agent. If you use a configuration file, you can use also a symbolic name as
+stored in the configuration file. See L<JMX::Jmx4Perl::Manual> for details.
 
 You can use B<jmx4perl> in two modes: Directly by providing an C<agent-url> or
 enter an interactive mode if you ommit the agent-url or provide the the command
@@ -422,6 +420,10 @@ sub _check_for_error {
     }
 }
 
+sub _has_tty {
+  return -t STDOUT;
+}
+
 sub _print_response {
     my $resp = shift;
     my $val = $resp->value;
@@ -429,6 +431,7 @@ sub _print_response {
         print Dumper($val);
     } else {
         print $val;
+        print "\n" if &_has_tty;
     }
     if ($opts{history} && $resp->history) {
         print "\nHistory:\n";
@@ -534,13 +537,41 @@ sub _validate_mbean_name {
       ($mbean !~ /^[^:]+:[^:]+$/ || $mbean !~ /:([^=]+)=/);    
 }
 
+sub _get_args_for_jmx4perl {
+    my $url = shift;
+    my $opts = shift;
+    # Try provided first argument as server name first in a 
+    # given configuration
+    my $ret;
+    my $config = new JMX::Jmx4Perl::Config($opts->{config});
+    my $server_config = $config->get_server_config($url);
+    if ($server_config && $server_config->{url}) {
+        print "Taking ",$server_config->{url}, " from configuration for $url" if $opts->{verbose};
+        &_verify_url($server_config->{url});
+        # Use server configs as default
+        $ret = { server => $url, config => $config };
+    } else {
+        &_verify_url($url);
+        $ret = { url => $url };
+    }
+
+    for my $arg qw(product user password proxy proxy-user proxy-password verbose) {
+        my $cfg = $arg;
+        $cfg =~ s/\-/_/g;
+        if (defined($opts->{$arg})) {
+            $ret->{$cfg} = $opts->{$arg};
+        }
+    }
+    return $ret;
+}
+
 sub _verify_url {
     my $url = shift;
-    my $last = shift;
     
     unless ($url =~ m|^\w+://|) {
-        my $text = "No url given for command. See --help for assistance.\n";
-        if ($last =~ m|^\w+://|) {
+        my $text = "No url or server name given for command. See --help for assistance.\n";
+        my $last = $#ARGV >= 0 ? $ARGV[$#ARGV] : undef;
+        if ($last && $last =~ m|^\w+://| && $last ne $url) {
             $text .= "Please note, that the URL must be given as first argument, not as last.\n";
         }
         die $text;

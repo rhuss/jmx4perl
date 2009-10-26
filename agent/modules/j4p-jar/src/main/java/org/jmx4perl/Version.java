@@ -30,8 +30,10 @@ package org.jmx4perl;
  * @author roland
  * @since Jun 11, 2009
  */
-public class Version {
-    private static String VERSION = "0.35";
+public final class Version {
+    private final static String VERSION = "0.36_2";
+
+    private Version() {}
 
     public static String getVersion() {
         return VERSION;

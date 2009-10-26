@@ -116,7 +116,7 @@ public class ListHandler extends RequestHandler {
             Map map = new HashMap();
             map.put("type",attrInfo.getType());
             map.put("desc",attrInfo.getDescription());
-            map.put("rw",new Boolean(attrInfo.isWritable() && attrInfo.isReadable()));
+            map.put("rw",Boolean.valueOf(attrInfo.isWritable() && attrInfo.isReadable()));
             attrMap.put(attrInfo.getName(),map);
         }
         if (attrMap.size() > 0) {

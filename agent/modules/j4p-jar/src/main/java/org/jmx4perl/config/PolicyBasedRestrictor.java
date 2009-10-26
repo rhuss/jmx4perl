@@ -76,7 +76,7 @@ public class PolicyBasedRestrictor implements Restrictor {
         catch (MalformedObjectNameException e) { exp = e; }
         finally {
             if (exp != null) {
-                throw new RuntimeException("Cannot parse policy file",exp);
+                throw new IllegalStateException("Cannot parse policy file",exp);
             }
         }
     }
@@ -165,9 +165,6 @@ public class PolicyBasedRestrictor implements Restrictor {
                 assertNodeName(commandNode,"command");
                 String typeName = commandNode.getTextContent().trim();
                 JmxRequest.Type type = JmxRequest.Type.valueOf(typeName.toUpperCase());
-                if (type == null) {
-                    throw new IllegalStateException("Unknown request type " + typeName);
-                }
                 typeSet.add(type);
             }
         }

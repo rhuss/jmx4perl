@@ -1,6 +1,4 @@
 # -*- mode: cperl -*-
-#!/usr/bin/perl
-
 use FindBin;
 use strict;
 use warnings;
@@ -176,7 +174,7 @@ sub exec_check_perl4jmx {
     push @args,("--url",$url);
     # push @args,("--verbose");
    
-    my $cmd = "$FindBin::Bin/../../scripts/check_jmx4perl "
+    my $cmd = "perl $FindBin::Bin/../../scripts/check_jmx4perl "
           .join(" ",map { '"' . $_ . '"' } @args); 
     print $cmd,"\n" if 0;
     open (F,"$cmd 2>&1 |") 

@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
-  <artifactId>j4p-agent-parent</artifactId>
+  <artifactId>j4p-parent</artifactId>
   <version>1</version>
-  <name>j4p-agent-parent</name>
+  <name>j4p-parent</name>
   <description>j4p parent pom</description>
 
   <packaging>pom</packaging>
@@ -29,7 +29,7 @@
   </developers>
 
   <properties>
-    <applicationVersion>0.35</applicationVersion>
+    <applicationVersion>0.36</applicationVersion>
   </properties>
   
 </project>

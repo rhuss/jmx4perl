@@ -3,6 +3,7 @@ package org.jmx4perl.it;
 import javax.management.MBeanRegistration;
 import javax.management.ObjectName;
 import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
 
 /**
  * @author roland
@@ -10,9 +11,9 @@ import javax.management.MBeanServer;
  */
 public class OperationChecking implements OperationCheckingMBean, MBeanRegistration {
 
-    String name;
+    private String name;
 
-    int counter = 0;
+    private int counter = 0;
 
     public OperationChecking(String pName) {
         name = pName;
@@ -30,14 +31,14 @@ public class OperationChecking implements OperationCheckingMBean, MBeanRegistrat
         }
     }
 
-    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws Exception {
+    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws MalformedObjectNameException {
         return new ObjectName(name);
     }
 
     public void postRegister(Boolean pBoolean) {
     }
 
-    public void preDeregister() throws Exception {
+    public void preDeregister()  {
     }
 
     public void postDeregister() {

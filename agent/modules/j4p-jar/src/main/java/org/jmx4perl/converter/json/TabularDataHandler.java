@@ -79,7 +79,7 @@ public class TabularDataHandler implements ObjectToJsonConverter.Handler {
             }
         } catch (NoSuchElementException ex) {
              throw new IllegalArgumentException(
-                     "Index " + idx + " out of range. Ex: " + ex.toString());
+                     "Index " + idx + " out of range. Ex: " + ex.toString(),ex);
         }
         return (CompositeData) it.next();
     }

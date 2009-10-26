@@ -26,20 +26,21 @@ package org.jmx4perl.it;
 import javax.management.MBeanRegistration;
 import javax.management.ObjectName;
 import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
 
 /**
  * We need to use MBeanRegisration because Websphere wont let us set our name
  * directly while registerting (it always add some boilerplate to the name). Using this
  * way, it works (so the names under which we register correspond to those in the
  * integration test).
- * 
+ *
  * @author roland
  * @since Jun 25, 2009
  */
 public class ObjectNameChecking implements ObjectNameCheckingMBean, MBeanRegistration {
 
 
-    String name;
+    private String name;
 
     public ObjectNameChecking(String pName) {
         name = pName;
@@ -49,14 +50,14 @@ public class ObjectNameChecking implements ObjectNameCheckingMBean, MBeanRegistr
         return "OK";
     }
 
-    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws Exception {
+    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws MalformedObjectNameException {
         return new ObjectName(name);
     }
 
     public void postRegister(Boolean pBoolean) {
     }
 
-    public void preDeregister() throws Exception {
+    public void preDeregister()  {
     }
 
     public void postDeregister() {

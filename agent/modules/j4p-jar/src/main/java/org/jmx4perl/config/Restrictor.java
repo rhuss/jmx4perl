@@ -3,7 +3,6 @@ package org.jmx4perl.config;
 import org.jmx4perl.JmxRequest;
 
 import javax.management.ObjectName;
-import javax.servlet.http.HttpServletRequest;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON

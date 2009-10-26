@@ -1,14 +1,14 @@
 package org.jmx4perl.converter.json.simplifier;
 
-import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.converter.StringToObjectConverter;
+import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Stack;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -39,7 +39,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 abstract class SimplifierHandler<T> implements ObjectToJsonConverter.Handler {
 
-    Map<String, Extractor<T>> extractorMap;
+    private Map<String, Extractor<T>> extractorMap;
 
     private Class<T> type;
 
@@ -67,7 +67,7 @@ abstract class SimplifierHandler<T> implements ObjectToJsonConverter.Handler {
                 attributeValue = extractor.extract((T) pValue);
                 return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);
             } catch (SkipAttributeException e) {
-                throw new IllegalArgumentException("Illegal path element " + element + " for object " + pValue);
+                throw new IllegalArgumentException("Illegal path element " + element + " for object " + pValue,e);
             }
         } else {
             JSONObject ret = new JSONObject();
@@ -89,6 +89,14 @@ abstract class SimplifierHandler<T> implements ObjectToJsonConverter.Handler {
     public Object setObjectValue(StringToObjectConverter pConverter, Object pInner,
                                  String pAttribute, String pValue) throws IllegalAccessException, InvocationTargetException {
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void addExtractors(Object[][] pAttrExtractors) {
+        for (int i = 0;i< pAttrExtractors.length; i++) {
+            extractorMap.put((String) pAttrExtractors[i][0],
+                             (Extractor<T>) pAttrExtractors[i][1]);
+        }
     }
 
 

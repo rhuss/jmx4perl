@@ -73,7 +73,7 @@ public class ListHandler implements ObjectToJsonConverter.Handler {
             idx = Integer.parseInt(pAttribute);
         } catch (NumberFormatException exp) {
             throw new IllegalArgumentException("Non-numeric index for accessing collection " + pInner +
-                    ". (index = " + pAttribute + ", value to set = " + pValueS + ")");
+                    ". (index = " + pAttribute + ", value to set = " + pValueS + ")",exp);
         }
 
         // For a collection, we can infer the type within the collection. We are trying to fetch

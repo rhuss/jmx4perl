@@ -34,19 +34,26 @@ public class ClassHandler extends SimplifierHandler<Class> {
         super(Class.class);
     }
 
+    @Override
     void init(Map<String, Extractor<Class>> pStringExtractorMap) {
-        pStringExtractorMap.put("name",new Extractor<Class>() {
-            public Object extract(Class value) {
-                return value.getName();
+        Object[][] pAttrs = {
+                { "name", new NameExtractor() },
+                { "interfaces", new InterfaceExtractor() }
+        };
+        addExtractors(pAttrs);
+    }
+
+    // ==================================================================================
+    private static class NameExtractor implements Extractor<Class> {
+        public Object extract(Class pClass) { return pClass.getName(); }
+    }
+
+    private static class InterfaceExtractor implements Extractor<Class> {
+        public Object extract(Class value) throws SkipAttributeException {
+            if (value.isInterface()) {
+                throw new SkipAttributeException();
             }
-        });
-        pStringExtractorMap.put("interfaces",new Extractor<Class>() {
-            public Object extract(Class value) throws SkipAttributeException {
-                if (value.isInterface()) {
-                    throw new SkipAttributeException();
-                }
-                return value.getInterfaces();
-            }
-        });
+            return value.getInterfaces();
+        }
     }
 }

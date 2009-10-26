@@ -1,5 +1,8 @@
 package org.jmx4perl.converter;
 
+import java.util.Map;
+import java.util.HashMap;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -29,28 +32,60 @@ package org.jmx4perl.converter;
  */
 public class StringToObjectConverter {
 
+
+    private static final Map<String,Extractor> EXTRACTOR_MAP = new HashMap<String,Extractor>();
+
+    static {
+        EXTRACTOR_MAP.put(Integer.class.getName(),new IntExtractor());
+        EXTRACTOR_MAP.put("int",new IntExtractor());
+        EXTRACTOR_MAP.put(Long.class.getName(),new LongExtractor());
+        EXTRACTOR_MAP.put("long",new LongExtractor());
+        EXTRACTOR_MAP.put(Boolean.class.getName(),new BooleanExtractor());
+        EXTRACTOR_MAP.put("boolean",new BooleanExtractor());
+        EXTRACTOR_MAP.put(String.class.getName(),new StringExtractor());
+    }
+
     public Object convertFromString(String pType, String pValue) {
         // TODO: Look for an external solution or support more types
-        // At least use a map for lookup
         if ("[null]".equals(pValue)) {
             return null;
-        } else if ("\"\"".equals(pValue)) {
-            if (String.class.getName().equals(pType)) {
+        }
+
+        // Special string value
+        if ("\"\"".equals(pValue)) {
+            if (matchesType(pType,String.class)) {
                 return "";
-            } else {
-                throw new IllegalArgumentException("Cannot convert empty string tag to type " + pType);
             }
+            throw new IllegalArgumentException("Cannot convert empty string tag to type " + pType);
         }
-        if (String.class.getName().equals(pType)) {
-            return pValue;
-        } else if (Integer.class.getName().equals(pType) || "int".equals(pType)){
-            return Integer.parseInt(pValue);
-        } else if (Long.class.getName().equals(pType) || "long".equals(pType)){
-            return Long.parseLong(pValue);
-        } else if (Boolean.class.getName().equals(pType) || "boolean".equals(pType)){
-            return Boolean.parseBoolean(pValue);
-        } else {
-            throw new IllegalArgumentException("Cannot convert string " + pValue + " to type " + pType);
+
+        Extractor extractor = EXTRACTOR_MAP.get(pType);
+        if (extractor == null) {
+            throw new IllegalArgumentException("Cannot convert string " + pValue + " to type " + pType + " because no converter could be found");
         }
+        return extractor.extract(pValue);
+    }
+
+    private boolean matchesType(String pType, Class pClass) {
+        return pClass.getName().equals(pType);
+    }
+
+    // ===========================================================================
+    // Extractor interface
+    private interface Extractor {
+        Object extract(String pValue);
+    }
+
+    private static class StringExtractor implements Extractor {
+        public Object extract(String pValue) { return pValue; }
+    }
+    private static class IntExtractor implements Extractor {
+        public Object extract(String pValue) { return Integer.parseInt(pValue); }
+    }
+    private static class LongExtractor implements Extractor {
+        public Object extract(String pValue) { return Long.parseLong(pValue); }
+    }
+    private static class BooleanExtractor implements Extractor {
+        public Object extract(String pValue) { return Boolean.parseBoolean(pValue); }
     }
 }

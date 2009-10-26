@@ -51,7 +51,7 @@ is backed up by this module. Other implementations (e.g.
 
 =over 4 
 
-=item $jjagent = JMX::Jmx4Perl::Agent->new(url => $url)
+=item $jjagent = JMX::Jmx4Perl::Agent->new(url => $url, ....)
 
 Creates a new local agent for a given url 
 
@@ -104,7 +104,7 @@ sub init {
     croak "No URL provided" unless $self->cfg('url');
     my $ua = JMX::Jmx4Perl::Agent::UserAgent->new();
     $ua->jjagent_config($self->{cfg});
-    $ua->timeout($self->cfg-('timeout')) if $self->cfg('timeout');
+    $ua->timeout($self->cfg('timeout')) if $self->cfg('timeout');
     $ua->agent("JMX::Jmx4Perl::Agent $VERSION");
     # $ua->env_proxy;
     my $proxy = $self->cfg('proxy');

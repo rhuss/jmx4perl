@@ -73,39 +73,35 @@ public class Config implements ConfigMBean, MBeanRegistration {
     public String mBeanServerInfo() {
         StringBuffer ret = new StringBuffer();
         Set<MBeanServer> mBeanServers = mBeanServerHandler.getMBeanServers();
-        if (mBeanServers == null) {
-            ret.append("Not initialized yet\n");
-        } else {
 
-            ret.append("Found ").append(mBeanServers.size()).append(" MBeanServers\n");
-            for (MBeanServer s : mBeanServers) {
-                ret.append("    ")
-                        .append("++ ")
-                        .append(s.toString())
-                        .append(": default domain = ")
-                        .append(s.getDefaultDomain())
-                        .append(", ")
-                        .append(s.getMBeanCount())
+        ret.append("Found ").append(mBeanServers.size()).append(" MBeanServers\n");
+        for (MBeanServer s : mBeanServers) {
+            ret.append("    ")
+                    .append("++ ")
+                    .append(s.toString())
+                    .append(": default domain = ")
+                    .append(s.getDefaultDomain())
+                    .append(", ")
+                    .append(s.getMBeanCount())
                         .append(" MBeans\n");
 
-                ret.append("        Domains:\n");
-                boolean javaLangFound = false;
-                for (String d : s.getDomains()) {
-                    if ("java.lang".equals(d)) {
-                        javaLangFound = true;
-                    }
-                    appendDomainInfo(ret, s, d);
+            ret.append("        Domains:\n");
+            boolean javaLangFound = false;
+            for (String d : s.getDomains()) {
+                if ("java.lang".equals(d)) {
+                    javaLangFound = true;
                 }
-                if (!javaLangFound) {
-                    // JBoss fails to list java.lang in its domain list
-                    appendDomainInfo(ret,s,"java.lang");
-                }
+                appendDomainInfo(ret, s, d);
             }
-            ret.append("\n");
-            ret.append("Platform MBeanServer: ")
-                    .append(ManagementFactory.getPlatformMBeanServer())
-                    .append("\n");
+            if (!javaLangFound) {
+                // JBoss fails to list java.lang in its domain list
+                appendDomainInfo(ret,s,"java.lang");
+            }
         }
+        ret.append("\n");
+        ret.append("Platform MBeanServer: ")
+                .append(ManagementFactory.getPlatformMBeanServer())
+                .append("\n");
         return ret.toString();
     }
 
@@ -161,14 +157,14 @@ public class Config implements ConfigMBean, MBeanRegistration {
     // =================================================================================
     // We are providing our own name
 
-    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws Exception {
+    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws MalformedObjectNameException {
         return new ObjectName("jmx4perl:type=Config");
     }
 
     public void postRegister(Boolean pBoolean) {
     }
 
-    public void preDeregister() throws Exception {
+    public void preDeregister()  {
     }
 
     public void postDeregister() {
