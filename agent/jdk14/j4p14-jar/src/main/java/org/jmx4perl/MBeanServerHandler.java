@@ -263,8 +263,8 @@ public class MBeanServerHandler {
     private void addJBossMBeanServer(Set servers) {
         try {
             Class locatorClass = Class.forName("org.jboss.mx.util.MBeanServerLocator");
-            Method method = locatorClass.getMethod("locateJBoss", new Class[0]);
-            servers.add((MBeanServer) method.invoke(null,new Object[] { null }));
+            Method method = locatorClass.getMethod("locateJBoss",null);
+            servers.add((MBeanServer) method.invoke(null,null));
         }
         catch (ClassNotFoundException e) { /* Ok, its *not* JBoss, continue with search ... */ }
         catch (NoSuchMethodException e) { }
