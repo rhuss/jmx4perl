@@ -8,7 +8,7 @@ license: gpl
 resources:
   license: http://opensource.org/licenses/gpl-license.php
 build_requires:
-  Module::Build: 0
+  Module::Build: 0.35
   Test: 0
   Test::Deep: 0
   Test::More: 0
