@@ -36,7 +36,7 @@ import java.util.Set;
 public abstract class RequestHandler {
 
     // RestriOctor for restricting operations
-    final protected Restrictor restrictor;
+    protected final Restrictor restrictor;
 
     protected RequestHandler(Restrictor pRestrictor) {
         restrictor = pRestrictor;
