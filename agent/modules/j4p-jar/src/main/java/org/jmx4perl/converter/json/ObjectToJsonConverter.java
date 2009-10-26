@@ -174,7 +174,9 @@ public class ObjectToJsonConverter {
             v = pServletConfig.getInitParameter("maxObjects");
             hardMaxObjects = v != null ? Integer.parseInt(v) : 0;
         } else {
-            hardMaxDepth = hardMaxCollectionSize = hardMaxObjects = 0;
+            hardMaxDepth = 0;
+            hardMaxCollectionSize = 0;
+            hardMaxObjects = 0;
         }
     }
 
