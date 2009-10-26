@@ -70,7 +70,7 @@ if ($opts{shell}) {
     print "Interactive shell mode not supported yet.\nPlease provide a command as argument\n\n";
     &Getopt::Long::HelpMessage();
 } else {
-    my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
+    my $sub = $COMMANDS{$command} || die "No command '",$command,"' known. See --help for assistance.\n";
 
     my $jmx_args = &_get_args_for_jmx4perl($url,\%opts);
     my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
@@ -420,13 +420,18 @@ sub _check_for_error {
     }
 }
 
+sub _has_tty {
+  return -t STDOUT;
+}
+
 sub _print_response {
     my $resp = shift;
     my $val = $resp->value;
     if (ref($val)) {
         print Dumper($val);
     } else {
-        print $val,"\n";
+        print $val;
+        print "\n" if &_has_tty;
     }
     if ($opts{history} && $resp->history) {
         print "\nHistory:\n";
