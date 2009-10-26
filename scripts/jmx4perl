@@ -547,11 +547,11 @@ sub _get_args_for_jmx4perl {
     my $server_config = $config->get_server_config($url);
     if ($server_config && $server_config->{url}) {
         print "Taking ",$server_config->{url}, " from configuration for $url" if $opts->{verbose};
-        &_verify_url($server_config->{url},$ARGV[$#ARGV]);
+        &_verify_url($server_config->{url});
         # Use server configs as default
         $ret = { server => $url, config => $config };
     } else {
-        &_verify_url($url,$ARGV[$#ARGV]);
+        &_verify_url($url);
         $ret = { url => $url };
     }
 
@@ -567,11 +567,11 @@ sub _get_args_for_jmx4perl {
 
 sub _verify_url {
     my $url = shift;
-    my $last = shift;
     
     unless ($url =~ m|^\w+://|) {
         my $text = "No url or server name given for command. See --help for assistance.\n";
-        if ($last =~ m|^\w+://| && $last ne $url) {
+        my $last = $#ARGV >= 0 ? $ARGV[$#ARGV] : undef;
+        if ($last && $last =~ m|^\w+://| && $last ne $url) {
             $text .= "Please note, that the URL must be given as first argument, not as last.\n";
         }
         die $text;
