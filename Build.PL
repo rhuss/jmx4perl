@@ -21,6 +21,7 @@ my $class = Module::Build->subclass(
       my $self = shift;
       use FindBin;
 
+
       die "Distribution must not contain a j4p-access.xml" if -f "$FindBin::Bin/agent/j4p-access.xml";
 
       my $version_java = "$FindBin::Bin/agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java";
@@ -83,7 +84,7 @@ my $build = $class->new
                    "Config::General" => "0"
                   },
    build_requires => {
-                      "Module::Build" => "0",
+                      "Module::Build" => "0.35",
                       "Test::More" => "0",
                       "Test::Deep" => 0,
                       "Test" => "0"
