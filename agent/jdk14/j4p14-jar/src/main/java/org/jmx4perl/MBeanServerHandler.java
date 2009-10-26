@@ -180,7 +180,7 @@ public class MBeanServerHandler {
         addFromMBeanServerFactory(servers);
         addFromJndiContext(servers);
         addFromWeblogicJndi(servers);
-        //servers.add(ManagementFactory.getPlatformMBeanServer());
+        addPlatformMBeanServer(servers);
 
         if (servers.size() == 0) {
 			throw new IllegalStateException("Unable to locate any MBeanServer instance");
@@ -188,6 +188,27 @@ public class MBeanServerHandler {
 
 		return servers;
 	}
+
+    private void addPlatformMBeanServer(Set pServers) {
+        // Do it by reflection
+        try {
+            Class managementFactory = Class.forName("java.lang.management.ManagementFactory");
+            Method method = managementFactory.getMethod("getPlatformMBeanServer",null);
+            MBeanServer server = (MBeanServer) method.invoke(null,null);
+            if (server != null) {
+                pServers.add(server);
+            }
+
+        } catch (ClassNotFoundException exp) {
+
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("No method getPlatformMBeanServer found: " + e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Error while invoking getPlatformMBeanServer: " + e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException("Error while invoking getPlatformMBeanServer: " + e);
+        }
+    }
 
     private void addFromWeblogicJndi(Set pServers) {
         try {
