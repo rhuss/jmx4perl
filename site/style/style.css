@@ -74,6 +74,21 @@ blockquote {
 	padding: 0.8em 1em 0.2em 46px;
 }
 
+code {
+    font: normal 1.1em courier,monospace,monaco;
+}
+
+pre { 
+    font: normal 1.2em courier,monospace,monaco;
+    line-height: 150%;
+	border: 1px solid #DDD;
+    background: #F6F6F6;
+	color: #332;
+	display: block;
+	margin: 0.2em;
+	padding: 0.4em;
+    
+}
 
 /* 
    Tables
