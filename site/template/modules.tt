@@ -1,5 +1,10 @@
-<ul>
-[% FOREACH module IN modules %]
-   <li><a href="[% module.link %]">[% module.name %]</a> - [% module.description %]</li>  
+<p>
+ Perl-Modules used within Jmx4Perl. Feel free to use and extend on these as demonstrated 
+ in the examples within the distribution's <code>examples/</code> directory.
+</p>
+
+<table class="nav_table">
+[% FOREACH module IN modules %]   
+   <tr><td><a href="[% module.link %]">[% module.name %]</a></td><td>[% module.description %]</td></tr> 
 [% END %]
-</ul>
+</table>

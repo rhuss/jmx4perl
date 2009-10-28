@@ -51,11 +51,11 @@ body {
 
 p {padding: 0.2em 0 1em;}
 
-h1 {font: normal 2em sans-serif;}
-h2 {font: normal 1.8em sans-serif;}
-h3 {font: normal 1.6em sans-serif;}
-h4 {font: normal 1.4em sans-serif;}
-h5 {font: bold 1.2em sans-serif;}
+h1 {font: normal 1.6em sans-serif;}
+h2 {font: normal 1.4em sans-serif;}
+h3 {font: normal 1.2em sans-serif;}
+h4 {font: normal 1.1em sans-serif;}
+h5 {font: bold 1.1em sans-serif;}
 h6 {font: bold 1em sans-serif;}
 
 h1,h2,h3,h4,h5,h6 {
@@ -110,6 +110,10 @@ table.data_table td, table th {padding: 10px;}
 table.data_table td {
 	background: #F5F5F5;
 	border: 1px solid #E0E0E0;
+}
+
+table.nav_table td { 
+    padding: 0px 10px; 
 }
 
 
@@ -261,7 +265,7 @@ img.right,img.alignright {margin: 0 0 15px 12px;}
 .archive_separator {margin: 0 0 14px;}
 
 /* Messages */
-.error, .notice, .success {
+.error, .notice, .success, .summary {
 	border: 1px solid #DDD;
 	margin-bottom: 1em;
 	padding: 0.6em 0.8em;
@@ -275,6 +279,9 @@ img.right,img.alignright {margin: 0 0 15px 12px;}
 
 .success {background: #E6EFC2; color: #264409; border-color: #C6D880;}
 .success a {color: #264409;}
+
+.summary {background: #E6EFC2; color: #264409; border-color: #C6D880;}
+.summary a {color: #264409;}
 
 
 /* 
@@ -516,6 +523,9 @@ img.right,img.alignright {margin: 0 0 15px 12px;}
 .box_content {padding: 8px 0 8px;}
 .box li:first-child {border-top: none;}
 
+.box_content { list-style: none; }
+    
+}
 
 /* 
    Comments 

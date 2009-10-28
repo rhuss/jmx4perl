@@ -1,0 +1,22 @@
+<h1>Dowload</h1>
+
+<p>
+  The canonical place to download distributions of jmx4perl
+  is on <a href="">CPAN</a>. The latest version of jmx4perl is
+  [% version %]. The agent is packaged within the distributed tar
+  archive, but for the latest Distribution can be downloaded here:
+</p>
+<dl class="download">
+  [% FOREACH link IN links %]
+    <dt>[% link.description %</dt>
+    <dd>
+      <ul>
+        <li>Tar-Achive: <a href="[% link.tar_url %]">[ %link.tar_name %]</a> (SHA1: [% link.tar_sha1 %])</li>
+        <li>Agent: <a href="[% link.agent_url %]">[ %link.agent_name %]</a> <code>[% link.agent_sha1 %]</code></li>
+      </ul>
+  [% END %]
+</dl>
+  
+<h1>Changes</h1>
+
+[% changes %]

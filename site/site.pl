@@ -23,11 +23,12 @@ my $config =
 
 my $TOP_LEVEL_NAVI_ITEMS = 
   [
-     { label => "Home", link => &make_link("../index.html") },
+     { label => "Home", link => &make_link("../pages/index.html") },
      { label => "Documentation", link => &make_link("../pod/JMX_Jmx4Perl_Manual.html")},
-     { label => "Nagios", link => &make_link("../nagios/index.html") },
-     { label => "Platforms", link => &make_link("../platforms/index.html") },
-     { label => "Agent", link => &make_link("../agent/index.html") },
+     { label => "Download", link => &make_link("../pages/download.html")},
+#     { label => "Nagios", link => &make_link("../nagios/index.html") },
+#     { label => "Platforms", link => &make_link("../platforms/index.html") },
+#     { label => "Agent", link => &make_link("../agent/index.html") },
   ];
 
 #my $TOP_LEVEL_NAVI = {};
@@ -42,6 +43,9 @@ mkdir "$Bin/target";
 
 # Pod documentation
 &make_module_docs;
+
+# Make pages
+&make_pages;
 
 # Fetch blog entries for main site
 # and convert to static pages
@@ -62,28 +66,76 @@ sub make_resources {
     copy \1,"$Bin/style","$Bin/target/";
 }
 
+sub make_pages {
+    my $target = "$Bin/target/pages";
+    mkdir $target unless -d $target;
+
+    &make_home_pages($target);
+    &make_download($target);
+
+}
+
+sub make_home_pages {
+    my $target = shift;
+    print ":::: Making index pages\n";
+
+    # Index
+    my ($template,$base_args) = &_get_template("home");
+    open(F,"$Bin/pages/index.html") || die "Cannot open index.html: $!";
+    my $pod_html = join "",<F>;
+    close F;
+    my $tt_args = 
+        {
+         %$base_args,
+         sub_navigation => [
+                              { label => "News", link => &make_link("index.html") },
+                              { label => "Blog", link => &make_link("blog.html") },
+                           ]
+        };
+    &sub_navigation_select($tt_args,"news");
+
+    $template->process("main.tt",{ %$tt_args, content => $pod_html },"$target/index.html")
+      || die $template->error,"\n";
+    
+}
+
+
+sub make_download {
+    my $target = shift;
+    print ":::: Making downoad pages\n";
+
+    # Download
+    my ($template,$base_args) = &_get_template("download");
+    my $tt_args = 
+        {
+         %$base_args,
+         sub_navigation => [
+                              { label => "Distribution", link => &make_link("dowload.html") },
+                              { label => "Agent", link => &make_link("agent.html") },
+                           ]
+        };
+    &sub_navigation_select($tt_args,"distribution");
+    open(F,"$Bin/pages/download.html") || die "Cannot open download.html: $!";
+    my $pod_html = join "",<F>;
+    close F;
+    $template->process("main.tt",{ %$tt_args, content => $pod_html },"$target/download.html")
+      || die $template->error,"\n";
+}
+
 sub make_module_docs {
     print ":::: Making Module documentation\n";
     my $target = "$Bin/target/pod";
     mkdir $target;
 
-    my $top_navigation = &top_navi_with_selected("documentation");
     my $pod_search = new Pod::Simple::Search()->limit_glob("JMX::*");
     my $n2p = $pod_search->survey(realpath("$Bin/../lib"));
     my $pod = Pod::POM->new();
-    my $template = Template->new
-      ({
-        INCLUDE_PATH => "$Bin/template:$Bin/template/inc",
-        INTERPOLATE => 1,
-        DEBUG => 1
-       })
-      || die Template->error(),"\n";    
+    my ($template,$base_args) = &_get_template("documentation");
     my $module_map = &extract_module_map($n2p,$target);
     #print Dumper($module_map);
     my $tt_args = 
     { 
-     css_base_url => "../style/",
-     top_navigation => $top_navigation,
+     %$base_args,
      sub_navigation => [
                        { label => "Manual", link => &make_link("JMX_Jmx4Perl_Manual.html") },
                        { label => "Modules", link => &make_link("modules.html") },
@@ -125,6 +177,25 @@ sub make_module_docs {
 
     #print $text,"\n";
     #print Dumper(new Pod::Simple::Search()->limit_glob("Pod::*")->survey());
+}
+
+sub _get_template {
+    my $menu_label = shift;
+    my $top_navigation = &top_navi_with_selected($menu_label);
+
+    my $template = Template->new
+      ({
+        INCLUDE_PATH => "$Bin/template:$Bin/template/inc",
+        INTERPOLATE => 1,
+        DEBUG => 1
+       })
+      || die Template->error(),"\n";    
+
+    my $base_args = {
+                     css_base_url => "../style/",
+                     top_navigation => $top_navigation,
+                    };
+    return ($template,$base_args);
 }
 
 sub extract_description {
