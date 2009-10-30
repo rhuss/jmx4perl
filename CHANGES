@@ -1,14 +1,15 @@
-0.36
+0.36 (2009-10-30)
   - Added <remote> to j4p-access.xml for restricting 
     access to certain hosts or subnets only.
   - Added support for a JDK 1.4 agent war. The feature base for 
     this agent is frozen. It might even vanish in the future.
-    You need a 1.4 agent for running withing Weblogic 8.1
+    You need a JDK 1.4 agent for running within Weblogic 8.1
   - Cleaned up j4p agent with help of sonar and associated 
     metric checkers like PMD, check_style and FindBugs.
   - Added support for config files in jmx4perl and JMX::Jmx4Perl 
     which allows for shortcuts for agent URL as well as storing 
     user and credentials information.
+  - Fixed some bugs
 
 0.35 (2009-08-15)
   - Added example 'threadDump.pl'
