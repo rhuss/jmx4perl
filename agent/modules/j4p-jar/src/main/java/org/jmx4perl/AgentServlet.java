@@ -153,7 +153,7 @@ public class AgentServlet extends HttpServlet {
             // Check access policy
             checkClientIPAccess(pReq);
 
-            jmxReq = new JmxRequest(pReq.getPathInfo(),pReq.getParameterMap());
+            jmxReq = JmxRequestFactory.createRequestFromUrl(pReq.getPathInfo(),pReq.getParameterMap());
 
             boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
             if (debug) logRequest(pReq, jmxReq);
