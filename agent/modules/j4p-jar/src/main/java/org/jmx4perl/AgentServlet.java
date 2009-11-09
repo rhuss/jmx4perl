@@ -9,6 +9,8 @@ import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.handler.*;
 import org.jmx4perl.history.HistoryStore;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
 import javax.management.*;
@@ -18,9 +20,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -86,9 +90,12 @@ public class AgentServlet extends HttpServlet {
     // Handler for finding and merging the various MBeanHandler
     private MBeanServerHandler mBeanServerHandler;
 
-    // Map with all request handlers
-    private static final  Map<JmxRequest.Type,RequestHandler> REQUEST_HANDLER_MAP =
-            new HashMap<JmxRequest.Type,RequestHandler>();
+    // POST- and GET- HttpRequestHandler
+    private HttpRequestHandler GET_HANDLER,POST_HANDLER;
+
+    // Map with all json request handlers
+    private static final  Map<JmxRequest.Type, JsonRequestHandler> REQUEST_HANDLER_MAP =
+            new HashMap<JmxRequest.Type, JsonRequestHandler>();
 
     // History handler
     private static HistoryStore historyStore;
@@ -121,7 +128,7 @@ public class AgentServlet extends HttpServlet {
         // Access restrictor
         restrictor = RestrictorFactory.buildRestrictor();
 
-        registerRequestHandler();
+        registerRequestHandlers();
         registerOwnMBeans();
     }
 
@@ -135,78 +142,145 @@ public class AgentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        handle(req, resp);
+        handle(GET_HANDLER,req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        handle(req,resp);
+        handle(POST_HANDLER,req,resp);
     }
 
-    private void handle(HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
-        JSONObject json = null;
-        JmxRequest jmxReq = null;
+    private void handle(HttpRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
+        JSONAware json = null;
         int code = 200;
         Throwable throwable = null;
         try {
             // Check access policy
             checkClientIPAccess(pReq);
 
-            jmxReq = JmxRequestFactory.createRequestFromUrl(pReq.getPathInfo(),pReq.getParameterMap());
+            // Dispatch for the proper HTTP request method
+            json = pReqHandler.handleRequest(pReq,pResp);
+            code = extractResultCode(json);
+            if (isDebug()) log("Response: " + json);
+        } catch (IllegalArgumentException exp) {
+            json = getErrorJSON(code = 400,exp);
+        } catch (IllegalStateException exp) {
+            json = getErrorJSON(code = 500,exp);
+        } catch (SecurityException exp) {
+            // Wipe out stacktrace
+            json = getErrorJSON(code = 403,new Exception(exp.getMessage()));
+        } catch (Exception exp) {
+            json = getErrorJSON(code = 500,exp);
+        } catch (Error error) {
+            json = getErrorJSON(code = 500,error);
+        } finally {
+            sendResponse(pResp,code,json.toJSONString());
+        }
+    }
 
-            boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
-            if (debug) logRequest(pReq, jmxReq);
+    // Extract an return code. It's the highest status number contained
+    // in within the responnses
+    private int extractResultCode(JSONAware pJson) {
+        if (pJson instanceof List) {
+            int maxCode = 0;
+            for (JSONAware j : (List<JSONAware>) pJson) {
+                int code = extractStatus(j);
+                if (code > maxCode) {
+                    maxCode = code;
+                }
+            }
+            return maxCode;
+        } else {
+            return extractStatus(pJson);
+        }
+    }
 
-            // Call handler and retrieve return value
+    private int extractStatus(JSONAware pJson) {
+        if (pJson instanceof JSONObject) {
+            JSONObject jsonObject = (JSONObject) pJson;
+            if (!jsonObject.containsKey("status")) {
+                throw new IllegalStateException("No status given in response " + pJson);
+            }
+            return (Integer) jsonObject.get("status");
+        } else {
+            throw new IllegalStateException("Internal: Not a JSONObject but a " + pJson.getClass() + " " + pJson);
+        }
+    }
+
+    private interface HttpRequestHandler {
+        JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) throws Exception;
+    }
+
+
+    private HttpRequestHandler newPostHttpRequestHandler() {
+        return new HttpRequestHandler() {
+            public JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp)
+                    throws Exception {
+                List<JmxRequest> jmxRequests;
+                String encoding = pReq.getCharacterEncoding();
+                jmxRequests = JmxRequestFactory.createRequestsFromInputStream(
+                        encoding != null ?
+                                new InputStreamReader(pReq.getInputStream(),encoding) :
+                                new InputStreamReader(pReq.getInputStream()));
+                JSONArray responseList = new JSONArray();
+                for (JmxRequest jmxReq : jmxRequests) {
+                    boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
+                    if (debug) logRequest(pReq, jmxReq);
+
+                    // Call handler and retrieve return value
+                    JSONObject resp = executeRequest(jmxReq);
+                    responseList.add(resp);
+                }
+                return responseList;
+            }
+        };
+    }
+
+    private HttpRequestHandler newGetHttpRequestHandler() {
+        return new HttpRequestHandler() {
+            public JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) throws Exception {
+                JmxRequest jmxReq =
+                        JmxRequestFactory.createRequestFromUrl(pReq.getPathInfo(),pReq.getParameterMap());
+                if (isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {
+                    logRequest(pReq, jmxReq);
+                }
+                return executeRequest(jmxReq);
+            }
+        };
+    }
+
+
+    private JSONObject executeRequest(JmxRequest jmxReq) {
+
+        // Call handler and retrieve return value
+        try {
             Object retValue = callRequestHandler(jmxReq);
-
-            if (debug) log("Return: " + retValue);
-            json = objectToJsonConverter.convertToJson(retValue,jmxReq);
+            boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
+            if (debug) log("Response: " + retValue);
+            JSONObject json = objectToJsonConverter.convertToJson(retValue,jmxReq);
 
             // Update global history store
             historyStore.updateAndAdd(jmxReq,json);
 
             // Ok, we did it ...
             json.put("status",200 /* success */);
-            if (debug) log("Response: " + json);
-        } catch (AttributeNotFoundException exp) {
-            code = 404;
-            throwable = exp;
-        } catch (InstanceNotFoundException exp) {
-            code = 404;
-            throwable = exp;
-        } catch (UnsupportedOperationException exp) {
-            code = 404;
-            throwable = exp;
-        } catch (IllegalArgumentException exp) {
-            code = 400;
-            throwable = exp;
-        } catch (IllegalStateException exp) {
-            code = 500;
-            throwable = exp;
-        } catch (SecurityException exception) {
-            code = 403;
-            // Wipe out stacktrace
-            throwable = new Exception(exception.getMessage());
-        } catch (Exception exp) {
-            code = 500;
-            throwable = exp;
-        } catch (Error error) {
-            code = 500;
-            throwable = error;
-        } finally {
-            if (code != 200) {
-                json = getErrorJSON(code,throwable);
-                if (isDebug()) {
-                    log("Error " + code,throwable);
-                }
-            } else if (isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {
-                log("Success");
-            }
-            sendResponse(pResp,code,json.toJSONString());
+            if (debug) log("Success");
+            return json;
+        } catch (ReflectionException e) {
+            return getErrorJSON(404,e);
+        } catch (InstanceNotFoundException e) {
+            return getErrorJSON(404,e);
+        } catch (MBeanException e) {
+            return getErrorJSON(500,e);
+        } catch (AttributeNotFoundException e) {
+            return getErrorJSON(404,e);
+        } catch (UnsupportedOperationException e) {
+            return getErrorJSON(500,e);
         }
     }
+
+    // =======================================================================
 
     private void logRequest(HttpServletRequest pReq, JmxRequest pJmxReq) {
         log("URI: " + pReq.getRequestURI());
@@ -223,7 +297,7 @@ public class AgentServlet extends HttpServlet {
     private Object callRequestHandler(JmxRequest pJmxReq)
             throws ReflectionException, InstanceNotFoundException, MBeanException, AttributeNotFoundException {
         JmxRequest.Type type = pJmxReq.getType();
-        RequestHandler handler = REQUEST_HANDLER_MAP.get(type);
+        JsonRequestHandler handler = REQUEST_HANDLER_MAP.get(type);
         if (handler == null) {
             throw new UnsupportedOperationException("Unsupported operation '" + pJmxReq.getType() + "'");
         }
@@ -238,6 +312,9 @@ public class AgentServlet extends HttpServlet {
         StringWriter writer = new StringWriter();
         pExp.printStackTrace(new PrintWriter(writer));
         jsonObject.put("stacktrace",writer.toString());
+        if (isDebug()) {
+            log("Error " + pErrorCode,pExp);
+        }
         return jsonObject;
     }
 
@@ -256,9 +333,9 @@ public class AgentServlet extends HttpServlet {
     }
 
 
-    private void registerRequestHandler() {
+    private void registerRequestHandlers() {
 
-        RequestHandler handlers[] = {
+        JsonRequestHandler handlers[] = {
                 new ReadHandler(restrictor),
                 new WriteHandler(restrictor,objectToJsonConverter),
                 new ExecHandler(restrictor,stringToObjectConverter),
@@ -267,9 +344,12 @@ public class AgentServlet extends HttpServlet {
                 new SearchHandler(restrictor)
         };
 
-        for (RequestHandler handler : handlers) {
+        for (JsonRequestHandler handler : handlers) {
             REQUEST_HANDLER_MAP.put(handler.getType(),handler);
         }
+
+        GET_HANDLER = newGetHttpRequestHandler();
+        POST_HANDLER = newPostHttpRequestHandler();
     }
 
     private void initStores() {

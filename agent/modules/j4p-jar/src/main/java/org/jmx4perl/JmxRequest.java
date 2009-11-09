@@ -4,10 +4,7 @@ import org.json.simple.JSONObject;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Collections;
+import java.util.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -39,7 +36,7 @@ import java.util.Collections;
  * @author roland
  * @since Apr 19, 2009
  */
-class JmxRequest {
+public class JmxRequest {
 
     /**
      * Enumeration for encapsulationg the request mode.
@@ -133,6 +130,8 @@ class JmxRequest {
         s = (String) pMap.get("path");
         if (s != null) {
             extraArgs = splitPath(s);
+        } else {
+            extraArgs = new ArrayList<String>();
         }
         List<String> l = (List<String>) pMap.get("arguments");
         if (l != null) {
@@ -181,7 +180,8 @@ class JmxRequest {
     }
 
     private List<String> splitPath(String pPath) {
-        return null;  //To change body of created methods use File | Settings | File Templates.
+        String[] elements = pPath.split("/");
+        return Arrays.asList(elements);
     }
 
 
@@ -210,7 +210,7 @@ class JmxRequest {
         return maxObjects;
     }
 
-        void setAttributeName(String pName) {
+    void setAttributeName(String pName) {
         attributeName = pName;
     }
 
@@ -263,7 +263,7 @@ class JmxRequest {
      * Return this request in a proper JSON representation
      * @return this object in a JSON representation
      */
-    JSONObject toJSON() {
+    public JSONObject toJSON() {
         JSONObject ret = new JSONObject();
         ret.put("type",type.value);
         if (objectName != null) {

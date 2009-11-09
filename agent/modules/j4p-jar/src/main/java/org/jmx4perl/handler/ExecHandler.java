@@ -34,7 +34,7 @@ import java.util.List;
  * @author roland
  * @since Jun 12, 2009
  */
-public class ExecHandler extends RequestHandler {
+public class ExecHandler extends JsonRequestHandler {
     private StringToObjectConverter stringToObjectConverter;
 
     public ExecHandler(Restrictor pRestrictor,StringToObjectConverter pStringToObjectConverter) {

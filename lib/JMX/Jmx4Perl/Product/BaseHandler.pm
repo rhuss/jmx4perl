@@ -467,14 +467,18 @@ sub jvm_info {
                               "time" => [ "Starttime", RUNTIME_STARTTIME ]                              
                              ]                         
                );
-
     my $ret = "";
+
+    # Collect all alias and create a map with values
+    my $info_map = $self->_fetch_info(\@info);
+
+    # Prepare output
     while (@info) {
         my $titel = shift @info;
         my $e = shift @info;
         my $val = "";
         while (@$e) {
-            $self->_append_info(\$val,shift @$e,shift @$e);            
+            $self->_append_info($info_map,\$val,shift @$e,shift @$e);            
         }
         if (length $val) {
             $ret .= $titel . ":\n";
@@ -482,8 +486,6 @@ sub jvm_info {
         }
     }
     
-
-
     if ($verbose) {
         my $args = "";
         my $rt_args = $self->_get_attribute(RUNTIME_ARGUMENTS);
@@ -512,6 +514,34 @@ sub jvm_info {
     return $ret;
 }
 
+# Bulk fetch of information
+sub _fetch_info {
+    my $self = shift;
+    my $info = shift;
+    my $jmx4perl = $self->{jmx4perl};
+    my @reqs = ();
+    my @aliases = ();
+    my $info_map = {};
+    for (my $i=1; $i < @$info; $i += 2) {
+        my $attr_list = $info->[$i];
+        for (my $j=1;$j < @$attr_list;$j += 2) {
+            my $alias_list = $attr_list->[$j];
+            for (my $k=1;$k < @$alias_list;$k++) {
+                my $alias = $alias_list->[$k];                
+                my @args = $jmx4perl->resolve_alias($alias);
+                next unless $args[0];
+                push @reqs,new JMX::Jmx4Perl::Request(READ,@args);
+                push @aliases,$alias;
+            }
+        }
+    }
+    my @resps = $jmx4perl->request(@reqs);
+    foreach my $resp (@resps) {
+        $info_map->{shift @aliases} = $resp->value;
+    }
+    return $info_map;
+}
+
 # Fetch version and vendor from jrs77
 sub _server_info_from_jsr77 {
     my $self = shift;
@@ -528,17 +558,18 @@ sub _server_info_from_jsr77 {
 
 sub _append_info {
     my $self = shift;
+    my $info_map = shift;
     my $r = shift;
     my $type = shift;
     my $content = shift;
     my $label = shift @$content;
-    my $value = $self->_get_attribute(shift @$content);
+    my $value = $info_map->{shift @$content};
     return unless defined($value);
     if ($type eq "mem") {
         $value = int($value/(1024*1024)) . " MB";
     } elsif ($type eq "str" && @$content) {
         while (@$content) {
-            $value .= " " . $self->_get_attribute(shift @$content);
+            $value .= " " . $info_map->{shift @$content};
         }
     } elsif ($type eq "duration") {
         $value = &_format_duration($value);

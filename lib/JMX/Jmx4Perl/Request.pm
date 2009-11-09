@@ -41,6 +41,14 @@ Write an attribute
 
 Execute an JMX operation 
 
+=item LIST
+
+List all MBeans available
+
+=item SEARCH
+
+Search for MBeans
+
 =item REGISTER_NOTIFICATION
 
 Register for a JMX notification (not supported yet)
@@ -243,6 +251,20 @@ sub _validate {
         die $self->{type} . ": No mbean name given\n" unless $self->{mbean};
         die $self->{type} . ": No operation name given\n" unless $self->{operation};
     }
+}
+
+# Called for post requests
+sub TO_JSON {
+    my $self = shift;
+    return {
+            type => $self->{type} ? uc($self->{type}) : undef,
+            mbean => $self->{mbean},
+            attribute => $self->{attribute},
+            path => $self->{path},
+            arguments => $self->{args},
+            value => $self->{value},
+            operation => $self->{operation},
+           };
 }
 
 =back 

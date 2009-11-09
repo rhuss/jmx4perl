@@ -5,7 +5,10 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import javax.management.MalformedObjectNameException;
+import javax.servlet.ServletInputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.Reader;
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -108,10 +111,10 @@ class JmxRequestFactory {
     /**
      * Create a list of {@link JmxRequest}s from the (POST) JSON content of an agent.
      *
-     * @param content JSON representation of a {@link JmxRequest}
+     * @param content JSON representation of a {@link org.jmx4perl.JmxRequest}
      * @return list with one or more requests
      */
-    static List<JmxRequest> createRequestsFromContent(String content) {
+    static List<JmxRequest> createRequestsFromInputStream(Reader content) throws MalformedObjectNameException, IOException {
         try {
             JSONParser parser = new JSONParser();
             Object json = parser.parse(content);
@@ -128,6 +131,7 @@ class JmxRequestFactory {
             } else {
                 throw new IllegalArgumentException("Invalid JSON Request " + content);
             }
+            return ret;
         } catch (ParseException e) {
             throw new IllegalArgumentException("Invalid JSON request " + content,e);
         }

@@ -32,7 +32,7 @@ import javax.management.*;
  * @author roland
  * @since Jun 12, 2009
  */
-public class ReadHandler extends RequestHandler {
+public class ReadHandler extends JsonRequestHandler {
 
     public ReadHandler(Restrictor pRestrictor) {
         super(pRestrictor);

@@ -33,12 +33,12 @@ import java.util.Set;
  * @author roland
  * @since Jun 12, 2009
  */
-public abstract class RequestHandler {
+public abstract class JsonRequestHandler {
 
     // RestriOctor for restricting operations
     protected final Restrictor restrictor;
 
-    protected RequestHandler(Restrictor pRestrictor) {
+    protected JsonRequestHandler(Restrictor pRestrictor) {
         restrictor = pRestrictor;
     }
 

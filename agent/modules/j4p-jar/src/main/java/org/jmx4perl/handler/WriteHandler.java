@@ -34,7 +34,7 @@ import java.lang.reflect.InvocationTargetException;
  * @author roland
  * @since Jun 12, 2009
  */
-public class WriteHandler extends RequestHandler {
+public class WriteHandler extends JsonRequestHandler {
 
     private ObjectToJsonConverter objectToJsonConverter;
 

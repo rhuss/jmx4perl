@@ -33,7 +33,7 @@ import javax.management.*;
  * @author roland
  * @since Jun 12, 2009
  */
-public class VersionHandler extends RequestHandler {
+public class VersionHandler extends JsonRequestHandler {
 
     public VersionHandler(Restrictor pRestrictor) {
         super(pRestrictor);

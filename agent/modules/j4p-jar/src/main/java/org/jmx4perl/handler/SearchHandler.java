@@ -36,7 +36,7 @@ import java.util.Set;
  * @author roland
  * @since Jun 18, 2009
  */
-public class SearchHandler extends RequestHandler {
+public class SearchHandler extends JsonRequestHandler {
 
     public SearchHandler(Restrictor pRestrictor) {
         super(pRestrictor);
