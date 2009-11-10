@@ -1,3 +1,11 @@
+0.40
+  - Extended protocol to allow for JSON requests via POST in addition
+    to pure URL based requests via GET
+  - Implemented bulk requests: JMX::Jmx4Perl->request() can now take a
+    list of JMX::Jmx4Perl::Request objects in which case it will
+    return a list of JMX::Jmx4Perl::Response objects (instead of a
+    single, scalar, response when used with a single request)
+
 0.36 (2009-10-30)
   - Added <remote> to j4p-access.xml for restricting 
     access to certain hosts or subnets only.

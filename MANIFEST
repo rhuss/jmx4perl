@@ -83,9 +83,9 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/json/simplifier/UrlHa
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/json/TabularDataHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/StringToObjectConverter.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ExecHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/JsonRequestHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ListHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ReadHandler.java
-agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/RequestHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/SearchHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/VersionHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/WriteHandler.java
@@ -94,6 +94,7 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/history/HistoryKey.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/history/HistoryStore.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/history/ValueEntry.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/JmxRequest.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/JmxRequestFactory.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/MBeanServerHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/config/IpCheckerTest.java
@@ -114,6 +115,7 @@ it/t/10_base.t
 it/t/30_naming.t
 it/t/40_alias.t
 it/t/50_check_jmx4perl.t
+it/t/60_bulk_request.t
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Protocol.pod

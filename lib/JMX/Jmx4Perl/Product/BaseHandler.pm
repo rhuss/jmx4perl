@@ -422,10 +422,10 @@ sub server_info {
     return $ret;
 }
 
-=item jvm_info = $handler->jvm_info()
+=item $jvm_info = $handler->jvm_info()
 
 Get information which is based on well known MBeans which are available for
-every Virtual machine.
+every Virtual machine. This is a textual representation of the information. 
 
 =cut
 
@@ -514,7 +514,8 @@ sub jvm_info {
     return $ret;
 }
 
-# Bulk fetch of information
+# Bulk fetch of alias information
+# Return: Map with aliases as keys and response values as values
 sub _fetch_info {
     my $self = shift;
     my $info = shift;
