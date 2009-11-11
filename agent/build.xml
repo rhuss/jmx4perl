@@ -58,6 +58,7 @@
         <fileset dir="lib">
           <include name="*.jar"/>
         </fileset>
+        <pathelement location="modules/j4p-jar/target/classes"/>
       </classpath>
     </javac>
   </target>

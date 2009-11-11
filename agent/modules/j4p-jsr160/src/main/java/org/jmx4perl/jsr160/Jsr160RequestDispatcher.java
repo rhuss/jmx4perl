@@ -23,8 +23,12 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
 
     }
 
-    public Object dispatchRequest(JmxRequest pJmxReq) 
+    public Object dispatchRequest(JmxRequest pJmxReq)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         return null;
+    }
+
+    public boolean canHandle(JmxRequest pJmxRequest) {
+        return false;
     }
 }

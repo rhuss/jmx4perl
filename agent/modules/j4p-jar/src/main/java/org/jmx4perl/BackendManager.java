@@ -10,6 +10,10 @@ import org.json.simple.JSONObject;
 
 import javax.management.*;
 import javax.servlet.ServletConfig;
+import java.util.List;
+import java.util.ArrayList;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -64,7 +68,12 @@ public class BackendManager {
     // Loghandler for dispatching logs
     private LogHandler logHandler;
 
+    // List of RequestDispatchers to consult
+    List<RequestDispatcher> requestDispatchers;
+
     public BackendManager(ServletConfig pConfig, LogHandler pLogHandler) {
+
+
         // Central objects
         StringToObjectConverter stringToObjectConverter = new StringToObjectConverter();
         objectToJsonConverter = new ObjectToJsonConverter(stringToObjectConverter,pConfig);
@@ -75,14 +84,53 @@ public class BackendManager {
         // Log handler for putting out debug
         logHandler = pLogHandler;
 
+        // Create and remember request dispatchers
         localDispatcher = new LocalRequestDispatcher(objectToJsonConverter,
                                                      stringToObjectConverter,
                                                      restrictor);
-        // TODO: Lookup remote dispatchers used for proxying
+        requestDispatchers = createRequestDispatchers(pConfig.getInitParameter("dispatcherClasses"),
+                                                      objectToJsonConverter,stringToObjectConverter,restrictor);
+        requestDispatchers.add(localDispatcher);
 
         // Backendstore for remembering state
         initStores(pConfig);
         registerOwnMBeans();
+    }
+
+    private List<RequestDispatcher> createRequestDispatchers(String pClasses,
+                                                             ObjectToJsonConverter pObjectToJsonConverter,
+                                                             StringToObjectConverter pStringToObjectConverter,
+                                                             Restrictor pRestrictor) {
+        List<RequestDispatcher> ret = new ArrayList<RequestDispatcher>();
+        if (pClasses == null || pClasses.length() == 0) {
+            return ret;
+        }
+        String[] names = pClasses.split("\\s*,\\s*");
+        for (String name : names) {
+            try {
+                Class clazz = this.getClass().getClassLoader().loadClass(name);
+                Constructor constructor = clazz.getConstructor(ObjectToJsonConverter.class,
+                                                               StringToObjectConverter.class,
+                                                               Restrictor.class);
+                RequestDispatcher dispatcher =
+                        (RequestDispatcher)
+                                constructor.newInstance(pObjectToJsonConverter,
+                                                        pStringToObjectConverter,
+                                                        pRestrictor);
+                ret.add(dispatcher);
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException("Couldn't load class " + name + ": " + e,e);
+            } catch (NoSuchMethodException e) {
+                throw new IllegalArgumentException("Class " + name + " has invalid constructor: " + e,e);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException("Constructor of " + name + " couldn't be accessed: " + e,e);
+            } catch (InvocationTargetException e) {
+                throw new IllegalArgumentException(e);
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException(name + " couldn't be instantiated: " + e,e);
+            }
+        }
+        return ret;
     }
 
     /**
@@ -98,7 +146,16 @@ public class BackendManager {
      */
     public JSONObject handleRequest(JmxRequest pJmxReq) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
 
-        Object retValue = localDispatcher.dispatchRequest(pJmxReq);
+        Object retValue = null;
+        for (RequestDispatcher dispatcher : requestDispatchers) {
+            if (dispatcher.canHandle(pJmxReq)) {
+                retValue = dispatcher.dispatchRequest(pJmxReq);
+                break;
+            }
+        }
+        if (retValue == null) {
+            throw new IllegalStateException("Internal error: No dispathcer found for handling " + pJmxReq);
+        }
         JSONObject json = objectToJsonConverter.convertToJson(retValue,pJmxReq);
 
         // Update global history store

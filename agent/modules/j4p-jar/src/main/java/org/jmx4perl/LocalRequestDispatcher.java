@@ -47,6 +47,11 @@ public class LocalRequestDispatcher implements RequestDispatcher {
         return mBeanServerHandler.dispatchRequest(handler, pJmxReq);
     }
 
+    // Can handle any request
+    public boolean canHandle(JmxRequest pJmxRequest) {
+        return true;
+    }
+
     private void registerRequestHandlers(ObjectToJsonConverter objectToJsonConverter,
                                          StringToObjectConverter stringToObjectConverter,
                                          Restrictor restrictor) {
