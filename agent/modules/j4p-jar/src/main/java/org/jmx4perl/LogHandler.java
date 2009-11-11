@@ -1,10 +1,4 @@
-package org.jmx4perl.handler;
-
-import org.jmx4perl.JmxRequest;
-import org.jmx4perl.Version;
-import org.jmx4perl.config.Restrictor;
-
-import javax.management.*;
+package org.jmx4perl;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -31,21 +25,10 @@ import javax.management.*;
 
 /**
  * @author roland
- * @since Jun 12, 2009
+ * @since Nov 11, 2009
  */
-public class VersionHandler extends JsonRequestHandler {
+public interface LogHandler {
 
-    public VersionHandler(Restrictor pRestrictor) {
-        super(pRestrictor);
-    }
-
-    @Override
-    public JmxRequest.Type getType() {
-        return JmxRequest.Type.VERSION;
-    }
-
-    @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request) {
-        return Version.getVersion();
-    }
+    public void log(String msg);
+    public void log(String message, Throwable t);
 }

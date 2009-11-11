@@ -1,10 +1,9 @@
-package org.jmx4perl.handler;
+package org.jmx4perl;
 
-import org.jmx4perl.JmxRequest;
-import org.jmx4perl.Version;
-import org.jmx4perl.config.Restrictor;
-
-import javax.management.*;
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.ReflectionException;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -30,22 +29,24 @@ import javax.management.*;
  */
 
 /**
+ * Interface for dispatching a request to a certain backend.
+ *
  * @author roland
- * @since Jun 12, 2009
+ * @since Nov 11, 2009
  */
-public class VersionHandler extends JsonRequestHandler {
+public interface RequestDispatcher {
+    /**
+     * Dispatch a {@link org.jmx4perl.JmxRequest} to a certain backend
+     * and return the result of the JMX action.
+     *
+     * @param pJmxReq the request to dispatch
+     * @return result object
+     * @throws InstanceNotFoundException when a certain MBean could not be found
+     * @throws AttributeNotFoundException in case an attributes couldnt be resolved
+     * @throws ReflectionException
+     * @throws MBeanException
+     */
+    public Object dispatchRequest(JmxRequest pJmxReq)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException;
 
-    public VersionHandler(Restrictor pRestrictor) {
-        super(pRestrictor);
-    }
-
-    @Override
-    public JmxRequest.Type getType() {
-        return JmxRequest.Type.VERSION;
-    }
-
-    @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request) {
-        return Version.getVersion();
-    }
 }

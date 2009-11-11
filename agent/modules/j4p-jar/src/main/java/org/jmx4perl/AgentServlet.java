@@ -1,13 +1,11 @@
 package org.jmx4perl;
 
-
 import org.jmx4perl.config.Config;
 import org.jmx4perl.config.DebugStore;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.config.RestrictorFactory;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
-import org.jmx4perl.handler.*;
 import org.jmx4perl.history.HistoryStore;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
@@ -23,9 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -75,68 +71,32 @@ import java.util.Map;
  * @author roland@cpan.org
  * @since Apr 18, 2009
  */
-public class AgentServlet extends HttpServlet {
+public class AgentServlet extends HttpServlet implements LogHandler {
 
     private static final long serialVersionUID = 42L;
-
-    // Converter for converting various attribute object types
-    // a JSON representation
-    private ObjectToJsonConverter objectToJsonConverter;
-
-    // String to object converters for setting attributes and arguments
-    // of operations
-    private StringToObjectConverter stringToObjectConverter;
-
-    // Handler for finding and merging the various MBeanHandler
-    private MBeanServerHandler mBeanServerHandler;
 
     // POST- and GET- HttpRequestHandler
     private HttpRequestHandler GET_HANDLER,POST_HANDLER;
 
-    // Map with all json request handlers
-    private static final  Map<JmxRequest.Type, JsonRequestHandler> REQUEST_HANDLER_MAP =
-            new HashMap<JmxRequest.Type, JsonRequestHandler>();
-
-    // History handler
-    private static HistoryStore historyStore;
-
-    // Storage for storing debug information
-    private static DebugStore debugStore;
-
-    // MBean used for configuration
-    private static Config configMBean;
-    private static ObjectName configMBeanName;
-
-    // Handling access restrictions
-    private Restrictor restrictor;
+    // Backend dispatcher
+    BackendManager backendManager;
 
     @Override
     public void init(ServletConfig pConfig) throws ServletException {
         super.init(pConfig);
 
-        // Get all MBean servers we can find. This is done by a dedicated
-        // handler object
-        mBeanServerHandler = new MBeanServerHandler();
+        // Different HTTP request handlers
+        GET_HANDLER = newGetHttpRequestHandler();
+        POST_HANDLER = newPostHttpRequestHandler();
 
-        // Backendstore for remembering state
-        initStores();
+        backendManager = new BackendManager(pConfig,this);
 
-        // Central objects
-        stringToObjectConverter = new StringToObjectConverter();
-        objectToJsonConverter = new ObjectToJsonConverter(stringToObjectConverter,pConfig);
-
-        // Access restrictor
-        restrictor = RestrictorFactory.buildRestrictor();
-
-        registerRequestHandlers();
-        registerOwnMBeans();
     }
 
     @Override
     public void destroy() {
-        unregisterOwnMBeans();
+        backendManager.unregisterOwnMBeans();
         super.destroy();
-
     }
 
     @Override
@@ -154,7 +114,6 @@ public class AgentServlet extends HttpServlet {
     private void handle(HttpRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
         JSONAware json = null;
         int code = 200;
-        Throwable throwable = null;
         try {
             // Check access policy
             checkClientIPAccess(pReq);
@@ -162,7 +121,7 @@ public class AgentServlet extends HttpServlet {
             // Dispatch for the proper HTTP request method
             json = pReqHandler.handleRequest(pReq,pResp);
             code = extractResultCode(json);
-            if (isDebug()) log("Response: " + json);
+            if (backendManager.isDebug()) backendManager.log("Response: " + json);
         } catch (IllegalArgumentException exp) {
             json = getErrorJSON(code = 400,exp);
         } catch (IllegalStateException exp) {
@@ -225,7 +184,7 @@ public class AgentServlet extends HttpServlet {
                                 new InputStreamReader(pReq.getInputStream()));
                 JSONArray responseList = new JSONArray();
                 for (JmxRequest jmxReq : jmxRequests) {
-                    boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
+                    boolean debug = backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation());
                     if (debug) logRequest(pReq, jmxReq);
 
                     // Call handler and retrieve return value
@@ -242,7 +201,7 @@ public class AgentServlet extends HttpServlet {
             public JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) throws Exception {
                 JmxRequest jmxReq =
                         JmxRequestFactory.createRequestFromUrl(pReq.getPathInfo(),pReq.getParameterMap());
-                if (isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {
+                if (backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {
                     logRequest(pReq, jmxReq);
                 }
                 return executeRequest(jmxReq);
@@ -252,21 +211,9 @@ public class AgentServlet extends HttpServlet {
 
 
     private JSONObject executeRequest(JmxRequest jmxReq) {
-
         // Call handler and retrieve return value
         try {
-            Object retValue = callRequestHandler(jmxReq);
-            boolean debug = isDebug() && !"debugInfo".equals(jmxReq.getOperation());
-            if (debug) log("Response: " + retValue);
-            JSONObject json = objectToJsonConverter.convertToJson(retValue,jmxReq);
-
-            // Update global history store
-            historyStore.updateAndAdd(jmxReq,json);
-
-            // Ok, we did it ...
-            json.put("status",200 /* success */);
-            if (debug) log("Success");
-            return json;
+            return backendManager.handleRequest(jmxReq);
         } catch (ReflectionException e) {
             return getErrorJSON(404,e);
         } catch (InstanceNotFoundException e) {
@@ -283,25 +230,15 @@ public class AgentServlet extends HttpServlet {
     // =======================================================================
 
     private void logRequest(HttpServletRequest pReq, JmxRequest pJmxReq) {
-        log("URI: " + pReq.getRequestURI());
-        log("Path-Info: " + pReq.getPathInfo());
-        log("Request: " + pJmxReq.toString());
+        backendManager.log("URI: " + pReq.getRequestURI());
+        backendManager.log("Path-Info: " + pReq.getPathInfo());
+        backendManager.log("Request: " + pJmxReq.toString());
     }
 
     private void checkClientIPAccess(HttpServletRequest pReq) {
-        if (!restrictor.isRemoteAccessAllowed(pReq.getRemoteHost(),pReq.getRemoteAddr())) {
+        if (!backendManager.isRemoteAccessAllowed(pReq.getRemoteHost(),pReq.getRemoteAddr())) {
             throw new SecurityException("No access from client " + pReq.getRemoteAddr() + " allowed");
         }
-    }
-
-    private Object callRequestHandler(JmxRequest pJmxReq)
-            throws ReflectionException, InstanceNotFoundException, MBeanException, AttributeNotFoundException {
-        JmxRequest.Type type = pJmxReq.getType();
-        JsonRequestHandler handler = REQUEST_HANDLER_MAP.get(type);
-        if (handler == null) {
-            throw new UnsupportedOperationException("Unsupported operation '" + pJmxReq.getType() + "'");
-        }
-        return mBeanServerHandler.dispatchRequest(handler, pJmxReq);
     }
 
 
@@ -312,8 +249,8 @@ public class AgentServlet extends HttpServlet {
         StringWriter writer = new StringWriter();
         pExp.printStackTrace(new PrintWriter(writer));
         jsonObject.put("stacktrace",writer.toString());
-        if (isDebug()) {
-            log("Error " + pErrorCode,pExp);
+        if (backendManager.isDebug()) {
+            backendManager.log("Error " + pErrorCode,pExp);
         }
         return jsonObject;
     }
@@ -330,107 +267,6 @@ public class AgentServlet extends HttpServlet {
         pResp.setStatus(pStatusCode);
         PrintWriter writer = pResp.getWriter();
         writer.write(pJsonTxt);
-    }
-
-
-    private void registerRequestHandlers() {
-
-        JsonRequestHandler handlers[] = {
-                new ReadHandler(restrictor),
-                new WriteHandler(restrictor,objectToJsonConverter),
-                new ExecHandler(restrictor,stringToObjectConverter),
-                new ListHandler(restrictor),
-                new VersionHandler(restrictor),
-                new SearchHandler(restrictor)
-        };
-
-        for (JsonRequestHandler handler : handlers) {
-            REQUEST_HANDLER_MAP.put(handler.getType(),handler);
-        }
-
-        GET_HANDLER = newGetHttpRequestHandler();
-        POST_HANDLER = newPostHttpRequestHandler();
-    }
-
-    private void initStores() {
-        int maxEntries;
-        ServletConfig config = getServletConfig();
-        try {
-            maxEntries = Integer.parseInt(config.getInitParameter("historyMaxEntries"));
-        } catch (NumberFormatException exp) {
-            maxEntries = 10;
-        }
-
-        String doDebug = config.getInitParameter("debug");
-        boolean debug = false;
-        if (doDebug != null && Boolean.valueOf(doDebug)) {
-            debug = true;
-        }
-        int maxDebugEntries = 100;
-        try {
-            maxEntries = Integer.parseInt(config.getInitParameter("debugMaxEntries"));
-        } catch (NumberFormatException exp) {
-            maxDebugEntries = 100;
-        }
-
-        historyStore = new HistoryStore(maxEntries);
-        debugStore = new DebugStore(maxDebugEntries,debug);
-        configMBean = new Config(historyStore,debugStore,mBeanServerHandler);
-
-    }
-
-    private void registerOwnMBeans() {
-        try {
-            configMBeanName = mBeanServerHandler.registerMBean(configMBean);
-        } catch (NotCompliantMBeanException e) {
-            log("Error registering config MBean: " + e,e);
-        } catch (MBeanRegistrationException e) {
-            log("Cannot register MBean: " + e,e);
-        } catch (MalformedObjectNameException e) {
-            log("Invalid name for config MBean: " + e,e);
-        } catch (InstanceAlreadyExistsException e) {
-            log("Config MBean already exists: " + e,e);
-        }
-    }
-
-
-    // Remove MBeans again.
-    private void unregisterOwnMBeans() {
-        if (configMBeanName != null) {
-            try {
-                mBeanServerHandler.unregisterMBean(configMBeanName);
-            } catch (MalformedObjectNameException e) {
-                // wont happen
-                log("Invalid name for config MBean: " + e,e);
-            } catch (InstanceNotFoundException e) {
-                log("No Mbean registered with name " + configMBeanName + ": " + e,e);
-            } catch (MBeanRegistrationException e) {
-                log("Cannot unregister MBean: " + e,e);
-            }
-        } else {
-            log("Internal Problem: No ConfigMBean name !");
-        }
-    }
-
-
-    @Override
-    public void log(String msg) {
-        super.log(msg);
-        if (debugStore != null) {
-            debugStore.log(msg);
-        }
-    }
-
-    @Override
-    public void log(String message, Throwable t) {
-        super.log(message,t);
-        if (debugStore != null) {
-            debugStore.log(message, t);
-        }
-    }
-
-    private boolean isDebug() {
-        return debugStore != null ? debugStore.isDebug() : false;
     }
 
 }

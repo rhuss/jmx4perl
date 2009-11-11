@@ -46,7 +46,7 @@ public class Config implements ConfigMBean, MBeanRegistration {
     private MBeanServerHandler mBeanServerHandler;
 
 
-    public Config(HistoryStore pHistoryStore,DebugStore pDebugStore, MBeanServerHandler pMBeanServerHandler) {
+    public Config(HistoryStore pHistoryStore, DebugStore pDebugStore, MBeanServerHandler pMBeanServerHandler) {
         historyStore = pHistoryStore;
         debugStore = pDebugStore;
         mBeanServerHandler = pMBeanServerHandler;

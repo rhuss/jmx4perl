@@ -49,7 +49,7 @@ public class SearchHandler extends JsonRequestHandler {
 
     @Override
     public Object doHandleRequest(MBeanServer server, JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+            throws InstanceNotFoundException, AttributeNotFoundException, MBeanException {
         Set<ObjectName> names = server.queryNames(request.getObjectName(),null);
         if (names == null || names.size() == 0) {
             throw new InstanceNotFoundException("No MBean with pattern " + request.getObjectNameAsString() + " found");
