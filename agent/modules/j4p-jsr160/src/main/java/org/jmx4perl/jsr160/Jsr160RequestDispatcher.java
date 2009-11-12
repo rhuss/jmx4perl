@@ -1,6 +1,6 @@
 package org.jmx4perl.jsr160;
 
-import org.jmx4perl.RequestDispatcher;
+import org.jmx4perl.backend.RequestDispatcher;
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
@@ -12,6 +12,8 @@ import javax.management.ReflectionException;
 import javax.management.MBeanException;
 
 /**
+ * Dispatcher for calling JSR-160 connectors
+ *
  * @author roland
  * @since Nov 11, 2009
  */

@@ -61,6 +61,11 @@ agent/modules/j4p-it/src/main/java/org/jmx4perl/it/TestMBeanRegisteringServlet.j
 agent/modules/j4p-it/src/main/webapp/WEB-INF/web.xml
 agent/modules/j4p-jar/pom.xml
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/AgentServlet.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/backend/BackendManager.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/backend/LocalRequestDispatcher.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/backend/LogHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/backend/MBeanServerHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/backend/RequestDispatcher.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/AllowAllRestrictor.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/Config.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/ConfigMBean.java
@@ -95,7 +100,6 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/history/HistoryStore.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/history/ValueEntry.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/JmxRequest.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/JmxRequestFactory.java
-agent/modules/j4p-jar/src/main/java/org/jmx4perl/MBeanServerHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/config/IpCheckerTest.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/config/PolicyBasedRestrictorTest.java
@@ -103,6 +107,10 @@ agent/modules/j4p-jar/src/test/java/org/jmx4perl/converter/json/ObjectToJsonConv
 agent/modules/j4p-jar/src/test/resources/access-sample1.xml
 agent/modules/j4p-jar/src/test/resources/access-sample2.xml
 agent/modules/j4p-jar/src/test/resources/access-sample3.xml
+agent/modules/j4p-jsr160/pom.xml
+agent/modules/j4p-jsr160/src/main/java/org/jmx4perl/jsr160/Jsr160RequestDispatcher.java
+agent/modules/j4p-proxy/pom.xml
+agent/modules/j4p-proxy/src/main/webapp/WEB-INF/web.xml
 agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml

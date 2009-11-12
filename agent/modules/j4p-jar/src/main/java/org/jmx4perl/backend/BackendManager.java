@@ -1,5 +1,6 @@
-package org.jmx4perl;
+package org.jmx4perl.backend;
 
+import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.DebugStore;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.config.RestrictorFactory;
@@ -147,24 +148,30 @@ public class BackendManager {
     public JSONObject handleRequest(JmxRequest pJmxReq) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
 
         Object retValue = null;
+        boolean found = false;
         for (RequestDispatcher dispatcher : requestDispatchers) {
             if (dispatcher.canHandle(pJmxReq)) {
                 retValue = dispatcher.dispatchRequest(pJmxReq);
+                found = true;
                 break;
             }
         }
-        if (retValue == null) {
-            throw new IllegalStateException("Internal error: No dispathcer found for handling " + pJmxReq);
+        if (!found) {
+            throw new IllegalStateException("Internal error: No dispatcher found for handling " + pJmxReq);
         }
         JSONObject json = objectToJsonConverter.convertToJson(retValue,pJmxReq);
 
         // Update global history store
         historyStore.updateAndAdd(pJmxReq,json);
         boolean debug = isDebug() && !"debugInfo".equals(pJmxReq.getOperation());
-        if (debug) log("Response: " + json);
+        if (debug) {
+            log("Response: " + json);
+        }
         // Ok, we did it ...
         json.put("status",200 /* success */);
-        if (debug) log("Success");
+        if (debug) {
+            log("Success");
+        }
         return json;
     }
 
@@ -207,7 +214,7 @@ public class BackendManager {
     }
 
     // Remove MBeans again.
-    void unregisterOwnMBeans() {
+    public void unregisterOwnMBeans() {
         if (configMBeanName != null) {
             try {
                 localDispatcher.unregisterLocalMBean(configMBeanName);
@@ -243,7 +250,7 @@ public class BackendManager {
         }
     }
 
-    boolean isDebug() {
-        return debugStore != null ? debugStore.isDebug() : false;
+    public boolean isDebug() {
+        return debugStore != null && debugStore.isDebug();
     }
 }

@@ -1,17 +1,15 @@
 package org.jmx4perl;
 
-import org.jmx4perl.config.Config;
-import org.jmx4perl.config.DebugStore;
-import org.jmx4perl.config.Restrictor;
-import org.jmx4perl.config.RestrictorFactory;
-import org.jmx4perl.converter.StringToObjectConverter;
-import org.jmx4perl.converter.json.ObjectToJsonConverter;
-import org.jmx4perl.history.HistoryStore;
+import org.jmx4perl.backend.BackendManager;
+import org.jmx4perl.backend.LogHandler;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
-import javax.management.*;
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.ReflectionException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;

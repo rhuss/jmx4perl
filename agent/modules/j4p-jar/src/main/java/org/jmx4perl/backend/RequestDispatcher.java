@@ -1,4 +1,6 @@
-package org.jmx4perl;
+package org.jmx4perl.backend;
+
+import org.jmx4perl.JmxRequest;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;

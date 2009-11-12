@@ -35,7 +35,7 @@ import java.util.Set;
  */
 public abstract class JsonRequestHandler {
 
-    // RestriOctor for restricting operations
+    // Restrictor for restricting operations
     protected final Restrictor restrictor;
 
     protected JsonRequestHandler(Restrictor pRestrictor) {
@@ -70,7 +70,7 @@ public abstract class JsonRequestHandler {
      * Does a check for restrictions as well
      *
      * @param server server to try
-     * @param request reqiest to process
+     * @param request request to process
      * @return the object result from the request
      *
      * @throws InstanceNotFoundException if the provided server cant handle the request
@@ -99,7 +99,7 @@ public abstract class JsonRequestHandler {
      * request.
      *
      * @param server server to try
-     * @param request reqiest to process
+     * @param request request to process
      * @return the object result from the request
      *
      * @throws InstanceNotFoundException
@@ -112,8 +112,8 @@ public abstract class JsonRequestHandler {
 
     /**
      * Override this if you want to have all servers at once for processing the request
-     * (like need for merging infos as for a <code>list</code> command). This method
-     * is only called whem {@link #handleAllServersAtOnce()} returns <code>true</code>
+     * (like need for merging info as for a <code>list</code> command). This method
+     * is only called when {@link #handleAllServersAtOnce()} returns <code>true</code>
      *
      * @param servers all MBeans servers detected
      * @param request request to process

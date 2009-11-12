@@ -1,5 +1,6 @@
-package org.jmx4perl;
+package org.jmx4perl.backend;
 
+import org.jmx4perl.JmxRequest;
 import org.jmx4perl.handler.JsonRequestHandler;
 
 import javax.management.*;
@@ -34,7 +35,8 @@ import java.lang.reflect.InvocationTargetException;
  */
 
 /**
- * Handler for finding and merging various MBeanServers.
+ * Handler for finding and merging various MBeanServers locally when used
+ * as an agent.
  *
  * @author roland
  * @since Jun 15, 2009
@@ -206,9 +208,9 @@ public class MBeanServerHandler {
 			 */
 			Class adminServiceClass = getClass().getClassLoader().loadClass("com.ibm.websphere.management.AdminServiceFactory");
 			Method getMBeanFactoryMethod = adminServiceClass.getMethod("getMBeanFactory", new Class[0]);
-			Object mbeanFactory = getMBeanFactoryMethod.invoke(null, new Object[0]);
+			Object mbeanFactory = getMBeanFactoryMethod.invoke(null);
 			Method getMBeanServerMethod = mbeanFactory.getClass().getMethod("getMBeanServer", new Class[0]);
-			servers.add((MBeanServer) getMBeanServerMethod.invoke(mbeanFactory, new Object[0]));
+			servers.add((MBeanServer) getMBeanServerMethod.invoke(mbeanFactory));
 		}
 		catch (ClassNotFoundException ex) {
             // Expected if not running under WAS

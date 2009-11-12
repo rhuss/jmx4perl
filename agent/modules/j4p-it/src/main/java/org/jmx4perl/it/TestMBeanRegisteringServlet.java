@@ -24,7 +24,7 @@
 package org.jmx4perl.it;
 
 
-import org.jmx4perl.MBeanServerHandler;
+import org.jmx4perl.backend.MBeanServerHandler;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.ServletConfig;

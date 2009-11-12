@@ -1,4 +1,4 @@
-package org.jmx4perl;
+package org.jmx4perl.backend;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -24,11 +24,11 @@ package org.jmx4perl;
  */
 
 /**
+ * Simple log handler for dispatching logging to e.g. a {@link javax.servlet.http.HttpServlet}
  * @author roland
  * @since Nov 11, 2009
  */
 public interface LogHandler {
-
     public void log(String msg);
     public void log(String message, Throwable t);
 }

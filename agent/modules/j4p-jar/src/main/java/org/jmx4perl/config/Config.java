@@ -1,6 +1,6 @@
 package org.jmx4perl.config;
 
-import org.jmx4perl.MBeanServerHandler;
+import org.jmx4perl.backend.MBeanServerHandler;
 import org.jmx4perl.history.HistoryKey;
 import org.jmx4perl.history.HistoryStore;
 

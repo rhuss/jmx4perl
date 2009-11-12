@@ -1,5 +1,6 @@
-package org.jmx4perl;
+package org.jmx4perl.backend;
 
+import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.Config;
 import org.jmx4perl.config.DebugStore;
 import org.jmx4perl.config.Restrictor;
@@ -68,11 +69,15 @@ public class LocalRequestDispatcher implements RequestDispatcher {
         }
     }
 
-    public void unregisterLocalMBean(ObjectName pMBeanName) throws MBeanRegistrationException, InstanceNotFoundException, MalformedObjectNameException {
+    public void unregisterLocalMBean(ObjectName pMBeanName)
+            throws MBeanRegistrationException, InstanceNotFoundException,
+            MalformedObjectNameException {
         mBeanServerHandler.unregisterMBean(pMBeanName);
     }
 
-    public ObjectName registerConfigMBean(HistoryStore pHistoryStore, DebugStore pDebugStore) throws MBeanRegistrationException, NotCompliantMBeanException, MalformedObjectNameException, InstanceAlreadyExistsException {
+    public ObjectName registerConfigMBean(HistoryStore pHistoryStore, DebugStore pDebugStore)
+            throws MBeanRegistrationException, NotCompliantMBeanException,
+            MalformedObjectNameException, InstanceAlreadyExistsException {
         return mBeanServerHandler.registerMBean(
                 new Config(pHistoryStore,pDebugStore,mBeanServerHandler));
     }

@@ -84,7 +84,7 @@ public class JmxRequest {
     /**
      * Create a request with the given type (with no MBean name)
      *
-     * @param pType request's type
+     * @param pType requests type
      */
     JmxRequest(Type pType) {
         type = pType;
@@ -94,7 +94,7 @@ public class JmxRequest {
      * Create a request with given type for a certain MBean.
      * Other parameters of the request need to be set explicitely via a setter.
      *
-     * @param pType request's type
+     * @param pType requests type
      * @param pObjectNameS MBean name in string representation
      * @throws MalformedObjectNameException if the name couldnot properly translated
      *         into a JMX {@link javax.management.ObjectName}
