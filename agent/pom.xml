@@ -31,7 +31,7 @@
   </developers>
 
   <properties>
-    <applicationVersion>0.50</applicationVersion>
+    <applicationVersion>0.40</applicationVersion>
   </properties>
   
 </project>

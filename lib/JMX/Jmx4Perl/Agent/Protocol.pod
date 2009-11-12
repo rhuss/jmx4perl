@@ -43,6 +43,8 @@ L</"Query Parameters">
 
 The supported operations are described now in the following sections. 
 
+I<TODO: Describe new variant with JSON-Request send via POST>
+
 =head2 read
 
 Mode used for reading an JMX attributes. The operation specific parameters have
