@@ -13,7 +13,7 @@ JMX::Jmx4Perl::Product::Jetty - Handler for Jetty
 
 =head1 DESCRIPTION
 
-This is the product handler support Jetty. It supports Jetty version 5 and 6.
+This is the product handler support Jetty. It supports Jetty version 5, 6 and 7.
 (L<http://www.mortbay.org/jetty/>)
 
 Please note, that you must have JMX support enabled in Jetty for autodetection
