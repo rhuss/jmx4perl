@@ -122,7 +122,7 @@ sub _version_or_vendor {
             my $val;
             eval "\$self->_try_$what";
             die $@ if $@;
-        } elsif ($self->jsr77 ) {
+        } elsif ($self->jsr77) {
             $self->{$what} = $self->_server_info_from_jsr77("server" . (uc substr($what,0,1)) . substr($what,1));
             $self->{"original_" . $what} = $self->{$what};
             if ($transform && $self->{$what}) {
@@ -471,7 +471,6 @@ sub jvm_info {
 
     # Collect all alias and create a map with values
     my $info_map = $self->_fetch_info(\@info);
-
     # Prepare output
     while (@info) {
         my $titel = shift @info;
@@ -537,8 +536,11 @@ sub _fetch_info {
         }
     }
     my @resps = $jmx4perl->request(@reqs);
+    #print Dumper(\@resps);
     foreach my $resp (@resps) {
-        $info_map->{shift @aliases} = $resp->value;
+        my $alias = shift @aliases;
+        die "Error while fetching $alias: ",$resp->error_text if $resp->is_error;
+        $info_map->{$alias} = $resp->value;
     }
     return $info_map;
 }
@@ -590,7 +592,6 @@ sub _get_attribute {
     my $response = $jmx4perl->request($request);
     return undef if $response->status == 404;     # Ignore attributes not found
     return $response->value if $response->is_ok;
-    print Dumper($response);
     die "Error fetching attribute ","@_",": ",$response->error_text;
 }
 

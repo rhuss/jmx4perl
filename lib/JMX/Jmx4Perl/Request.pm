@@ -256,15 +256,14 @@ sub _validate {
 # Called for post requests
 sub TO_JSON {
     my $self = shift;
-    return {
-            type => $self->{type} ? uc($self->{type}) : undef,
-            mbean => $self->{mbean},
-            attribute => $self->{attribute},
-            path => $self->{path},
-            arguments => $self->{args},
-            value => $self->{value},
-            operation => $self->{operation},
-           };
+    my $ret = {
+               type => $self->{type} ? uc($self->{type}) : undef,
+              };
+    for my $k (qw(mbean attribute path value operation)) {
+        $ret->{$k} = $self->{$k} if $self->{$k};
+    }
+    $ret->{arguments} = $self->{args} if $self->{args};
+    return $ret;
 }
 
 =back 

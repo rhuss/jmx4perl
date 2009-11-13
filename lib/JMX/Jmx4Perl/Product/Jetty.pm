@@ -31,13 +31,21 @@ sub name {
 
 sub _try_version {
     my $self = shift;
+    my $jmx = $self->{jmx4perl};
+
+    # Jetty V6 & 7
+    my $servers = $jmx->search("*:id=0,type=server,*");
+    my $ret;
+    if ($servers) {
+        $ret = $self->try_attribute("version",$servers->[0],"version");
+    }
+
     # Jetty V5
-    # Jetty V6
-    my $ret = $self->try_attribute("version","org.mortbay.jetty:id=0,type=server","version");
     if (!length($self->{version})) {
         delete $self->{version};
         $ret = $self->try_attribute("version","org.mortbay:jetty=default","version");
     }
+
     $self->{version} =~ s/Jetty\/([^\s]+).*/$1/;
     return $ret;
 }

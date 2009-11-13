@@ -54,7 +54,7 @@ sub init_aliases {
      attributes => 
    {
     #SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    SERVER_HOSTNAME => [ "jonas:name=jonas,type=ServerProxy", "HostName"],
+    #SERVER_HOSTNAME => [ "jonas:name=jonas,type=ServerProxy", "HostName"],
    },
      operations => 
    {

@@ -48,7 +48,7 @@ public class MBeanServerHandler {
 
     // Whether we are running under JBoss
     private boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
-    // boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
+    boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
 
     public MBeanServerHandler() {
         mBeanServers = findMBeanServers();
@@ -80,11 +80,12 @@ public class MBeanServerHandler {
                         attrException = exp;
                     }
                 }
+                // Must be set, otherwise we would nave have left the loop
                 if (attrException != null) {
                     throw attrException;
+                } else {
+                    throw objNotFoundException;
                 }
-                // Must be there, otherwise we would nave have left the loop
-                throw objNotFoundException;
             } catch (ReflectionException e) {
                 throw new IllegalStateException("Internal error for '" + pJmxReq.getAttributeName() +
                         "' on object " + pJmxReq.getObjectName() + ": " + e,e);
@@ -252,11 +253,11 @@ public class MBeanServerHandler {
         // if ((isJBoss || isWebsphere)
         // The workaround was enabled for websphere as well, but it seems
         // to work without it for WAS 7.0
-        if (isJBoss && pJmxReq.getObjectName() != null &&
+        if ( (isJBoss || isWebsphere) && pJmxReq.getObjectName() != null &&
                 "java.lang".equals(pJmxReq.getObjectName().getDomain())) {
             try {
                 // invoking getMBeanInfo() works around a bug in getAttribute() that fails to
-                // refetch the domains from the platform (JDK) bean server (e.g. for MXMBeans)
+                // refetch the domains from the platform (JDK) bean server (e.g. for MXBeans)
                 for (MBeanServer s : mBeanServers) {
                     try {
                         s.getMBeanInfo(pJmxReq.getObjectName());

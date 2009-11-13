@@ -1,0 +1,13 @@
+2009-11-12 - 0.40_2
+    Glassfish 2.1.1 & 3 Preview
+    Jboss 4.2.3 GA & 5.1 GA
+    Geronimo 2.1.4 (w. Jetty 6)
+
+2009-11-13 - 0.40_2
+    Weblogic 9.2 & 10.0
+    Websphere 6.1 (no MXBeans, though) + 7.0 (completely)
+    Jonas 4.10.3 & 5.1.0
+    Tomcat 5.5.28 & 6.0.20
+    Jetty 5.1.15 & 6.1.21 & 7.0.0
+    
+   

@@ -19,8 +19,8 @@ sub new {
     $self->{product} = $args{product} || $ENV{JMX4PERL_PRODUCT};
     $self->{user} = $args{user} || $ENV{JMX4PERL_USER};
     $self->{password} = $args{password} || $ENV{JMX4PERL_PASSWORD};
-
-    $self->{jmx4perl} = new JMX::Jmx4Perl(map { $_ => $self->{$_ } } qw(url product user password));
+    $self->{verbose} = $args{verbose} || $ENV{JMX4PERL_VERBOSE};
+    $self->{jmx4perl} = new JMX::Jmx4Perl(map { $_ => $self->{$_ } } qw(url product user password verbose));
     
     bless $self,(ref($class) || $class);
 

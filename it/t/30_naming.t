@@ -8,7 +8,7 @@ use File::Temp qw/tmpnam/;
 
 BEGIN { use_ok("JMX::Jmx4Perl"); }
 
-my $jmx = It->new->jmx4perl;
+my $jmx = It->new(verbose => 0)->jmx4perl;
 
 my $name_p = "jmx4perl.it:type=naming,name=%s";
 my @names = 

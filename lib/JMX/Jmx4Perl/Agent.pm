@@ -104,6 +104,7 @@ sub init {
     croak "No URL provided" unless $self->cfg('url');
     my $ua = JMX::Jmx4Perl::Agent::UserAgent->new();
     $ua->jjagent_config($self->{cfg});
+    #push @{ $ua->requests_redirectable }, 'POST';
     $ua->timeout($self->cfg('timeout')) if $self->cfg('timeout');
     $ua->agent("JMX::Jmx4Perl::Agent $VERSION");
     # $ua->env_proxy;
@@ -146,6 +147,7 @@ sub request {
     print "Requesting ",$http_req->uri,"\n" if $self->{cfg}->{verbose};
     my $http_resp = $ua->request($http_req);
     my $json_resp = {};
+    print "Response: ",Dumper($http_resp) if $self->{cfg}->{verbose};
     eval {
         $json_resp = from_json($http_resp->content());
     };
@@ -168,6 +170,7 @@ sub _to_http_request {
         return HTTP::Request->new(GET => $url);
     } else {
         my $url = $self->cfg('url') || croak "No URL provided";
+        $url .= "/" unless $url =~ m|/$|;
         my $request = HTTP::Request->new(POST => $url);
         my $content = to_json(\@reqs, { convert_blessed => 1 });
         $request->content($content);
@@ -219,13 +222,13 @@ sub _validate_response {
         if ($content) {
             chomp $content;
             $error .=  "=" x length($http_resp->status_line) . "\n\n";
-            my $short = substr($content,0,500);
+            my $short = substr($content,0,600);
             $error .=  $short . (length($short) < length($content) ? "\n\n.......\n\n" : "") . "\n" 
               if $content ne $http_resp->status_line;
         }
         return JMX::Jmx4Perl::Response->new
           ( 
-           status => 400,
+           status => $json_resp->{status},
            content => $http_resp->content,
            error => $error
           );        
