@@ -85,12 +85,19 @@ separator. This looks a bit like a simplified form of XPath.
 
 =item max_depth, max_objects, max_list_size
 
-With these objects you can restrict the size of the JSON structure
+With these number you can restrict the size of the JSON structure
 returned. C<max_depth> gives the maximum nesting level of the JSON
 object,C<max_objects> returns the maximum number of objects to be returned in
 total and C<max_list_size> restrict the number of all arrays and collections
 (maps, lists) in the answer. Note, that you should use this restrictions if you
 are doing massive bulk operations.
+
+=item proxy_url, proxy_env
+
+If given, the request is processed by the agent in proxy mode, i.e. it will
+proxy to another server exposing via a JSR-160 connector. C<proxy_url> is a JMX
+service url as specified in JSR-160 and C<proxy_env> are further context
+informations. 
 
 =back 
 
@@ -142,6 +149,16 @@ a hashref, using 'type' for the entry specifying the request type.
 For the options C<max_depth>, C<max_objects> and C<max_list_size>, you can mix
 them in into the hashref if using the hashed argument format. For the first
 format, these options are given as a final hashref.
+
+If the request should be proxied through this request, a proxy configuration
+needs to be given as optional parameter. The proxy configuration consists of a
+JMX service C<url> and a optional environment, which is given as a key-value
+map. For example
+
+ $req = new JMX::Jmx4Perl::Request(..., { 
+                                     proxy_url => "",
+                                     proxy_env => { ..... }
+                                   } );
 
 Note, depending on the type, some parameters are mandatory. The mandatory
 parameters and the order of the arguments for the constructor variant without
@@ -265,7 +282,7 @@ sub TO_JSON {
     my $ret = {
                type => $self->{type} ? uc($self->{type}) : undef,
               };
-    for my $k (qw(mbean attribute path value operation arguments max_depth max_objects max_list_size)) {
+    for my $k (qw(mbean attribute path value operation arguments max_depth max_objects max_list_size proxy_url proxy_env)) {
         $ret->{$k} = $self->{$k} if $self->{$k};
     }
     return $ret;

@@ -164,7 +164,7 @@ sub request {
 sub _to_http_request {
     my $self = shift;
     my @reqs = @_;
-    if (@reqs == 1) {
+    if (@reqs == 1 && !$reqs[0]->get("proxy_url")) {
         # Old, rest-style
         my $url = $self->request_url($reqs[0]);
         return HTTP::Request->new(GET => $url);

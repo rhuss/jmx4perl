@@ -5,6 +5,7 @@ import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
 
 import javax.management.*;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 /*
@@ -49,8 +50,8 @@ public class WriteHandler extends JsonRequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
 
         if (!restrictor.isAttributeWriteAllowed(request.getObjectName(),request.getAttributeName())) {
             throw new SecurityException("Writing attribute " + request.getAttributeName() +
@@ -73,9 +74,9 @@ public class WriteHandler extends JsonRequestHandler {
         }
     }
 
-    private Object setAttribute(JmxRequest request, MBeanServer server)
+    private Object setAttribute(JmxRequest request, MBeanServerConnection server)
             throws MBeanException, AttributeNotFoundException, InstanceNotFoundException,
-            ReflectionException, IntrospectionException, InvalidAttributeValueException, IllegalAccessException, InvocationTargetException {
+            ReflectionException, IntrospectionException, InvalidAttributeValueException, IllegalAccessException, InvocationTargetException, IOException {
         // Old value, will throw an exception if attribute is not known. That's good.
         Object oldValue = server.getAttribute(request.getObjectName(), request.getAttributeName());
 

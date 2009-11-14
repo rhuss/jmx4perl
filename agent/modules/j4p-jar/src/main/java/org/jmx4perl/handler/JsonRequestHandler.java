@@ -4,6 +4,7 @@ import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
+import java.io.IOException;
 import java.util.Set;
 
 /*
@@ -55,7 +56,7 @@ public abstract class JsonRequestHandler {
      * are done for you
      *
      * @return whether you want to have
-     * {@link #doHandleRequest(javax.management.MBeanServer, org.jmx4perl.JmxRequest)}
+     * {@link #doHandleRequest(javax.management.MBeanServerConnection, org.jmx4perl.JmxRequest)}
      * (<code>false</code>) or
      * {@link #doHandleRequest(java.util.Set, org.jmx4perl.JmxRequest)} (<code>true</code>) called.
      */
@@ -78,8 +79,8 @@ public abstract class JsonRequestHandler {
      * @throws ReflectionException
      * @throws MBeanException
      */
-    public Object handleRequest(MBeanServer server,JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public Object handleRequest(MBeanServerConnection server,JmxRequest request)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
         checkForType();
         return doHandleRequest(server,request);
     }
@@ -107,8 +108,8 @@ public abstract class JsonRequestHandler {
      * @throws ReflectionException
      * @throws MBeanException
      */
-    protected abstract Object doHandleRequest(MBeanServer server,JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException;
+    protected abstract Object doHandleRequest(MBeanServerConnection server,JmxRequest request)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException;
 
     /**
      * Override this if you want to have all servers at once for processing the request
@@ -119,14 +120,14 @@ public abstract class JsonRequestHandler {
      * @param request request to process
      * @return the object found
      */
-    public Object handleRequest(Set<MBeanServer> servers, JmxRequest request)
-            throws ReflectionException, InstanceNotFoundException, MBeanException, AttributeNotFoundException {
+    public Object handleRequest(Set<MBeanServerConnection> servers, JmxRequest request)
+            throws ReflectionException, InstanceNotFoundException, MBeanException, AttributeNotFoundException, IOException {
         checkForType();
         return doHandleRequest(servers,request);
     }
 
-    public Object doHandleRequest(Set<MBeanServer> servers, JmxRequest request)
-                throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException    {
+    public Object doHandleRequest(Set<MBeanServerConnection> servers, JmxRequest request)
+                throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
         return null;
     }
 }

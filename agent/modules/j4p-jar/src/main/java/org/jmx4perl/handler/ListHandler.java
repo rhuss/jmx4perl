@@ -5,6 +5,7 @@ import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
+import java.io.IOException;
 import java.util.*;
 
 /*
@@ -49,15 +50,15 @@ public class ListHandler extends JsonRequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(Set<MBeanServer> pServers, JmxRequest request)
-            throws InstanceNotFoundException {
+    public Object doHandleRequest(Set<MBeanServerConnection> pServers, JmxRequest request)
+            throws InstanceNotFoundException, IOException {
         try {
             Map<String /* domain */,
                     Map<String /* props */,
                             Map<String /* attribute/operation */,
                                                                 List<String /* names */>>>> ret =
                     new HashMap<String, Map<String, Map<String, List<String>>>>();
-            for (MBeanServer server : pServers) {
+            for (MBeanServerConnection server : pServers) {
                 for (Object nameObject : server.queryNames((ObjectName) null,(QueryExp) null)) {
                     ObjectName name = (ObjectName) nameObject;
                     MBeanInfo mBeanInfo = server.getMBeanInfo(name);
@@ -135,7 +136,7 @@ public class ListHandler extends JsonRequestHandler {
 
     // will not be called
     @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public Object doHandleRequest(MBeanServerConnection server, JmxRequest request) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         return null;
     }
 

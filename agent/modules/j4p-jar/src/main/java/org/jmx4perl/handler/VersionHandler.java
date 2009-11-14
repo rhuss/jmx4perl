@@ -45,7 +45,7 @@ public class VersionHandler extends JsonRequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request) {
+    public Object doHandleRequest(MBeanServerConnection server, JmxRequest request) {
         return Version.getVersion();
     }
 }

@@ -11,6 +11,7 @@ import org.json.simple.JSONObject;
 
 import javax.management.*;
 import javax.servlet.ServletConfig;
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.lang.reflect.Constructor;
@@ -145,7 +146,8 @@ public class BackendManager {
      * @throws ReflectionException
      * @throws MBeanException
      */
-    public JSONObject handleRequest(JmxRequest pJmxReq) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public JSONObject handleRequest(JmxRequest pJmxReq) throws InstanceNotFoundException, AttributeNotFoundException,
+            ReflectionException, MBeanException, IOException {
 
         Object retValue = null;
         boolean found = false;
