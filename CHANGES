@@ -1,12 +1,10 @@
-0.40
+0.40 (2009-11-14)
   - Extended protocol to allow for JSON requests via POST in addition
     to pure URL based requests via GET
   - Implemented bulk requests: JMX::Jmx4Perl->request() can now take a
     list of JMX::Jmx4Perl::Request objects in which case it will
     return a list of JMX::Jmx4Perl::Response objects (instead of a
     single, scalar, response when used with a single request)
-  - 'search' now return undef instead of throwing an error when no
-    Mbean could be found
   - Support for Glassfish V3 Preview, Jonas 5.1 and Jetty 7.0.0
 
 0.36 (2009-10-30)
