@@ -11,9 +11,7 @@ JMX::Jmx4Perl::Request - A jmx4perl request
 =head1 DESCRIPTION
 
 A L<JMX::Jmx4Perl::Request> encapsulates a request for various operational
-types. Probably the most common type is C<READ> which let you
-retrieve an attribute value from an MBeanServer. (In fact, at the time being,
-this is the only one supported fo now)
+types. 
 
 The following attributes are available:
 
@@ -63,6 +61,14 @@ Remove a JMX notification (not supported yet)
 
 If type is C<READ> or C<WRITE> this specifies the requested
 attribute
+
+=item value
+
+For C<WRITE> this specifies the value to set
+
+=item arguments
+
+List of arguments of C<EXEC> operations
 
 =item path
 
@@ -210,7 +216,7 @@ sub new {
             } elsif ($type eq EXEC) {
                 $self->{mbean} = shift;
                 $self->{operation} = shift;
-                $self->{args} = [ @_ ];
+                $self->{arguments} = [ @_ ];
             } elsif ($type eq LIST) {
                 $self->{path} = shift;
             } elsif ($type eq SEARCH) {
@@ -259,10 +265,9 @@ sub TO_JSON {
     my $ret = {
                type => $self->{type} ? uc($self->{type}) : undef,
               };
-    for my $k (qw(mbean attribute path value operation)) {
+    for my $k (qw(mbean attribute path value operation arguments)) {
         $ret->{$k} = $self->{$k} if $self->{$k};
     }
-    $ret->{arguments} = $self->{args} if $self->{args};
     return $ret;
 }
 

@@ -22,10 +22,12 @@ initial version.
 
 =head1 REQUEST 
 
-Jmx4perl uses a restful style for the request, which essentially is a single URL
-without additional parameters for specifying the request. For this to work, the
-URL is divided into parts separated by C</>. In general, the request URL looks
-like
+Jmx4perl know about two different style for handling a request which are
+distinguished by the HTTP method used, GET or POST.
+
+For GET requests it uses restful style, which essentially is a single URL which
+encodes all requests parameters. For this to work, the URL is divided into
+parts separated by C</>. In general, the request URL looks like
 
  <base-url>/<mode of operation>/<operation specific parameter>/..../
 
@@ -41,11 +43,17 @@ In addition to the command provided as a path, the agent knows about some query
 parameters which influence the value returned. These are described in section
 L</"Query Parameters">
 
+For POST the complete request is specified in the content. This content is a
+JSON representation of the JMX request. Beside the operations available for a
+simple GET request, POST request can contain additional parameters, e.g. for
+specifying a proxy. Additionally, with POST request you can submit multiple JMX
+request at a time realizing bulk operation and minimizing turnaround times. 
+
 The supported operations are described now in the following sections. 
 
-I<TODO: Describe new variant with JSON-Request send via POST>
+=head2 GET Requests
 
-=head2 read
+=head3 read
 
 Mode used for reading an JMX attributes. The operation specific parameters have
 the following format.
@@ -114,7 +122,7 @@ the innerpath if you want to transverse into this array.
 
 =back
 
-=head2 write
+=head3 write
 
 Writing an attribute is quite similar to reading, except that the URL takes an
 additional C<value> element:
@@ -161,7 +169,7 @@ something like
 
   http://localhost:8080/j4p/write/java.lang:type=Memory/Verbose/true
 
-=head2 exec
+=head3 exec
 
 With this mode, you can execute a JMX operation on a target MBean. The format
 of this looks like
@@ -190,7 +198,7 @@ For example, to execute a garbage collection you use
 
   http://localhost:8080/j4p/exec/java.lang:type=Memory/gc
 
-=head2 search
+=head3 search
 
 This mode is used to query for certain MBean. It takes a single argument for
 specifying the search parameter like in 
@@ -202,7 +210,7 @@ L<http://java.sun.com/j2se/1.5.0/docs/api/javax/management/ObjectName.html>,
 i.e. it may contain wildcars like C<*> and C<?>. The Mbean names matching the
 query are returned as a list within the response.
 
-=head2 list
+=head3 list
 
 The list operation allows you to get information about the accessible
 MBeans. This information includes the MBean names, their attributes and
@@ -223,7 +231,7 @@ below for the format of the complete answer.
 
 =back 
 
-=head2 Escaping
+=head3 Escaping
 
 If you are forced to use a slash (C</>) as part of your request (e.g. as part
 of you bean's name) you need to escape it. A single slash (C</>) is escaped by
@@ -246,6 +254,67 @@ slashes. The reason is rather simple: JBoss/Tomcat has a nasty bug, which
 returns an HTTP response C<HTTP/1.x 400 Invalid URI: noSlash> for any URL which
 contains an escaped slash in the path info (i.e. C<%2F>). Other appservers
 might croak as well, though not test. Try it yourself!
+
+=head2 POST Requests
+
+All operations as desrcibed above are available for post requests as well. In
+its most general form, the content of a POST has the following format:
+
+ [
+  {
+    "attribute":"HeapMemoryUsage",
+    "mbean":"java.lang:type=Memory",
+    "path":"used",
+    "type":"READ"
+  },
+  { 
+    "mbean":"*:type=Memory,*",
+    "type":"SEARCH"
+  }
+ ]
+
+In this case, multiple request are represented as a JSON array with maps, where
+the map's entries are the single request's attribute along with its value. For
+a single request, the array can be omitted. Depending on whether you send an
+array of requests or a single request you get an array of responses or a single
+response as result.
+
+The parameters known to a single request are:
+
+=over
+
+=item type
+
+Operational type as defined in L<JMX::Jmx4Perl::Request> (C<"READ">,
+C<"WRITE">, C<"EXEC">, C<"LIST">, C<"SEARCH">)
+
+=item mbean
+
+Name of the targetted mbean in its canonical format. 
+
+=item attribute
+
+If type is C<READ> or C<WRITE> this specifies the requested
+attribute
+
+=item value
+
+For C<WRITE> this specifies the value to set
+
+=item arguments
+
+List of arguments of C<EXEC> operations
+
+=item path
+
+Inner path 
+
+=item max_depth, max_objects, max_list_size
+
+Optional parameters in order to influence the size of the returned JSON
+response. 
+
+=back
 
 =head1 RESPONSE
 

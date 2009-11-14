@@ -183,14 +183,12 @@ sub _from_http_response {
     my $self = shift;
     my $json_resp = shift;
     my @reqs = @_;
-    if (@reqs == 1) {
-        die "Internal: Not a hash but ",ref($json_resp) unless ref($json_resp) eq "HASH";
+    if (ref($json_resp) eq "HASH") {
         return JMX::Jmx4Perl::Response->new(%{$json_resp},request => $reqs[0]);
-    } else {
-        die "Internal: Not an array of responses but ",ref($json_resp) unless ref($json_resp) eq "ARRAY";
+    } elsif (ref($json_resp) eq "ARRAY") {
         die "Internal: Number of request and responses doesnt match (",scalar(@reqs)," vs. ",scalar(@$json_resp) 
           unless scalar(@reqs) == scalar(@$json_resp);
-
+        
         my @ret = ();        
         for (my $i=0;$i<@reqs;$i++) {
             die "Internal: Not a hash --> ",$json_resp->[$i] unless ref($json_resp->[$i]) eq "HASH";
@@ -198,6 +196,8 @@ sub _from_http_response {
             push @ret,$response;
         }
         return @ret;
+    } else {
+        die "Internal: Not a hash nor an array but ",ref($json_resp) ? ref($json_resp) : $json_resp;
     }
 }
 
@@ -263,7 +263,7 @@ sub request_url {
         $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq EXEC) {
         $req .= "/" . $self->_escape($request->get("operation"));
-        $req .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("args")};
+        $req .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("arguments")};
     } elsif ($type eq SEARCH) {
         # Nothing further to append.
     }
