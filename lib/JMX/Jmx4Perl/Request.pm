@@ -265,7 +265,7 @@ sub TO_JSON {
     my $ret = {
                type => $self->{type} ? uc($self->{type}) : undef,
               };
-    for my $k (qw(mbean attribute path value operation arguments)) {
+    for my $k (qw(mbean attribute path value operation arguments max_depth max_objects max_list_size)) {
         $ret->{$k} = $self->{$k} if $self->{$k};
     }
     return $ret;
