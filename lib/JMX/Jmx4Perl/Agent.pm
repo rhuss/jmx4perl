@@ -156,7 +156,12 @@ sub request {
         $error_resp->{request} = @jmx_requests > 1 ? undef : $jmx_requests[0];
         return $error_resp;
     }
-    return $self->_from_http_response($json_resp,@jmx_requests);
+    my @responses = ($self->_from_http_response($json_resp,@jmx_requests));
+    if (!wantarray && scalar(@responses) == 1) {
+        return shift @responses;
+    } else {
+        return @responses;
+    }
 }
 
 
@@ -164,7 +169,7 @@ sub request {
 sub _to_http_request {
     my $self = shift;
     my @reqs = @_;
-    if (@reqs == 1 && !$reqs[0]->get("proxy_url")) {
+    if (@reqs == 1 && !$reqs[0]->get("target")) {
         # Old, rest-style
         my $url = $self->request_url($reqs[0]);
         return HTTP::Request->new(GET => $url);

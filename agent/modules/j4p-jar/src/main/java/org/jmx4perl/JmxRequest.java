@@ -77,7 +77,7 @@ public class JmxRequest {
     private List<String> extraArgs;
     private String operation;
     private Type type;
-    private ProxyConfig proxyConfig;
+    private TargetConfig targetConfig = null;
 
     // Max depth of returned JSON structure when deserializing.
     private int maxDepth = 0;
@@ -147,9 +147,9 @@ public class JmxRequest {
             operation = s;
         }
 
-        Map proxy = (Map) pMap.get("proxy");
-        if (proxy != null) {
-            proxyConfig = new ProxyConfig(proxy);
+        Map target = (Map) pMap.get("target");
+        if (target != null) {
+            targetConfig = new TargetConfig(target);
         }
 
     }
@@ -245,8 +245,8 @@ public class JmxRequest {
         maxDepth = pMaxDepth;
     }
 
-    public ProxyConfig getProxyConfig() {
-        return proxyConfig;
+    public TargetConfig getTargetConfig() {
+        return targetConfig;
     }
 
     @Override
@@ -265,8 +265,8 @@ public class JmxRequest {
         if (extraArgs != null && extraArgs.size() > 0) {
             ret.append(", extra=").append(extraArgs);
         }
-        if (proxyConfig != null) {
-            ret.append(", proxy=").append(proxyConfig);
+        if (targetConfig != null) {
+            ret.append(", target=").append(targetConfig);
         }
         ret.append("]");
         return ret.toString();
@@ -299,8 +299,8 @@ public class JmxRequest {
         if (operation != null) {
             ret.put("operation",operation);
         }
-        if (proxyConfig != null) {
-            ret.put("proxy",proxyConfig.toJSON());
+        if (targetConfig != null) {
+            ret.put("target", targetConfig.toJSON());
         }
         return ret;
     }
@@ -308,48 +308,44 @@ public class JmxRequest {
     // ===============================================================================
     // Proxy configuration
 
-    public static class ProxyConfig {
-        private JMXServiceURL jmxUrl;
-        private Map<String,Object> environment;
+    public static class TargetConfig {
+        private String url;
+        private Map<String,Object> env;
 
-        public ProxyConfig(Map pProxy) {
+        public TargetConfig(Map pProxy) {
             String url = (String) pProxy.get("url");
             if (url == null) {
-                throw new IllegalArgumentException("No url given for proxy configuration");
+                throw new IllegalArgumentException("No service url given for JSR-160 target");
             }
-            try {
-                jmxUrl = new JMXServiceURL(url);
-            } catch (MalformedURLException e) {
-                throw new IllegalArgumentException("Proxy-Url " + url + " is not well formed: " + e,e);
-            }
+            this.url = url;
             Map env = (Map) pProxy.get("env");
             if (env != null) {
-                environment = env;
+                this.env = env;
             }
         }
 
-        public JMXServiceURL getJmxUrl() {
-            return jmxUrl;
+        public String getUrl() {
+            return url;
         }
 
-        public Map<String, Object> getEnvironment() {
-            return environment;
+        public Map<String, Object> getEnv() {
+            return env;
         }
 
         public JSONObject toJSON() {
             JSONObject ret = new JSONObject();
-            ret.put("url",jmxUrl);
-            if (environment != null) {
-                ret.put("env",environment);
+            ret.put("url", url);
+            if (env != null) {
+                ret.put("env", env);
             }
             return ret;
         }
 
         @Override
         public String toString() {
-            return "ProxyConfig[" +
-                    jmxUrl +
-                    ", " + environment +
+            return "TargetConfig[" +
+                    url +
+                    ", " + env +
                     "]";
         }
     }

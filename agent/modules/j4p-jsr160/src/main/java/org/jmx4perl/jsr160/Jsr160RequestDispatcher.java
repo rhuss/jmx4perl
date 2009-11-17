@@ -52,6 +52,7 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
         JsonRequestHandler handler = requestHandlerManager.getRequestHandler(pJmxReq.getType());
         MBeanServerConnection connection = getConnection(pJmxReq);
         if (handler.handleAllServersAtOnce()) {
+            // There is no way to get remotely all MBeanServers ...
             return handler.handleRequest(new HashSet<MBeanServerConnection>(Arrays.asList(connection)),pJmxReq);
         } else {
             return handler.handleRequest(connection,pJmxReq);
@@ -59,17 +60,18 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
     }
 
     private MBeanServerConnection getConnection(JmxRequest pJmxReq) throws IOException {
-        JmxRequest.ProxyConfig proxyConfig = pJmxReq.getProxyConfig();
-        if (proxyConfig == null) {
+        JmxRequest.TargetConfig targetConfig = pJmxReq.getTargetConfig();
+        if (targetConfig == null) {
             throw new IllegalArgumentException("No proxy configuration in request " + pJmxReq);
         }
-        JMXServiceURL url = proxyConfig.getJmxUrl();
-        Map env = proxyConfig.getEnvironment();
+        String urlS = targetConfig.getUrl();
+        JMXServiceURL url = new JMXServiceURL(urlS);
+        Map env = targetConfig.getEnv();
         JMXConnector connector = JMXConnectorFactory.connect(url,env);
         return connector.getMBeanServerConnection();
     }
 
     public boolean canHandle(JmxRequest pJmxRequest) {
-        return pJmxRequest.getProxyConfig() != null;
+        return pJmxRequest.getTargetConfig() != null;
     }
 }
