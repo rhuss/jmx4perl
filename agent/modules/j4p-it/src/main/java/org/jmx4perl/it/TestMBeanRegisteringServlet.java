@@ -47,7 +47,8 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
             "/slash-simple/",
             "/--/",
             "with%3acolon",
-            "//server/client"
+            "//server/client",
+            "service%3ajmx%3armi%3a///jndi/rmi%3a//bhut%3a9999/jmxrmi"
 //            "äöüßÄÖÜ"
 
     };

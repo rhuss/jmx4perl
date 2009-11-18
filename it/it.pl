@@ -8,9 +8,12 @@ use TAP::Harness;
 use Data::Dumper;
 
 my $dir = $FindBin::Bin . "/t";
-my ($gateway_url,$user,$password,$product);
+my ($gateway_url,$user,$password,$product,$target_url,$target_user,$target_password);
 GetOptions("dir=s" => \$dir,
            "url=s" => \$gateway_url,
+           "target=s" => \$target_url,
+           "target-user=s" => \$target_user,
+           "target-password=s" => \$target_password,
            "user=s" => \$user,
            "password=s" => \$password,
            "product=s" => \$product);
@@ -37,6 +40,9 @@ my $harness = new TAP::Harness
    });
 
 $ENV{JMX4PERL_GATEWAY} = $gateway_url;
+$ENV{JMX4PERL_TARGET_URL} = $target_url;
+$ENV{JMX4PERL_TARGET_USER} = $target_user;
+$ENV{JMX4PERL_TARGET_PASSWORD} = $target_password;
 $ENV{JMX4PERL_USER} = $user;
 $ENV{JMX4PERL_PASSWORD} = $password;
 $ENV{JMX4PERL_PRODUCT} = $product;

@@ -44,7 +44,7 @@ It uses a traditional request-response paradigma for performing JMX operations
 on a remote Java Virtual machine. 
 
 There a various ways how JMX information can be transfered. Jmx4Perl is based
-on an I<agent>, a small (< 100k) Java Servlet, which needs to deployed on a
+on an I<agent>, a Java Servlet, which needs to deployed on a
 Java application server. It plays the role of a proxy, which on one side
 communicates with the MBeanServer within in the application server and
 transfers JMX related information via HTTP and JSON to the client (i.e. this
@@ -581,6 +581,8 @@ provided partially, in which case the remaining map/array is returned. See also
 L<JMX::Jmx4Perl::Agent::Protocol> for a more detailed discussion of inner
 pathes. 
 
+This method throws an exception if an error occurs.
+
 =cut
 
 sub list {
@@ -589,6 +591,12 @@ sub list {
 
     my $request = JMX::Jmx4Perl::Request->new(LIST,$path);
     my $response = $self->request($request);
+    if ($response->is_error) {
+        my $txt = "Error while listing attributes: " . $response->error_text . "\n" .
+          "Status: " . $response->status . "\n";
+        #($response->stacktrace ? "\n" . $response->stacktrace . "\n" : "\n");
+        die $txt;
+    }
     return $response->value;    
 }
 

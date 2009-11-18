@@ -12,10 +12,9 @@ import javax.management.*;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.naming.Context;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Dispatcher for calling JSR-160 connectors
@@ -66,9 +65,24 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
         }
         String urlS = targetConfig.getUrl();
         JMXServiceURL url = new JMXServiceURL(urlS);
-        Map env = targetConfig.getEnv();
+        Map env = prepareEnv(targetConfig.getEnv());
         JMXConnector connector = JMXConnectorFactory.connect(url,env);
         return connector.getMBeanServerConnection();
+    }
+
+    private Map prepareEnv(Map<String, Object> pEnv) {
+        if (pEnv == null || pEnv.size() == 0) {
+            return pEnv;
+        }
+        Map<String,Object> ret = new HashMap<String, Object>(pEnv);
+        String user = (String) ret.remove("user");
+        String password  = (String) ret.remove("password");
+        if (user != null && password != null) {
+            ret.put(Context.SECURITY_PRINCIPAL, user);
+            ret.put(Context.SECURITY_CREDENTIALS, password);
+            ret.put("jmx.remote.credentials",new String[] { user, password });
+        }
+        return ret;
     }
 
     public boolean canHandle(JmxRequest pJmxRequest) {

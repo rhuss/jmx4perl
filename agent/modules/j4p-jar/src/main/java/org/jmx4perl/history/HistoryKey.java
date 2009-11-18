@@ -41,11 +41,14 @@ public class HistoryKey implements Serializable {
     private String mBean;
     private String secondary;
     private String path;
+    private String target;
 
     HistoryKey(JmxRequest pJmxReq) {
         validate(pJmxReq);
         Type rType = pJmxReq.getType();
-
+        if (pJmxReq.getTargetConfig() != null) {
+            target = pJmxReq.getTargetConfig().getUrl();
+        }
         mBean = pJmxReq.getObjectNameAsString();
         if (rType == EXEC) {
             type = "operation";
@@ -72,18 +75,20 @@ public class HistoryKey implements Serializable {
         }
     }
 
-    public HistoryKey(String pMBean, String pOperation) {
+    public HistoryKey(String pMBean, String pOperation, String pTarget) {
         type = "operation";
         mBean = pMBean;
         secondary = pOperation;
         path = null;
+        target = pTarget;
     }
 
-    public HistoryKey(String pMBean, String pAttribute, String pPath) {
+    public HistoryKey(String pMBean, String pAttribute, String pPath,String pTarget) {
         type = "attribute";
         mBean = pMBean;
         secondary = pAttribute;
         path = pPath;
+        target = pTarget;
     }
 
     @Override
@@ -96,6 +101,8 @@ public class HistoryKey implements Serializable {
         if (!mBean.equals(that.mBean)) return false;
         if (path != null ? !path.equals(that.path) : that.path != null) return false;
         if (!secondary.equals(that.secondary)) return false;
+        if (target != null ? !target.equals(that.target) : that.target != null)
+            return false;
         if (!type.equals(that.type)) return false;
 
         return true;
@@ -107,6 +114,7 @@ public class HistoryKey implements Serializable {
         result = 31 * result + mBean.hashCode();
         result = 31 * result + secondary.hashCode();
         result = 31 * result + (path != null ? path.hashCode() : 0);
+        result = 31 * result + (target != null ? target.hashCode() : 0);
         return result;
     }
 }

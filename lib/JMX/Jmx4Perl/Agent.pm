@@ -84,6 +84,15 @@ Optional proxy to use
 
 Credentials to use for accessing the proxy
 
+=item target
+
+Add a target which is used for any request served by this object if not already
+a target is present in the request. This way you can setup the default target
+configuration if you are using the agent servlet as a proxy, e.g.
+
+  ... target => { url => "service:jmx:...", user => "...", password => "..." }
+
+
 =back 
 
 =cut
@@ -124,7 +133,6 @@ sub init {
         }
     }
     $self->{ua} = $ua;
-
     return $self;
 }
 
@@ -139,15 +147,14 @@ L<JMX::Jmx4Perl>->request().
 
 sub request {
     my $self = shift;
-    my @jmx_requests = @_;
- 
+    my @jmx_requests = $self->cfg('target') ? $self->_update_targets(@_) : @_;
     my $ua = $self->{ua};
    
     my $http_req = $self->_to_http_request(@jmx_requests);
     print "Requesting ",$http_req->uri,"\n" if $self->{cfg}->{verbose};
     my $http_resp = $ua->request($http_req);
     my $json_resp = {};
-    print "Response: ",Dumper($http_resp) if $self->{cfg}->{verbose};
+    #print "Response: ",Dumper($http_resp) if $self->{cfg}->{verbose};
     eval {
         $json_resp = from_json($http_resp->content());
     };
@@ -206,11 +213,34 @@ sub _from_http_response {
     }
 }
 
+# Update targets if not set in request.
+sub _update_targets {
+    my $self = shift;
+    my @requests = @_;
+    my $target = $self->_clone_target;
+    for my $req (@requests) {
+        $req->{target} = $target unless exists($req->{target});
+        # An request with existing but undefined target removes
+        # any default
+        delete $req->{target} unless defined($req->{target});
+    }
+    return @requests;
+}
+
+sub _clone_target {
+    my $self = shift;
+    die "Internal: No target set" unless $self->cfg('target');
+    my $target = { %{$self->cfg('target')} };
+    if ($target->{env}) {
+        $target->{env} = { %{$target->{env}}};
+    }
+    return $target;
+}
+
 # Validate the JSON answer and the HttpResponse
 sub _validate_response {
     my $self = shift;
-    my ($http_req,$http_resp,$json_resp,$json_error) = @_;
-    
+    my ($http_req,$http_resp,$json_resp,$json_error) = @_;    
     if ($json_error && !$http_resp->is_error) {
         # If not an HTTP-Error and deserialization fails, then we probably 
         # got a wrong URL
@@ -221,7 +251,8 @@ sub _validate_response {
            error => "Error while deserializing JSON answer (probably wrong URL): " . $@
           );
     }
-    if ($http_resp->is_error && $json_resp->{status} != 200) {
+    my $sample_resp = $json_resp->[0] if ref($json_resp) eq "ARRAY" && scalar(@$json_resp) == 1;
+    if ($http_resp->is_error && $sample_resp && $sample_resp->{status} == 200) {
         my $error = "Error while fetching ".$http_req->uri." :\n\n" . $http_resp->status_line . "\n";
         my $content = $http_resp->content;
         if ($content) {
@@ -235,7 +266,8 @@ sub _validate_response {
           ( 
            status => $json_resp->{status},
            content => $http_resp->content,
-           error => $error
+           error => $error,
+           stacktrace => $sample_resp->{stacktrace}
           );        
     };
     return undef;

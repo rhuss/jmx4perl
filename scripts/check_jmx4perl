@@ -52,6 +52,13 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 "java.lang:type=Memory" \
                 "gc" 
 
+ # Use check_jmx4perl in proxy mode
+ check_jmx4perl --url http://localhost:8888/j4p \
+                --alias MEMORY_HEAP_USED \
+                --critical 10000000 \
+                --target service:jmx:rmi:///jndi/rmi://bhut:9999/jmxrmi
+  
+
 =head1 DESCRIPTION
 
 Command for providing Nagios conmpliant output for JMX response fetched via
@@ -154,6 +161,13 @@ will result in an output like
 
  OK - Heap-Memory: 3.48% used (17.68 MB / 508.06 MB) | '[MEMORY_HEAP_USED]'=3.48%;;:80
 
+<check_jmx4perl> can be used in a proxy mode as well. When the option
+C<--target> is given, the agent servlet use this url as a JMX Service URL and
+tries to connect via a JSR-160 to specified target to obtain the JMX
+information from there. Additionally C<--target-user> and C<--target-password>
+can be used to provide credentials if the target server is secure with user-
+and password name. Please see the manual for more information about the proxy
+mode and its limitations.
 
 =cut
 
