@@ -149,7 +149,6 @@ sub request {
     my $self = shift;
     my @jmx_requests = $self->cfg('target') ? $self->_update_targets(@_) : @_;
     my $ua = $self->{ua};
-   
     my $http_req = $self->_to_http_request(@jmx_requests);
     print "Requesting ",$http_req->uri,"\n" if $self->{cfg}->{verbose};
     my $http_resp = $ua->request($http_req);
@@ -241,14 +240,15 @@ sub _clone_target {
 sub _validate_response {
     my $self = shift;
     my ($http_req,$http_resp,$json_resp,$json_error) = @_;    
-    if ($json_error && !$http_resp->is_error) {
+    if ($json_error) {
         # If not an HTTP-Error and deserialization fails, then we probably 
         # got a wrong URL
         return JMX::Jmx4Perl::Response->new
           ( 
            status => 400,
-           content => $http_resp->content,
-           error => "Error while deserializing JSON answer (probably wrong URL): " . $@
+           error => 
+           "Error while deserializing JSON answer " . (!$http_resp->is_error ? "(Wrong URL ?)" : "") . " : " . $@ . 
+           "\n" . $http_resp->content
           );
     }
     my $sample_resp = $json_resp->[0] if ref($json_resp) eq "ARRAY" && scalar(@$json_resp) == 1;

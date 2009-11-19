@@ -55,26 +55,31 @@ public class ListHandler extends JsonRequestHandler {
         try {
             Map<String /* domain */,
                     Map<String /* props */,
-                            Map<String /* attribute/operation */,
-                                                                List<String /* names */>>>> ret =
+                            Map<String /* attribute/operation/error */,
+                                    List<String /* names */>>>> ret =
                     new HashMap<String, Map<String, Map<String, List<String>>>>();
             for (MBeanServerConnection server : pServers) {
                 for (Object nameObject : server.queryNames((ObjectName) null,(QueryExp) null)) {
                     ObjectName name = (ObjectName) nameObject;
-                    MBeanInfo mBeanInfo = server.getMBeanInfo(name);
-
                     Map mBeansMap = getOrCreateMap(ret,name.getDomain());
                     Map mBeanMap = getOrCreateMap(mBeansMap,name.getCanonicalKeyPropertyListString());
 
-                    addAttributes(mBeanMap, mBeanInfo);
-                    addOperations(mBeanMap, mBeanInfo);
+                    try {
+                        MBeanInfo mBeanInfo = server.getMBeanInfo(name);
 
-                    // Trim if needed
-                    if (mBeanMap.size() == 0) {
-                        mBeansMap.remove(name.getCanonicalKeyPropertyListString());
-                        if (mBeansMap.size() == 0) {
-                            ret.remove(name.getDomain());
+                        addAttributes(mBeanMap, mBeanInfo);
+                        addOperations(mBeanMap, mBeanInfo);
+                        // Trim if needed
+                        if (mBeanMap.size() == 0) {
+                            mBeansMap.remove(name.getCanonicalKeyPropertyListString());
+                            if (mBeansMap.size() == 0) {
+                                ret.remove(name.getDomain());
+                            }
                         }
+                    } catch (IOException exp) {
+                        // In case of a remote call, IOEcxeption can occur e.g. for
+                        // NonSerializableExceptions
+                        mBeanMap.put("error",exp);
                     }
                 }
             }

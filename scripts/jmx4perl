@@ -241,10 +241,14 @@ sub command_attributes {
                                                                                          max_objects => $max_objects,
                                                                                          max_list_size => $max_list_size});
                         my $response = $jmx->request($request);
-                        if ($response->is_error) {
+                        if ($response->is_error) {                            
                             print "\nERROR: ",$response->error_text,"\n";
-                            if ($opts{verbose} && $response->stacktrace) {
-                                print $response->stacktrace;
+                            if ($opts{verbose}) {
+                                if ($response->stacktrace) {
+                                    print $response->stacktrace;
+                                } else {
+                                    print Dumper($response);
+                                }
                             }
                         } else {
                             my $val = $response->value;
@@ -417,9 +421,11 @@ sub _check_for_error {
     my $resp = shift;
     if ($resp->is_error) {
         print STDERR "ERROR: ",$resp->error_text,"\n";
-        if ($resp->stacktrace && $opts{verbose}) {
-            print STDERR "Server Stacktrace:\n";
-            print STDERR $resp->stacktrace;
+        if ($opts{verbose}) {
+            if ($resp->stacktrace) {
+                print STDERR "Server Stacktrace:\n";
+                print STDERR $resp->stacktrace;
+            }
         }
         exit 1;
     }

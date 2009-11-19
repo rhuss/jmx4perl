@@ -10,7 +10,7 @@ Simple:
 
    use strict;
    use JMX::Jmx4Perl;
-   use JMX::Jmx4Perl::Alias;   # Import certains aliases for MBeans
+   use JMX::Jmx4Perl::Alias;   # Import MBean aliases 
 
    print "Memory Used: ",
           JMX::Jmx4Perl
@@ -809,12 +809,14 @@ sub _format_map {
             } elsif ($level == 1) {
                 $prefix = $CURRENT_DOMAIN . ":";
             } 
-            $ret .= &_get_space($level).$prefix.$d.$sep."\n" unless ($d eq "attr" || $d eq "op");
+            $ret .= &_get_space($level).$prefix.$d.$sep."\n" unless ($d eq "attr" || $d eq "op" || $d eq "error");
             my @args = ($ret,$map->{$d},$path);
             if ($d eq "attr") {
                 $ret = &_format_attr_or_op(@args,$level,"attr","Attributes",\&_format_attribute);
             } elsif ($d eq "op") {
                 $ret = &_format_attr_or_op(@args,$level,"op","Operations",\&_format_operation);
+            } elsif ($d eq "error") {
+                $ret = $ret . "\nError: ".$map->{error}->{message}."\n";
             } else {
                 $ret = &_format_map(@args,$level+1);
                 if ($level == 0) {
