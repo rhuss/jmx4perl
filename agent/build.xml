@@ -6,19 +6,21 @@
 <project name="json-jmx-agent" default="main" basedir=".">
 
   <property name="war-name" value="j4p.war"/>
-  <property name="proxy-name" value="j4p-proxy.war"/>
   <property name="war-name-14" value="j4p14.war"/>
   <property name="it-war-name" value="j4p-it.war"/>
 
   <target name="main" depends="war,it-war" description="Build agent (j4p.war) and integration test (j4p-it.war)"/>
   <target name="jdk14" depends="war14" description="Build JDK 1.4 legacy agent (j4p14.war)"  />
 
+  <!-- Get version from maven build -->
+  <xmlproperty file="pom.xml"/>
+  <property name="version" value="${project.properties.applicationVersion}"/>
+
   <!-- Preparations -->
   <target name="mkdir">
     <mkdir dir="modules/j4p-jar/target/classes"/>
     <mkdir dir="modules/j4p-war/target"/>
     <mkdir dir="modules/j4p-jsr160/target/classes"/>
-    <mkdir dir="modules/j4p-proxy/target"/>
     <mkdir dir="modules/j4p-it/target/classes"/>
   </target>
 
@@ -64,8 +66,8 @@
   </target>
 
   <target name="jar" depends="compile">
-    <jar destfile="modules/j4p-jar/target/j4p-agent.jar" basedir="modules/j4p-jar/target/classes"/>
-    <jar destfile="modules/j4p-jsr160/target/j4p-jsr160.jar" basedir="modules/j4p-jsr160/target/classes"/>
+    <jar destfile="modules/j4p-jar/target/j4p-${version}.jar" basedir="modules/j4p-jar/target/classes"/>
+    <jar destfile="modules/j4p-jsr160/target/j4p-jsr160-${version}.jar" basedir="modules/j4p-jsr160/target/classes"/>
   </target>
 
   <target name="war" depends="jar,copy_access_policy">
@@ -75,24 +77,13 @@
         <exclude name="README"/>
       </lib>
       <lib dir="modules/j4p-jar/target">
-        <include name="j4p-agent.jar"/>
-      </lib>
-    </war>
-    <war destfile="modules/j4p-proxy/target/${proxy-name}" webxml="modules/j4p-proxy/src/main/webapp/WEB-INF/web.xml">
-      <lib dir="lib">
-        <exclude name="servlet-api*"/>
-        <exclude name="README"/>
-      </lib>
-      <lib dir="modules/j4p-jar/target">
-        <include name="j4p-agent.jar"/>
+        <include name="j4p-${version}.jar"/>
       </lib>
       <lib dir="modules/j4p-jsr160/target">
-        <include name="j4p-jsr160.jar"/>
+        <include name="j4p-jsr160-${version}.jar"/>
       </lib>
     </war>
-
     <copy file="modules/j4p-war/target/${war-name}" todir="."/>
-    <copy file="modules/j4p-proxy/target/${proxy-name}" todir="."/>
   </target>
 
   <!-- ===============================================================  -->
@@ -114,7 +105,7 @@
           <include name="*.jar"/>
         </fileset>
         <fileset dir="modules/j4p-jar/target">
-          <include name="j4p-agent.jar"/>
+          <include name="j4p-${version}.jar"/>
         </fileset>
       </classpath>
     </javac>
@@ -139,7 +130,6 @@
       <fileset dir="modules/j4p-jar/target" includes="**/*"/>
       <fileset dir="modules/j4p-war/target" includes="**/*"/>
       <fileset dir="modules/j4p-jsr160/target" includes="**/*"/>
-      <fileset dir="modules/j4p-proxy/target" includes="**/*"/>
       <fileset dir="modules/j4p-it/target" includes="**/*"/>
       <fileset dir="jdk14/j4p14-jar/target" includes="**/*"/>
       <fileset dir="jdk14/j4p14-war/target" includes="**/*"/>

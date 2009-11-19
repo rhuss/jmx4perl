@@ -15,7 +15,6 @@
     <module>modules/j4p-war</module>
     <module>modules/j4p-it</module>
     <module>modules/j4p-jsr160</module>
-    <module>modules/j4p-proxy</module>
   </modules>
 
   <developers>
@@ -31,7 +30,7 @@
   </developers>
 
   <properties>
-    <applicationVersion>0.40</applicationVersion>
+    <applicationVersion>0.50_1</applicationVersion>
   </properties>
   
 </project>

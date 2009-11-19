@@ -91,6 +91,7 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ExecHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/JsonRequestHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ListHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ReadHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/RequestHandlerManager.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/SearchHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/VersionHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/WriteHandler.java
@@ -109,8 +110,6 @@ agent/modules/j4p-jar/src/test/resources/access-sample2.xml
 agent/modules/j4p-jar/src/test/resources/access-sample3.xml
 agent/modules/j4p-jsr160/pom.xml
 agent/modules/j4p-jsr160/src/main/java/org/jmx4perl/jsr160/Jsr160RequestDispatcher.java
-agent/modules/j4p-proxy/pom.xml
-agent/modules/j4p-proxy/src/main/webapp/WEB-INF/web.xml
 agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml
