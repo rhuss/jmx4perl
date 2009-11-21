@@ -122,7 +122,7 @@ sub _version_or_vendor {
             my $val;
             eval "\$self->_try_$what";
             die $@ if $@;
-        } elsif ($self->jsr77 ) {
+        } elsif ($self->jsr77) {
             $self->{$what} = $self->_server_info_from_jsr77("server" . (uc substr($what,0,1)) . substr($what,1));
             $self->{"original_" . $what} = $self->{$what};
             if ($transform && $self->{$what}) {
@@ -422,10 +422,10 @@ sub server_info {
     return $ret;
 }
 
-=item jvm_info = $handler->jvm_info()
+=item $jvm_info = $handler->jvm_info()
 
 Get information which is based on well known MBeans which are available for
-every Virtual machine.
+every Virtual machine. This is a textual representation of the information. 
 
 =cut
 
@@ -467,14 +467,17 @@ sub jvm_info {
                               "time" => [ "Starttime", RUNTIME_STARTTIME ]                              
                              ]                         
                );
-
     my $ret = "";
+
+    # Collect all alias and create a map with values
+    my $info_map = $self->_fetch_info(\@info);
+    # Prepare output
     while (@info) {
         my $titel = shift @info;
         my $e = shift @info;
         my $val = "";
         while (@$e) {
-            $self->_append_info(\$val,shift @$e,shift @$e);            
+            $self->_append_info($info_map,\$val,shift @$e,shift @$e);            
         }
         if (length $val) {
             $ret .= $titel . ":\n";
@@ -482,8 +485,6 @@ sub jvm_info {
         }
     }
     
-
-
     if ($verbose) {
         my $args = "";
         my $rt_args = $self->_get_attribute(RUNTIME_ARGUMENTS);
@@ -512,6 +513,38 @@ sub jvm_info {
     return $ret;
 }
 
+# Bulk fetch of alias information
+# Return: Map with aliases as keys and response values as values
+sub _fetch_info {
+    my $self = shift;
+    my $info = shift;
+    my $jmx4perl = $self->{jmx4perl};
+    my @reqs = ();
+    my @aliases = ();
+    my $info_map = {};
+    for (my $i=1; $i < @$info; $i += 2) {
+        my $attr_list = $info->[$i];
+        for (my $j=1;$j < @$attr_list;$j += 2) {
+            my $alias_list = $attr_list->[$j];
+            for (my $k=1;$k < @$alias_list;$k++) {
+                my $alias = $alias_list->[$k];                
+                my @args = $jmx4perl->resolve_alias($alias);
+                next unless $args[0];
+                push @reqs,new JMX::Jmx4Perl::Request(READ,@args);
+                push @aliases,$alias;
+            }
+        }
+    }
+    my @resps = $jmx4perl->request(@reqs);
+    #print Dumper(\@resps);
+    foreach my $resp (@resps) {
+        my $alias = shift @aliases;
+        die "Error while fetching $alias: ",$resp->error_text if $resp->is_error;
+        $info_map->{$alias} = $resp->value;
+    }
+    return $info_map;
+}
+
 # Fetch version and vendor from jrs77
 sub _server_info_from_jsr77 {
     my $self = shift;
@@ -528,17 +561,18 @@ sub _server_info_from_jsr77 {
 
 sub _append_info {
     my $self = shift;
+    my $info_map = shift;
     my $r = shift;
     my $type = shift;
     my $content = shift;
     my $label = shift @$content;
-    my $value = $self->_get_attribute(shift @$content);
+    my $value = $info_map->{shift @$content};
     return unless defined($value);
     if ($type eq "mem") {
         $value = int($value/(1024*1024)) . " MB";
     } elsif ($type eq "str" && @$content) {
         while (@$content) {
-            $value .= " " . $self->_get_attribute(shift @$content);
+            $value .= " " . $info_map->{shift @$content};
         }
     } elsif ($type eq "duration") {
         $value = &_format_duration($value);
@@ -558,7 +592,6 @@ sub _get_attribute {
     my $response = $jmx4perl->request($request);
     return undef if $response->status == 404;     # Ignore attributes not found
     return $response->value if $response->is_ok;
-    print Dumper($response);
     die "Error fetching attribute ","@_",": ",$response->error_text;
 }
 

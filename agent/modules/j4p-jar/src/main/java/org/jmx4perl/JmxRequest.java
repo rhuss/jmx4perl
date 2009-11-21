@@ -4,10 +4,7 @@ import org.json.simple.JSONObject;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -33,53 +30,14 @@ import java.util.regex.Pattern;
  */
 
 /**
- * A JMX request which knows how to translate from a REST Url. Additionally
- * it can be easily translated into a JSON format for inclusion into a response
- * from {@link AgentServlet}
- * <p>
- * The REST-Url which gets recognized has the following format:
- * <p>
- * <pre>
- *    &lt;base_url&gt;/&lt;type&gt;/&lt;param1&gt;/&lt;param2&gt;/....
- * </pre>
- * <p>
- * where <code>base_url<code> is the URL specifying the overall servlet (including
- * the servlet context, something like "http://localhost:8080/j4p-agent"),
- * <code>type</code> the operational mode and <code>param1 .. paramN<code>
- * the provided parameters which are dependend on the <code>type<code>
- * <p>
- * The following types are recognized so far, along with there parameters:
+ * Representation of a JMX request which is converted from an GET or POST HTTP
+ * Request. A <code>JmxRequest</code> can be obtained only from a
+ * {@link org.jmx4perl.JmxRequestFactory}
  *
- * <ul>
- *   <li>Type: <b>read</b> ({@link Type#READ}<br/>
- *       Parameters: <code>param1<code> = MBean name, <code>param2</code> = Attribute name,
- *       <code>param3 ... paramN</code> = Inner Path.
- *       The inner path is optional and specifies a path into complex MBean attributes
- *       like collections or maps. If within collections/arrays/tabular data,
- *       <code>paramX</code> should specify
- *       a numeric index, in maps/composite data <code>paramX</code> is a used as a string
- *       key.</li>
- *   <li>Type: <b>write</b> ({@link Type#WRITE}<br/>
- *       Parameters: <code>param1</code> = MBean name, <code>param2</code> = Attribute name,
- *       <code>param3</code> = value, <code>param4 ... paramN</code> = Inner Path.
- *       The value must be URL encoded (with UTF-8 as charset), and must be convertable into
- *       a data structure</li>
- *   <li>Type: <b>exec</b> ({@link Type#EXEC}<br/>
- *       Parameters: <code>param1</code> = MBean name, <code>param2</code> = operation name,
- *       <code>param4 ... paramN</code> = arguments for the operation.
- *       The arguments must be URL encoded (with UTF-8 as charset), and must be convertable into
- *       a data structure</li>
- *    <li>Type: <b>version</b> ({@link Type#VERSION}<br/>
- *        Parameters: none
- *    <li>Type: <b>search</b> ({@link Type#SEARCH}<br/>
- *        Parameters: <code>param1</code> = MBean name pattern
- * </ul>
  * @author roland
  * @since Apr 19, 2009
  */
-public class JmxRequest extends JSONObject {
-
-    private static final long serialVersionUID = 42L;
+public class JmxRequest {
 
     /**
      * Enumeration for encapsulationg the request mode.
@@ -107,10 +65,9 @@ public class JmxRequest extends JSONObject {
         public String getValue() {
             return value;
         }
-
     };
 
-
+    // Attributes
     private String objectNameS;
     private ObjectName objectName;
     private String attributeName;
@@ -124,151 +81,68 @@ public class JmxRequest extends JSONObject {
     private int maxCollectionSize = 0;
     private int maxObjects = 0;
 
-    private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^-*\\+?$");
-
-    JmxRequest(String pPathInfo, Map pParameterMap) {
-        try {
-            if (pPathInfo != null && pPathInfo.length() > 0) {
-
-                // Get all path elements as a reverse stack
-                Stack<String> elements = extractElementsFromPath(pPathInfo);
-                type = extractType(elements.pop());
-
-                Processor processor = processorMap.get(type);
-                if (processor == null) {
-                    throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
-                }
-
-                // Parse request
-                processor.process(this,elements);
-
-                // Extract all additional args from the remaining path info
-                extraArgs = toList(elements);
-
-                // Setup JSON representation
-                put("type",type.getValue());
-                processor.setupJSON(this);
-            }
-            extractParameters(pParameterMap);
-        } catch (NoSuchElementException exp) {
-            throw new IllegalArgumentException("Invalid path info " + pPathInfo,exp);
-        } catch (MalformedObjectNameException e) {
-            throw new IllegalArgumentException("Invalid object name \"" + objectNameS + "\": " + e.getMessage(),e);
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Internal: Illegal encoding for URL conversion: " + e,e);
-        } catch (EmptyStackException exp) {
-            throw new IllegalArgumentException("Invalid arguments in pathinfo " + pPathInfo + " for command " + type,exp);
-        }
-    }
-
-    private void extractParameters(Map pParameterMap) {
-        if (pParameterMap != null) {
-            if (pParameterMap.get("maxDepth") != null) {
-                maxDepth = Integer.parseInt( ((String []) pParameterMap.get("maxDepth"))[0]);
-            }
-            if (pParameterMap.get("maxCollectionSize") != null) {
-                maxCollectionSize = Integer.parseInt(((String []) pParameterMap.get("maxCollectionSize"))[0]);
-            }
-            if (pParameterMap.get("maxObjects") != null) {
-                maxObjects = Integer.parseInt(((String []) pParameterMap.get("maxObjects"))[0]);
-            }
-        }
-    }
-
-    private List<String> toList(Stack<String> pElements) {
-        List<String> p = new ArrayList<String>();
-        while (!pElements.isEmpty()) {
-            p.add(pElements.pop());
-        }
-        return p;
-    }
-
-    /*
-    We need to use this special treating for slashes (i.e. to escape with '/-/') because URI encoding doesnt work
-    well with HttpRequest.pathInfo() since in Tomcat/JBoss slash seems to be decoded to early so that it get messed up
-    and answers with a "HTTP/1.x 400 Invalid URI: noSlash" without returning any further indications
-
-    For the rest of unsafe chars, we use uri decoding (as anybody should do). It could be of course the case,
-    that the pathinfo has been already uri decoded (dont know by heart)
+    /**
+     * Create a request with the given type (with no MBean name)
+     *
+     * @param pType requests type
      */
-    private Stack<String> extractElementsFromPath(String path) throws UnsupportedEncodingException {
-        String[] elements = (path.startsWith("/") ? path.substring(1) : path).split("/+");
-
-        Stack<String> ret = new Stack<String>();
-        Stack<String> elementStack = new Stack<String>();
-
-        for (int i=elements.length-1;i>=0;i--) {
-            elementStack.push(elements[i]);
-        }
-
-        extractElements(ret,elementStack,null);
-        if (ret.size() == 0) {
-            throw new IllegalArgumentException("No request type given");
-        }
-
-        // Reverse stack
-        Collections.reverse(ret);
-
-        return ret;
+    JmxRequest(Type pType) {
+        type = pType;
     }
 
-    private void extractElements(Stack<String> ret, Stack<String> pElementStack,StringBuffer previousBuffer)
-            throws UnsupportedEncodingException {
-        if (pElementStack.isEmpty()) {
-            if (previousBuffer != null && previousBuffer.length() > 0) {
-                ret.push(decode(previousBuffer.toString()));
-            }
-            return;
+    /**
+     * Create a request with given type for a certain MBean.
+     * Other parameters of the request need to be set explicitely via a setter.
+     *
+     * @param pType requests type
+     * @param pObjectNameS MBean name in string representation
+     * @throws MalformedObjectNameException if the name couldnot properly translated
+     *         into a JMX {@link javax.management.ObjectName}
+     */
+    JmxRequest(Type pType,String pObjectNameS) throws MalformedObjectNameException {
+        type = pType;
+        if (pObjectNameS != null) {
+            objectNameS = pObjectNameS;
+            objectName = new ObjectName(objectNameS);
         }
-        String element = pElementStack.pop();
-        Matcher matcher = SLASH_ESCAPE_PATTERN.matcher(element);
-        if (matcher.matches()) {
-            if (ret.isEmpty()) {
-                return;
-            }
-            StringBuffer val;
-            if (previousBuffer == null) {
-                val = new StringBuffer(ret.pop());
-            } else {
-                val = previousBuffer;
-            }
-            // Decode to value
-            for (int j=0;j<element.length();j++) {
-                val.append("/");
-            }
-            // Special escape at the end indicates that this is the last element in the path
-            if (!element.substring(element.length()-1,1).equals("+")) {
-                if (!pElementStack.isEmpty()) {
-                    val.append(decode(pElementStack.pop()));
-                }
-                extractElements(ret,pElementStack,val);
-                return;
-            } else {
-                ret.push(decode(val.toString()));
-                extractElements(ret,pElementStack,null);
-                return;
-            }
-        }
-        if (previousBuffer != null) {
-            ret.push(decode(previousBuffer.toString()));
-        }
-        ret.push(decode(element));
-        extractElements(ret,pElementStack,null);
     }
 
-    private String decode(String s) {
-        return s;
-        //return URLDecoder.decode(s,"UTF-8");
-
-    }
-
-    private Type extractType(String pTypeS) {
-        for (Type t : Type.values()) {
-            if (t.getValue().equals(pTypeS)) {
-                return t;
-            }
+    /**
+     * Create a request out of a parameter map
+     *
+     */
+    JmxRequest(Map<String,?> pMap) throws MalformedObjectNameException {
+        type = Type.valueOf((String) pMap.get("type"));
+        if (type == null) {
+            throw new IllegalArgumentException("Type is required");
         }
-        throw new IllegalArgumentException("Invalid request type '" + pTypeS + "'");
+        String s = (String) pMap.get("mbean");
+        if (s != null) {
+            objectNameS = s;
+            objectName = new ObjectName(s);
+        }
+        s = (String) pMap.get("attribute");
+        if (s != null) {
+            attributeName = s;
+        }
+        s = (String) pMap.get("path");
+        if (s != null) {
+            extraArgs = splitPath(s);
+        } else {
+            extraArgs = new ArrayList<String>();
+        }
+        List<String> l = (List<String>) pMap.get("arguments");
+        if (l != null) {
+            extraArgs = l;
+        }
+        s = (String) pMap.get("value");
+        if (s != null) {
+             value = s;
+        }
+        s = (String) pMap.get("operation");
+        if (s != null) {
+            operation = s;
+        }
     }
 
     public String getObjectNameAsString() {
@@ -303,6 +177,13 @@ public class JmxRequest extends JSONObject {
         }
     }
 
+    private List<String> splitPath(String pPath) {
+        String[] elements = pPath.split("/");
+        return Arrays.asList(elements);
+    }
+
+
+
     public String getValue() {
         return value;
     }
@@ -327,6 +208,34 @@ public class JmxRequest extends JSONObject {
         return maxObjects;
     }
 
+    void setAttributeName(String pName) {
+        attributeName = pName;
+    }
+
+    void setValue(String pValue) {
+        value = pValue;
+    }
+
+    void setOperation(String pOperation) {
+        operation = pOperation;
+    }
+
+    void setExtraArgs(List<String> pExtraArgs) {
+        extraArgs = pExtraArgs;
+    }
+
+    void setMaxObjects(int pMaxObjects) {
+        maxObjects = pMaxObjects;
+    }
+
+    void setMaxCollectionSize(int pMaxCollectionSize) {
+        maxCollectionSize = pMaxCollectionSize;
+    }
+
+    void setMaxDepth(int pMaxDepth) {
+        maxDepth = pMaxDepth;
+    }
+
     @Override
     public String toString() {
         StringBuffer ret = new StringBuffer("JmxRequest[");
@@ -336,7 +245,7 @@ public class JmxRequest extends JSONObject {
             ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(attributeName)
                     .append(", value=").append(value);
         } else if (type == Type.EXEC) {
-            ret.append("EXEC mbean=").append(objectNameS).append(", " + OPERATION_KEY + "=").append(operation);
+            ret.append("EXEC mbean=").append(objectNameS).append(", operation=").append(operation);
         } else {
             ret.append(type).append(" mbean=").append(objectNameS);
         }
@@ -347,104 +256,33 @@ public class JmxRequest extends JSONObject {
         return ret.toString();
     }
 
-    // ==================================================================================
-    // Dedicated parser for the various operations. They are installed as static processors.
 
-    private interface Processor {
-        void process(JmxRequest r,Stack<String> e)
-                throws MalformedObjectNameException;
-        void setupJSON(JmxRequest r);
-    }
-
-    private static Map<Type,Processor> processorMap;
-
-    private static final String ATTRIBUTE_KEY = "attribute";
-    private static final String MBEAN_KEY = "mbean";
-    private static final String PATH_KEY = "path";
-    private static final String VALUE_KEY = "value";
-    private static final String ARGUMENTS_KEY = "arguments";
-    private static final String OPERATION_KEY = "operation";
-
-    static {
-        processorMap = new HashMap<Type, Processor>();
-        processorMap.put(Type.READ,new Processor() {
-            public void process(JmxRequest r,Stack<String> e) throws MalformedObjectNameException {
-                r.objectNameS = e.pop();
-                r.objectName = new ObjectName(r.objectNameS);
-                r.attributeName = e.pop();
+    /**
+     * Return this request in a proper JSON representation
+     * @return this object in a JSON representation
+     */
+    public JSONObject toJSON() {
+        JSONObject ret = new JSONObject();
+        ret.put("type",type.value);
+        if (objectName != null) {
+            ret.put("mbean",objectName.getCanonicalName());
+        }
+        if (attributeName != null) {
+            ret.put("attribute",attributeName);
+        }
+        if (extraArgs != null && extraArgs.size() > 0) {
+            if (type == Type.READ || type == Type.WRITE) {
+                ret.put("path",getExtraArgsAsPath());
+            } else if (type == Type.EXEC) {
+                ret.put("arguments",extraArgs);
             }
-
-            public void setupJSON(JmxRequest r) {
-                r.put(MBEAN_KEY,r.objectName.getCanonicalName());
-                r.put(ATTRIBUTE_KEY,r.attributeName);
-                String path = r.getExtraArgsAsPath();
-                if (path != null) {
-                    r.put(PATH_KEY,path);
-                }
-            }
-        });
-        processorMap.put(Type.WRITE,new Processor() {
-
-            public void process(JmxRequest r, Stack<String> e) throws MalformedObjectNameException {
-                r.objectNameS = e.pop();
-                r.objectName = new ObjectName(r.objectNameS);
-                r.attributeName = e.pop();
-                r.value = e.pop();
-            }
-
-            public void setupJSON(JmxRequest r) {
-                r.put(MBEAN_KEY,r.objectName.getCanonicalName());
-                r.put(ATTRIBUTE_KEY,r.attributeName);
-                String path = r.getExtraArgsAsPath();
-                if (path != null) {
-                    r.put(PATH_KEY,path);
-                }
-                r.put(VALUE_KEY,r.value);
-            }
-        });
-        processorMap.put(Type.EXEC,new Processor() {
-
-            public void process(JmxRequest r, Stack<String> e) throws MalformedObjectNameException {
-                r.objectNameS = e.pop();
-                r.objectName = new ObjectName(r.objectNameS);
-                r.operation = e.pop();
-            }
-
-            public void setupJSON(JmxRequest r) {
-                r.put(MBEAN_KEY,r.objectName.getCanonicalName());
-                r.put(OPERATION_KEY,r.operation);
-                if (r.extraArgs.size() > 0) {
-                    r.put(ARGUMENTS_KEY,r.extraArgs);
-                }
-            }
-        });
-
-        processorMap.put(Type.LIST,new Processor() {
-            public void process(JmxRequest r, Stack<String> e) throws MalformedObjectNameException {
-            }
-
-            public void setupJSON(JmxRequest r) {
-            }
-        });
-        processorMap.put(Type.VERSION,new Processor() {
-
-            public void process(JmxRequest r, Stack<String> e) throws MalformedObjectNameException {
-            }
-
-            public void setupJSON(JmxRequest r) {
-            }
-        });
-
-        processorMap.put(Type.SEARCH,new Processor() {
-            public void process(JmxRequest r,Stack<String> e) throws MalformedObjectNameException {
-                r.objectNameS = e.pop();
-                r.objectName = new ObjectName(r.objectNameS);
-            }
-
-            public void setupJSON(JmxRequest r) {
-                r.put(MBEAN_KEY,r.objectName.getCanonicalName());
-            }
-        });
-
+        }
+        if (value != null) {
+            ret.put("value",value);
+        }
+        if (operation != null) {
+            ret.put("operation",operation);
+        }
+        return ret;
     }
 }

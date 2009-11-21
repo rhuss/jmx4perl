@@ -34,7 +34,7 @@ import java.util.*;
  * @author roland
  * @since Jun 12, 2009
  */
-public class ListHandler extends RequestHandler {
+public class ListHandler extends JsonRequestHandler {
     public JmxRequest.Type getType() {
         return JmxRequest.Type.LIST;
     }

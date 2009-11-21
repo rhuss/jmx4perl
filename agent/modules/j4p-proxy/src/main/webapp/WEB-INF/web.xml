@@ -5,8 +5,17 @@
   <display-name>JSON JMX Agent</display-name>
 
   <servlet>
-    <servlet-name>j4p-agent</servlet-name>
+    <servlet-name>j4p-proxy</servlet-name>
     <servlet-class>org.jmx4perl.AgentServlet</servlet-class>
+    <init-param>
+      <description>
+        Classnames (comma separated) of RequestDispatcher used in addition
+        to the LocalRequestDispatcher
+      </description>
+      <param-name>dispatcherClasses</param-name>
+      <param-value>org.jmx4perl.jsr160.Jsr160RequestDispatcher</param-value>
+    </init-param>
+
     <init-param>
       <description>
         Debugging state after startup. Can be changed via
@@ -64,7 +73,7 @@
   </servlet>
 
   <servlet-mapping>
-    <servlet-name>j4p-agent</servlet-name>
+    <servlet-name>j4p-proxy</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
 

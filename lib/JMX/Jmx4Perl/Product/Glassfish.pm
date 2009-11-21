@@ -26,7 +26,24 @@ sub name {
 }
 
 sub version {
-    return shift->_version_or_vendor("version",qr/([\d\.]+)/m);
+    my $self = shift;
+    my $version = $self->_version_or_vendor("version",qr/([\d\.]+)/m);
+    return $version if $version;
+    
+    # Try for Glassfish V3
+    my $jmx = $self->{jmx4perl};
+
+    my $servers = $jmx->search("com.sun.appserv:type=Host,*");
+    if ($servers) {
+        $self->{"original_version"} = "GlassFish V3";
+        $self->{"version"} = "3";
+        return "3";
+    }
+    return undef;
+}
+
+sub vendor {
+    return "Sun Microsystems";
 }
 
 sub autodetect_pattern {
@@ -39,16 +56,16 @@ sub jsr77 {
 
 sub init_aliases {
     return 
-    {
-     attributes => 
-   {
-   },
-     operations => 
-   {
-    THREAD_DUMP => [ "com.sun.appserv:category=monitor,server=server,type=JVMInformation", "getThreadDump"]
-   }
-     # Alias => [ "mbean", "attribute", "path" ]
-    };
+        {
+         attributes => 
+           {
+           },
+         operations => 
+           {
+            THREAD_DUMP => [ "com.sun.appserv:category=monitor,server=server,type=JVMInformation", "getThreadDump"]
+           }
+         # Alias => [ "mbean", "attribute", "path" ]
+        };
 }
 
 

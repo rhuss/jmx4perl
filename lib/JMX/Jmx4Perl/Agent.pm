@@ -104,6 +104,7 @@ sub init {
     croak "No URL provided" unless $self->cfg('url');
     my $ua = JMX::Jmx4Perl::Agent::UserAgent->new();
     $ua->jjagent_config($self->{cfg});
+    #push @{ $ua->requests_redirectable }, 'POST';
     $ua->timeout($self->cfg('timeout')) if $self->cfg('timeout');
     $ua->agent("JMX::Jmx4Perl::Agent $VERSION");
     # $ua->env_proxy;
@@ -138,42 +139,103 @@ L<JMX::Jmx4Perl>->request().
 
 sub request {
     my $self = shift;
-    my $jmx_request = shift;
+    my @jmx_requests = @_;
  
     my $ua = $self->{ua};
-    my $url = $self->request_url($jmx_request);
-    print "Requesting $url\n" if $self->{cfg}->{verbose};
-#    print $url;
-    my $req = HTTP::Request->new(GET => $url);
-    my $resp = $ua->request($req);
-    my $ret = {};
+   
+    my $http_req = $self->_to_http_request(@jmx_requests);
+    print "Requesting ",$http_req->uri,"\n" if $self->{cfg}->{verbose};
+    my $http_resp = $ua->request($http_req);
+    my $json_resp = {};
+    print "Response: ",Dumper($http_resp) if $self->{cfg}->{verbose};
     eval {
-        $ret = from_json($resp->content());
+        $json_resp = from_json($http_resp->content());
     };
-    if ($@) {
-        if (!$resp->is_error) {
-            return JMX::Jmx4Perl::Response->new
-              ( 
-               code => 400,
-               request => $jmx_request,
-               content => $resp->content,
-               error => "Error while deserializing JSON answer (probably wrong URL)"
-              );
-        }
+    my $error_resp = $self->_validate_response($http_req,$http_resp,$json_resp,$@);
+    if ($error_resp) {
+        $error_resp->{request} = @jmx_requests > 1 ? undef : $jmx_requests[0];
+        return $error_resp;
     }
-    if ($resp->is_error && !$ret->{status}) {
-        my $error = "Error while fetching $url :\n\n" . $resp->status_line . "\n";
-        my $content = $resp->content;
+    return $self->_from_http_response($json_resp,@jmx_requests);
+}
+
+
+# Create an HTTP-Request for calling the server
+sub _to_http_request {
+    my $self = shift;
+    my @reqs = @_;
+    if (@reqs == 1) {
+        # Old, rest-style
+        my $url = $self->request_url($reqs[0]);
+        return HTTP::Request->new(GET => $url);
+    } else {
+        my $url = $self->cfg('url') || croak "No URL provided";
+        $url .= "/" unless $url =~ m|/$|;
+        my $request = HTTP::Request->new(POST => $url);
+        my $content = to_json(\@reqs, { convert_blessed => 1 });
+        $request->content($content);
+        return $request;
+    }    
+}
+
+# Create one or more response objects for a given request
+sub _from_http_response {
+    my $self = shift;
+    my $json_resp = shift;
+    my @reqs = @_;
+    if (ref($json_resp) eq "HASH") {
+        return JMX::Jmx4Perl::Response->new(%{$json_resp},request => $reqs[0]);
+    } elsif (ref($json_resp) eq "ARRAY") {
+        die "Internal: Number of request and responses doesnt match (",scalar(@reqs)," vs. ",scalar(@$json_resp) 
+          unless scalar(@reqs) == scalar(@$json_resp);
+        
+        my @ret = ();        
+        for (my $i=0;$i<@reqs;$i++) {
+            die "Internal: Not a hash --> ",$json_resp->[$i] unless ref($json_resp->[$i]) eq "HASH";
+            my $response = JMX::Jmx4Perl::Response->new(%{$json_resp->[$i]},request => $reqs[$i]);
+            push @ret,$response;
+        }
+        return @ret;
+    } else {
+        die "Internal: Not a hash nor an array but ",ref($json_resp) ? ref($json_resp) : $json_resp;
+    }
+}
+
+# Validate the JSON answer and the HttpResponse
+sub _validate_response {
+    my $self = shift;
+    my ($http_req,$http_resp,$json_resp,$json_error) = @_;
+    
+    if ($json_error && !$http_resp->is_error) {
+        # If not an HTTP-Error and deserialization fails, then we probably 
+        # got a wrong URL
+        return JMX::Jmx4Perl::Response->new
+          ( 
+           status => 400,
+           content => $http_resp->content,
+           error => "Error while deserializing JSON answer (probably wrong URL): " . $@
+          );
+    }
+    if ($http_resp->is_error && $json_resp->{status} != 200) {
+        my $error = "Error while fetching ".$http_req->uri." :\n\n" . $http_resp->status_line . "\n";
+        my $content = $http_resp->content;
         if ($content) {
             chomp $content;
-            $error .=  "=" x length($resp->status_line) . "\n\n";
-            my $short = substr($content,0,500);
-            $error .=  $short . (length($short) < length($content) ? "\n\n.......\n\n" : "") . "\n" if $content ne $resp->status_line;
+            $error .=  "=" x length($http_resp->status_line) . "\n\n";
+            my $short = substr($content,0,600);
+            $error .=  $short . (length($short) < length($content) ? "\n\n.......\n\n" : "") . "\n" 
+              if $content ne $http_resp->status_line;
         }
-        die $error;
+        return JMX::Jmx4Perl::Response->new
+          ( 
+           status => $json_resp->{status},
+           content => $http_resp->content,
+           error => $error
+          );        
     };
-    return JMX::Jmx4Perl::Response->new(%{$ret},request => $jmx_request);
+    return undef;
 }
+
 
 =item $url = $agent->request_url($request)
 
@@ -201,7 +263,7 @@ sub request_url {
         $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq EXEC) {
         $req .= "/" . $self->_escape($request->get("operation"));
-        $req .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("args")};
+        $req .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("arguments")};
     } elsif ($type eq SEARCH) {
         # Nothing further to append.
     }

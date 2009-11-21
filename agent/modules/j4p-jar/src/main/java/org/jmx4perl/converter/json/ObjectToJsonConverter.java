@@ -102,7 +102,7 @@ public class ObjectToJsonConverter {
             Object jsonResult = extractObject(pValue,extraStack,true);
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("value",jsonResult);
-            jsonObject.put("request",pRequest);
+            jsonObject.put("request",pRequest.toJSON());
             return jsonObject;
         } finally {
             clearContext();

@@ -1,6 +1,6 @@
 package org.jmx4perl.config;
 
-import org.jmx4perl.MBeanServerHandler;
+import org.jmx4perl.backend.MBeanServerHandler;
 import org.jmx4perl.history.HistoryKey;
 import org.jmx4perl.history.HistoryStore;
 
@@ -46,7 +46,7 @@ public class Config implements ConfigMBean, MBeanRegistration {
     private MBeanServerHandler mBeanServerHandler;
 
 
-    public Config(HistoryStore pHistoryStore,DebugStore pDebugStore, MBeanServerHandler pMBeanServerHandler) {
+    public Config(HistoryStore pHistoryStore, DebugStore pDebugStore, MBeanServerHandler pMBeanServerHandler) {
         historyStore = pHistoryStore;
         debugStore = pDebugStore;
         mBeanServerHandler = pMBeanServerHandler;

@@ -33,7 +33,7 @@ import javax.management.*;
  * @author roland
  * @since Jun 12, 2009
  */
-public class VersionHandler extends RequestHandler {
+public class VersionHandler extends JsonRequestHandler {
 
     public VersionHandler(Restrictor pRestrictor) {
         super(pRestrictor);
@@ -45,8 +45,7 @@ public class VersionHandler extends RequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public Object doHandleRequest(MBeanServer server, JmxRequest request) {
         return Version.getVersion();
     }
 }

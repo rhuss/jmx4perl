@@ -7,7 +7,7 @@ use Data::Dumper;
 use It;
 use JMX::Jmx4Perl::Alias;
 
-my $jmx = It->new->jmx4perl;
+my $jmx = It->new(verbose =>0)->jmx4perl;
 my ($ret,$content);
 
 ($ret,$content) = &exec_check_perl4jmx();
@@ -65,8 +65,9 @@ is($ret,0,"Initial history fetch returns OK");
 ok($content =~ /'mem'=(\d+)/ && $1 eq "0","Initial history fetch returns 0 mem delta");
 
 my $mem = $jmx->get_attribute(MEMORY_HEAP_USED);
-my $c = 0.10 * $mem;
+my $c = 0.40 * $mem;
 ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c -$c:$c --name mem");
+#print $content,"\n";
 is($ret,0,"Second history fetch returns OK for -c $c");
 ok($content =~ /'mem'=(\d+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
 

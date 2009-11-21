@@ -124,12 +124,12 @@ agent. If you use a configuration file, you can use also a symbolic name as
 stored in the configuration file. See L<JMX::Jmx4Perl::Manual> for details.
 
 You can use B<jmx4perl> in two modes: Directly by providing an C<agent-url> or
-enter an interactive mode if you ommit the agent-url or provide the the command
-line options C<--shell> (I<to be done>). 
+enter an interactive mode if you ommit the agent-url or provide the the
+command line options C<--shell> (I<to be done>).
 
-B<jmx4perl> servers also an example of how to use the L<JMX::Jmx4Perl> package.
-See its documentation for more details on how to embed JMX access into your
-programs. 
+B<jmx4perl> servers also an example of how to use the L<JMX::Jmx4Perl>
+package. See its documentation for more details on how to embed JMX access
+into your programs.
 
 =cut
 
@@ -142,8 +142,8 @@ programs.
 
 If you use the non-interactive mode without any command or with C<info> as
 command, you get a description about the server, including the application
-server's product name and version. This works by autodetection and only for the
-supported application servers (see L<JMX::Jmx4Perl::Manual> for a list of
+server's product name and version. This works by autodetection and only for
+the supported application servers (see L<JMX::Jmx4Perl::Manual> for a list of
 supported products). The only argument required is the url which points to the
 deployed jmx4perl agent.
 
@@ -231,8 +231,8 @@ sub command_attributes {
             if ($attrs) {
                 for my $a (keys %{$attrs}) {
                     print "$d:$p -- $a";
-                    eval {
-                        my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a,{max_depth => $max_depth,
+					eval {
+						my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a,{max_depth => $max_depth,
                                                                                          max_objects => $max_objects,
                                                                                          max_list_size => $max_list_size});
                         my $response = $jmx->request($request);

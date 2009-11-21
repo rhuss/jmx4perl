@@ -69,11 +69,11 @@ SUPPORTED APPLICATION SERVERS
 
   * JBoss 4.2.3 GA & 5.1.0 GA
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
-  * Jonas 4.10.3 (with Jetty 5.1.10 and Tomcat 5.5.26)
+  * Jonas 4.10.3 (with Jetty 5.1.10 and Tomcat 5.5.26) and 5.1.0
   * Apache Geronimo 2.1.4 (Jetty 6 and Tomcat 6)
-  * Glassfish 2.1
-  * Apache Tomcat 4.1.39, 5.5.27 & 6.0.18
-  * Jetty 5.1.15 & 6.1.18 (with JMX enabled)
+  * Glassfish 2.1.1 and 3 Preview
+  * Apache Tomcat 5.5.28 & 6.0.20
+  * Jetty 5.1.15 & 6.1.21 & 7.0.0 (with JMX enabled)
   * IBM Websphere 6.1 & 7.0
 
   It is expected that every Java application server which runs with at

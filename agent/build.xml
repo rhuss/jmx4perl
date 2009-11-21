@@ -6,6 +6,7 @@
 <project name="json-jmx-agent" default="main" basedir=".">
 
   <property name="war-name" value="j4p.war"/>
+  <property name="proxy-name" value="j4p-proxy.war"/>
   <property name="war-name-14" value="j4p14.war"/>
   <property name="it-war-name" value="j4p-it.war"/>
 
@@ -15,7 +16,9 @@
   <!-- Preparations -->
   <target name="mkdir">
     <mkdir dir="modules/j4p-jar/target/classes"/>
-    <mkdir dir="modules/j4p-war/target/classes"/>
+    <mkdir dir="modules/j4p-war/target"/>
+    <mkdir dir="modules/j4p-jsr160/target/classes"/>
+    <mkdir dir="modules/j4p-proxy/target"/>
     <mkdir dir="modules/j4p-it/target/classes"/>
   </target>
 
@@ -45,10 +48,24 @@
       </classpath>
     </javac>
 
+    <javac 	srcdir="modules/j4p-jsr160/src/main/java"
+            destdir="modules/j4p-jsr160/target/classes"
+            includes="**/*.java"
+            debug="true"
+            target="1.5"
+            source="1.5">
+      <classpath>
+        <fileset dir="lib">
+          <include name="*.jar"/>
+        </fileset>
+        <pathelement location="modules/j4p-jar/target/classes"/>
+      </classpath>
+    </javac>
   </target>
 
   <target name="jar" depends="compile">
     <jar destfile="modules/j4p-jar/target/j4p-agent.jar" basedir="modules/j4p-jar/target/classes"/>
+    <jar destfile="modules/j4p-jsr160/target/j4p-jsr160.jar" basedir="modules/j4p-jsr160/target/classes"/>
   </target>
 
   <target name="war" depends="jar,copy_access_policy">
@@ -60,9 +77,22 @@
       <lib dir="modules/j4p-jar/target">
         <include name="j4p-agent.jar"/>
       </lib>
-      <classes dir="modules/j4p-war/target/classes"/>      
     </war>
+    <war destfile="modules/j4p-proxy/target/${proxy-name}" webxml="modules/j4p-proxy/src/main/webapp/WEB-INF/web.xml">
+      <lib dir="lib">
+        <exclude name="servlet-api*"/>
+        <exclude name="README"/>
+      </lib>
+      <lib dir="modules/j4p-jar/target">
+        <include name="j4p-agent.jar"/>
+      </lib>
+      <lib dir="modules/j4p-jsr160/target">
+        <include name="j4p-jsr160.jar"/>
+      </lib>
+    </war>
+
     <copy file="modules/j4p-war/target/${war-name}" todir="."/>
+    <copy file="modules/j4p-proxy/target/${proxy-name}" todir="."/>
   </target>
 
   <!-- ===============================================================  -->
@@ -108,6 +138,8 @@
     <delete includeemptydirs="true">
       <fileset dir="modules/j4p-jar/target" includes="**/*"/>
       <fileset dir="modules/j4p-war/target" includes="**/*"/>
+      <fileset dir="modules/j4p-jsr160/target" includes="**/*"/>
+      <fileset dir="modules/j4p-proxy/target" includes="**/*"/>
       <fileset dir="modules/j4p-it/target" includes="**/*"/>
       <fileset dir="jdk14/j4p14-jar/target" includes="**/*"/>
       <fileset dir="jdk14/j4p14-war/target" includes="**/*"/>

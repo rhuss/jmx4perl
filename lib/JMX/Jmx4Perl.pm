@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.36";
+$VERSION = "0.40";
 
 my $REGISTRY = {
                 # Agent based
@@ -385,9 +385,9 @@ sub search {
     my $request = new JMX::Jmx4Perl::Request(SEARCH,$pattern);
     my $response = $self->request($request);
 
-    return undef if $response->status eq "404"; # nothing found
+    return undef if $response->status == 404; # nothing found
     if ($response->is_error) {
-        die "Error searching for $pattern: ",$response->error_text,Dumper($response);
+        die "Error searching for $pattern: ",$response->error_text;
     }
     return $response->value;    
 }
