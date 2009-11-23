@@ -327,12 +327,12 @@ return an arrayref in the form described above.
 
 =item *
 
-A coderef, which is executed when C<JMX::Jmx4Perl->get_attribute()> or
-C<JMX::Jmx4Perl->execute()> is called and which is supossed to do the complete
+A coderef, which is executed when C<JMX::Jmx4Perl-E<gt>get_attribute()> or
+C<JMX::Jmx4Perl-E<gt>execute()> is called and which is supossed to do the complete
 lookup. The first argument to the subroutine is the handler which can be used
 to access the L<JMX::Jmx4Perl> object. The additional argument are either the
-value to set (for C<JMX::Jmx4Perl->set_attribute()> or the operation's
-arguments for C<JMX::Jmx4Perl->execute()>. This is the most flexible way for a
+value to set (for C<JMX::Jmx4Perl-E<gt>set_attribute()> or the operation's
+arguments for C<JMX::Jmx4Perl-E<gt>execute()>. This is the most flexible way for a
 handler to do anything it likes to do when an attribute value is requested or
 an operation is about to be executed. You have to return a
 L<JMX::Jmx4Perl::Response> object.
