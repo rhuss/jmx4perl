@@ -49,16 +49,22 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
 
         JsonRequestHandler handler = requestHandlerManager.getRequestHandler(pJmxReq.getType());
-        MBeanServerConnection connection = getConnection(pJmxReq);
-        if (handler.handleAllServersAtOnce()) {
-            // There is no way to get remotely all MBeanServers ...
-            return handler.handleRequest(new HashSet<MBeanServerConnection>(Arrays.asList(connection)),pJmxReq);
-        } else {
-            return handler.handleRequest(connection,pJmxReq);
+        JMXConnector connector = getConnector(pJmxReq);
+        try {
+            MBeanServerConnection connection = connector.getMBeanServerConnection();
+            if (handler.handleAllServersAtOnce()) {
+                // There is no way to get remotely all MBeanServers ...
+                return handler.handleRequest(new HashSet<MBeanServerConnection>(Arrays.asList(connection)),pJmxReq);
+            } else {
+                return handler.handleRequest(connection,pJmxReq);
+            }
+        } finally {
+            releaseConnector(connector);
         }
     }
 
-    private MBeanServerConnection getConnection(JmxRequest pJmxReq) throws IOException {
+    // TODO: Add connector to a pool and release it on demand. For now, simpluy close it.
+    private JMXConnector getConnector(JmxRequest pJmxReq) throws IOException {
         JmxRequest.TargetConfig targetConfig = pJmxReq.getTargetConfig();
         if (targetConfig == null) {
             throw new IllegalArgumentException("No proxy configuration in request " + pJmxReq);
@@ -66,8 +72,13 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
         String urlS = targetConfig.getUrl();
         JMXServiceURL url = new JMXServiceURL(urlS);
         Map env = prepareEnv(targetConfig.getEnv());
-        JMXConnector connector = JMXConnectorFactory.connect(url,env);
-        return connector.getMBeanServerConnection();
+        JMXConnector ret = JMXConnectorFactory.newJMXConnector(url,env);
+        ret.connect();
+        return ret;
+    }
+
+    private void releaseConnector(JMXConnector pConnector) throws IOException {
+        pConnector.close();
     }
 
     private Map prepareEnv(Map<String, Object> pEnv) {

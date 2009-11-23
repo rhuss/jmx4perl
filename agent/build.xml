@@ -115,7 +115,7 @@
   <target name="it-war" depends="jar,compile-it">
     <war destfile="modules/j4p-it/target/${it-war-name}" webxml="modules/j4p-it/src/main/webapp/WEB-INF/web.xml">
       <lib dir="modules/j4p-jar/target">
-        <include name="j4p-agent.jar"/>
+        <include name="j4p-${version}.jar"/>
       </lib>
       <classes dir="modules/j4p-it/target/classes"/>
     </war>
