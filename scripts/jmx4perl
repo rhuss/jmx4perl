@@ -557,7 +557,7 @@ sub _get_args_for_jmx4perl {
     my $config = new JMX::Jmx4Perl::Config($opts->{config});
     my $server_config = $config->get_server_config($url);
     if ($server_config && $server_config->{url}) {
-        print "Taking ",$server_config->{url}, " from configuration for $url" if $opts->{verbose};
+        print "Taking ",$server_config->{url}, " from configuration for $url\n" if $opts->{verbose};
         &_verify_url($server_config->{url});
         # Use server configs as default
         $ret = { server => $url, config => $config };

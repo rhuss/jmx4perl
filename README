@@ -3,11 +3,13 @@
 
 INTRODUCTION
 
-  jmx4perl provides a new way for accessing Java JEE Server management
-  interfaces which are based on JMX (Java Management Extensions). It
-  is an agent based approach, where a small Java Webapplication 
-  deployed on the application server provides a an HTTP/JSON based
-  access to the JMX MBeans registered within the application server.  
+  jmx4perl provides a new way for accessing JMX based Java JEE Server
+  management interfaces. It is an agent based approach, where a small
+  Java Webapplication deployed on the application server provides a an
+  HTTP/JSON based access to the JMX MBeans registered within the
+  application server. The agent can be operated in an proxy mode for
+  monitoring JEE Servers which don't have the agent servlet installed
+  (but export JMX remotely via JSR 160 connectors). 
 
   A discussion about the pros and cons of an agent based vs. a direct
   JMX remoting (which is available via JSR 160 connectors) can be
@@ -15,9 +17,12 @@ INTRODUCTION
   package. The biggest advantage for an agent based approach is that
   no local java installation is required for using it.
 
+  Discussion and interesting articles around jmx4perl (and Nagios in
+  general) can be found at http://labs.consol.de
+
 HOW IT WORKS
 
-  You need to deploy a small (~ 100k) Java Agent WAR (web archive) to
+  You need to deploy a (~ 100k) Java Agent WAR (web archive) to
   the Java application server to monitor. Thats all on the java
   side. There is no need to add any startup parameters to the
   application server and to open any additional ports. All

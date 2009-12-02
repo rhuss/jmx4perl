@@ -151,6 +151,7 @@ sub request {
     my $ua = $self->{ua};
     my $http_req = $self->_to_http_request(@jmx_requests);
     print "Requesting ",$http_req->uri,"\n" if $self->{cfg}->{verbose};
+    #print Dumper($http_req);
     my $http_resp = $ua->request($http_req);
     my $json_resp = {};
     #print "Response: ",Dumper($http_resp) if $self->{cfg}->{verbose};

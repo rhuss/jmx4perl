@@ -312,15 +312,20 @@ public class JmxRequest {
         private String url;
         private Map<String,Object> env;
 
-        public TargetConfig(Map pProxy) {
-            String url = (String) pProxy.get("url");
+        public TargetConfig(Map pMap) {
+            String url = (String) pMap.get("url");
             if (url == null) {
                 throw new IllegalArgumentException("No service url given for JSR-160 target");
             }
             this.url = url;
-            Map env = (Map) pProxy.get("env");
-            if (env != null) {
-                this.env = env;
+            String user = (String) pMap.get("user");
+            if (user != null) {
+                env = new HashMap<String, Object>();
+                env.put("user",user);
+                String pwd = (String) pMap.get("password");
+                if (pwd != null) {
+                    env.put("password",pwd);
+                }
             }
         }
 
