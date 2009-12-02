@@ -33,9 +33,13 @@ JMX::Jmx4Perl::Config - Configuration file support for Jmx4Perl
     User = roland
     Password = test
     Product = JBoss
-    # Proxy_User = ....
-    # Proxy_Password = ....
-
+    
+    # HTTP proxy for accessing the agent
+    <Proxy>
+      Url = http://proxy:8001
+      User = proxyuser
+      Password = ppaasswwdd
+    </Proxy>
     # Target for running j4p in proxy mode
     <Target>
       Url       service:jmx:iiop://....

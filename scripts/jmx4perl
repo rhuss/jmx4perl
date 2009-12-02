@@ -566,12 +566,24 @@ sub _get_args_for_jmx4perl {
         $ret = { url => $url };
     }
 
-    for my $arg qw(product user password proxy proxy-user proxy-password verbose) {
+    for my $arg qw(product user password verbose) {
         my $cfg = $arg;
         $cfg =~ s/\-/_/g;
         if (defined($opts->{$arg})) {
             $ret->{$cfg} = $opts->{$arg};
         }
+    }
+    if (defined($opts->{proxy})) {
+        # Already set in server config ?
+        die "Old proxy syntax (Proxy,Proxy_User,Proxy_Password) not supported in config anymore" 
+          unless ref($opts->{proxy}) eq "HASH";
+        my $proxy = $ret->{proxy} || {};
+        $proxy->{url} = $opts->{proxy};
+        for my $k (qw(user password)) {
+            $proxy->{$k} = defined($opts->{'proxy-' . $k}) ? $opts->{'proxy-' . $k} : $proxy->{$k};
+            delete $proxy->{$k} unless $proxy->{$k};
+        }
+        $ret->{proxy} = $proxy;
     }
     if (defined($opts->{target})) {
         $ret->{target} = {

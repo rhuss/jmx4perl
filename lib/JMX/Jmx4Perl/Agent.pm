@@ -78,6 +78,8 @@ Credentials to use for the HTTP request
 
 =item proxy => <http_proxy>
 
+=item proxy => { url => <http_proxy> }
+
 Optional proxy to use
 
 =item proxy_user => <user>, proxy_password => <password>
@@ -119,14 +121,15 @@ sub init {
     # $ua->env_proxy;
     my $proxy = $self->cfg('proxy');
     if ($proxy) {
-        if (ref($proxy) eq "HASH") {
-            for my $k (keys %$proxy) {
-                $ua->proxy($k,$proxy->{$k});
+        my $url = ref($proxy) eq "HASH" ? $proxy->{url} : $proxy;
+        if (ref($url) eq "HASH") {
+            for my $k (keys %$url) {
+                $ua->proxy($k,$url->{$k});
             }
         } else {
             if ($self->cfg('url') =~ m|^(.*?)://|) {
                 # Set proxy for URL scheme used
-                $ua->proxy($1,$proxy);
+                $ua->proxy($1,$url);
             } else {
                 $ua->proxy('http',$proxy);
             }
