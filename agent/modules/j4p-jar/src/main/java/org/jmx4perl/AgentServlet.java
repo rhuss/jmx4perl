@@ -6,10 +6,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
-import javax.management.ReflectionException;
+import javax.management.*;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -74,18 +71,18 @@ public class AgentServlet extends HttpServlet implements LogHandler {
     private static final long serialVersionUID = 42L;
 
     // POST- and GET- HttpRequestHandler
-    private HttpRequestHandler GET_HANDLER,POST_HANDLER;
+    private HttpRequestHandler httpGetHandler, httpPostHandler;
 
     // Backend dispatcher
-    BackendManager backendManager;
+    private BackendManager backendManager;
 
     @Override
     public void init(ServletConfig pConfig) throws ServletException {
         super.init(pConfig);
 
         // Different HTTP request handlers
-        GET_HANDLER = newGetHttpRequestHandler();
-        POST_HANDLER = newPostHttpRequestHandler();
+        httpGetHandler = newGetHttpRequestHandler();
+        httpPostHandler = newPostHttpRequestHandler();
 
         backendManager = new BackendManager(pConfig,this);
 
@@ -100,13 +97,13 @@ public class AgentServlet extends HttpServlet implements LogHandler {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        handle(GET_HANDLER,req, resp);
+        handle(httpGetHandler,req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        handle(POST_HANDLER,req,resp);
+        handle(httpPostHandler,req,resp);
     }
 
     private void handle(HttpRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
@@ -166,14 +163,14 @@ public class AgentServlet extends HttpServlet implements LogHandler {
     }
 
     private interface HttpRequestHandler {
-        JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) throws Exception;
+        JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) throws IOException, MalformedObjectNameException;
     }
 
 
     private HttpRequestHandler newPostHttpRequestHandler() {
         return new HttpRequestHandler() {
             public JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp)
-                    throws Exception {
+                    throws IOException, MalformedObjectNameException {
                 List<JmxRequest> jmxRequests;
                 String encoding = pReq.getCharacterEncoding();
                 jmxRequests = JmxRequestFactory.createRequestsFromInputStream(
@@ -196,7 +193,7 @@ public class AgentServlet extends HttpServlet implements LogHandler {
 
     private HttpRequestHandler newGetHttpRequestHandler() {
         return new HttpRequestHandler() {
-            public JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) throws Exception {
+            public JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) {
                 JmxRequest jmxReq =
                         JmxRequestFactory.createRequestFromUrl(pReq.getPathInfo(),pReq.getParameterMap());
                 if (backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {

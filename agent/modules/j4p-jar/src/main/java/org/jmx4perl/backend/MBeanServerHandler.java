@@ -48,7 +48,7 @@ public class MBeanServerHandler {
 
     // Whether we are running under JBoss
     private boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
-    boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
+    private boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
 
     public MBeanServerHandler() {
         mBeanServers = findMBeanServers();

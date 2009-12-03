@@ -5,10 +5,9 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import javax.management.MalformedObjectNameException;
-import javax.servlet.ServletInputStream;
-import java.io.UnsupportedEncodingException;
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,7 +18,7 @@ import java.util.regex.Pattern;
  * @author roland
  * @since Oct 29, 2009
  */
-class JmxRequestFactory {
+final class JmxRequestFactory {
 
     // Pattern for detecting escaped slashes in URL encoded requests
     private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^-*\\+?$");
@@ -81,7 +80,7 @@ class JmxRequestFactory {
                 Stack<String> elements = extractElementsFromPath(pPathInfo);
                 Type type = extractType(elements.pop());
 
-                Processor processor = processorMap.get(type);
+                Processor processor = PROCESSOR_MAP.get(type);
                 if (processor == null) {
                     throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
                 }
@@ -99,7 +98,7 @@ class JmxRequestFactory {
         } catch (NoSuchElementException exp) {
             throw new IllegalArgumentException("Invalid path info " + pPathInfo,exp);
         } catch (MalformedObjectNameException e) {
-            throw new IllegalArgumentException("Invalid object name \"" + (request != null ? request.getObjectNameAsString() : "") + "\": " + e.getMessage(),e);
+            throw new IllegalArgumentException("Invalid object name. " + e.getMessage(),e);
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Internal: Illegal encoding for URL conversion: " + e,e);
         } catch (EmptyStackException exp) {
@@ -145,7 +144,7 @@ class JmxRequestFactory {
     For the rest of unsafe chars, we use uri decoding (as anybody should do). It could be of course the case,
     that the pathinfo has been already uri decoded (dont know by heart)
      */
-    static private Stack<String> extractElementsFromPath(String path) throws UnsupportedEncodingException {
+    private static Stack<String> extractElementsFromPath(String path) throws UnsupportedEncodingException {
         String[] elements = (path.startsWith("/") ? path.substring(1) : path).split("/+");
 
         Stack<String> ret = new Stack<String>();
@@ -167,7 +166,7 @@ class JmxRequestFactory {
     }
 
 
-    static private void extractElements(Stack<String> ret, Stack<String> pElementStack,StringBuffer previousBuffer)
+    private static void extractElements(Stack<String> ret, Stack<String> pElementStack,StringBuffer previousBuffer)
             throws UnsupportedEncodingException {
         if (pElementStack.isEmpty()) {
             if (previousBuffer != null && previousBuffer.length() > 0) {
@@ -217,7 +216,7 @@ class JmxRequestFactory {
 
     }
 
-    static private Type extractType(String pTypeS) {
+    private static Type extractType(String pTypeS) {
         for (Type t : Type.values()) {
             if (t.getValue().equals(pTypeS)) {
                 return t;
@@ -257,20 +256,19 @@ class JmxRequestFactory {
                 throws MalformedObjectNameException;
     }
 
-    final private static Map<Type,Processor> processorMap;
-
+    private static final Map<Type,Processor> PROCESSOR_MAP;
 
 
     static {
-        processorMap = new HashMap<Type, Processor>();
-        processorMap.put(Type.READ,new Processor() {
+        PROCESSOR_MAP = new HashMap<Type, Processor>();
+        PROCESSOR_MAP.put(Type.READ,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 JmxRequest req = new JmxRequest(Type.READ,e.pop());
                 req.setAttributeName(e.pop());
                 return req;
             }
         });
-        processorMap.put(Type.WRITE,new Processor() {
+        PROCESSOR_MAP.put(Type.WRITE,new Processor() {
 
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 JmxRequest req = new JmxRequest(Type.WRITE,e.pop());
@@ -279,7 +277,7 @@ class JmxRequestFactory {
                 return req;
             }
         });
-        processorMap.put(Type.EXEC,new Processor() {
+        PROCESSOR_MAP.put(Type.EXEC,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 JmxRequest req = new JmxRequest(Type.EXEC,e.pop());
                 req.setOperation(e.pop());
@@ -287,18 +285,18 @@ class JmxRequestFactory {
             }
         });
 
-        processorMap.put(Type.LIST,new Processor() {
+        PROCESSOR_MAP.put(Type.LIST,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 return new JmxRequest(Type.LIST);
             }
         });
-        processorMap.put(Type.VERSION,new Processor() {
+        PROCESSOR_MAP.put(Type.VERSION,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 return new JmxRequest(Type.VERSION);
             }
         });
 
-        processorMap.put(Type.SEARCH,new Processor() {
+        PROCESSOR_MAP.put(Type.SEARCH,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 return new JmxRequest(Type.SEARCH,e.pop());
             }
