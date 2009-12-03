@@ -70,7 +70,7 @@ public class BackendManager {
     private LogHandler logHandler;
 
     // List of RequestDispatchers to consult
-    List<RequestDispatcher> requestDispatchers;
+    private List<RequestDispatcher> requestDispatchers;
 
     public BackendManager(ServletConfig pConfig, LogHandler pLogHandler) {
 
@@ -243,7 +243,7 @@ public class BackendManager {
         }
     }
 
-    final public void log(String message, Throwable t) {
+    public final void log(String message, Throwable t) {
         logHandler.log(message,t);
         if (debugStore != null) {
             debugStore.log(message, t);
