@@ -3,35 +3,47 @@
 
 INTRODUCTION
 
-  jmx4perl provides a new way for accessing Java JEE Server management
-  interfaces which are based on JMX (Java Management Extensions). It
-  is an agent based approach, where a small Java Webapplication 
-  deployed on the application server provides a an HTTP/JSON based
-  access to the JMX MBeans registered within the application server.  
+  jmx4perl provides an alternate way for accessing Java JEE Server
+  management interfaces which are based on JMX (Java Management
+  Extensions). It is an agent based approach, where a small Java
+  Webapplication deployed on the application server provides an
+  HTTP/JSON based access to JMX MBeans registered within the
+  application server.
 
   A discussion about the pros and cons of an agent based vs. a direct
   JMX remoting (which is available via JSR 160 connectors) can be
   found in the manual "JMX::Jmx4Perl::Manual" contained within this
   package. The biggest advantage for an agent based approach is that
-  no local java installation is required for using it.
+  no local java installation is required.
+
+  Since version 0.50 a second operational mode has been added in which
+  jmx4perl acts as a JMX bridge. It accepts the usual HTTP/JSON
+  requests which are forwared to the target server via JSR-160 based
+  remote communication. The advantage of this proxy mode is that no
+  agent is required to be installed on the target platform. 
 
 HOW IT WORKS
 
-  You need to deploy a small (~ 100k) Java Agent WAR (web archive) to
-  the Java application server to monitor. Thats all on the java
-  side. There is no need to add any startup parameters to the
-  application server and to open any additional ports. All
+  For the agent mode, you need to deploy a small (~ 100k) Java Agent
+  WAR (web archive) to the Java application server to monitor. Thats
+  all on the java side. There is no need to add any startup parameters
+  to the application server and to open any additional ports. All
   communication takes places via HTTP where JSON objects are
   exchanged. Additionally, the agent benefits from the security
   infrastructure in place which every application server provides for
   web application.
 
-  The Perl module JMX::Jmx4Perl::Agent accesses this web application
-  and transform the request's results from JSON into a simple pure
+  The proxy mode needs the j4p.war to de deployed on an arbitrary
+  servlet engine, which can reach the target platform to monitor for
+  the selected JSR-160 connector (e.g RMI/JRMP or RMI/IIOP). The
+  target server needs to have remote JMX access enabled.
+
+  The Perl module JMX::Jmx4Perl::Agent accesses the deployed agent
+  servlet and transform the request's results from JSON into a simple
   Perl object. This distribution contains a sample Nagios check
   'check_jmx4perl' which use this result to perform various checks.
-  The command line tool 'jmx4perl' provides an easy access to the
-  agent, too.
+  The tool 'jmx4perl' provides an easy access to the
+  agent from the command line.
 
 INSTALLATION
 
@@ -64,8 +76,8 @@ INSTALLATION
  
 SUPPORTED APPLICATION SERVERS
   
-  For now, the following Java Application Servers has been tested on
-  the following servers:
+  The following Java Application Servers has been confirmed to work
+  with jmx4perl both in agent and proxy mode :
 
   * JBoss 4.2.3 GA & 5.1.0 GA
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
@@ -89,9 +101,8 @@ LEGACY JDK 1.4 SUPPORT
   your own by using 'ant jdk14' within the "agent" directory which
   builds a j4p14.war. A maven build is provided as well within
   agent/modules/jdk14. Please note the this support is experimentally
-  and it is very likely, that no new features will be added to the
-  backported j4p14.war in the future. j4p14.war has been successfully
-  tested with Weblogic 8.1.
+  and no new features will be added to the backported j4p14.war in the
+  future. j4p14.war has been successfully tested with Weblogic 8.1.
 
 SOURCE REPOSITORY
 

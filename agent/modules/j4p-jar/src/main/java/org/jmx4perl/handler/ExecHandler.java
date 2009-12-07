@@ -60,7 +60,7 @@ public class ExecHandler extends JsonRequestHandler {
         List<String> args = request.getExtraArgs();
         if (args.size() != paramClazzes.length) {
             throw new IllegalArgumentException("Invalid operation parameters. Operation " +
-                    request.getOperation() + " requires " + paramClazzes.length +
+                    request.getOperation() + " on " + request.getObjectName() + " requires " + paramClazzes.length +
                     " parameters, not " + args.size() + " as given");
         }
         for (int i = 0;i <  paramClazzes.length; i++) {
