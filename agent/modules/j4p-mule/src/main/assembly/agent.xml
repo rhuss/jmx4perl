@@ -8,8 +8,8 @@
   <dependencySets>
     <dependencySet>
       <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-      <unpack>false</unpack>
-      <scope>compile</scope>
+      <unpack>true</unpack>
+      <scope>runtime</scope>
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>
   </dependencySets>

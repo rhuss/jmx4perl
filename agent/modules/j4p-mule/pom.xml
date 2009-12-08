@@ -19,15 +19,7 @@
   <dependencies>
     <dependency>
       <groupId>org.jmx4perl</groupId>
-      <artifactId>j4p-war</artifactId>
-      <type>war</type>
-      <version>${applicationVersion}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jmx4perl</groupId>
-      <artifactId>j4p-war</artifactId>
-      <type>war</type>
+      <artifactId>j4p</artifactId>
       <version>${applicationVersion}</version>
     </dependency>
 
@@ -35,16 +27,34 @@
       <groupId>org.mule</groupId>
       <artifactId>mule-core</artifactId>
       <version>2.2.1</version>
-      <scope>runtime</scope>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.safehaus.jug</groupId>
+          <artifactId>jug</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mule.modules</groupId>
+      <artifactId>mule-module-management</artifactId>
+      <version>2.2.1</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.safehaus.jug</groupId>
+          <artifactId>jug</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
       <artifactId>jetty</artifactId>
       <version>6.1.21</version>
-      <scope>runtime</scope>
+      <scope>provided</scope>
     </dependency>
-
 
   </dependencies>
 
@@ -59,10 +69,10 @@
         </configuration>
         <executions>
           <execution>
-            <id>make-assembly</id> 
-            <phase>package</phase> 
+            <id>make-assembly</id>
+            <phase>package</phase>
             <goals>
-              <goal>single</goal> 
+              <goal>single</goal>
             </goals>
           </execution>
         </executions>
@@ -70,5 +80,5 @@
     </plugins>
   </build>
 
-  
+
 </project>
