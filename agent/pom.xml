@@ -16,6 +16,7 @@
     <module>modules/j4p-it</module>
     <module>modules/j4p-jsr160</module>
     <module>modules/j4p-proxy</module>
+    <module>modules/j4p-mule</module>
   </modules>
 
   <developers>
