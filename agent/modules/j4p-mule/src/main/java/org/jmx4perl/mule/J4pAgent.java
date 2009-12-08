@@ -9,6 +9,12 @@ import org.mule.api.MuleException;
 import org.mule.api.lifecycle.InitialisationException;
 import org.mule.api.lifecycle.StartException;
 import org.mule.api.lifecycle.StopException;
+import org.mule.module.management.agent.JmxAgent;
+
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author roland
@@ -26,7 +32,6 @@ public class J4pAgent extends AbstractAgent {
         super("j4p-agent");
     }
 
-    @Override
     public void stop() throws MuleException {
         try {
             server.stop();
@@ -35,7 +40,6 @@ public class J4pAgent extends AbstractAgent {
         }
     }
 
-    @Override
     public void start() throws MuleException {
         try {
             server.start();
@@ -45,14 +49,22 @@ public class J4pAgent extends AbstractAgent {
     }
 
     @Override
+    public String getDescription() {
+        String host;
+        try {
+            host = Inet4Address.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            host = "localhost";
+        }
+        return "j4p Agent: http://" + host + ":" + getPort() + "/j4p";
+    }
+
     public void dispose() {
     }
 
-    @Override
     public void registered() {
     }
 
-    @Override
     public void unregistered() {
     }
 

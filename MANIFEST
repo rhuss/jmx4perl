@@ -110,6 +110,9 @@ agent/modules/j4p-jar/src/test/resources/access-sample2.xml
 agent/modules/j4p-jar/src/test/resources/access-sample3.xml
 agent/modules/j4p-jsr160/pom.xml
 agent/modules/j4p-jsr160/src/main/java/org/jmx4perl/jsr160/Jsr160RequestDispatcher.java
+agent/modules/j4p-mule/pom.xml
+agent/modules/j4p-mule/src/main/assembly/agent.xml
+agent/modules/j4p-mule/src/main/java/org/jmx4perl/mule/J4pAgent.java
 agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml
