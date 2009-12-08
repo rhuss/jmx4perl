@@ -219,6 +219,8 @@ public class AgentServlet extends HttpServlet implements LogHandler {
             return getErrorJSON(404,e);
         } catch (UnsupportedOperationException e) {
             return getErrorJSON(500,e);
+        } catch (IOException e) {
+            return getErrorJSON(500,e);
         }
     }
 

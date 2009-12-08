@@ -52,13 +52,13 @@ public class Config implements ConfigMBean, MBeanRegistration {
         mBeanServerHandler = pMBeanServerHandler;
     }
 
-    public void setHistoryEntriesForAttribute(String pMBean, String pAttribute, String pPath, int pMaxEntries) {
-        HistoryKey key = new HistoryKey(pMBean,pAttribute,pPath);
+    public void setHistoryEntriesForAttribute(String pMBean, String pAttribute, String pPath, String pTarget, int pMaxEntries) {
+        HistoryKey key = new HistoryKey(pMBean,pAttribute,pPath,pTarget);
         historyStore.configure(key,pMaxEntries);
     }
 
-    public void setHistoryEntriesForOperation(String pMBean, String pOperation, int pMaxEntries) {
-        HistoryKey key = new HistoryKey(pMBean,pOperation);
+    public void setHistoryEntriesForOperation(String pMBean, String pOperation, String pTarget, int pMaxEntries) {
+        HistoryKey key = new HistoryKey(pMBean,pOperation,pTarget);
         historyStore.configure(key,pMaxEntries);
     }
 

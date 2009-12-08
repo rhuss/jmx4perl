@@ -4,6 +4,7 @@ import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -48,8 +49,8 @@ public class SearchHandler extends JsonRequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, MBeanException {
+    public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
+            throws InstanceNotFoundException, AttributeNotFoundException, MBeanException, IOException {
         Set<ObjectName> names = server.queryNames(request.getObjectName(),null);
         if (names == null || names.size() == 0) {
             throw new InstanceNotFoundException("No MBean with pattern " + request.getObjectNameAsString() + " found");

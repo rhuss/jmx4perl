@@ -35,6 +35,7 @@ my $result = GetOptions(\%opts,
                         "user|u=s","password|p=s",
                         "proxy=s",
                         "proxy-user=s","proxy-password=s",
+                        "target|t=s","target-user=s","target-password=s",
                         "product=s",
                         "config=s",
                         "verbose|v!",
@@ -111,6 +112,9 @@ Options:
    --proxy <url>           URL to proxy
    --proxy-user <user>     Authentication information for a proxy
    --proxy-password <pwd>
+   --target <jmx-url>      JSR-160 JMX Service URL to be used as the target server
+   --target-user <user>    Credential for the target server if --target is given
+   --target-password <pwd> 
    --config                Path to an optional configuration file (default: ~/.j4p)
    --history               Print out the history of return values (if switched on and present)
    --verbose               Print out more information
@@ -158,6 +162,7 @@ sub command_info {
 }
 
 =head2 list
+
 
 List meta data of all registered mbeans on the target application server. This
 includes attributes and operations along whith their descriptions and
@@ -224,7 +229,7 @@ sub command_attributes {
     my $max_list_size = defined($_[1]) ? $_[1] : 150;
     my $max_objects = defined($_[2]) ? $_[2] : 1000;
     my $data = $jmx->list();
-
+    
     for my $d (keys %$data) {
         for my $p (keys %{$data->{$d}}) {
             my $attrs = $data->{$d}->{$p}->{'attr'};
@@ -236,10 +241,14 @@ sub command_attributes {
                                                                                          max_objects => $max_objects,
                                                                                          max_list_size => $max_list_size});
                         my $response = $jmx->request($request);
-                        if ($response->is_error) {
+                        if ($response->is_error) {                            
                             print "\nERROR: ",$response->error_text,"\n";
-                            if ($opts{verbose} && $response->stacktrace) {
-                                print $response->stacktrace;
+                            if ($opts{verbose}) {
+                                if ($response->stacktrace) {
+                                    print $response->stacktrace;
+                                } else {
+                                    print Dumper($response);
+                                }
                             }
                         } else {
                             my $val = $response->value;
@@ -412,9 +421,11 @@ sub _check_for_error {
     my $resp = shift;
     if ($resp->is_error) {
         print STDERR "ERROR: ",$resp->error_text,"\n";
-        if ($resp->stacktrace && $opts{verbose}) {
-            print STDERR "Server Stacktrace:\n";
-            print STDERR $resp->stacktrace;
+        if ($opts{verbose}) {
+            if ($resp->stacktrace) {
+                print STDERR "Server Stacktrace:\n";
+                print STDERR $resp->stacktrace;
+            }
         }
         exit 1;
     }
@@ -546,7 +557,7 @@ sub _get_args_for_jmx4perl {
     my $config = new JMX::Jmx4Perl::Config($opts->{config});
     my $server_config = $config->get_server_config($url);
     if ($server_config && $server_config->{url}) {
-        print "Taking ",$server_config->{url}, " from configuration for $url" if $opts->{verbose};
+        print "Taking ",$server_config->{url}, " from configuration for $url\n" if $opts->{verbose};
         &_verify_url($server_config->{url});
         # Use server configs as default
         $ret = { server => $url, config => $config };
@@ -555,12 +566,31 @@ sub _get_args_for_jmx4perl {
         $ret = { url => $url };
     }
 
-    for my $arg qw(product user password proxy proxy-user proxy-password verbose) {
+    for my $arg qw(product user password verbose) {
         my $cfg = $arg;
         $cfg =~ s/\-/_/g;
         if (defined($opts->{$arg})) {
             $ret->{$cfg} = $opts->{$arg};
         }
+    }
+    if (defined($opts->{proxy})) {
+        # Already set in server config ?
+        die "Old proxy syntax (Proxy,Proxy_User,Proxy_Password) not supported in config anymore" 
+          unless ref($opts->{proxy}) eq "HASH";
+        my $proxy = $ret->{proxy} || {};
+        $proxy->{url} = $opts->{proxy};
+        for my $k (qw(user password)) {
+            $proxy->{$k} = defined($opts->{'proxy-' . $k}) ? $opts->{'proxy-' . $k} : $proxy->{$k};
+            delete $proxy->{$k} unless $proxy->{$k};
+        }
+        $ret->{proxy} = $proxy;
+    }
+    if (defined($opts->{target})) {
+        $ret->{target} = {
+                          url => $opts->{target},
+                          $opts->{'target-user'} ? (user => $opts->{'target-user'}) : (),
+                          $opts->{'target-password'} ? (password => $opts->{'target-password'}) : (),
+                         };
     }
     return $ret;
 }
