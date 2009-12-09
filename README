@@ -22,9 +22,6 @@ INTRODUCTION
   remote communication. The advantage of this proxy mode is that no
   agent is required to be installed on the target platform. 
 
-  Discussion and interesting articles around jmx4perl (and Nagios in
-  general) can be found at http://labs.consol.de
-
 HOW IT WORKS
 
   For the agent mode, you need to deploy a small (~ 100k) Java Agent
@@ -104,8 +101,8 @@ LEGACY JDK 1.4 SUPPORT
   your own by using 'ant jdk14' within the "agent" directory which
   builds a j4p14.war. A maven build is provided as well within
   agent/modules/jdk14. Please note the this support is experimentally
-  and no new features will be added to the backported j4p14.war in the
-  future. j4p14.war has been successfully tested with Weblogic 8.1.
+  and the version is freezed to 0.36. j4p14.war has been successfully
+  tested with Weblogic 8.1.
 
 SOURCE REPOSITORY
 

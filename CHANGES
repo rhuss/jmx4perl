@@ -26,6 +26,7 @@
     user and credentials information.
   - Fixed some bugs
 
+
 0.35 (2009-08-15)
   - Added example 'threadDump.pl'
   - Fixed bug when serializing floats and doubles.
