@@ -45,5 +45,20 @@
   <properties>
     <applicationVersion>0.50_4</applicationVersion>
   </properties>
-  
+
+  <profiles>
+    <profile>
+      <id>dist-labs</id>
+      <distributionManagement>
+        <repository>
+          <id>consol-labs-release</id>
+          <url>scpexe://labs.consol.de/home/maven-repository/www/htdocs/repository</url>
+        </repository>
+        <snapshotRepository>
+          <id>consol-labs-snapshots</id>
+          <url>scpexe://labs.consol.de/home/maven-repository/www/htdocs/snapshots-repository</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>  
+  </profiles>
 </project>
