@@ -20,7 +20,7 @@ my $class = Module::Build->subclass(
   sub ACTION_buildagent {
       my $self = shift;
       use FindBin;
-
+      use File::Find;
 
       die "Distribution must not contain a j4p-access.xml" if -f "$FindBin::Bin/agent/j4p-access.xml";
 
@@ -43,13 +43,17 @@ my $class = Module::Build->subclass(
                 return $t;
                });
 
-      &_replace_version($pom,$version,
-          sub {  
-                my $v = shift;
-                my $t = shift;
-                $t =~ s|(<applicationVersion>)\s*(.+)\s*(</applicationVersion>)|$1$v$3|;
-                return $t;
-               });
+      find( sub { 
+        if ($_ eq "pom.xml") {
+          &_replace_version($File::Find::name,$version,
+            sub {  
+                  my $v = shift;
+                  my $t = shift;
+                  $t =~ s|(</artifactId>\s+<version>)\s*(.+)\s*(</version>)|$1$v$3|;
+                  return $t;
+                 });
+         }
+       },"$FindBin::Bin/agent/modules");
 
       print "Cannot re-create agent.war" 
               unless $self->do_system(qw(ant -f agent/build.xml));

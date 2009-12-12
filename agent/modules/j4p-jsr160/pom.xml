@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-jsr160</artifactId>
-  <version>${applicationVersion}</version>
+  <version>0.50_4</version>
   <packaging>jar</packaging>
   <name>j4p-jsr160</name>
   <description>j4p-160 - jar file containing JSR 160 based code for proxying</description>
@@ -12,7 +12,7 @@
   <parent>
     <groupId>org.jmx4perl</groupId>
     <artifactId>j4p-parent</artifactId>
-    <version>1</version>
+    <version>2</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -20,20 +20,7 @@
     <dependency>
       <groupId>org.jmx4perl</groupId>
       <artifactId>j4p</artifactId>
-      <version>${applicationVersion}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>javaee</groupId>
-      <artifactId>javaee-api</artifactId>
-      <version>5</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.googlecode.json-simple</groupId>
-      <artifactId>json-simple</artifactId>
-      <version>1.1</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
