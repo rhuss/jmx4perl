@@ -54,9 +54,18 @@ sub execute {
         my $o = $self->{opts};
 
         # Request
+        my @optional = ();
+        if ($o->target) {
+            push @optional,target => { 
+                                      url => $o->target,
+                                      $o->{'target-user'} ? (user => $o->{'target-user'}) : (),
+                                      $o->{'target-password'} ? (password => $o->{'target-password'}) : (),
+                                     }
+        }
         my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $o->url, user => $o->user, 
                                      password => $o->password,
-                                     product => $o->product, proxy => $o->proxy);
+                                     product => $o->product, proxy => $o->proxy,
+                                     @optional);
         my $request;
         my $do_read = $o->get("attribute");
         if ($o->get("alias")) {
@@ -173,10 +182,12 @@ sub _send_request {
 sub _switch_on_history {
     my ($self,$jmx,$orig_request) = @_;
     my ($mbean,$operation) = $jmx->resolve_alias(JMX4PERL_HISTORY_MAX_ATTRIBUTE);
-    # Set history to 1 (we need only the last
+    # Set history to 1 (we need only the last)
+    my $target = $jmx->cfg("target");
     my $switch_request = new JMX::Jmx4Perl::Request
       (EXEC,$mbean,$operation,
-       $orig_request->get("mbean"),$orig_request->get("attribute"),$orig_request->get("path"),1);
+       $orig_request->get("mbean"),$orig_request->get("attribute"),$orig_request->get("path"),
+       $target ? $target->{url} : undef,1,{target => undef});
     my $resp = $jmx->request($switch_request);
     if ($resp->is_error) {
         $self->{np}->nagios_die("Error: ".$resp->status." ".$resp->error_text.
@@ -532,12 +543,13 @@ sub _create_nagios_plugin {
           "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning> -n <label>\n" . 
           "                      [--alias <alias>] [--base <alias/number/mbean>] [--delta <time-base>] [--product <product>]\n".
           "                      [--user <user>] [--password <password>] [--proxy <proxy>]\n" .
+          "                      [--target <target-url>] [--target-user <user>] [--target-password <password>]\n" .
           "                      [-v] [--help]",
           version => $JMX::Jmx4Perl::VERSION,
           url => "http://www.consol.com/opensource/nagios/",
           plugin => "check_jmx4perl",
           blurb => "This plugin checks for JMX attribute values on a remote Java application server",
-          extra => "\n\nYou need to deploy j4p.war on the target application server.\n" .
+          extra => "\n\nYou need to deploy j4p.war on the target application server or as an intermediate proxy.\n" .
           "Please refer to the documentation for JMX::Jmx4Perl for further details"
          );
     $np->shortname(undef);
@@ -595,6 +607,18 @@ sub _create_nagios_plugin {
     $np->add_arg(
                  spec => "warning|w=s",
                  help => "Warning Threshold for value.",
+                );
+    $np->add_arg(
+                 spec => "target=s",
+                 help => "JSR-160 Service URL specifing the target server"
+                );
+    $np->add_arg(
+                 spec => "target-user=s",
+                 help => "Username to use for JSR-160 connection (if --target is set)"
+                );
+    $np->add_arg(
+                 spec => "target-password=s",
+                 help => "Password to use for JSR-160 connection (if --target is set)"
                 );
     $np->add_arg(
                  spec => "proxy=s",

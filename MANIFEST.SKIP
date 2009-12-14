@@ -67,3 +67,6 @@ jboss_attr.txt
 site/.*
 x/.*
 it/test_log.txt
+jmx_remote.txt
+examples/remote.pl
+

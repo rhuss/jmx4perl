@@ -4,6 +4,7 @@ import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
+import java.io.IOException;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -44,8 +45,8 @@ public class ReadHandler extends JsonRequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
         if (!restrictor.isAttributeReadAllowed(request.getObjectName(),request.getAttributeName())) {
             throw new SecurityException("Reading attribute " + request.getAttributeName() +
                     " is forbidden for MBean " + request.getObjectNameAsString());

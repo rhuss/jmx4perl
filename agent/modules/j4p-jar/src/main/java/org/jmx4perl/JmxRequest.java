@@ -4,6 +4,8 @@ import org.json.simple.JSONObject;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.remote.JMXServiceURL;
+import java.net.MalformedURLException;
 import java.util.*;
 
 /*
@@ -75,6 +77,7 @@ public class JmxRequest {
     private List<String> extraArgs;
     private String operation;
     private Type type;
+    private TargetConfig targetConfig = null;
 
     // Max depth of returned JSON structure when deserializing.
     private int maxDepth = 0;
@@ -143,6 +146,12 @@ public class JmxRequest {
         if (s != null) {
             operation = s;
         }
+
+        Map target = (Map) pMap.get("target");
+        if (target != null) {
+            targetConfig = new TargetConfig(target);
+        }
+
     }
 
     public String getObjectNameAsString() {
@@ -236,6 +245,10 @@ public class JmxRequest {
         maxDepth = pMaxDepth;
     }
 
+    public TargetConfig getTargetConfig() {
+        return targetConfig;
+    }
+
     @Override
     public String toString() {
         StringBuffer ret = new StringBuffer("JmxRequest[");
@@ -251,6 +264,9 @@ public class JmxRequest {
         }
         if (extraArgs != null && extraArgs.size() > 0) {
             ret.append(", extra=").append(extraArgs);
+        }
+        if (targetConfig != null) {
+            ret.append(", target=").append(targetConfig);
         }
         ret.append("]");
         return ret.toString();
@@ -283,6 +299,60 @@ public class JmxRequest {
         if (operation != null) {
             ret.put("operation",operation);
         }
+        if (targetConfig != null) {
+            ret.put("target", targetConfig.toJSON());
+        }
         return ret;
     }
+
+    // ===============================================================================
+    // Proxy configuration
+
+    public static class TargetConfig {
+        private String url;
+        private Map<String,Object> env;
+
+        public TargetConfig(Map pMap) {
+            String url = (String) pMap.get("url");
+            if (url == null) {
+                throw new IllegalArgumentException("No service url given for JSR-160 target");
+            }
+            this.url = url;
+            String user = (String) pMap.get("user");
+            if (user != null) {
+                env = new HashMap<String, Object>();
+                env.put("user",user);
+                String pwd = (String) pMap.get("password");
+                if (pwd != null) {
+                    env.put("password",pwd);
+                }
+            }
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public Map<String, Object> getEnv() {
+            return env;
+        }
+
+        public JSONObject toJSON() {
+            JSONObject ret = new JSONObject();
+            ret.put("url", url);
+            if (env != null) {
+                ret.put("env", env);
+            }
+            return ret;
+        }
+
+        @Override
+        public String toString() {
+            return "TargetConfig[" +
+                    url +
+                    ", " + env +
+                    "]";
+        }
+    }
+
 }

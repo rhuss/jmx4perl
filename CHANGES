@@ -1,3 +1,9 @@
+0.50
+  - Protocol of j4p.war has been extended to enable proxy mode
+  - Added '--target' to check_jmx4perl for using proxy mode
+  - Added '--target' to jmx4perl
+  - Added Mule agent. Use maven to build it in agent/modules/j4p-mule  
+
 0.40 (2009-11-14)
   - Extended protocol to allow for JSON requests via POST in addition
     to pure URL based requests via GET
@@ -19,6 +25,7 @@
     which allows for shortcuts for agent URL as well as storing 
     user and credentials information.
   - Fixed some bugs
+
 
 0.35 (2009-08-15)
   - Added example 'threadDump.pl'

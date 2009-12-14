@@ -22,6 +22,11 @@
       <artifactId>j4p</artifactId>
       <version>${applicationVersion}</version>
     </dependency>
+    <dependency>
+      <groupId>org.jmx4perl</groupId>
+      <artifactId>j4p-jsr160</artifactId>
+      <version>${applicationVersion}</version>
+    </dependency>
   </dependencies>
 
   <build>

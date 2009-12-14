@@ -6,6 +6,7 @@ use Test::More qw(no_plan);
 use Data::Dumper;
 use It;
 use JMX::Jmx4Perl::Alias;
+use JMX::Jmx4Perl::Request;
 
 my $jmx = It->new(verbose =>0)->jmx4perl;
 my ($ret,$content);
@@ -58,7 +59,7 @@ for my $base (qw(MEMORY_HEAP_MAX java.lang:type=Memory/HeapMemoryUsage/max 10000
 # ====================================================
 # Incremental value checks
 
-$jmx->execute(JMX4PERL_HISTORY_RESET);
+&reset_history($jmx);
 
 ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c 10 --name mem");
 is($ret,0,"Initial history fetch returns OK");
@@ -71,7 +72,7 @@ my $c = 0.40 * $mem;
 is($ret,0,"Second history fetch returns OK for -c $c");
 ok($content =~ /'mem'=(\d+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
 
-$jmx->execute(JMX4PERL_HISTORY_RESET);
+&reset_history($jmx);
 
 
 # ====================================================
@@ -168,16 +169,19 @@ sub exec_check_perl4jmx {
     for (@_) {
         push @args,split;
     }
-    my ($url,$user,$password,$product) = @ENV{"JMX4PERL_GATEWAY","JMX4PERL_USER",
-                                                "JMX4PERL_PASSWORD","JMX4PERL_PRODUCT"};
+    my ($url,$user,$password,$product,$target,$target_user,$target_password) = 
+      @ENV{"JMX4PERL_GATEWAY","JMX4PERL_USER",
+             "JMX4PERL_PASSWORD","JMX4PERL_PRODUCT","JMX4PERL_TARGET_URL","JMX4PERL_TARGET_USER","JMX4PERL_TARGET_PASSWORD"};
     push @args,("--user",$user,"--password",$password) if $user;
     push @args,("--product",$product) if $product;
     push @args,("--url",$url);
-    # push @args,("--verbose");
+    push @args,("--target",$target) if $target;
+    push @args,("--target-user",$target_user,"--target-password",$target_password) if $target_user;
+    #push @args,("--verbose");
    
     my $cmd = "perl $FindBin::Bin/../../scripts/check_jmx4perl "
           .join(" ",map { '"' . $_ . '"' } @args); 
-    print $cmd,"\n" if 0;
+    #print $cmd,"\n";
     open (F,"$cmd 2>&1 |") 
       || die "Cannot open check_jmx4perl: $!";
     my $content = join "",<F>;
@@ -191,4 +195,11 @@ sub exec_check_perl4jmx {
           ($? & 127),  ($? & 128) ? 'with' : 'without';
     }
     return ($? >> 8,$content);
+}
+
+sub reset_history {
+    my $jmx = shift;
+    my ($mbean,$operation) = $jmx->resolve_alias(JMX4PERL_HISTORY_RESET);
+    my $req = new JMX::Jmx4Perl::Request(EXEC,$mbean,$operation,{target => undef});
+    $jmx->request($req);
 }

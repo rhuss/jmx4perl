@@ -5,6 +5,7 @@ import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.converter.StringToObjectConverter;
 
 import javax.management.*;
+import java.io.IOException;
 import java.util.List;
 
 /*
@@ -48,8 +49,8 @@ public class ExecHandler extends JsonRequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
         if (!restrictor.isOperationAllowed(request.getObjectName(),request.getOperation())) {
             throw new SecurityException("Operation " + request.getOperation() +
                     " forbidden for MBean " + request.getObjectNameAsString());
@@ -60,7 +61,7 @@ public class ExecHandler extends JsonRequestHandler {
         List<String> args = request.getExtraArgs();
         if (args.size() != paramClazzes.length) {
             throw new IllegalArgumentException("Invalid operation parameters. Operation " +
-                    request.getOperation() + " requires " + paramClazzes.length +
+                    request.getOperation() + " on " + request.getObjectName() + " requires " + paramClazzes.length +
                     " parameters, not " + args.size() + " as given");
         }
         for (int i = 0;i <  paramClazzes.length; i++) {
@@ -77,8 +78,8 @@ public class ExecHandler extends JsonRequestHandler {
         return server.invoke(request.getObjectName(),request.getOperation(),params,paramClazzes);
     }
 
-    private String[] extractOperationTypes(MBeanServer pServer, JmxRequest pRequest)
-            throws ReflectionException, InstanceNotFoundException {
+    private String[] extractOperationTypes(MBeanServerConnection pServer, JmxRequest pRequest)
+            throws ReflectionException, InstanceNotFoundException, IOException {
         try {
             MBeanInfo mBeanInfo = pServer.getMBeanInfo(pRequest.getObjectName());
             for (MBeanOperationInfo opInfo : mBeanInfo.getOperations()) {

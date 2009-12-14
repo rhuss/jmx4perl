@@ -6,10 +6,14 @@ import org.jmx4perl.handler.JsonRequestHandler;
 import javax.management.*;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import java.util.*;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -45,13 +49,14 @@ public class MBeanServerHandler {
 
     // The MBeanServers to use
     private Set<MBeanServer> mBeanServers;
+    private Set<MBeanServerConnection> mBeanServerConnections;
 
     // Whether we are running under JBoss
     private boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
-    boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
+    // private boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
 
     public MBeanServerHandler() {
-        mBeanServers = findMBeanServers();
+        initMBeanServers();
     }
 
     /**
@@ -64,7 +69,11 @@ public class MBeanServerHandler {
     public Object dispatchRequest(JsonRequestHandler pRequestHandler, JmxRequest pJmxReq)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         if (pRequestHandler.handleAllServersAtOnce()) {
-            return pRequestHandler.handleRequest(mBeanServers,pJmxReq);
+            try {
+                return pRequestHandler.handleRequest(mBeanServerConnections,pJmxReq);
+            } catch (IOException e) {
+                throw new IllegalStateException("Internal: IOException " + e + ". Shouldnt happen.",e);
+            }
         } else {
             try {
                 wokaroundJBossBug(pJmxReq);
@@ -78,14 +87,15 @@ public class MBeanServerHandler {
                         objNotFoundException = exp;
                     } catch (AttributeNotFoundException exp) {
                         attrException = exp;
+                    } catch (IOException e) {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                     }
                 }
-                // Must be set, otherwise we would nave have left the loop
                 if (attrException != null) {
                     throw attrException;
-                } else {
-                    throw objNotFoundException;
                 }
+                // Must be there, otherwise we would nave have left the loop
+                throw objNotFoundException;
             } catch (ReflectionException e) {
                 throw new IllegalStateException("Internal error for '" + pJmxReq.getAttributeName() +
                         "' on object " + pJmxReq.getObjectName() + ": " + e,e);
@@ -170,22 +180,25 @@ public class MBeanServerHandler {
      * @return the MBeanServer found
      * @throws IllegalStateException if no MBeanServer could be found.
      */
-    private Set<MBeanServer> findMBeanServers() {
+    private void initMBeanServers() {
 
         // Check for JBoss MBeanServer via its utility class
-        Set<MBeanServer> servers = new LinkedHashSet<MBeanServer>();
+        mBeanServers = new LinkedHashSet<MBeanServer>();
+        addJBossMBeanServer(mBeanServers);
+        addWebsphereMBeanServer(mBeanServers);
+        addFromMBeanServerFactory(mBeanServers);
+        addFromJndiContext(mBeanServers);
+        mBeanServers.add(ManagementFactory.getPlatformMBeanServer());
 
-        addJBossMBeanServer(servers);
-        addWebsphereMBeanServer(servers);
-        addFromMBeanServerFactory(servers);
-        addFromJndiContext(servers);
-        servers.add(ManagementFactory.getPlatformMBeanServer());
-
-        if (servers.size() == 0) {
+        if (mBeanServers.size() == 0) {
 			throw new IllegalStateException("Unable to locate any MBeanServer instance");
 		}
 
-		return servers;
+        // Copy over servers into connection set. Required for proper generic usage
+        mBeanServerConnections = new LinkedHashSet<MBeanServerConnection>();
+        for (MBeanServer server : mBeanServers) {
+            mBeanServerConnections.add(server);
+        }
 	}
 
     private void addFromJndiContext(Set<MBeanServer> servers) {
@@ -253,11 +266,11 @@ public class MBeanServerHandler {
         // if ((isJBoss || isWebsphere)
         // The workaround was enabled for websphere as well, but it seems
         // to work without it for WAS 7.0
-        if ( (isJBoss || isWebsphere) && pJmxReq.getObjectName() != null &&
+        if (isJBoss && pJmxReq.getObjectName() != null &&
                 "java.lang".equals(pJmxReq.getObjectName().getDomain())) {
             try {
                 // invoking getMBeanInfo() works around a bug in getAttribute() that fails to
-                // refetch the domains from the platform (JDK) bean server (e.g. for MXBeans)
+                // refetch the domains from the platform (JDK) bean server (e.g. for MXMBeans)
                 for (MBeanServer s : mBeanServers) {
                     try {
                         s.getMBeanInfo(pJmxReq.getObjectName());

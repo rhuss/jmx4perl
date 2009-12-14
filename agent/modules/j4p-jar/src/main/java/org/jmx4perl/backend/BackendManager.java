@@ -11,6 +11,7 @@ import org.json.simple.JSONObject;
 
 import javax.management.*;
 import javax.servlet.ServletConfig;
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.lang.reflect.Constructor;
@@ -48,7 +49,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class BackendManager {
 
-    LocalRequestDispatcher localDispatcher;
+    private LocalRequestDispatcher localDispatcher;
 
     // Converter for converting various attribute object types
     // a JSON representation
@@ -70,7 +71,7 @@ public class BackendManager {
     private LogHandler logHandler;
 
     // List of RequestDispatchers to consult
-    List<RequestDispatcher> requestDispatchers;
+    private List<RequestDispatcher> requestDispatchers;
 
     public BackendManager(ServletConfig pConfig, LogHandler pLogHandler) {
 
@@ -145,7 +146,8 @@ public class BackendManager {
      * @throws ReflectionException
      * @throws MBeanException
      */
-    public JSONObject handleRequest(JmxRequest pJmxReq) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public JSONObject handleRequest(JmxRequest pJmxReq) throws InstanceNotFoundException, AttributeNotFoundException,
+            ReflectionException, MBeanException, IOException {
 
         Object retValue = null;
         boolean found = false;
@@ -243,7 +245,7 @@ public class BackendManager {
         }
     }
 
-    public void log(String message, Throwable t) {
+    public final void log(String message, Throwable t) {
         logHandler.log(message,t);
         if (debugStore != null) {
             debugStore.log(message, t);

@@ -6,6 +6,7 @@ import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
 import javax.management.ReflectionException;
+import java.io.IOException;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -48,8 +49,8 @@ public interface RequestDispatcher {
      * @throws ReflectionException
      * @throws MBeanException
      */
-    public Object dispatchRequest(JmxRequest pJmxReq)
-            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException;
+    Object dispatchRequest(JmxRequest pJmxReq)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException;
 
     /**
      * Check wether current dispatcher can handle the given request

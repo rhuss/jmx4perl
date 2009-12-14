@@ -20,7 +20,18 @@ sub new {
     $self->{user} = $args{user} || $ENV{JMX4PERL_USER};
     $self->{password} = $args{password} || $ENV{JMX4PERL_PASSWORD};
     $self->{verbose} = $args{verbose} || $ENV{JMX4PERL_VERBOSE};
-    $self->{jmx4perl} = new JMX::Jmx4Perl(map { $_ => $self->{$_ } } qw(url product user password verbose));
+    my $t_url = $args{target_url} || $ENV{JMX4PERL_TARGET_URL};
+    my $t_user = $args{target_user} || $ENV{JMX4PERL_TARGET_USER};
+    my $t_password = $args{target_password} || $ENV{JMX4PERL_TARGET_PASSWORD};
+    my @params = map { $_ => $self->{$_ } } qw(url product user password verbose);
+    if ($t_url) {
+        push @params, target => {
+                                 url => $t_url,
+                                 $t_user ? (user => $t_user) : (),
+                                 $t_password ? (password => $t_password) : ()
+                                };
+    }
+    $self->{jmx4perl} = new JMX::Jmx4Perl(@params);
     
     bless $self,(ref($class) || $class);
 

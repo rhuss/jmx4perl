@@ -40,18 +40,20 @@ public interface ConfigMBean {
      * @param pMBean MBean object name
      * @param pAttribute attribute name
      * @param pPath inner path (optional)
+     * @param pTarget remote target or null for a loal mbean
      * @param pMaxEntries max last entries to remember, if 0 history tracking is switched off.
      */
-    void setHistoryEntriesForAttribute(String pMBean,String pAttribute,String pPath,int pMaxEntries);
+    void setHistoryEntriesForAttribute(String pMBean,String pAttribute,String pPath,String pTarget,int pMaxEntries);
 
     /**
      * Switch on history tracking for an operation. If <code>pMaxEntries</code> is null
      * history tracking is switched off. The return value of the operation will be tracked.
      * @param pMBean MBean object name
      * @param pOperation operation to track
+     * @param pTarget remote target or null for a loal mbean
      * @param pMaxEntries max last entries to remember, if 0 history tracking is switched off.
      */
-    void setHistoryEntriesForOperation(String pMBean,String pOperation,int pMaxEntries);
+    void setHistoryEntriesForOperation(String pMBean,String pOperation,String pTarget,int pMaxEntries);
 
     /**
      * Remove all history entries and switch off history tracking globally.

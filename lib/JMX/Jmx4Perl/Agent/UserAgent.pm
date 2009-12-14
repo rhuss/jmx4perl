@@ -15,7 +15,7 @@ authentication support
 =head1 DESCRIPTION
 
 Simple subclass implementing an own C<get_basic_credentials> method for support
-of basic and prox authentication. This is an internal class used by
+of basic and proxy authentication. This is an internal class used by
 L<JMX::Jmx4Perl::Agent>. 
 
 =cut 
@@ -29,13 +29,22 @@ sub get_basic_credentials {
     my ($self, $realm, $uri, $isproxy) = @_;
 
     my $cfg = $self->{jjagent_config} || {};
-    my $user = $isproxy ? $cfg->{proxy_user} : $cfg->{user};
-    my $password = $isproxy ? $cfg->{proxy_password} : $cfg->{password};
-
+    my $user = $isproxy ? $self->proxy_cfg($cfg,"user") : $cfg->{user};
+    my $password = $isproxy ? $self->proxy_cfg($cfg,"password") : $cfg->{password};
     if ($user && $password) {
         return ($user,$password);
     } else {
         return (undef,undef);
+    }
+}
+
+sub proxy_cfg {
+    my ($self,$cfg,$what) = @_;
+    my $proxy = $cfg->{proxy};
+    if (ref($proxy) eq "HASH") {
+        return $proxy->{$what};
+    } else {
+        return $cfg->{"proxy_" . $what};
     }
 }
 

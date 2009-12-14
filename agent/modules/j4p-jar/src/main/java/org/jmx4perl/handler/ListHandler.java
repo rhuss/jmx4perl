@@ -5,6 +5,7 @@ import org.jmx4perl.JmxRequest;
 import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
+import java.io.IOException;
 import java.util.*;
 
 /*
@@ -49,31 +50,36 @@ public class ListHandler extends JsonRequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(Set<MBeanServer> pServers, JmxRequest request)
-            throws InstanceNotFoundException {
+    public Object doHandleRequest(Set<MBeanServerConnection> pServers, JmxRequest request)
+            throws InstanceNotFoundException, IOException {
         try {
             Map<String /* domain */,
                     Map<String /* props */,
-                            Map<String /* attribute/operation */,
-                                                                List<String /* names */>>>> ret =
+                            Map<String /* attribute/operation/error */,
+                                    List<String /* names */>>>> ret =
                     new HashMap<String, Map<String, Map<String, List<String>>>>();
-            for (MBeanServer server : pServers) {
+            for (MBeanServerConnection server : pServers) {
                 for (Object nameObject : server.queryNames((ObjectName) null,(QueryExp) null)) {
                     ObjectName name = (ObjectName) nameObject;
-                    MBeanInfo mBeanInfo = server.getMBeanInfo(name);
-
                     Map mBeansMap = getOrCreateMap(ret,name.getDomain());
                     Map mBeanMap = getOrCreateMap(mBeansMap,name.getCanonicalKeyPropertyListString());
 
-                    addAttributes(mBeanMap, mBeanInfo);
-                    addOperations(mBeanMap, mBeanInfo);
+                    try {
+                        MBeanInfo mBeanInfo = server.getMBeanInfo(name);
 
-                    // Trim if needed
-                    if (mBeanMap.size() == 0) {
-                        mBeansMap.remove(name.getCanonicalKeyPropertyListString());
-                        if (mBeansMap.size() == 0) {
-                            ret.remove(name.getDomain());
+                        addAttributes(mBeanMap, mBeanInfo);
+                        addOperations(mBeanMap, mBeanInfo);
+                        // Trim if needed
+                        if (mBeanMap.size() == 0) {
+                            mBeansMap.remove(name.getCanonicalKeyPropertyListString());
+                            if (mBeansMap.size() == 0) {
+                                ret.remove(name.getDomain());
+                            }
                         }
+                    } catch (IOException exp) {
+                        // In case of a remote call, IOEcxeption can occur e.g. for
+                        // NonSerializableExceptions
+                        mBeanMap.put("error",exp);
                     }
                 }
             }
@@ -135,7 +141,7 @@ public class ListHandler extends JsonRequestHandler {
 
     // will not be called
     @Override
-    public Object doHandleRequest(MBeanServer server, JmxRequest request) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
+    public Object doHandleRequest(MBeanServerConnection server, JmxRequest request) throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         return null;
     }
 
