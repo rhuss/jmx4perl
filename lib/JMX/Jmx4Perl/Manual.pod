@@ -282,7 +282,10 @@ F<agent/modules/j4p-mule/target/j4p-mule-0.50-agent.jar> (note the C<-agent>
 classifier, replace the version number with the current jmx4perl version).
 
 Alternatively, the mule agent can be downloaded from out maven repository at
-L<http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/>.
+L<http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/> or you can use
+'./Build get_mule_agent' to download the current mule agent
+automatically. (BTW, './Build get_war' downloads the current jmx4perl standard
+agent from labs.consol.de repository).
 
 The unzipped agent jar needs to be stored within the Mule installation in
 F<lib/opt/>. Additionally, the Mule configuration needs to be adapted to
