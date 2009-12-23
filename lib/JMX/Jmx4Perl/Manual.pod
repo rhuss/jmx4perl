@@ -181,11 +181,7 @@ F<webapp> directory.
 =item * 
 
 Enable remote JMX commonicutaion on the target plattform. Please consult the
-documentation of your Appserver for further details. For JBoss
-(L<http://labs.consol.de/blog/jmx4perl/jboss-remote-jmx>) and Weblogic
-(http://labs.consol.de/blog/jmx4perl/configuring-remote-jmx-access-for-weblogic)
-detailed instructions can be found on the jmx4perl blog at
-L<http://labs.consol.de/>.
+documentation of your Appserver for further details.
 
 =item * 
 
@@ -265,7 +261,7 @@ target server, which in most cases is as simple as copying the agent into a
 specific directory. Please consult the documentation of your Java application
 server for the details (look for "deployment" and "web application" (or "war))) 
 
-To test it, you can use L<jmx4perl> with the URL of the depolyed
+To test it, you can use L<jmx4perl> with the URL of the deployed
 agent:
 
   jmx4perl http://<jeeserver>:<port>/j4p
@@ -281,13 +277,13 @@ tool installed. The agent can be found afterwards at
 F<agent/modules/j4p-mule/target/j4p-mule-0.50-agent.jar> (note the C<-agent>
 classifier, replace the version number with the current jmx4perl version).
 
-Alternatively, the mule agent can be downloaded from out maven repository at
+Alternatively, the mule agent can be downloaded from our maven repository at
 L<http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/> or you can use
-'./Build get_mule_agent' to download the current mule agent
-automatically. (BTW, './Build get_war' downloads the current jmx4perl standard
+C<./Build get_mule_agent> to download the current mule agent
+automatically. (BTW, C<./Build get_war> downloads the current jmx4perl standard
 agent from labs.consol.de repository).
 
-The unzipped agent jar needs to be stored within the Mule installation in
+The agent jar needs to be stored within the Mule installation in
 F<lib/opt/>. Additionally, the Mule configuration needs to be adapted to
 contain the following section:
 
@@ -296,7 +292,7 @@ contain the following section:
  </management:custom-agent>
  <management:jmx-server/>
 
-Starting up mule shoudl yield a startup message like 
+Starting up mule should yield a startup message like 
 
  *********************************************************
  * Mule ESB and Integration Platform                     *
