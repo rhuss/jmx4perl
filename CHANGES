@@ -3,6 +3,8 @@
   - Added '--target' to check_jmx4perl for using proxy mode
   - Added '--target' to jmx4perl
   - Added Mule agent. Use maven to build it in agent/modules/j4p-mule  
+  - 'get_war' and 'get_mule_agent' as actions for Build.PL for
+    fetching java artifacts from the labs.consol.de maven repository.
 
 0.40 (2009-11-14)
   - Extended protocol to allow for JSON requests via POST in addition

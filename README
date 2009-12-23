@@ -18,9 +18,9 @@ INTRODUCTION
 
   Since version 0.50 a second operational mode has been added in which
   jmx4perl acts as a JMX bridge. It accepts the usual HTTP/JSON
-  requests which are forwared to the target server via JSR-160 based
+  requests which are forwarded to the target server via JSR-160 based
   remote communication. The advantage of this proxy mode is that no
-  agent is required to be installed on the target platform. 
+  agent is required to be installed on the target platform.
 
 HOW IT WORKS
 
@@ -70,29 +70,54 @@ INSTALLATION
   To test it, you can use 'jmx4perl' with the URL of the deployed
   agent:
 
-      jmx4perl http://jeeserver:port/j4p
+      jmx4perl http://<jeeserver>:<port>/j4p
       
   Consult 'man jmx4perl' for further details. 
  
 SUPPORTED APPLICATION SERVERS
   
   The following Java Application Servers has been confirmed to work
-  with jmx4perl both in agent and proxy mode :
+  with jmx4perl both in agent mode :
 
   * JBoss 4.2.3 GA & 5.1.0 GA
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
   * Jonas 4.10.3 (with Jetty 5.1.10 and Tomcat 5.5.26) and 5.1.0
   * Apache Geronimo 2.1.4 (Jetty 6 and Tomcat 6)
-  * Glassfish 2.1.1 and 3 Preview
+  * Glassfish 2.1.1 and v3
   * Apache Tomcat 5.5.28 & 6.0.20
   * Jetty 5.1.15 & 6.1.21 & 7.0.0 (with JMX enabled)
   * IBM Websphere 6.1 & 7.0
 
+  The proxy mode has been explicitely tested for 
+
+  * JBoss 4.2.3 GA & 5.1.0 GA
+  * Oracle WebLogic 9.2 MP3 & 10.0.2.0
+  * Glassfish 2.1.1 and v3
+
+  More test are scheduled, detailed setup instructions for individual
+  JEE servers can be found at http://labs.consol.de/tags/jsr-160
+  
   It is expected that every Java application server which runs with at
   least Java 1.5 and conforms to at least version 2.4 of the Servlet
   specification should work out of the box.  Please open a bug at
   http://rt.cpan.org/Public/Bug/Report.html?Queue=jmx4perl if you
   encounter any problems.
+
+MULE AGENT SUPPORT
+
+  This distribution contains a Mule ESB (www.mulesoft.org) agent which
+  can be deployed on the Mule ESB (running in standalone
+  mode). Currently, you need to build the agent from source,
+  though. Maven is required for building the agen. Call 'mvn install'
+  within the 'agent' directory, you find the agent then as
+  'agent/modules/j4p-mule/target/j4p-mule-<version>-agent.jar'.
+  Alternatively the agent jar can be downloaded from the maven
+  labs.conso.de's repository at
+  http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/
+
+  Installation instruction are included in JMX::Jmx4Perl::Manual
+  The initial article related can be found at
+  http://labs.consol.de/blog/jmx4perl/jmx4perl-mule-agent
 
 LEGACY JDK 1.4 SUPPORT
 
@@ -102,12 +127,21 @@ LEGACY JDK 1.4 SUPPORT
   builds a j4p14.war. A maven build is provided as well within
   agent/modules/jdk14. Please note the this support is experimentally
   and the version is freezed to 0.36. j4p14.war has been successfully
-  tested with Weblogic 8.1.
+  tested with Weblogic 8.1. This JDK 1.4 support will be removed in
+  the next version (you can always download 0.50 if you need the JDK
+  1.4 support)
 
-SOURCE REPOSITORY
+RESOURCES
 
-  Jmx4perl's source is hosted on github.com. You can clone the repository 
-  with git://github.com/rhuss/jmx4perl.git as URL
+  * Jmx4perl's source is hosted on github.com. You can clone the
+    repository with git://github.com/rhuss/jmx4perl.git as URL
+
+  * Interesting articles around Jmx4Perl, JMX and Nagios can be found
+    at http://labs.consol.de Checkout the various post categories for
+    selecting a specific topic.
+
+  * www.jmx4perl.org is the canonical entry point for jmx4perl related
+    information. 
 
 LICENSE
   
@@ -133,8 +167,8 @@ LICENSE
 PROFESSIONAL SERVICES
 
   Just in case you need professional support for this module (or
-  Nagios or JMX in general), you might want have a look at
-  http://www.consol.com/opensource/nagios/. Contact
+  Nagios, JMX or JEE in general), you might want to have a look at
+  http://www.consol.com/nagios-monitoring . Contact
   roland.huss@consol.de for further information (or use the contact
   form at http://www.consol.com/contact/ )
 

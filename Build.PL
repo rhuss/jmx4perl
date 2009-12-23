@@ -17,6 +17,65 @@ my $class = Module::Build->subclass(
       $self->SUPER::ACTION_clean;
   }
 
+  sub ACTION_get_war {
+      &_download("j4p-war","war","j4p.war","");
+  }
+
+  sub ACTION_get_mule_agent {
+      &_download("j4p-mule","jar","j4p-mule-agent.jar","-agent");
+  }
+
+  sub _download { 
+     my ($name,$type,$file,$classifier) = @_;
+
+      eval {
+        require LWP;
+      };
+      if ($@) {
+        print "No LWP installed\n";
+        exit 1;
+      }
+      my $BASE_URL = "http://labs.consol.de/maven/repository/org/jmx4perl";
+      my $version = &_extract_version();
+      my $url = $BASE_URL . "/$name/$version/$name-${version}${classifier}.$type";
+      my $ua = LWP::UserAgent->new;
+      my $res = $ua->request(new HTTP::Request(GET => $url));
+      my $content =  $res->content;
+      if ($res->is_success) {
+         open(F,">$file") || die "Cannot open $file: $!\n";
+         print F $content;
+         close F;
+         print "Downloaded $file into local directory\n";
+      } else {
+         print "Error fetching $url\n";
+         print $res->status_line,"\n";
+         exit 1;
+      }
+      eval {
+         require Digest::SHA1;
+      };
+      if ($@) {
+         print "No Digest::SHA1 installed. Skipping checksum test\n";
+         return;
+      }
+      $res = $ua->request(new HTTP::Request(GET => $url . ".sha1"));
+      if ($res->is_success) {
+         my $r_sha1 = $res->content;
+         chomp $r_sha1;
+         my $sha1 = new Digest::SHA1;
+         $sha1->add($content);
+         if ($r_sha1 ne $sha1->hexdigest) {
+            print "CHECKSUM Error:\nRemote SHA1: $r_sha1\nLocal  SHA1: ",$sha1->hexdigest,"\n";
+            exit 1;
+         } else {
+            print "SHA1 Checksum $r_sha1 verified\n";
+            return;
+         }
+      } else {
+         print $res->status_line,"\n";
+         exit 1;
+      }
+  }
   sub ACTION_buildagent {
       my $self = shift;
       use FindBin;
@@ -25,14 +84,9 @@ my $class = Module::Build->subclass(
       die "Distribution must not contain a j4p-access.xml" if -f "$FindBin::Bin/agent/j4p-access.xml";
 
       my $version_java = "$FindBin::Bin/agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java";
-      my $version_perl = "$FindBin::Bin/lib/JMX/Jmx4Perl.pm";
       my $pom          = "$FindBin::Bin/agent/pom.xml";
+      my $version = &_extract_version();
 
-
-      open(F,"$version_perl") || die "Cannot open $version_perl : $!";
-      my $v = join "",<F>;
-      close F;
-      my $version = $1 if $v =~ /^\s+\$VERSION\s+=\s+"([^"]+)"/m; 
       die "Cannot extract version from $version_perl" unless $version;
 
       &_replace_version($version_java,$version,
@@ -57,6 +111,15 @@ my $class = Module::Build->subclass(
 
       print "Cannot re-create agent.war" 
               unless $self->do_system(qw(ant -f agent/build.xml));
+  }
+
+  sub _extract_version {
+      my $version_perl = "$FindBin::Bin/lib/JMX/Jmx4Perl.pm";
+      open(F,"$version_perl") || die "Cannot open $version_perl : $!";
+      my $v = join "",<F>;
+      close F;
+      my $version = $1 if $v =~ /^\s+\$VERSION\s+=\s+"([^"]+)"/m; 
+      return $version;
   }
 
   sub _replace_version {
@@ -118,7 +181,7 @@ my $build = $class->new
                       "Test::Deep" => 0,
                       "Test" => "0"
                      },                       
-   keywords => [  "JMX", "JEE", "Management" ],
+   keywords => [  "JMX", "JEE", "Management", "Nagios" ],
   );
 
 $build->create_build_script;

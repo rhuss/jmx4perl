@@ -3,7 +3,7 @@
 
 =head1 NAME 
 
-JMX::Jmx4Perl::Manual - Manual for B<jmx4perl>
+JMX::Jmx4Perl::Manual - Documentation for B<jmx4perl>
 
 =head1 DESCRIPTION
 
@@ -13,84 +13,101 @@ especially JEE application servers use this technology intensively for exposing
 managable entities. In fact, the popular JEE Server JBoss 4 is based on a JMX
 kernel.
 
-For the Perl world, it's not that easy to access JMX MBeans. MBeans are is the
+For the Perl world, it's not that easy to access JMX MBeans. I<MBean> is the
 Java term for JMX managed entities. The existing solutions are mostly based on
 the Java standard JSR-160 (L<http://jcp.org/en/jsr/detail?id=160>), which
 defines how JMX can be accessed remotely. The problem of JSR-160 with respect
 to Perl is, that the default communication protocols rely on exchanging
-serialized Java objects. Hence they require to start a Java Virtual Machine, in
+serialized Java objects. Hence they require to start a Java Virtual Machine in
 the one way or other. This has quite some implications concerning installation
 requirements (you need a Java virtual machine with the proper version
 installed) and performance (firing up a JVM is not something you get for free)
 
 The ultimate goal of B<jmx4perl> is to bridge both worlds in the most simplest
-way. This is done with an agent based approach as described below. In short,
-the building blocks of this bridge are based on standards well known and used
-in both worlds: HTTP and JSON.
+way. This is done with the I<agent> and I<proxy> based approaches described
+below. In short, the building blocks of this bridge are based on standards well
+known and used in both worlds: HTTP and JSON.
 
 Another goal is to provide an abstraction for accessing certain, commonly known
 MBeans for various supported JEE application server, which differ in naming
 from brand to brand. For now, the JEE servers supported are JBoss 4 & 5, Oracle
-WebLogic 9 & 10, Websphere 6 & 7, Glassfish 2, Jonas 4 and Geronimo 2 as well
-as the pure servlet containers Jetty 5 and 6, Tomcat 4, 5 & 6. Other platforms
-might work as well, however they are not yet tested. Please let me know,
-whether jmx4perl works for you on other servers as well (which is highly likely
-due to the simplistic nature of the agent webapp).  B<jmx4perl> is not an
-academic exercise. In fact it originates from the need to let Nagios (a
-hopefully well known open source monitoring solution, see
-L<http://www.nagios.org>) access JEE appliation servers in a painless way. You
-can find a nagios check in the scripts directory, which is a prefactored check
-directly usable in a Nagios setup.
+WebLogic 9 & 10, Websphere 6 & 7, Glassfish 2 & 3, Jonas 4 and Geronimo 2 as
+well as the pure servlet containers Jetty 5 and 6, Tomcat 4, 5 & 6. Other
+platforms might work as well, however they are not yet tested. Please let me
+know, whether jmx4perl works for you on other servers as well (which is highly
+likely due to the simplistic nature of the agent).  B<jmx4perl> is not an
+academic exercise. In fact it originates from the need to let Nagios (a well
+known open source monitoring solution, see L<http://www.nagios.org>) access JEE
+appliation servers in a painless way. You can find a nagios check in the
+scripts directory, which is a prefactored check directly usable for a Nagios
+setup.
 
 Additionally, there is a command line tool called (incidentally ;-) L<jmx4perl>
-which allows for simple access to JMX MBeans and much more features. 
+which allows for simple access to JMX MBeans and much more. 
 
 =head1 MBean Features
 
 JMX is a complex specification, which can not be completely revealed in this
 short documentation. Refer to
-L<http://java.sun.com/docs/books/tutorial/jmx/index.html> for a JMX
-tutorial. But in short, one can distinguish between three kinds of operational
-modes:
+L<http://java.sun.com/docs/books/tutorial/jmx/index.html> for an introduction
+to JMX. But in short, one can distinguish three kinds of operational modes:
 
 =over
 
 =item Attribute reading and writing
 
 An MBean can have one or more attributes, which can be read and/or
-written. 
+written. jmx4perl knows how to read and write MBean attributes.
 
 =item Execution of operations
 
 A MBean can expose certain operations, which can be executed via JMX
-calls. 
+calls. With jmx4perl, JMX operations can be executed.
 
 =item Notifications
 
 Listeners can register to get notified for certain notifications by the
 MBeans. This is not yet supported by jmx4perl and it is technically quite
 challenging, since HTTP, our transport protocol, is a typical request-response
-based protocol which is unidirectional by nature. However, there are already
+based protocol which is unidirectional by nature. However there are already
 ideas how to overcome this limitation, but please don't hold your breath. This
 is on the roadmap, but with very low priority only. Tell me your use case if
 you want to push it up.
 
 =back
 
-In short, jmx4perl supports only reading of attributes for the moment. In most
-cases this is sufficient for monitoring purposes, i.e. Nagios monitoring. 
+=head1 AGENT BASED APPROACH
 
-=head1 AGENT APPROACH
-
-As mentioned above we are using an agent based approach. An agent based
-approach requires you to install a small Java Webapplication within your JEE
-application server. It registers itself locally to the JMX MBeanServer, and
-listens to HTTP requests whose results are translated into a JSON
-representation. This reponse can be easily picked up by a Perl module,
+An agent based approach requires you to install a small Java Webapplication
+within your JEE application server. It registers itself locally to the JMX
+MBeanServer, and listens to HTTP requests whose results are translated into a
+JSON representation. This reponse can be easily picked up by a Perl module,
 L<JMX::Jmx4Perl> in our case. This kind of approach differs from the canonical
-approach as suggested by the JMX specification itself quite a bit. It only
-works for application servers, where Java web applications can be
-deployed. Otherwise, it has also quite some advantages:
+approach as suggested by the JMX specification itself. 
+
+This approach works for the following environments:
+
+=over 4
+
+=item * 
+
+JEE Servers where a webapplication in the standard WAR format can be deployed. 
+
+=item *
+
+For the Mule ESB as dedicated Mule agent can be used for exposing JMX to the
+outside. 
+
+=item *
+
+Not actually ready, but definitively scheduled for the next release is
+packaging as an OSGi bundle for operation in an OSGi environment (along with an
+OSGi HttpService). Stay tuned ...
+
+=back 
+
+Beside this restriction concerning the runtime environment, this approach has
+also quite some advantages:
 
 =head2 Advantages
 
@@ -126,17 +143,106 @@ Firewall friendly since all HTTP communication goes over a single port.
 
 =item * 
 
-Only applicable for JEE server or servlet container, where a WAR (Java Web
-Archive) can be deployed.
+The agent can be deployed only to certain Java runtime container (Servlet
+container, Mule Agent, OSGi container). But please read on, even when your
+runtime environment doesn't fit in here. With the I<proxy> approach arbitrary
+Java applications can be connected to.
+
+=back 
+
+=head1 PROXY MODE
+
+Although the I<agent based> is the most simplest way to access JMX, there are
+circumstances which prevent the deployment of a dedicated agent servlet. This
+kind of restrictions are mostly politically motivated. For these situations,
+jmx4perl provides an operational mode known as the I<proxy mode> with which the
+target platform can be monitored without installing the j4p agent servlet on
+it. This works by using j4p.war as a JMX Proxy, which translates our
+JSON/HTTP protocol on the frontside to JSR-160 JMX remote requests on the
+backend and vice versa.
+
+A dedicated proxy serlvet server is needed for hosting C<j4p.war>, which supports
+the I<agent mode> as well as the I<proxy mode>. A lightweight container like
+Tomcat or Jetty are a perfect choice for this mode. The setup is straight
+forward: 
+
+=over
 
 =item * 
 
-For now, only reading of MBean attributes is supported. However, support for
-writing of attributes and execution of operations are underway. Notifications
-are bit more involved, but chances are good that some sort of support will be
-incorporated into a future version as well. 
+Install Jetty (L<http://www.mortbay.org/jetty/>) or Tomcat
+(L<http://tomcat.apache.org/>) 
 
-=back 
+=item * 
+
+Deploy C<j4p.war> from the jmx4perl distribution by copying it into the
+F<webapp> directory.
+
+=item * 
+
+Enable remote JMX commonicutaion on the target plattform. Please consult the
+documentation of your Appserver for further details. For JBoss
+(L<http://labs.consol.de/blog/jmx4perl/jboss-remote-jmx>) and Weblogic
+(http://labs.consol.de/blog/jmx4perl/configuring-remote-jmx-access-for-weblogic)
+detailed instructions can be found on the jmx4perl blog at
+L<http://labs.consol.de/>.
+
+=item * 
+
+Use the C<--target> option for C<jmx4perl> or C<check_jmx4perl> with a JMX
+service URL (like C<service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi>) in
+order to specify the target server. Use the proxy server's URL as the agent
+URL:
+
+ jmx4perl http://localhost:8080/j4p  \
+      --target service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi list
+
+
+=back
+
+Said all this, the proxy mode has some limitations:
+
+=over 4
+
+=item * 
+
+There is no automatic merging of JMX MBeanServers as in the case of the direct
+mode. Most application servers uses an own MBeanServer in addition to the
+PlatformMBeanServer (which is always present). Each MBean is registered only in
+one MBeanServer. The choice, which C<MBeanServer> to use has to be given
+upfront, usually as a part of the JMX Service URL. But even then (as it is the
+case for JBoss 5.1) you might run into problem when selecting the proper
+MBeanServer.
+
+=item * 
+
+Proxying adds an additional remote layer which causes additional
+problems. I.e. the complex operations like C<list> might fail in the proxy mode
+because of serialization issues. E.g. for JBoss it happens that certain
+MBeanInfo objects requested for the list operation are not serializable. This
+is a bug of JBoss, but I expect similar limitations for other application
+servers as well.
+
+=item * 
+
+Certain workarounds (like the JBoss I<"can not find MXBeans before MBeanInfo has
+been fetched"> bug) works only in agent mode.
+
+=item * 
+
+It is astonishingly hard to set up an application server for JSR-160
+export. And there are even cases (combinations of JDK and AppServer Version)
+which don't work at all properly (e.g. JDK 1.5 and JBoss 5). For certain
+application servers, detailed setup instructions are published at
+http://labs.consol.de/tags/jsr-160/
+
+=back
+
+To summarize, the proxy mode should be used only when required. The agent
+servlet on its own is more powerful than the proxy mode since it eliminates an
+additional layer, which adds to the overall complexity and performance. Also,
+minor additional features like merging of MBeanServers are not available in the
+proxy mode.
 
 =head1 INSTALLATION 
 
@@ -162,10 +268,100 @@ server for the details (look for "deployment" and "web application" (or "war)))
 To test it, you can use L<jmx4perl> with the URL of the depolyed
 agent:
 
-  jmx4perl http://jeeserver:port/j4p
+  jmx4perl http://<jeeserver>:<port>/j4p
       
 Consult L<jmx4perl> for further details. 
+
+=head2 Mule agent
+
+The mule agent is not yet distributed as binary and not included in the default
+build. You can easily build it on your by using C<mvn install> within the
+F<agent/> subdirectory. You need maven (L<http://maven.apache.org>) as build
+tool installed. The agent can be found afterwards at
+F<agent/modules/j4p-mule/target/j4p-mule-0.50-agent.jar> (note the C<-agent>
+classifier, replace the version number with the current jmx4perl version).
+
+Alternatively, the mule agent can be downloaded from out maven repository at
+L<http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/>.
+
+The unzipped agent jar needs to be stored within the Mule installation in
+F<lib/opt/>. Additionally, the Mule configuration needs to be adapted to
+contain the following section:
+
+ <management:custom-agent name="j4p-agent" class="org.jmx4perl.mule.J4pAgent">
+   <spring:property name="port" value="8899"/>
+ </management:custom-agent>
+ <management:jmx-server/>
+
+Starting up mule shoudl yield a startup message like 
+
+ *********************************************************
+ * Mule ESB and Integration Platform                     *
+ * Version: 2.2.1 Build: 14422                           *
+ * MuleSource, Inc.                                      *
+ * For more information go to http://mule.mulesource.org *
+ *                                                       *
+ * Server started: 12/9/09 3:36 PM                       *
+ * Server ID: myMule                                     *
+ * JDK: 1.6.0_15 (mixed mode)                            *
+ * OS encoding: MacRoman, Mule encoding: UTF-8           *
+ * OS: Mac OS X (10.6.2, x86_64)                         *
+ * Host: localhost (127.0.0.1)                           * 
+ *                                                       *
+ * Agents Running:                                       *
+ *   Wrapper Manager: Mule PID #0, Wrapper PID #861      *
+ *   j4p Agent: http://localhost:8899/j4p                *
+ *   JMX Agent                                           *
+ *********************************************************
+
+Note the URL for the j4p agent which can be used with C<jmx4perl> or
+C<check_jmx4perl> like
+
+ jmx4perl http://localhost:8899/j4p list
+
+which will result in an output similar to
+
+ Mule.myMule:
+    Mule.myMule:name=AllStatistics,type=org.mule.Statistics
+        Attributes:
+            Enabled                             boolean
+        Operations:
+            void logSummary()                   
+            java.lang.String printXmlSummary()  
+            java.lang.String printHtmlSummary() 
+            void clear()                        
+            java.lang.String printCSVSummary()  
  
+ ....
+ java.lang:
+    java.lang:type=Memory
+        Attributes:
+            NonHeapMemoryUsage                  CompositeData [ro] 
+            ObjectPendingFinalizationCount      int [ro]
+            Verbose                             boolean
+            HeapMemoryUsage                     CompositeData [ro]
+        Operations:
+            void gc()
+
+Note that Mule was started here with a server id myMule (startup option:
+C<-M-Dmule.serverId=myMule>). As you can see you have access to the Mule specific
+MBeans and the Java platform MXBeans (which BTW is not easy achievable using
+Mules JSR-160 agents directly).
+
+For enabling basic security the properties user and password can be set:
+
+ <management:custom-agent name="j4p-agent" class="org.jmx4perl.mule.J4pAgent">
+   <spring:property name="user" value="roland"/>
+   <spring:property name="password" value="wtf"/>
+ </management:custom-agent>
+ <management:jmx-server/>
+
+On the client side the options C<--user> and C<--password> can be used with
+C<jmx4perl> and C<check_jmx4perl> for specifying the credentials.
+
+Finally, all other options as specified as init parameters in C<j4p.war>s web.xml
+can be used as properties here as well.
+
 =head1 FEATURES
 
 =head2 Reading and Writing Attributes
@@ -180,7 +376,7 @@ operation.
 =head2 Execution of JMX operations
 
 It is easy to execute JMX operations, even with arguments. However, they same
-restriction for the argument types apply as for writing attributes: There must
+restrictions for the argument types apply as for writing attributes: There must
 be an easy way to deserialize an argument from a string representation. The
 same types as for writing attributes are supported.
 
@@ -238,7 +434,7 @@ Please note, that autodetection is not for free with respect to performance. It
 takes some considerable time to probe various servers. So, if you have the
 chance to provide the application server type in advance, you should do
 this. Said this, please note this is only relevant if you are going to use the
-aliasing feature.
+aliasing feature described below.
 
 =head2 Aliasing
 
@@ -255,20 +451,19 @@ without worrying about aliasing at all.
 
 =head2 History Tracking
 
-The agent C<j4p> can be switched into a history tracking mode, where it
-records the values for C<read>, C<write> and C<exec> operations (the return
-value for the late mode). You have to call a certain, jmx4perl specific, MBean
-to turn it on. If switched on, each request contains an additional history
-entry containing the list of historical values along with their timestamps. The
-history is stored in a list with fixed length so that the oldes value gets
-removed from the list in case of an overflow. 
+The agent C<j4p> can be switched into a history tracking mode, where it records
+the values for C<read>, C<write> and C<exec> operations. You have to call a
+certain, jmx4perl specific, MBean to turn it on. If switched on each request
+contains an additional history entry containing the list of historical values
+along with their timestamps. The history is stored in a list with fixed length
+so that the oldest value gets removed from the list in case of an overflow.
 
 =head2 Full featured Nagios plugin C<check_jmx4perl> 
 
 A full functional Nagios plugin called C<check_jmx4perl> is provided in the
 scripts directory. It can be used to monitor any JMX Mbean's attribute with a
 numeric value. Thresholds for warning and critical values can be provided in
-the formas as defined by L<Nagios::Plugin>. You can use autodetection and
+the formats as defined by L<Nagios::Plugin>. You can use autodetection and
 aliasing here as well. C<check_jmx4perl> can use relative critical and warning
 thresholds which refer to some base value taken from another MBean's
 attribute. An incremental mode can be used to measure the growth rate of
@@ -284,10 +479,10 @@ MBeans on your JEE Server.
 
 If you want to use the Nagios Plugin L<check_jmx4perl> start reading its
 documentation. A Nagios cookbook is on the roadmap. If you want to restrict
-access to you JMX MBeanServer read the next chapter in this manual which
-describes a way to build a custom agent containing a policy file. 
+access to your JMX MBeanServer read the next chapter in this manual which
+describes a way to build a custom agent containing a policy file.
 
-Next, L<JMX::Jmx4Perl> is the entry module. Use it, if you need programmatical
+Next, L<JMX::Jmx4Perl> is the entry module. Use this, if you need programmatical
 access to JMX. Don't forget to have a look into the F<examples> directory which
 contains some usage examples for L<JMX::Jmx4Perl>
 
@@ -295,6 +490,12 @@ Of course, you are free to access the agent servlet directly without the usage
 of the provided module. Even in Java ;-) A description of the request and
 response format can be found in the protocol description
 L<JMX::Jmx4Perl::Agent::Protocol>.
+
+Another resource is the jmx4perl Blog located at L<http://labs.consol.de>. It
+contains various post about different jmx4perl use case and best practices.
+Don't forget to add L<http://labs.consol.de/tags/jmx4perl/feed/rss/> to your
+RSS Feedreader if you want to keep in touch with the latest jmx4perl evolution
+(there is quite something in the pipeline).
 
 =head1 ACCESS POLICY
 
@@ -326,8 +527,10 @@ called. If the complete C<commands> section is missing, no restriction on a
 request type is in effect. In the C<mbeans> part you can provide MBeans by name
 and the allowed attributes and operations. If this section is present, only the
 MBeans listed can be accessed with the attributes and operations listed. Access
-to an attribute can be restricted further by giving a C<mode="read"> attribute to the
-C<attribute> tag in which case the attribute can be accessed read-only.
+to an attribute can be restricted further by giving a C<mode="read"> attribute
+to the C<attribute> tag in which case the attribute can be accessed
+read-only. Via the C<remote> section access to certain IP adresses and subnets
+can be restricted.
 
 =item 4.
 
@@ -357,19 +560,6 @@ A typical workflow looks like
   85124 Thu Jul 30 10:42:22 CEST 2009 WEB-INF/lib/j4p-agent.jar
       0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/classes/j4p-access.xml
  $ cp j4p.war $DEPLOYMENT_DIR/
-
-=head1 FURTHER DIRECTIONS
-
-As an supplement to the provided agent based approach, the more traditional way
-of using a JVM for remote communication would be a nice additional option. With
-help of modules like C<Java::Import> this should fit nicely in the provided
-API. 
-
-Maybe support notifications.
-
-Readline support for jmx4perl would be cool, too.
-
-Any other suggestions ?
 
 =head1 LICENSE
 
