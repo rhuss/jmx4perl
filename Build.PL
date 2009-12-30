@@ -76,6 +76,7 @@ my $class = Module::Build->subclass(
          exit 1;
       }
   }
+
   sub ACTION_buildagent {
       my $self = shift;
       use FindBin;
@@ -127,6 +128,12 @@ my $class = Module::Build->subclass(
       my $version = shift;
       my $replace_sub = shift;
 
+      my ($ma,$mi,$pa,$dev) = ($1,$2,$3,$4) if $version =~ /^(\d+)\.(\d+)(?:\.(\d+))?(?:_(\d+))?$/;
+      $pa = "0" unless $pa;
+      $version = "$ma.$mi.$pa";
+      if ($dev) {
+         $version .= ".M" . $dev;
+      }
       print "Setting version to $version in $file\n";
 
       open(F,"$file") || die "Cannot open $file : $!";

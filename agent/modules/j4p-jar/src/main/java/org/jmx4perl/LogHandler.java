@@ -1,4 +1,4 @@
-package org.jmx4perl.backend;
+package org.jmx4perl;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -29,6 +29,6 @@ package org.jmx4perl.backend;
  * @since Nov 11, 2009
  */
 public interface LogHandler {
-    void log(String msg);
+    void log(String message);
     void log(String message, Throwable t);
 }

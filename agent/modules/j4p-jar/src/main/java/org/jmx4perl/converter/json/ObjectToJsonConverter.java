@@ -10,7 +10,6 @@ import org.jmx4perl.converter.json.simplifier.UrlHandler;
 import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
-import javax.servlet.ServletConfig;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -64,8 +63,8 @@ public class ObjectToJsonConverter {
     private int hardMaxDepth,hardMaxCollectionSize,hardMaxObjects;
 
     public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter,
-                                 ServletConfig pServletConfig) {
-        initLimits(pServletConfig);
+                                 Map<String,String> pConfig) {
+        initLimits(pConfig);
 
         handlers = new ArrayList<Handler>();
 
@@ -160,18 +159,18 @@ public class ObjectToJsonConverter {
 
     // =================================================================================
 
-    private void initLimits(ServletConfig pServletConfig) {
+    private void initLimits(Map<String,String> pConfig) {
         // Max traversal depth
-        if (pServletConfig != null) {
-            String v = pServletConfig.getInitParameter("maxDepth");
+        if (pConfig != null) {
+            String v = pConfig.get("maxDepth");
             hardMaxDepth = v != null ? Integer.parseInt(v) : 0;
 
             // Max size of collections
-            v = pServletConfig.getInitParameter("maxCollectionSize");
+            v = pConfig.get("maxCollectionSize");
             hardMaxCollectionSize = v != null ? Integer.parseInt(v) : 0;
 
             // Maximum of overal objects returned by one traversal.
-            v = pServletConfig.getInitParameter("maxObjects");
+            v = pConfig.get("maxObjects");
             hardMaxObjects = v != null ? Integer.parseInt(v) : 0;
         } else {
             hardMaxDepth = 0;

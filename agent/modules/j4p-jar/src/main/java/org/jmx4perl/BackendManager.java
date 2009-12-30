@@ -1,6 +1,9 @@
-package org.jmx4perl.backend;
+package org.jmx4perl;
 
 import org.jmx4perl.JmxRequest;
+import org.jmx4perl.backend.LocalRequestDispatcher;
+import org.jmx4perl.LogHandler;
+import org.jmx4perl.backend.RequestDispatcher;
 import org.jmx4perl.config.DebugStore;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.config.RestrictorFactory;
@@ -10,12 +13,12 @@ import org.jmx4perl.history.HistoryStore;
 import org.json.simple.JSONObject;
 
 import javax.management.*;
-import javax.servlet.ServletConfig;
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -73,7 +76,7 @@ public class BackendManager {
     // List of RequestDispatchers to consult
     private List<RequestDispatcher> requestDispatchers;
 
-    public BackendManager(ServletConfig pConfig, LogHandler pLogHandler) {
+    public BackendManager(Map<String,String> pConfig, LogHandler pLogHandler) {
 
 
         // Central objects
@@ -90,7 +93,7 @@ public class BackendManager {
         localDispatcher = new LocalRequestDispatcher(objectToJsonConverter,
                                                      stringToObjectConverter,
                                                      restrictor);
-        requestDispatchers = createRequestDispatchers(pConfig.getInitParameter("dispatcherClasses"),
+        requestDispatchers = createRequestDispatchers(pConfig.get("dispatcherClasses"),
                                                       objectToJsonConverter,stringToObjectConverter,restrictor);
         requestDispatchers.add(localDispatcher);
 
@@ -177,22 +180,22 @@ public class BackendManager {
         return json;
     }
 
-    private void initStores(ServletConfig pConfig) {
+    private void initStores(Map<String,String> pConfig) {
         int maxEntries;
         try {
-            maxEntries = Integer.parseInt(pConfig.getInitParameter("historyMaxEntries"));
+            maxEntries = Integer.parseInt(pConfig.get("historyMaxEntries"));
         } catch (NumberFormatException exp) {
             maxEntries = 10;
         }
 
-        String doDebug = pConfig.getInitParameter("debug");
+        String doDebug = pConfig.get("debug");
         boolean debug = false;
         if (doDebug != null && Boolean.valueOf(doDebug)) {
             debug = true;
         }
         int maxDebugEntries = 100;
         try {
-            maxEntries = Integer.parseInt(pConfig.getInitParameter("debugMaxEntries"));
+            maxEntries = Integer.parseInt(pConfig.get("debugMaxEntries"));
         } catch (NumberFormatException exp) {
             maxDebugEntries = 100;
         }
@@ -255,4 +258,15 @@ public class BackendManager {
     public boolean isDebug() {
         return debugStore != null && debugStore.isDebug();
     }
+
+    /**
+     * Set the log handler used for log handling
+     *
+     * @param pLogHandler log handler to use
+     */
+    public void setLogHandler(LogHandler pLogHandler) {
+        logHandler = pLogHandler;
+    }
+
+
 }

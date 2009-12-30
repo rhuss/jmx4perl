@@ -1,7 +1,7 @@
 package org.jmx4perl;
 
-import org.jmx4perl.backend.BackendManager;
-import org.jmx4perl.backend.LogHandler;
+import org.jmx4perl.BackendManager;
+import org.jmx4perl.LogHandler;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
@@ -16,7 +16,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -84,7 +87,7 @@ public class AgentServlet extends HttpServlet implements LogHandler {
         httpGetHandler = newGetHttpRequestHandler();
         httpPostHandler = newPostHttpRequestHandler();
 
-        backendManager = new BackendManager(pConfig,this);
+        backendManager = new BackendManager(servletConfigAsMap(pConfig),this);
 
     }
 
@@ -225,6 +228,16 @@ public class AgentServlet extends HttpServlet implements LogHandler {
     }
 
     // =======================================================================
+
+    private Map<String, String> servletConfigAsMap(ServletConfig pConfig) {
+        Enumeration e = pConfig.getInitParameterNames();
+        Map<String,String> ret = new HashMap<String, String>();
+        while (e.hasMoreElements()) {
+            String key = (String) e.nextElement();
+            ret.put(key,pConfig.getInitParameter(key));
+        }
+        return ret;
+    }
 
     private void logRequest(HttpServletRequest pReq, JmxRequest pJmxReq) {
         backendManager.log("URI: " + pReq.getRequestURI());

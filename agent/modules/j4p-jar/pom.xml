@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p</artifactId>
-  <version>0.51</version>
+  <version>0.55.0.M1</version>
   <packaging>jar</packaging>
   <name>j4p-jar</name>
   <description>j4p - jar file containing servlet and helper classes</description>
@@ -16,17 +16,21 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
+  <properties>
+    <org.json.simple>1.1</org.json.simple>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>com.googlecode.json-simple</groupId>
       <artifactId>json-simple</artifactId>
-      <version>1.1</version>
+      <version>${org.json.simple}</version>
     </dependency>
 
     <dependency>
@@ -46,6 +50,38 @@
           <target>1.5</target>
         </configuration>
       </plugin>
+
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <instructions>
+            <Export-Package>org.jmx4perl</Export-Package>
+            <Private-Package>org.jmx4perl.*</Private-Package>
+            <Bundle-SymbolicName>org.jmx4perl</Bundle-SymbolicName>
+            <Bundle-Description>Jmx4Perl Agent Classes (no service)</Bundle-Description>
+          </instructions>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 

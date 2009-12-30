@@ -32,7 +32,7 @@ package org.jmx4perl;
  */
 public final class Version {
 
-    private static final String VERSION = "0.51";
+    private static final String VERSION = "0.55.0.M1";
 
     private Version() {}
 
