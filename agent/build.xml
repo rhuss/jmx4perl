@@ -13,8 +13,8 @@
   <target name="jdk14" depends="war14" description="Build JDK 1.4 legacy agent (j4p14.war)"  />
 
   <!-- Get version from maven build -->
-  <xmlproperty file="pom.xml"/>
-  <property name="version" value="${project.properties.applicationVersion}"/>
+  <xmlproperty file="modules/j4p-jar/pom.xml"/>
+  <property name="version" value="${project.version}"/>
 
   <!-- Preparations -->
   <target name="mkdir">
@@ -88,7 +88,7 @@
 
   <!-- ===============================================================  -->
   <!-- Integration Test WAR -->
-  
+
   <target name="mkdir-it">
     <mkdir dir="modules/j4p-it/target/classes"/>
   </target>
@@ -161,7 +161,7 @@
           <include name="*.jar"/>
         </fileset>
       </classpath>
-    </javac>    
+    </javac>
   </target>
 
   <target name="jar14" depends="compile14">
@@ -169,7 +169,7 @@
   </target>
 
   <target name="war14" depends="jar14,copy_access_policy14">
-    <war destfile="jdk14/j4p14-war/target/${war-name-14}" 
+    <war destfile="jdk14/j4p14-war/target/${war-name-14}"
          webxml="jdk14/j4p14-war/src/main/webapp/WEB-INF/web.xml">
       <lib dir="lib">
         <exclude name="servlet-api*"/>
@@ -178,7 +178,7 @@
       <lib dir="jdk14/j4p14-jar/target">
         <include name="j4p14-agent.jar"/>
       </lib>
-      <classes dir="jdk14/j4p14-war/target/classes"/>      
+      <classes dir="jdk14/j4p14-war/target/classes"/>
     </war>
     <copy file="jdk14/j4p14-war/target/${war-name-14}" todir="."/>
   </target>
