@@ -1,3 +1,6 @@
+0.51 (2009-12-30)
+  - Quickfix for a badly packaged agent/j4p.war
+
 0.50 (2009-12-24)
   - Protocol of j4p.war has been extended to enable proxy mode
   - Added '--target' to check_jmx4perl for using proxy mode
