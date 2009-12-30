@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jmx4perl</groupId>
+  <artifactId>j4p-osgi</artifactId>
+  <version>0.55.0.M1</version>
+  <packaging>bundle</packaging>
+  <name>j4p-osgi</name>
+  <description>j4p-osgi - OSGi Bundle</description>
+
+  <parent>
+    <groupId>org.jmx4perl</groupId>
+    <artifactId>j4p-parent</artifactId>
+    <version>2</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jmx4perl</groupId>
+      <artifactId>j4p</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.4</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <version>4.2.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>4.2.0</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!--<plugin>-->
+        <!--<groupId>org.apache.maven.plugins</groupId>-->
+        <!--<artifactId>maven-dependency-plugin</artifactId>-->
+        <!--<executions>-->
+          <!--<execution>-->
+            <!--<id>unpack-dependencies</id>-->
+            <!--<phase>process-classes</phase>-->
+            <!--<goals>-->
+              <!--<goal>unpack-dependencies</goal>-->
+            <!--</goals>-->
+            <!--<configuration>-->
+              <!--<outputDirectory>${project.build.directory}/classes</outputDirectory>-->
+            <!--</configuration>-->
+          <!--</execution>-->
+        <!--</executions>-->
+      <!--</plugin>-->
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.0.1</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>org.jmx4perl.osgi</Bundle-SymbolicName>
+            <Bundle-Description>Jmx4Perl agent exposing JMX via HTTP/JSON</Bundle-Description>
+            <Bundle-Version>${project.version}</Bundle-Version>
+            <Bundle-Activator>org.jmx4perl.osgi.J4pActivator</Bundle-Activator>
+            <Bundle-Name>Jmx4Perl Agent</Bundle-Name>
+            <Embed-Directory>lib</Embed-Directory>
+            <Embed-Dependency>json-simple;inline=false,j4p;inline=true</Embed-Dependency>
+            <_exportcontents>org.jmx4perl;version="${project.version}"</_exportcontents>
+          </instructions>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+
+</project>
