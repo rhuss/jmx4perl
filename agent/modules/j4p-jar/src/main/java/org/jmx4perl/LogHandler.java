@@ -29,6 +29,7 @@ package org.jmx4perl;
  * @since Nov 11, 2009
  */
 public interface LogHandler {
-    void log(String message);
-    void log(String message, Throwable t);
+    void debug(String message);
+    void info(String message);
+    void error(String message, Throwable t);
 }

@@ -52,37 +52,11 @@
 
   <build>
     <plugins>
-      <!--<plugin>-->
-        <!--<groupId>org.apache.maven.plugins</groupId>-->
-        <!--<artifactId>maven-dependency-plugin</artifactId>-->
-        <!--<executions>-->
-          <!--<execution>-->
-            <!--<id>unpack-dependencies</id>-->
-            <!--<phase>process-classes</phase>-->
-            <!--<goals>-->
-              <!--<goal>unpack-dependencies</goal>-->
-            <!--</goals>-->
-            <!--<configuration>-->
-              <!--<outputDirectory>${project.build.directory}/classes</outputDirectory>-->
-            <!--</configuration>-->
-          <!--</execution>-->
-        <!--</executions>-->
-      <!--</plugin>-->
-
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.0.1</version>
         <extensions>true</extensions>
-        <executions>
-          <execution>
-            <id>bundle-manifest</id>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>manifest</goal>
-            </goals>
-          </execution>
-        </executions>
+
         <configuration>
           <instructions>
             <Bundle-SymbolicName>org.jmx4perl.osgi</Bundle-SymbolicName>
@@ -92,22 +66,34 @@
             <Bundle-Name>Jmx4Perl Agent</Bundle-Name>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-Dependency>json-simple;inline=false,j4p;inline=true</Embed-Dependency>
+            <!-- Needed because we export an embedded package only -->
             <_exportcontents>org.jmx4perl;version="${project.version}"</_exportcontents>
+            <Import-Package>!org.jmx4perl,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
-
+      
       <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
+        <groupId>org.ops4j</groupId>
+        <artifactId>maven-pax-plugin</artifactId>
+        <version>1.4</version>
         <configuration>
-          <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-          </archive>
+          <noDependencies>true</noDependencies>
+          <profiles>log,web,compendium</profiles>
         </configuration>
       </plugin>
 
     </plugins>
   </build>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>ops4j.releases</id>
+      <url>http://repository.ops4j.org/maven2</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 
 </project>
