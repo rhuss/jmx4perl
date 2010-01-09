@@ -4,16 +4,19 @@ import org.jmx4perl.AgentServlet;
 import org.jmx4perl.Config;
 import org.jmx4perl.LogHandler;
 import org.osgi.framework.*;
+import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
 import javax.servlet.ServletException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import static org.jmx4perl.Config.AGENT_CONTEXT;
+import static org.jmx4perl.Config.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -69,6 +72,9 @@ public class J4pActivator implements BundleActivator {
         }
         httpServiceListener = createServiceListener();
         pBundleContext.addServiceListener(httpServiceListener,"(objectClass=" + HttpService.class.getName() + ")");
+
+        bundleContext.registerService(MBeanServer.class
+                .getCanonicalName(), MBeanServerFactory.createMBeanServer(), null);
     }
 
 
@@ -102,7 +108,7 @@ public class J4pActivator implements BundleActivator {
                 } catch (NamespaceException e) {
                     LogService logService = (LogService) logTracker.getService();
                     if (logService != null) {
-                        logService.log(LogService.LOG_ERROR,"Namespace Exception:" + e,e);
+                        logService.log(LogService.LOG_ERROR,"Namespace Exception: " + e,e);
                     }
                 }
             }
@@ -119,7 +125,20 @@ public class J4pActivator implements BundleActivator {
 
     private void registerServlet(ServiceReference pRef, Dictionary<String, String> pConfig) throws ServletException, NamespaceException {
         HttpService service = (HttpService) bundleContext.getService(pRef);
-        service.registerServlet(getConfiguration(AGENT_CONTEXT), createServlet(),pConfig, null);
+        service.registerServlet(getConfiguration(AGENT_CONTEXT),
+                                createServlet(),
+                                pConfig,
+                                getHttpContext());
+    }
+
+    private HttpContext getHttpContext() {
+        final String user = getConfiguration(USER);
+        final String password = getConfiguration(PASSWORD);
+        if (user == null) {
+            return new J4pHttpContext();
+        } else {
+            return new J4pAuthenticatedHttpContext(user, password);
+        }
     }
 
     private AgentServlet createServlet() {
@@ -170,5 +189,10 @@ public class J4pActivator implements BundleActivator {
         }
         return value;
     }
+
+
+
+    // ===========================================================================================
+    // Context to use:
 
 }

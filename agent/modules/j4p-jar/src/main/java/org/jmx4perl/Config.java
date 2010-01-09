@@ -55,7 +55,13 @@ public enum Config {
     MAX_OBJECTS("maxObjects","0"),
 
     // Context used for agent, used e.g. in the OSGi activator
-    AGENT_CONTEXT("agentContext","/j4p");
+    // (but not for the servlet, this is done in web.xml)
+    AGENT_CONTEXT("agentContext","/j4p"),
+
+    // User and password for authentication purposes. 
+    USER("user"),
+    PASSWORD("password");
+
 
     private String key;
     private String defaultValue;
