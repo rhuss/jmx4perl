@@ -65,6 +65,7 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/backend/LocalRequestDispatcher.
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/backend/MBeanServerHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/backend/RequestDispatcher.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/BackendManager.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/Config.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/AllowAllRestrictor.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/Config.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/config/ConfigMBean.java
@@ -115,6 +116,8 @@ agent/modules/j4p-mule/src/main/assembly/agent.xml
 agent/modules/j4p-mule/src/main/java/org/jmx4perl/mule/J4pAgent.java
 agent/modules/j4p-osgi/pom.xml
 agent/modules/j4p-osgi/src/main/java/org/jmx4perl/osgi/J4pActivator.java
+agent/modules/j4p-osgi/src/main/java/org/jmx4perl/osgi/J4pAuthenticatedHttpContext.java
+agent/modules/j4p-osgi/src/main/java/org/jmx4perl/osgi/J4pHttpContext.java
 agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml
