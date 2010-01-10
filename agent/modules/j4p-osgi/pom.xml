@@ -48,12 +48,6 @@
       <version>4.2.0</version>
       <scope>provided</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.apache.aries.jmx</groupId>
-      <artifactId>org.apache.aries.jmx</artifactId>
-      <version>1.0.0-incubating-SNAPSHOT</version>
-    </dependency>
   </dependencies>
 
   <build>
@@ -101,13 +95,4 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
-  <repositories>
-    <repository>
-      <id>apache.snapshot</id>
-      <url>http://repository.apache.org/snapshots</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 </project>

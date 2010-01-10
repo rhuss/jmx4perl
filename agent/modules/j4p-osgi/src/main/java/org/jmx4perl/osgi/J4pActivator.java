@@ -72,9 +72,6 @@ public class J4pActivator implements BundleActivator {
         }
         httpServiceListener = createServiceListener();
         pBundleContext.addServiceListener(httpServiceListener,"(objectClass=" + HttpService.class.getName() + ")");
-
-        bundleContext.registerService(MBeanServer.class
-                .getCanonicalName(), MBeanServerFactory.createMBeanServer(), null);
     }
 
 

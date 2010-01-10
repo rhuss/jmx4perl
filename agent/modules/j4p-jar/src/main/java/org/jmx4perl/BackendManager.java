@@ -152,11 +152,19 @@ public class BackendManager {
     public JSONObject handleRequest(JmxRequest pJmxReq) throws InstanceNotFoundException, AttributeNotFoundException,
             ReflectionException, MBeanException, IOException {
 
+        boolean debug = isDebug() && !"debugInfo".equals(pJmxReq.getOperation());
         Object retValue = null;
         boolean found = false;
         for (RequestDispatcher dispatcher : requestDispatchers) {
             if (dispatcher.canHandle(pJmxReq)) {
+                long time = 0;
+                if (debug) {
+                    time = System.currentTimeMillis();
+                }
                 retValue = dispatcher.dispatchRequest(pJmxReq);
+                if (debug) {
+                    debug("Execution time: " + (System.currentTimeMillis() - time) + " ms");
+                }
                 found = true;
                 break;
             }
@@ -168,7 +176,6 @@ public class BackendManager {
 
         // Update global history store
         historyStore.updateAndAdd(pJmxReq,json);
-        boolean debug = isDebug() && !"debugInfo".equals(pJmxReq.getOperation());
         if (debug) {
             debug("Response: " + json);
         }

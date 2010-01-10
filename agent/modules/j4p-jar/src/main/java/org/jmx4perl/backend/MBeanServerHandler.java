@@ -48,6 +48,7 @@ import java.util.Set;
 public class MBeanServerHandler {
 
     // The MBeanServers to use
+    // TODO: Dont cache them here ! Important for OSGi usage ...
     private Set<MBeanServer> mBeanServers;
     private Set<MBeanServerConnection> mBeanServerConnections;
 
@@ -72,7 +73,7 @@ public class MBeanServerHandler {
             try {
                 return pRequestHandler.handleRequest(mBeanServerConnections,pJmxReq);
             } catch (IOException e) {
-                throw new IllegalStateException("Internal: IOException " + e + ". Shouldnt happen.",e);
+                throw new IllegalStateException("Internal: IOException " + e + ". Shouldn't happen.",e);
             }
         } else {
             try {
@@ -87,8 +88,8 @@ public class MBeanServerHandler {
                         objNotFoundException = exp;
                     } catch (AttributeNotFoundException exp) {
                         attrException = exp;
-                    } catch (IOException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    } catch (IOException exp) {
+                        throw new IllegalStateException("I/O Error while dispatching",exp);
                     }
                 }
                 if (attrException != null) {
@@ -136,7 +137,6 @@ public class MBeanServerHandler {
             if (lastExp != null) {
                 throw new IllegalStateException("Could not register " + pMBean + ": " + lastExp,lastExp);
             }
-            //ManagementFactory.getPlatformMBeanServer().registerMBean(configMBean,name);
         }
         throw new IllegalStateException("No MBeanServer initialized yet");
     }
