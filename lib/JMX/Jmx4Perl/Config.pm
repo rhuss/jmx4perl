@@ -62,32 +62,45 @@ JMX::Jmx4Perl::Config - Configuration file support for Jmx4Perl
 
 =over
 
-=item $cfg = JMX::Jmx4Perl::Config->new($file)
+=item $cfg = JMX::Jmx4Perl::Config->new($file_or_hash)
 
 Create a new configuration object with the given file name. If no file name 
 is given the configuration F<~/.j4p> is tried. If the file does not 
 exist, C<server_config_exists> will alway return C<false> and
 C<get_server_config> will always return C<undef>
 
+If a hash is given as argument, this hash is used to extract the server 
+information.
+
 =cut 
 
 sub new { 
     my $class = shift;
-    my $file = shift;
-    $file = $ENV{HOME} . "/.j4p" unless $file;
+    my $file_or_hash = shift;
     my $self = {};
-    if (-e $file) {
-        if ($HAS_CONFIG_GENERAL) {
-            $self->{config} =           
-                 &_prepare_server_hash({
-                     new Config::General(-ConfigFile => $file,-LowerCaseNames => 1)->getall});
-        } else {
-            warn "Configuration file $file found, but Config::General is not installed.\n" . 
-              "Please install Config::General, for the moment we are ignoring the content of $file\n\n";
+    my $config = undef;;
+    if (!ref($file_or_hash)) {
+        my $file = $file_or_hash ? $file_or_hash : $ENV{HOME} . "/.j4p";
+        if (-e $file) {
+            if ($HAS_CONFIG_GENERAL) {
+                $config = {
+                           new Config::General(-ConfigFile => $file,-LowerCaseNames => 1)->getall
+                          };
+            } else {
+                warn "Configuration file $file found, but Config::General is not installed.\n" . 
+                  "Please install Config::General, for the moment we are ignoring the content of $file\n\n";
+            }
         }
+    } elsif (ref($file_or_hash) eq "HASH") {
+        $config = $file_or_hash;
     } else {
-        $self->{config} = {};
+        die "Invalid argument ",$file_or_hash;
     }
+    if ($config) {
+        $self->{config} = &_prepare_server_hash($config);
+        $self->{servers} = &_get_configured_servers($config);
+    }
+
     bless $self,(ref($class) || $class);
     return $self;   
 }
@@ -116,7 +129,18 @@ if no such configuration exist.
 sub get_server_config {
     my $self = shift;
     my $name = shift || die "No server name given to reference to get config for";
-    return $self->{config}->{$name};
+    return $self->{config} ? $self->{config}->{$name} : undef;
+}
+
+=item $servers = $config->get_servers 
+
+Get an arrayref to all configured servers or an empty arrayref.
+
+=cut
+
+sub get_servers {
+    my $self = shift;
+    return $self->{servers} || [];
 }
 
 sub _prepare_server_hash {
