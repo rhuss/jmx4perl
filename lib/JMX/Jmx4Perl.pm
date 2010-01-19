@@ -431,7 +431,7 @@ sub execute {
     }
     if ($response->is_error) {
         croak "No MBean ".$mbean." with operation ".$operation.
-          (@$op_args ?  " (Args: [".join(",",@$op_args)."]" : "")." found on the server side"
+          (@$op_args ?  " (Args: [".join(",",@$op_args)."]" : "")."] found on the server side"
             if $response->status == 404;
         croak "Error executing operation $operation on MBean $mbean: ",$response->error_text;
     }
