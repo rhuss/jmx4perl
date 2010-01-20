@@ -422,6 +422,7 @@ sub _check_for_error {
     if ($resp->is_error) {
         print STDERR "ERROR: ",$resp->error_text,"\n";
         if ($opts{verbose}) {
+            print STDERR "Content:\n" . $resp->{content} if $resp->{content};
             if ($resp->stacktrace) {
                 print STDERR "Server Stacktrace:\n";
                 print STDERR $resp->stacktrace;

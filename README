@@ -77,7 +77,7 @@ INSTALLATION
 SUPPORTED APPLICATION SERVERS
   
   The following Java Application Servers has been confirmed to work
-  with jmx4perl both in agent mode :
+  with jmx4perl in agent mode :
 
   * JBoss 4.2.3 GA & 5.1.0 GA
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
