@@ -83,6 +83,10 @@ public class ExecHandler extends JsonRequestHandler {
         try {
             MBeanInfo mBeanInfo = pServer.getMBeanInfo(pRequest.getObjectName());
             for (MBeanOperationInfo opInfo : mBeanInfo.getOperations()) {
+                // TODO: There can be more than one MBean operation with the same name (overloaded)
+                // IDEA: - Take the number of arguments into account, for types this gets too hary.
+                //       - For overloaded operations with the same number of args (nasty!) try them in turn
+                //         take next if parameter conversion fails.
                 if (opInfo.getName().equals(pRequest.getOperation())) {
                     MBeanParameterInfo[] pInfos = opInfo.getSignature();
                     String[] types = new String[pInfos.length];

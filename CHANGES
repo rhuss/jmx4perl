@@ -1,6 +1,7 @@
 0.55 
   - OSGi bundle (including dependencies) for exposing JSON export via
     the OSGi HTTP-Service. It's in agent/modules/j4p-osgi
+  - Refined error handling
 
 0.51 (2009-12-30)
   - Quickfix for a badly packaged agent/j4p.war
