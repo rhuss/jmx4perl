@@ -6,11 +6,9 @@
 <project name="json-jmx-agent" default="main" basedir=".">
 
   <property name="war-name" value="j4p.war"/>
-  <property name="war-name-14" value="j4p14.war"/>
   <property name="it-war-name" value="j4p-it.war"/>
 
   <target name="main" depends="war,it-war" description="Build agent (j4p.war) and integration test (j4p-it.war)"/>
-  <target name="jdk14" depends="war14" description="Build JDK 1.4 legacy agent (j4p14.war)"  />
 
   <!-- Get version from maven build -->
   <xmlproperty file="modules/j4p-jar/pom.xml"/>
@@ -131,55 +129,8 @@
       <fileset dir="modules/j4p-war/target" includes="**/*"/>
       <fileset dir="modules/j4p-jsr160/target" includes="**/*"/>
       <fileset dir="modules/j4p-it/target" includes="**/*"/>
-      <fileset dir="jdk14/j4p14-jar/target" includes="**/*"/>
-      <fileset dir="jdk14/j4p14-war/target" includes="**/*"/>
       <fileset dir="." includes="*.war"/>
     </delete>
   </target>
 
-  <!-- ========================================================= -->
-  <!-- JDK 1.4 Support  -->
-
-  <target name="mkdir14">
-    <mkdir dir="jdk14/j4p14-jar/target/classes"/>
-    <mkdir dir="jdk14/j4p14-war/target/classes"/>
-  </target>
-
-  <target name="copy_access_policy14" depends="check_for_access_policy" if="j4p-access.available" >
-    <copy file="j4p-access.xml" todir="jdk14/j4p14-war/target/classes"/>
-  </target>
-
-  <target name="compile14" depends="mkdir14">
-    <javac 	srcdir="jdk14/j4p14-jar/src/main/java"
-            destdir="jdk14/j4p14-jar/target/classes"
-            includes="**/*.java"
-            debug="true"
-            target="1.4"
-            source="1.4">
-      <classpath>
-        <fileset dir="lib">
-          <include name="*.jar"/>
-        </fileset>
-      </classpath>
-    </javac>
-  </target>
-
-  <target name="jar14" depends="compile14">
-    <jar destfile="jdk14/j4p14-jar/target/j4p14-agent.jar" basedir="jdk14/j4p14-jar/target/classes"/>
-  </target>
-
-  <target name="war14" depends="jar14,copy_access_policy14">
-    <war destfile="jdk14/j4p14-war/target/${war-name-14}"
-         webxml="jdk14/j4p14-war/src/main/webapp/WEB-INF/web.xml">
-      <lib dir="lib">
-        <exclude name="servlet-api*"/>
-        <exclude name="README"/>
-      </lib>
-      <lib dir="jdk14/j4p14-jar/target">
-        <include name="j4p14-agent.jar"/>
-      </lib>
-      <classes dir="jdk14/j4p14-war/target/classes"/>
-    </war>
-    <copy file="jdk14/j4p14-war/target/${war-name-14}" todir="."/>
-  </target>
 </project>
