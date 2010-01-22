@@ -1,7 +1,5 @@
 package org.jmx4perl;
 
-import org.jmx4perl.backend.BackendManager;
-import org.jmx4perl.backend.LogHandler;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
@@ -16,7 +14,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -66,7 +67,7 @@ import java.util.List;
  * @author roland@cpan.org
  * @since Apr 18, 2009
  */
-public class AgentServlet extends HttpServlet implements LogHandler {
+public class AgentServlet extends HttpServlet {
 
     private static final long serialVersionUID = 42L;
 
@@ -76,6 +77,17 @@ public class AgentServlet extends HttpServlet implements LogHandler {
     // Backend dispatcher
     private BackendManager backendManager;
 
+    // Used for logging
+    private LogHandler logHandler;
+
+    public AgentServlet() {
+        this(null);
+    }
+
+    public AgentServlet(LogHandler pLogHandler) {
+        logHandler = pLogHandler != null ? pLogHandler : getDefaultLogHandler();
+    }
+
     @Override
     public void init(ServletConfig pConfig) throws ServletException {
         super.init(pConfig);
@@ -84,8 +96,7 @@ public class AgentServlet extends HttpServlet implements LogHandler {
         httpGetHandler = newGetHttpRequestHandler();
         httpPostHandler = newPostHttpRequestHandler();
 
-        backendManager = new BackendManager(pConfig,this);
-
+        backendManager = new BackendManager(servletConfigAsMap(pConfig),logHandler);
     }
 
     @Override
@@ -116,7 +127,7 @@ public class AgentServlet extends HttpServlet implements LogHandler {
             // Dispatch for the proper HTTP request method
             json = pReqHandler.handleRequest(pReq,pResp);
             code = extractResultCode(json);
-            if (backendManager.isDebug()) backendManager.log("Response: " + json);
+            if (backendManager.isDebug()) backendManager.info("Response: " + json);
         } catch (IllegalArgumentException exp) {
             json = getErrorJSON(code = 400,exp);
         } catch (IllegalStateException exp) {
@@ -226,10 +237,23 @@ public class AgentServlet extends HttpServlet implements LogHandler {
 
     // =======================================================================
 
+    private Map<Config, String> servletConfigAsMap(ServletConfig pConfig) {
+        Enumeration e = pConfig.getInitParameterNames();
+        Map<Config,String> ret = new HashMap<Config, String>();
+        while (e.hasMoreElements()) {
+            String keyS = (String) e.nextElement();
+            Config key = Config.getByKey(keyS);
+            if (key != null) {
+                ret.put(key,pConfig.getInitParameter(keyS));
+            }
+        }
+        return ret;
+    }
+
     private void logRequest(HttpServletRequest pReq, JmxRequest pJmxReq) {
-        backendManager.log("URI: " + pReq.getRequestURI());
-        backendManager.log("Path-Info: " + pReq.getPathInfo());
-        backendManager.log("Request: " + pJmxReq.toString());
+        logHandler.debug("URI: " + pReq.getRequestURI());
+        logHandler.debug("Path-Info: " + pReq.getPathInfo());
+        logHandler.debug("Request: " + pJmxReq.toString());
     }
 
     private void checkClientIPAccess(HttpServletRequest pReq) {
@@ -247,7 +271,7 @@ public class AgentServlet extends HttpServlet implements LogHandler {
         pExp.printStackTrace(new PrintWriter(writer));
         jsonObject.put("stacktrace",writer.toString());
         if (backendManager.isDebug()) {
-            backendManager.log("Error " + pErrorCode,pExp);
+            backendManager.error("Error " + pErrorCode,pExp);
         }
         return jsonObject;
     }
@@ -264,6 +288,22 @@ public class AgentServlet extends HttpServlet implements LogHandler {
         pResp.setStatus(pStatusCode);
         PrintWriter writer = pResp.getWriter();
         writer.write(pJsonTxt);
+    }
+
+    private LogHandler getDefaultLogHandler() {
+        return new LogHandler() {
+            public void debug(String message) {
+                log(message);
+            }
+
+            public void info(String message) {
+                log(message);
+            }
+
+            public void error(String message, Throwable t) {
+                log(message,t);
+            }
+        };
     }
 
 }

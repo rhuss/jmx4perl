@@ -5,7 +5,7 @@
 
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-it</artifactId>
-  <version>${applicationVersion}</version>
+  <version>0.55.0.M2</version>
   <packaging>war</packaging>
   <name>j4p-it</name>
   <description>j4p - servlet used for integration testing</description>
@@ -13,7 +13,7 @@
   <parent>
     <groupId>org.jmx4perl</groupId>
     <artifactId>j4p-parent</artifactId>
-    <version>1</version>
+    <version>2</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -21,7 +21,7 @@
     <dependency>
       <groupId>org.jmx4perl</groupId>
       <artifactId>j4p</artifactId>
-      <version>${applicationVersion}</version>
+      <version>${project.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.json</groupId>
@@ -33,7 +33,6 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
-       <version>2.4</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>

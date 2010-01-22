@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.50_4";
+$VERSION = "0.55_2";
 
 my $REGISTRY = {
                 # Agent based
@@ -431,7 +431,7 @@ sub execute {
     }
     if ($response->is_error) {
         croak "No MBean ".$mbean." with operation ".$operation.
-          (@$op_args ?  " (Args: [".join(",",@$op_args)."]" : "")." found on the server side"
+          (@$op_args ?  " (Args: [".join(",",@$op_args)."]" : "")."] found on the server side"
             if $response->status == 404;
         croak "Error executing operation $operation on MBean $mbean: ",$response->error_text;
     }

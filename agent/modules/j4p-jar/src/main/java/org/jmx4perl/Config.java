@@ -1,0 +1,113 @@
+package org.jmx4perl;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/*
+ * jmx4perl - WAR Agent for exporting JMX via JSON
+ *
+ * Copyright (C) 2009 Roland Huß, roland@cpan.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * A commercial license is available as well. Please contact roland@cpan.org for
+ * further details.
+ */
+
+/**
+ * @author roland
+ * @since Jan 1, 2010
+ */
+public enum Config {
+
+    // Maximum number of history entries to keep
+    HISTORY_MAX_ENTRIES("historyMaxEntries","10"),
+
+    // Whether debug is switched on or not
+    DEBUG("debug","false"),
+
+    // Maximum number of debug entries to hold
+    DEBUG_MAX_ENTRIES("debugMaxEntries","100"),
+
+    // Dispatcher to use
+    DISPATCHER_CLASSES("dispatcherClasses"),
+
+    // Maximum traversal depth for serialization of complex objects.
+    MAX_DEPTH("maxDepth","0"),
+
+    // Maximum size of collections returned during serialization.
+    // If larger, the collection is truncated
+    MAX_COLLECTIONS_SIZE("maxCollectionSize","0"),
+
+    // Maximum number of objects returned by serialization
+    MAX_OBJECTS("maxObjects","0"),
+
+    // Context used for agent, used e.g. in the OSGi activator
+    // (but not for the servlet, this is done in web.xml)
+    AGENT_CONTEXT("agentContext","/j4p"),
+
+    // User and password for authentication purposes. 
+    USER("user"),
+    PASSWORD("password");
+
+
+    private String key;
+    private String defaultValue;
+    private static Map<String, Config> keyByName;
+
+    Config(String pValue) {
+        this(pValue,null);
+    }
+
+    Config(String pValue, String pDefault) {
+        key = pValue;
+        defaultValue = pDefault;
+    }
+
+    @Override
+    public String toString() {
+        return key;
+    }
+
+    public static Config getByKey(String pKeyS) {
+        if (keyByName == null) {
+            synchronized (Config.class) {
+                keyByName = new HashMap<String, Config>();
+                for (Config ck : Config.values()) {
+                    keyByName.put(ck.getKeyValue(),ck);
+                }
+            }
+        }
+        return keyByName.get(pKeyS);
+    }
+
+    public String getKeyValue() {
+        return key;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    // Extract value from map, including a default value if
+    // value is not set
+    public String getValue(Map<Config, String> pConfig) {
+        String value = pConfig.get(this);
+        if (value == null) {
+            value = this.getDefaultValue();
+        }
+        return value;
+    }
+}

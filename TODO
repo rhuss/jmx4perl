@@ -6,3 +6,8 @@
 08 Security options in Agent to restrict operations
 09 User/Password authentication in web.xml
 10 Bean Path accessor.
+11 'attributes' on a single bean
+12 Move 'get_attributes' to Jmx4Perl
+13 OSGi bundle for jmx4perl (using HTTP-Service)
+14 JSON Schema for protocol
+

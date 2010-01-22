@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-parent</artifactId>
-  <version>1</version>
+  <version>2</version>
   <name>j4p-parent</name>
   <description>j4p parent pom</description>
 
@@ -16,6 +16,7 @@
     <module>modules/j4p-it</module>
     <module>modules/j4p-jsr160</module>
     <module>modules/j4p-mule</module>
+    <module>modules/j4p-osgi</module>
   </modules>
 
   <build>
@@ -30,6 +31,16 @@
     </plugins>
   </build>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+        <version>2.4</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <developers>
     <developer>
       <name>Roland Huss</name>
@@ -42,8 +53,44 @@
     </developer>
   </developers>
 
-  <properties>
-    <applicationVersion>0.50_4</applicationVersion>
-  </properties>
-  
+  <pluginRepositories>
+    <pluginRepository>
+      <id>com.springsource.repository.bundles.milestone</id>
+      <name>SpringSource Enterprise Bundle Repository</name>
+      <url>http://repository.springsource.com/maven/bundles/milestone</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <profiles>
+    <profile>
+      <id>dist-labs</id>
+      <distributionManagement>
+        <repository>
+          <id>consol-labs-release</id>
+          <url>scpexe://labs.consol.de/home/maven-repository/www/htdocs/repository</url>
+        </repository>
+        <snapshotRepository>
+          <id>consol-labs-snapshots</id>
+          <url>scpexe://labs.consol.de/home/maven-repository/www/htdocs/snapshots-repository</url>
+        </snapshotRepository>
+      </distributionManagement>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.1.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

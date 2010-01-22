@@ -1,16 +1,17 @@
 package org.jmx4perl.converter.json;
 
 
+import org.jmx4perl.Config;
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.simplifier.ClassHandler;
 import org.jmx4perl.converter.json.simplifier.DomElementHandler;
 import org.jmx4perl.converter.json.simplifier.FileHandler;
 import org.jmx4perl.converter.json.simplifier.UrlHandler;
-import org.json.simple.JSONObject;
+import static org.jmx4perl.Config.*;
 
+import org.json.simple.JSONObject;
 import javax.management.AttributeNotFoundException;
-import javax.servlet.ServletConfig;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -64,8 +65,8 @@ public class ObjectToJsonConverter {
     private int hardMaxDepth,hardMaxCollectionSize,hardMaxObjects;
 
     public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter,
-                                 ServletConfig pServletConfig) {
-        initLimits(pServletConfig);
+                                 Map<Config,String> pConfig) {
+        initLimits(pConfig);
 
         handlers = new ArrayList<Handler>();
 
@@ -160,19 +161,16 @@ public class ObjectToJsonConverter {
 
     // =================================================================================
 
-    private void initLimits(ServletConfig pServletConfig) {
+    private void initLimits(Map<Config, String> pConfig) {
         // Max traversal depth
-        if (pServletConfig != null) {
-            String v = pServletConfig.getInitParameter("maxDepth");
-            hardMaxDepth = v != null ? Integer.parseInt(v) : 0;
+        if (pConfig != null) {
+            hardMaxDepth = Integer.parseInt(MAX_DEPTH.getValue(pConfig));
 
             // Max size of collections
-            v = pServletConfig.getInitParameter("maxCollectionSize");
-            hardMaxCollectionSize = v != null ? Integer.parseInt(v) : 0;
+            hardMaxCollectionSize = Integer.parseInt(MAX_COLLECTIONS_SIZE.getValue(pConfig));
 
             // Maximum of overal objects returned by one traversal.
-            v = pServletConfig.getInitParameter("maxObjects");
-            hardMaxObjects = v != null ? Integer.parseInt(v) : 0;
+            hardMaxObjects = Integer.parseInt(MAX_OBJECTS.getValue(pConfig));
         } else {
             hardMaxDepth = 0;
             hardMaxCollectionSize = 0;

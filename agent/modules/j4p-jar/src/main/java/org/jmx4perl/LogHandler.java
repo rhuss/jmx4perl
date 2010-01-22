@@ -24,19 +24,12 @@ package org.jmx4perl;
  */
 
 /**
- * Class holding the version of this agent. This gets updated automatically
- * when jmx4perl is build.
- *
+ * Simple log handler for dispatching logging to e.g. a {@link javax.servlet.http.HttpServlet}
  * @author roland
- * @since Jun 11, 2009
+ * @since Nov 11, 2009
  */
-public final class Version {
-
-    private static final String VERSION = "0.55.0.M2";
-
-    private Version() {}
-
-    public static String getVersion() {
-        return VERSION;
-    }
+public interface LogHandler {
+    void debug(String message);
+    void info(String message);
+    void error(String message, Throwable t);
 }

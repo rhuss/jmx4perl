@@ -108,6 +108,9 @@ public class ListHandler extends JsonRequestHandler {
             map.put("args",argList);
             map.put("ret",opInfo.getReturnType());
             map.put("desc",opInfo.getDescription());
+            // TODO: There can be more than one operation with the same name
+            // IDEA: In case of overloading use an array of maps as value with the variants within the list
+            // Check whether this is somewhat backward compatible
             opMap.put(opInfo.getName(),map);
         }
         if (opMap.size() > 0) {

@@ -69,4 +69,6 @@ x/.*
 it/test_log.txt
 jmx_remote.txt
 examples/remote.pl
-
+release.txt
+agent/modules/j4p-osgi/runner/*
+osgi.txt

@@ -139,6 +139,18 @@ sub init {
     return $self;
 }
 
+=item $url = $agent->url()
+
+Get the base URL for connecting to the agent. You cannot change the URL via this
+method, it is immutable for a given agent.
+
+=cut
+
+sub url { 
+    my $self = shift;
+    return $self->cfg('url');
+}
+
 =item $resp = $agent->request($request)
 
 Implementation of the JMX request as specified in L<JMX::Jmx4Perl>. It uses a
@@ -161,9 +173,11 @@ sub request {
     eval {
         $json_resp = from_json($http_resp->content());
     };
-    my $error_resp = $self->_validate_response($http_req,$http_resp,$json_resp,$@);
+    my $json_error = $@;
+    my $error_resp = $self->_validate_response($http_resp,$json_resp,$json_error);
     if ($error_resp) {
         $error_resp->{request} = @jmx_requests > 1 ? undef : $jmx_requests[0];
+        #print Dumper($error_resp);
         return $error_resp;
     }
     my @responses = ($self->_from_http_response($json_resp,@jmx_requests));
@@ -223,7 +237,7 @@ sub _update_targets {
     my $target = $self->_clone_target;
     for my $req (@requests) {
         $req->{target} = $target unless exists($req->{target});
-        # An request with existing but undefined target removes
+        # A request with existing but undefined target removes
         # any default
         delete $req->{target} unless defined($req->{target});
     }
@@ -243,40 +257,38 @@ sub _clone_target {
 # Validate the JSON answer and the HttpResponse
 sub _validate_response {
     my $self = shift;
-    my ($http_req,$http_resp,$json_resp,$json_error) = @_;    
-    if ($json_error) {
-        # If not an HTTP-Error and deserialization fails, then we probably 
-        # got a wrong URL
-        return JMX::Jmx4Perl::Response->new
-          ( 
-           status => 400,
-           error => 
-           "Error while deserializing JSON answer " . (!$http_resp->is_error ? "(Wrong URL ?)" : "") . " : " . $@ . 
-           "\n" . $http_resp->content
-          );
-    }
-    my $sample_resp = $json_resp->[0] if ref($json_resp) eq "ARRAY" && scalar(@$json_resp) == 1;
-    if ($http_resp->is_error && $sample_resp && $sample_resp->{status} == 200) {
-        my $error = "Error while fetching ".$http_req->uri." :\n\n" . $http_resp->status_line . "\n";
-        my $content = $http_resp->content;
-        if ($content) {
-            chomp $content;
-            $error .=  "=" x length($http_resp->status_line) . "\n\n";
-            my $short = substr($content,0,600);
-            $error .=  $short . (length($short) < length($content) ? "\n\n.......\n\n" : "") . "\n" 
-              if $content ne $http_resp->status_line;
+    my ($http_resp,$json_resp,$json_error) = @_;    
+    my $http_error = $http_resp->is_error;
+    
+    if (!$http_error) {
+        if (!$json_error) {
+            # If HTTP-Request suceeds and JSON deserialization was
+            # successful, no error occured
+            return undef;
+        } else {
+            # If is not an HTTP-Error and deserialization fails, then we
+            # probably got a wrong URL and get delivered some server side
+            # document (with HTTP code 200)
+            my $e = $json_error;
+            $e =~ s/(.*)at .*?line.*$/$1/;
+            return JMX::Jmx4Perl::Response->new
+              ( 
+               status => 400,
+               error => 
+               "Error while deserializing JSON answer (Wrong URL ?)\n" . $e,
+               content => $http_resp->content
+              );
         }
+    } else {
         return JMX::Jmx4Perl::Response->new
           ( 
-           status => $json_resp->{status},
-           content => $http_resp->content,
-           error => $error,
-           stacktrace => $sample_resp->{stacktrace}
+           status => $http_resp->code,
+           content => $json_error ? $http_resp->content : $json_resp,
+           error => $json_error ? $self->_prepare_http_error_text($http_resp) : $json_resp->{error},
+           stacktrace => ref($json_resp) eq "ARRAY" ? $self->_extract_stacktraces($json_resp) : $json_resp->{stacktrace}
           );        
-    };
-    return undef;
+    }
 }
-
 
 =item $url = $agent->request_url($request)
 
@@ -319,6 +331,7 @@ sub request_url {
     return $url . $req;
 }
 
+# =============================================================================
 
 # Extract path by splitting it up at "/", escape the parts, and join them again
 sub _extract_path {
@@ -356,6 +369,32 @@ sub _null_escape {
     } else {
         return $value;
     }
+}
+
+# Prepare some readable error text
+sub _prepare_http_error_text {
+    my $self = shift;
+    my $http_resp = shift;   
+    my $content = $http_resp->content;
+    my $error = "Error while fetching ".$http_resp->request->uri." :\n\n" . $http_resp->status_line . "\n";
+    chomp $content;
+    if ($content && $content ne $http_resp->status_line) {
+        my $error .=  "=" x length($http_resp->status_line) . "\n\n";
+        my $short = substr($content,0,600);
+        $error .=  $short . (length($short) < length($content) ? "\n\n... [truncated] ...\n\n" : "") . "\n" 
+    }
+    return $error;
+}
+
+# Extract all stacktraces stored in the given array ref of json responses
+sub _extract_stacktraces {
+    my $self = shift;
+    my $json_resp = shift;
+    my @ret = ();
+    for my $j (@$json_resp) {
+        push @ret,$j->{stacktrace} if $j->{stacktrace};
+    }
+    return @ret ? (scalar(@ret) == 1 ? $ret[0] : \@ret) : undef;
 }
 
 =back

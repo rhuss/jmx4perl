@@ -422,6 +422,7 @@ sub _check_for_error {
     if ($resp->is_error) {
         print STDERR "ERROR: ",$resp->error_text,"\n";
         if ($opts{verbose}) {
+            print STDERR "Content:\n" . $resp->{content} if $resp->{content};
             if ($resp->stacktrace) {
                 print STDERR "Server Stacktrace:\n";
                 print STDERR $resp->stacktrace;
@@ -566,25 +567,35 @@ sub _get_args_for_jmx4perl {
         $ret = { url => $url };
     }
 
+    # Basic options to take over literally
     for my $arg qw(product user password verbose) {
-        my $cfg = $arg;
-        $cfg =~ s/\-/_/g;
         if (defined($opts->{$arg})) {
-            $ret->{$cfg} = $opts->{$arg};
+            $ret->{$arg} = $opts->{$arg};
         }
     }
+
+    # Take proxy and target from config
+    if ($server_config) {
+        if ($server_config->{proxy}) {
+            my $proxy = $server_config->{proxy};
+            die "Old proxy syntax (Proxy,Proxy_User,Proxy_Password) not supported in config anymore" 
+              unless ref($proxy) eq "HASH";
+            $ret->{proxy} = $proxy;
+        }
+        if ($server_config->{target}) {
+            $ret->{target} = $server_config->{target}
+        }
+    }
+
+    # Overwrite with command line arguments
     if (defined($opts->{proxy})) {
-        # Already set in server config ?
-        die "Old proxy syntax (Proxy,Proxy_User,Proxy_Password) not supported in config anymore" 
-          unless ref($opts->{proxy}) eq "HASH";
-        my $proxy = $ret->{proxy} || {};
+        my $proxy = {};
         $proxy->{url} = $opts->{proxy};
-        for my $k (qw(user password)) {
-            $proxy->{$k} = defined($opts->{'proxy-' . $k}) ? $opts->{'proxy-' . $k} : $proxy->{$k};
-            delete $proxy->{$k} unless $proxy->{$k};
+        for my $k (qw(proxy-user proxy-password)) {
+            $proxy->{$k} = defined($opts->{$k}) if $opts->{$k};
         }
         $ret->{proxy} = $proxy;
-    }
+    }        
     if (defined($opts->{target})) {
         $ret->{target} = {
                           url => $opts->{target},
