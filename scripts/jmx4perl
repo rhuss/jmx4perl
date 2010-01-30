@@ -94,7 +94,7 @@ if ($opts{shell}) {
 
   jmx4perl .... <agent-url> search <mbean pattern>
 
-  jmx4perl .... <agent-url> list 
+  jmx4perl .... <agent-url> list [<domain-name>[:<mbean name>]]
 
   jmx4perl .... <agent-url> attributes [max-depth max-list-size max-objects] 
 
@@ -178,7 +178,7 @@ documentation abouting listing of MBeans.
 
 sub command_list {
     my ($jmx,$path) = @_;
-
+    $path =~ s|:|/|;
     my $req = JMX::Jmx4Perl::Request->new(LIST,$path);
     my $resp = $jmx->request($req);
     &_check_for_error($resp);
