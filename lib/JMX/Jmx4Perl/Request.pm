@@ -279,7 +279,7 @@ sub _validate {
     my $self = shift;
     if ($self->{type} eq READ ||  $self->{type} eq WRITE) {
         die $self->{type} . ": No mbean name given\n",Dumper($self) unless $self->{mbean};
-        die $self->{type} . ": No attribute name given\n" unless $self->{attribute};
+        die $self->{type} . ": No attribute name but path is given\n" if (!$self->{attribute} && $self->{path});
     }
     if ($self->{type} eq WRITE) {
         die $self->{type} . ": No value given\n" unless $self->{value};

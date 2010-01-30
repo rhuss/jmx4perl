@@ -264,7 +264,9 @@ final class JmxRequestFactory {
         PROCESSOR_MAP.put(Type.READ,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 JmxRequest req = new JmxRequest(Type.READ,e.pop());
-                req.setAttributeName(e.pop());
+                if (!e.isEmpty()) {
+                    req.setAttributeName(e.pop());
+                }
                 return req;
             }
         });

@@ -5,6 +5,10 @@ import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -47,11 +51,41 @@ public class ReadHandler extends JsonRequestHandler {
     @Override
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
-        if (!restrictor.isAttributeReadAllowed(request.getObjectName(),request.getAttributeName())) {
+        if (request.getAttributeName() != null) {
+            checkRestriction(request, request.getAttributeName());
+            return server.getAttribute(request.getObjectName(), request.getAttributeName());
+        } else {
+            // Return the value of all attributes stored
+            List<String> attributeNames = getAttributesNames(server,request.getObjectName());
+            Map<String,Object> ret = new HashMap<String, Object>();
+            for (String attribute : attributeNames) {
+                checkRestriction(request, attribute);
+                ret.put(attribute,
+                        server.getAttribute(request.getObjectName(), attribute));
+            }
+            return ret;
+        }
+    }
+
+    private List<String> getAttributesNames(MBeanServerConnection pServer, ObjectName pObjectName)
+            throws InstanceNotFoundException, IOException, ReflectionException {
+        try {
+            MBeanInfo mBeanInfo = null;
+            mBeanInfo = pServer.getMBeanInfo(pObjectName);
+            List<String> ret = new ArrayList<String>();
+            for (MBeanAttributeInfo attrInfo : mBeanInfo.getAttributes()) {
+                ret.add(attrInfo.getName());
+            }
+            return ret;
+        } catch (IntrospectionException e) {
+            throw new IllegalStateException("Internal error while retrieving list: " + e,e);
+        }
+    }
+
+    private void checkRestriction(JmxRequest request, String attribute) {
+        if (!restrictor.isAttributeReadAllowed(request.getObjectName(),attribute)) {
             throw new SecurityException("Reading attribute " + request.getAttributeName() +
                     " is forbidden for MBean " + request.getObjectNameAsString());
         }
-
-        return server.getAttribute(request.getObjectName(), request.getAttributeName());
     }
 }

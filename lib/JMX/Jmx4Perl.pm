@@ -257,6 +257,9 @@ value, this argument is taken as alias (without any path). If you want to use
 aliases together with a path, you need to use the second form with a hash ref
 for providing the (named) arguments. 
 
+If no attribute name is provided the value of E<all> attributes of this MBean 
+is returned.
+
 This method returns the value as it is returned from the server. It will throw
 an exception (die), if an error occurs on the server side, like when the name
 couldn't be found.
@@ -272,7 +275,7 @@ sub get_attribute {
     if (ref($object) eq "CODE") {       
         $response = $self->delegate_to_handler($object);                
     } else {
-        croak "No attribute provided for object $object" unless $attribute;        
+        #croak "No attribute provided for object $object" unless $attribute;        
         my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
         $response = $self->request($request);
     }

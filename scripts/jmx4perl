@@ -538,7 +538,7 @@ sub _extract_get_set_parameter {
         return ($o,$a,$p,$value);
     } else {
         &_validate_mbean_name($mbean);
-        die "ERROR No attribute for MBean $mbean given\n" unless $attribute;
+        die "ERROR No attribute for MBean $mbean given\n" if (!defined($attribute) && $mode eq "set");
         return ($mbean,$attribute,$path,$value);
     }    
 }
