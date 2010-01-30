@@ -37,29 +37,8 @@ import javax.management.MalformedObjectNameException;
  * @author roland
  * @since Jun 25, 2009
  */
-public class ObjectNameChecking implements ObjectNameCheckingMBean, MBeanRegistration {
-
-
-    private String name;
-
-    public ObjectNameChecking(String pName) {
-        name = pName;
-    }
-
+public class ObjectNameChecking implements ObjectNameCheckingMBean {
     public String getOk() {
         return "OK";
-    }
-
-    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws MalformedObjectNameException {
-        return new ObjectName(name);
-    }
-
-    public void postRegister(Boolean pBoolean) {
-    }
-
-    public void preDeregister()  {
-    }
-
-    public void postDeregister() {
     }
 }

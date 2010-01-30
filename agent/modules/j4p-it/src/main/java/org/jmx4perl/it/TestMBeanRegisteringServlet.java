@@ -66,12 +66,12 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
         try {
             // Register my test mbeans
             for (String name : strangeNames) {
-                registerMBean(new ObjectNameChecking(domain + ":type=naming,name=" + name));
+                registerMBean(new ObjectNameChecking(),domain + ":type=naming,name=" + name);
             }
 
             // Other MBeans
-            registerMBean(new OperationChecking(domain + ":type=operation"));
-            registerMBean(new AttributeChecking(domain + ":type=attribute"));
+            registerMBean(new OperationChecking(),domain + ":type=operation");
+            registerMBean(new AttributeChecking(),domain + ":type=attribute");
 
         } catch (RuntimeException e) {
             throw new ServletException("Error",e);

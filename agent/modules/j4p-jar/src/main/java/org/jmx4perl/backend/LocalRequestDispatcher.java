@@ -54,6 +54,6 @@ public class LocalRequestDispatcher implements RequestDispatcher {
             throws MBeanRegistrationException, NotCompliantMBeanException,
             MalformedObjectNameException, InstanceAlreadyExistsException {
         return mBeanServerHandler.registerMBean(
-                new Config(pHistoryStore,pDebugStore,mBeanServerHandler));
+                new Config(pHistoryStore,pDebugStore,mBeanServerHandler),Config.OBJECT_NAME);
     }
 }

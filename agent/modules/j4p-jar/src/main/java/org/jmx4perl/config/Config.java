@@ -39,12 +39,14 @@ import java.util.Set;
  * @author roland
  * @since Jun 12, 2009
  */
-public class Config implements ConfigMBean, MBeanRegistration {
+public class Config implements ConfigMBean {
 
     private HistoryStore historyStore;
     private DebugStore debugStore;
     private MBeanServerHandler mBeanServerHandler;
 
+    // Name under which this bean gets registered
+    public static final String OBJECT_NAME = "jmx4perl:type=Config";
 
     public Config(HistoryStore pHistoryStore, DebugStore pDebugStore, MBeanServerHandler pMBeanServerHandler) {
         historyStore = pHistoryStore;
@@ -152,21 +154,5 @@ public class Config implements ConfigMBean, MBeanRegistration {
         ObjectOutputStream oOut = new ObjectOutputStream(bOut);
         oOut.writeObject(historyStore);
         return bOut.size();
-    }
-
-    // =================================================================================
-    // We are providing our own name
-
-    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws MalformedObjectNameException {
-        return new ObjectName("jmx4perl:type=Config");
-    }
-
-    public void postRegister(Boolean pBoolean) {
-    }
-
-    public void preDeregister()  {
-    }
-
-    public void postDeregister() {
     }
 }

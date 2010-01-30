@@ -286,7 +286,7 @@ public class MBeanServerHandler {
         }
     }
 
-    private boolean checkForClass(String pClassName) {
+    boolean checkForClass(String pClassName) {
         try {
             Class.forName(pClassName);
             return true;

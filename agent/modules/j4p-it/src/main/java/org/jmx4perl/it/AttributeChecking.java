@@ -32,21 +32,15 @@ import javax.management.MalformedObjectNameException;
  * @author roland
  * @since Aug 7, 2009
  */
-public class AttributeChecking implements AttributeCheckingMBean, MBeanRegistration {
+public class AttributeChecking implements AttributeCheckingMBean {
 
 
-    private String name;
     private boolean state = false;
     private int idx = 0;
     private String strings[] = {
             "Started",
             "Stopped"
     };
-
-    public AttributeChecking(String pName) {
-        name = pName;
-        reset();
-    }
 
     public final void reset() {
         state = false;
@@ -80,20 +74,5 @@ public class AttributeChecking implements AttributeCheckingMBean, MBeanRegistrat
     public double getSmallMinutes() {
         // 10 ms
         return  1f/60 * 0.01;
-    }
-
-    // ============================================================================
-
-    public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws MalformedObjectNameException {
-        return new ObjectName(name);
-    }
-
-    public void postRegister(Boolean pBoolean) {
-    }
-
-    public void preDeregister() {
-    }
-
-    public void postDeregister() {
     }
 }
