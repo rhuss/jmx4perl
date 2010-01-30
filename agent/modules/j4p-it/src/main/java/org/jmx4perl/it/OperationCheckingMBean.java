@@ -7,6 +7,11 @@ package org.jmx4perl.it;
 public interface OperationCheckingMBean {
 
     void reset();
-    
+
     int fetchNumber(String arg);
+
+    int overloadedMethod(String arg);
+
+    int overloadedMethod(String arg,int arg2);
+
 }

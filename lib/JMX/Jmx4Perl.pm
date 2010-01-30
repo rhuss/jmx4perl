@@ -410,8 +410,17 @@ exported by L<JMX::Jmx4Perl::Alias>, otherwise it is guessed, whether the first
 string value is an alias or a MBean name. To be sure, use the variant with an
 hashref as argument.
 
-This method will croak, if something fails during execution of this operation
-or when the MBean/Operation combination could not be found.
+If you are calling an overloaded JMX operation (i.e. operations with the same
+name but a different argument signature), the operation name must include the
+signature as well. This is be done by adding the parameter types comma
+separated within parentheses:
+
+  ...
+  operation => "overloadedMethod(java.lang.String,int)"
+  ...
+
+This method will croak, if something fails during execution of this
+operation or when the MBean/Operation combination could not be found.
 
 The return value of this method is the return value of the JMX operation.
 

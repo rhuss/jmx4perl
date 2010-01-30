@@ -31,6 +31,14 @@ public class OperationChecking implements OperationCheckingMBean, MBeanRegistrat
         }
     }
 
+    public int overloadedMethod(String arg) {
+        return 1;
+    }
+
+    public int overloadedMethod(String arg, int arg2) {
+        return 2;
+    }
+
     public ObjectName preRegister(MBeanServer pMBeanServer, ObjectName pObjectName) throws MalformedObjectNameException {
         return new ObjectName(name);
     }
