@@ -85,6 +85,8 @@ it/t/30_naming.t
 it/t/40_alias.t
 it/t/50_check_jmx4perl.t
 it/t/60_bulk_request.t
+it/t/70_overloaded_method.t
+it/t/80_multiple_attributes.t
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Protocol.pod
@@ -100,6 +102,7 @@ lib/JMX/Jmx4Perl/Product/Glassfish.pm
 lib/JMX/Jmx4Perl/Product/JBoss.pm
 lib/JMX/Jmx4Perl/Product/Jetty.pm
 lib/JMX/Jmx4Perl/Product/Jonas.pm
+lib/JMX/Jmx4Perl/Product/Resin.pm
 lib/JMX/Jmx4Perl/Product/Tomcat.pm
 lib/JMX/Jmx4Perl/Product/Unknown.pm
 lib/JMX/Jmx4Perl/Product/Weblogic.pm

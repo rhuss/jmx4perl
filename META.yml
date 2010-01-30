@@ -56,6 +56,8 @@ provides:
     file: lib/JMX/Jmx4Perl/Product/Jetty.pm
   JMX::Jmx4Perl::Product::Jonas:
     file: lib/JMX/Jmx4Perl/Product/Jonas.pm
+  JMX::Jmx4Perl::Product::Resin:
+    file: lib/JMX/Jmx4Perl/Product/Resin.pm
   JMX::Jmx4Perl::Product::Tomcat:
     file: lib/JMX/Jmx4Perl/Product/Tomcat.pm
   JMX::Jmx4Perl::Product::Unknown:
