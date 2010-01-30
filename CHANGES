@@ -8,6 +8,7 @@
   - 'read' operation can now be used without attribute name in which
     case the value of all attributes is returned. This can be used
     directly with JMX::Jmx4Perl and the frontend jmx4perl.
+  - Support for Resin 3.1 added
 
 0.51 (2009-12-30)
   - Quickfix for a badly packaged agent/j4p.war
