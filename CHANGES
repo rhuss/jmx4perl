@@ -1,9 +1,10 @@
 0.55 
   - OSGi bundle (including dependencies) for exposing JSON export via
-    the OSGi HTTP-Service. It's in agent/modules/j4p-osgi
+    the OSGi HTTP-Service. It's in agent/modules/j4p-osgi.
   - Refined error handling
   - Removed legacy JDK 1.4 support. 0.36 is the one and only version
     for which the JDK 1.4 backport has been tested to some amount.
+  - Added support for overloaded JMX operations for 'list' and 'exec'
 
 0.51 (2009-12-30)
   - Quickfix for a badly packaged agent/j4p.war

@@ -3,15 +3,17 @@ package org.jmx4perl.osgi;
 import org.jmx4perl.AgentServlet;
 import org.jmx4perl.Config;
 import org.jmx4perl.LogHandler;
-import org.osgi.framework.*;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
 import javax.servlet.ServletException;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -56,6 +58,9 @@ public class J4pActivator implements BundleActivator {
     // Tracker to be used for the LogService
     private ServiceTracker logTracker;
 
+    // Tracker for HttpService
+    private ServiceTracker httpServiceTracker;
+
     // Prefix used for configuration values
     private static final String CONFIG_PREFIX = "org.jmx4perl";
 
@@ -66,37 +71,59 @@ public class J4pActivator implements BundleActivator {
         logTracker = new ServiceTracker(pBundleContext, LogService.class.getName(), null);
         logTracker.open();
 
-        final ServiceReference sRef = pBundleContext.getServiceReference(HttpService.class.getName());
-        if (sRef != null) {
-            registerServlet(sRef, getConfig());
-        }
-        httpServiceListener = createServiceListener();
-        pBundleContext.addServiceListener(httpServiceListener,"(objectClass=" + HttpService.class.getName() + ")");
+        // Track HttpService
+        httpServiceTracker = new ServiceTracker(pBundleContext,HttpService.class.getName(),getHttpServiceCustomizer(pBundleContext));
+        httpServiceTracker.open();
     }
 
 
     public void stop(BundleContext pBundleContext) throws Exception {
         assert pBundleContext.equals(bundleContext);
-        ServiceReference sRef = pBundleContext.getServiceReference(HttpService.class.getName());
-        if (sRef != null) {
-            unregisterServlet(sRef);
-        }
+
         logTracker.close();
         logTracker = null;
-        bundleContext.removeServiceListener(httpServiceListener);
+        httpServiceTracker.close();
+        httpServiceTracker = null;
+
         bundleContext = null;
     }
 
+    /**
+     * Get the security context for out servlet. Dependend on the configuration,
+     * this is either a no-op context or one which authenticates with a given used
+     *
+     * @return the HttpContext with which the agent servlet gets registered.
+     */
+    public HttpContext getHttpContext() {
+        final String user = getConfiguration(USER);
+        final String password = getConfiguration(PASSWORD);
+        if (user == null) {
+            return new J4pHttpContext();
+        } else {
+            return new J4pAuthenticatedHttpContext(user, password);
+        }
+    }
 
-    private ServiceListener createServiceListener() {
-        return new ServiceListener() {
-            public void serviceChanged(ServiceEvent pServiceEvent) {
+    /**
+     * Get the servlet alias under which the agen servlet is registered
+     * @return get the servlet alias
+     */
+    public String getServletAlias() {
+        return getConfiguration(AGENT_CONTEXT);
+    }
+
+    // ==================================================================================
+
+    // Customizer for registering servlet at a HttpService
+    private ServiceTrackerCustomizer getHttpServiceCustomizer(final BundleContext pContext) {
+        return new ServiceTrackerCustomizer() {
+                                    public Object addingService(ServiceReference reference) {
+                HttpService service = (HttpService) pContext.getService(reference);
                 try {
-                    if (pServiceEvent.getType() == ServiceEvent.REGISTERED) {
-                        registerServlet(pServiceEvent.getServiceReference(), getConfig());
-                    } else if (pServiceEvent.getType() == ServiceEvent.UNREGISTERING) {
-                        unregisterServlet(pServiceEvent.getServiceReference());
-                    }
+                    service.registerServlet(getServletAlias(),
+                                            createServlet(),
+                                            getConfig(),
+                                            getHttpContext());
                 } catch (ServletException e) {
                     LogService logService = (LogService) logTracker.getService();
                     if (logService != null) {
@@ -108,39 +135,22 @@ public class J4pActivator implements BundleActivator {
                         logService.log(LogService.LOG_ERROR,"Namespace Exception: " + e,e);
                     }
                 }
+                return service;
+            }
+
+            public void modifiedService(ServiceReference reference, Object service) {
+            }
+
+            public void removedService(ServiceReference reference, Object service) {
+                HttpService httpService = (HttpService) service;
+                httpService.unregister(getServletAlias());
             }
         };
     }
 
 
-    private void unregisterServlet(ServiceReference sRef) {
-        if (sRef != null) {
-            HttpService service = (HttpService) bundleContext.getService(sRef);
-            service.unregister(getConfiguration(AGENT_CONTEXT));
-        }
-    }
-
-    private void registerServlet(ServiceReference pRef, Dictionary<String, String> pConfig) throws ServletException, NamespaceException {
-        HttpService service = (HttpService) bundleContext.getService(pRef);
-        service.registerServlet(getConfiguration(AGENT_CONTEXT),
-                                createServlet(),
-                                pConfig,
-                                getHttpContext());
-    }
-
-    private HttpContext getHttpContext() {
-        final String user = getConfiguration(USER);
-        final String password = getConfiguration(PASSWORD);
-        if (user == null) {
-            return new J4pHttpContext();
-        } else {
-            return new J4pAuthenticatedHttpContext(user, password);
-        }
-    }
-
     private AgentServlet createServlet() {
-        AgentServlet servlet = new AgentServlet(getLogHandler());
-        return servlet;
+        return new AgentServlet(getLogHandler());
     }
 
     private LogHandler getLogHandler() {
@@ -186,10 +196,4 @@ public class J4pActivator implements BundleActivator {
         }
         return value;
     }
-
-
-
-    // ===========================================================================================
-    // Context to use:
-
 }
