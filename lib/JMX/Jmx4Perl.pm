@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.55_2";
+$VERSION = "0.55_3";
 
 my $REGISTRY = {
                 # Agent based
@@ -861,8 +861,14 @@ sub _format_attribute {
 sub _format_operation {
     my ($ret,$name,$op,$level) = @_;
     $ret .= &_get_space($level);
-    my $method = &_format_method($name,$op->{args},$op->{ret});
-    $ret .= sprintf("%-35s \"%s\"\n",$method,$op->{desc});
+    my $list = ref($op) eq "HASH" ? [ $op ] : $op;
+    my $first = 1;
+    for my $o (@$list) {
+        my $method = &_format_method($name,$o->{args},$o->{ret});
+        $ret .= &_get_space($level) unless $first;
+        $ret .= sprintf("%-35s \"%s\"\n",$method,$o->{desc});
+        $first = 0;
+    }
     return $ret;
 }
 
