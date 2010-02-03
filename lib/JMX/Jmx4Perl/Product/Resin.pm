@@ -9,7 +9,7 @@ use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Resin - Handler for Resing
+JMX::Jmx4Perl::Product::Resin - Handler for Resin
 
 =head1 DESCRIPTION
 
