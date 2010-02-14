@@ -316,7 +316,11 @@ sub request_url {
         $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq EXEC) {
         $req .= "/" . $self->_escape($request->get("operation"));
-        $req .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("arguments")};
+        for my $arg (@{$request->get("arguments")}) {
+            # Array refs are sticked together via ","
+            my $a = ref($arg) eq "ARRAY" ? join ",",@{$arg} : $arg;
+            $req .= "/" . $self->_escape($self->_null_escape($a));
+        }
     } elsif ($type eq SEARCH) {
         # Nothing further to append.
     }

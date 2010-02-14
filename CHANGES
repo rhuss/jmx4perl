@@ -9,6 +9,11 @@
     case the value of all attributes is returned. This can be used
     directly with JMX::Jmx4Perl and the frontend jmx4perl.
   - Support for Resin 3.1 added
+  - 'exec' operation can now deal with simple array arguments. Within
+    the perl modules, give an array ref for an array argument. This
+    gets translated to a comma separated list of values in the
+    string. For string array this works only with simle content
+    (i.e. no element containing a ',')
 
 0.51 (2009-12-30)
   - Quickfix for a badly packaged agent/j4p.war
