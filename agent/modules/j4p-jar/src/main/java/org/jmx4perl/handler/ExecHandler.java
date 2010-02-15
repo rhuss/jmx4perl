@@ -152,7 +152,7 @@ public class ExecHandler extends JsonRequestHandler {
         msg.append(pOperation).
                 append(" on MBEan ").
                 append(pRequest.getObjectNameAsString()).
-                append(" is overloded. Signatures found: ");
+                append(" is overloaded. Signatures found: ");
         msg.append(signatureToString(pParamInfos));
         msg.append(". Use a signature when specifying the operation.");
         return msg.toString();

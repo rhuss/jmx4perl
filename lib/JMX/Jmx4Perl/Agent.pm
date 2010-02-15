@@ -326,6 +326,7 @@ sub request_url {
     }
     # Squeeze multiple slashes
     $req =~ s|/{2,}|/|g;
+    #print "R: $req\n";
     my @params;
     for my $k (keys %PARAM_MAPPING) {
         push @params, $PARAM_MAPPING{$k} . "=" . $request->get($k)
@@ -355,7 +356,9 @@ sub _escape {
     my $input = shift;
     my $opts = { @_ };
     $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
-    $input =~ s|-/$|+/|; # The last slash needs a special escape
+    $input =~ s|-/$|+/|; # The last slash needs a special escape    
+    $input =~ s|^/-|/^|; # as well as the first slash
+
     return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
                                                               # default
                                                               # set. See L<URI>

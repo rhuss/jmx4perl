@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 final class JmxRequestFactory {
 
     // Pattern for detecting escaped slashes in URL encoded requests
-    private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^-*\\+?$");
+    private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^\\^?-*\\+?$");
 
     // private constructor for static class
     private JmxRequestFactory() { }
@@ -181,12 +181,17 @@ final class JmxRequestFactory {
                 return;
             }
             StringBuffer val;
-            if (previousBuffer == null) {
+
+            // Special escape at the beginning indicates that the this element belongs
+            // to the next one
+            if (element.substring(0,1).equals("^")) {
+                val = new StringBuffer();
+            } else if (previousBuffer == null) {
                 val = new StringBuffer(ret.pop());
             } else {
                 val = previousBuffer;
             }
-            // Decode to value
+            // Append approp. nr of slashes
             for (int j=0;j<element.length();j++) {
                 val.append("/");
             }
