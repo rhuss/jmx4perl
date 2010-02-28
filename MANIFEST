@@ -60,6 +60,7 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/Version.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/config/IpCheckerTest.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/config/PolicyBasedRestrictorTest.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/converter/json/ObjectToJsonConverterTest.java
+agent/modules/j4p-jar/src/test/java/org/jmx4perl/converter/StringToObjectConverterTest.java
 agent/modules/j4p-jar/src/test/resources/access-sample1.xml
 agent/modules/j4p-jar/src/test/resources/access-sample2.xml
 agent/modules/j4p-jar/src/test/resources/access-sample3.xml

@@ -72,3 +72,4 @@ examples/remote.pl
 release.txt
 agent/modules/j4p-osgi/runner/*
 osgi.txt
+MYMETA.yml

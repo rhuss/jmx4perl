@@ -1,4 +1,4 @@
-0.60 
+0.60  (2009-02-28)
   - OSGi bundle (including dependencies) for exposing JSON export via
     the OSGi HTTP-Service. It's in agent/modules/j4p-osgi.
   - Refined error handling
