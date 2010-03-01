@@ -39,7 +39,7 @@ import java.util.Set;
  * @author roland
  * @since Jun 12, 2009
  */
-public class Config implements ConfigMBean {
+public class Config implements ConfigMBean,MBeanRegistration {
 
     private HistoryStore historyStore;
     private DebugStore debugStore;
@@ -154,5 +154,21 @@ public class Config implements ConfigMBean {
         ObjectOutputStream oOut = new ObjectOutputStream(bOut);
         oOut.writeObject(historyStore);
         return bOut.size();
+    }
+
+    // ========================================================================
+
+    // Provide our own name on registration
+    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+        return new ObjectName(OBJECT_NAME);
+    }
+
+    public void postRegister(Boolean registrationDone) {
+    }
+
+    public void preDeregister() throws Exception {
+    }
+
+    public void postDeregister() {
     }
 }

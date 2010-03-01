@@ -3,7 +3,7 @@
 use It;
 use strict;
 use warnings;
-use Test::More tests => 8;
+use Test::More tests => 14;
 use File::Temp qw/tmpnam/;
 
 BEGIN { use_ok("JMX::Jmx4Perl"); }
@@ -28,7 +28,8 @@ my @searches =
   );
 
 for my $name (@names) {
-    my $scalar = $jmx->get_attribute(sprintf($name_p,$name,),"Ok");
+    my $mbean = &search($jmx,sprintf($name_p,$name));
+    my $scalar = $jmx->get_attribute($mbean,"Ok");
     is($scalar,"OK",$name);
 }
 
@@ -37,4 +38,11 @@ for my $s (@searches) {
     ok($r->[0] =~ $s->[1],"Search " . $s->[0]);    
 }
 
+sub search { 
+    my $jmx = shift;
+    my $prefix = shift;
+    my $ret = $jmx->search($prefix . ",*");
+    is(scalar(@$ret),1,"One MBean found");
+    return $ret->[0];
+}
 

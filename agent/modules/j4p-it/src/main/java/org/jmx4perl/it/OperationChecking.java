@@ -9,7 +9,7 @@ import javax.management.MalformedObjectNameException;
  * @author roland
  * @since Jun 30, 2009
  */
-public class OperationChecking implements OperationCheckingMBean {
+public class OperationChecking implements OperationCheckingMBean,MBeanRegistration {
 
     private int counter = 0;
 
@@ -31,5 +31,19 @@ public class OperationChecking implements OperationCheckingMBean {
 
     public int overloadedMethod(String arg, int arg2) {
         return 2;
+    }
+
+    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+        return new ObjectName("jmx4perl.it:type=operation");
+
+    }
+
+    public void postRegister(Boolean registrationDone) {
+    }
+
+    public void preDeregister() throws Exception {
+    }
+
+    public void postDeregister() {
     }
 }

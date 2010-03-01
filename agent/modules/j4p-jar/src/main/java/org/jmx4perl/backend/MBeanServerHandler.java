@@ -121,7 +121,7 @@ public class MBeanServerHandler {
             Exception lastExp = null;
             for (MBeanServer server : mBeanServers) {
                 try {
-                    if (pName != null && pName.length > 0) {
+                    if (pName != null && pName.length > 0 && pName[0] != null) {
                         ObjectName oName = new ObjectName(pName[0]);
                         return server.registerMBean(pMBean,oName).getObjectName();
                     } else {

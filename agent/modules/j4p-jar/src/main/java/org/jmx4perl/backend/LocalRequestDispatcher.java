@@ -19,6 +19,8 @@ import javax.management.*;
  */
 public class LocalRequestDispatcher implements RequestDispatcher {
 
+
+
     // Handler for finding and merging the various MBeanHandler
     private MBeanServerHandler mBeanServerHandler;
 
@@ -53,7 +55,14 @@ public class LocalRequestDispatcher implements RequestDispatcher {
     public ObjectName registerConfigMBean(HistoryStore pHistoryStore, DebugStore pDebugStore)
             throws MBeanRegistrationException, NotCompliantMBeanException,
             MalformedObjectNameException, InstanceAlreadyExistsException {
+        // Websphere adds extra parts to the object name if registered explicitely, but
+        // we need a defined name on the client side. So we register it with 'null' in websphere
+        // and let the bean define its namen. On the others side, Resin throws an exception
+        // if registering with a null name.
         return mBeanServerHandler.registerMBean(
-                new Config(pHistoryStore,pDebugStore,mBeanServerHandler),Config.OBJECT_NAME);
+                new Config(pHistoryStore,pDebugStore,mBeanServerHandler),
+                mBeanServerHandler.checkForClass("com.ibm.websphere.management.AdminServiceFactory") ?
+                        null :
+                        Config.OBJECT_NAME);
     }
 }

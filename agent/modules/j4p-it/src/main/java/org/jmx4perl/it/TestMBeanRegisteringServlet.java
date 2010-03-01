@@ -70,8 +70,16 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
             }
 
             // Other MBeans
-            registerMBean(new OperationChecking(),domain + ":type=operation");
-            registerMBean(new AttributeChecking(),domain + ":type=attribute");
+            boolean isWebsphere;
+            try {
+                Class.forName("com.ibm.websphere.management.AdminServiceFactory");
+                isWebsphere = true;
+
+            } catch (ClassNotFoundException exp) {
+                isWebsphere = false;
+            }
+            registerMBean(new OperationChecking(),isWebsphere ? null : domain + ":type=operation");
+            registerMBean(new AttributeChecking(),isWebsphere ? null : domain + ":type=attribute");
 
         } catch (RuntimeException e) {
             throw new ServletException("Error",e);

@@ -284,7 +284,8 @@ sub _validate_response {
           ( 
            status => $http_resp->code,
            content => $json_error ? $http_resp->content : $json_resp,
-           error => $json_error ? $self->_prepare_http_error_text($http_resp) : $json_resp->{error},
+           error => $json_error ? $self->_prepare_http_error_text($http_resp) : 
+           ref($json_resp) eq "ARRAY" ? join "\n",  map { $_->{error} } @$json_resp : $json_resp->{error},
            stacktrace => ref($json_resp) eq "ARRAY" ? $self->_extract_stacktraces($json_resp) : $json_resp->{stacktrace}
           );        
     }

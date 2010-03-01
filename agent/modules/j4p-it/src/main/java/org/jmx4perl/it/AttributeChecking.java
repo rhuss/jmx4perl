@@ -32,7 +32,7 @@ import javax.management.MalformedObjectNameException;
  * @author roland
  * @since Aug 7, 2009
  */
-public class AttributeChecking implements AttributeCheckingMBean {
+public class AttributeChecking implements AttributeCheckingMBean,MBeanRegistration {
 
 
     private boolean state = false;
@@ -74,5 +74,18 @@ public class AttributeChecking implements AttributeCheckingMBean {
     public double getSmallMinutes() {
         // 10 ms
         return  1f/60 * 0.01;
+    }
+
+    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+        return new ObjectName("jmx4perl.it:type=attribute");
+    }
+
+    public void postRegister(Boolean registrationDone) {
+    }
+
+    public void preDeregister() throws Exception {
+    }
+
+    public void postDeregister() {
     }
 }
