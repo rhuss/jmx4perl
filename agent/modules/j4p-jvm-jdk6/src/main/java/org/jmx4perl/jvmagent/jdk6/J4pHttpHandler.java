@@ -37,9 +37,12 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
     private Pattern contentTypePattern = Pattern.compile(".*;\\s*charset=([^;,]+)\\s*.*");
 
 
-    public J4pHttpHandler(String pContext, Map<Config,String> config) {
-        context = pContext;
-        backendManager = new BackendManager(config,this);
+    public J4pHttpHandler(Map<Config,String> pConfig) {        
+        context = pConfig.get(Config.AGENT_CONTEXT);
+        if (!context.endsWith("/")) {
+            context += "/";
+        }
+        backendManager = new BackendManager(pConfig,this);
         requestHandler = new HttpRequestHandler(backendManager,this);
     }
 
@@ -104,13 +107,21 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
     }
 
     private void sendResponse(HttpExchange pExchange, int pCode, String s) throws IOException {
-        Headers headers = pExchange.getResponseHeaders();
-        headers.set("Content-Type","text/plain; charset=utf-8");
-        byte[] response = s.getBytes();
-        pExchange.sendResponseHeaders(pCode,response.length);
-        OutputStream out = pExchange.getResponseBody();
-        out.write(response);
-        out.close();
+        OutputStream out = null;
+        try {
+            Headers headers = pExchange.getResponseHeaders();
+            headers.set("Content-Type","text/plain; charset=utf-8");
+            byte[] response = s.getBytes();
+            pExchange.sendResponseHeaders(pCode,response.length);
+            out = pExchange.getResponseBody();
+            out.write(response);
+        } finally {
+            if (out != null) {
+                // Always close in order to finish the request.
+                // Otherwise the thread blocks.
+                out.close();
+            }
+        }
     }
 
     @Override

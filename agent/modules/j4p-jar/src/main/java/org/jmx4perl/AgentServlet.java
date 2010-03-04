@@ -189,13 +189,6 @@ public class AgentServlet extends HttpServlet {
         return ret;
     }
 
-    private void logRequest(HttpServletRequest pReq, JmxRequest pJmxReq) {
-        logHandler.debug("URI: " + pReq.getRequestURI());
-        logHandler.debug("Path-Info: " + pReq.getPathInfo());
-        logHandler.debug("Request: " + pJmxReq.toString());
-    }
-
-
     private void sendResponse(HttpServletResponse pResp, int pStatusCode, String pJsonTxt) throws IOException {
         try {
             pResp.setCharacterEncoding("utf-8");

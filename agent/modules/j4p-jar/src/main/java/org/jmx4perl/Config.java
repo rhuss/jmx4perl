@@ -62,7 +62,6 @@ public enum Config {
     USER("user"),
     PASSWORD("password");
 
-
     private String key;
     private String defaultValue;
     private static Map<String, Config> keyByName;
@@ -109,5 +108,17 @@ public enum Config {
             value = this.getDefaultValue();
         }
         return value;
+    }
+
+    // Extract config options from a given map
+    public static Map<Config,String> extractConfig(Map<String,String> pMap) {
+        Map<Config,String> ret = new HashMap<Config, String>();
+        for (Config c : Config.values()) {
+            String value = pMap.get(c.getKeyValue());
+            if (value != null) {
+                ret.put(c,value);
+            }
+        }
+        return ret;
     }
 }
