@@ -5,17 +5,6 @@
 12 Move 'get_attributes' to Jmx4Perl
 14 JSON Schema for protocol
 15 Shell
-
-
-IT for 0.60:
-  * Oracle WebLogic 9.2 MP3 & 10.0.2.0
-  * Apache Tomcat 5.5.28 & 6.0.20
-  * Jetty 5.1.15 & 6.1.21 & 7.0.0 (with JMX enabled)
-  * IBM Websphere 6.1 & 7.0
-
-Done:
-  * Resin 3.1.9
-  * Jonas 4.10.3 (with Jetty 5.1.10 and Tomcat 5.5.26) and 5.1.0
-  * JBoss 4.2.3 GA & 5.1.0 GA
-  * Glassfish 2.1.1 and v3
-  * Apache Geronimo 2.1.4 (Jetty 6 and Tomcat 6)
+16 Bug: Overloade method with string array arguments 
+   gets parsed badly: 
+   No operation installBundles([Ljava.lang.String found on MBean osgi.core:type=framework,version=1.5

@@ -58,7 +58,7 @@ public enum Config {
     // (but not for the servlet, this is done in web.xml)
     AGENT_CONTEXT("agentContext","/j4p"),
 
-    // User and password for authentication purposes. 
+    // User and password for authentication purposes.
     USER("user"),
     PASSWORD("password");
 
