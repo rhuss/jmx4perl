@@ -121,24 +121,48 @@ MULE AGENT SUPPORT
   within the 'agent' directory, you find the agent then as
   'agent/modules/j4p-mule/target/j4p-mule-<version>-agent.jar'.
   Alternatively the agent jar can be downloaded from the maven
-  labs.conso.de's repository at
+  labs.consol.de's repository at
   http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/
 
   Installation instruction are included in JMX::Jmx4Perl::Manual
   The initial article related can be found at
   http://labs.consol.de/blog/jmx4perl/jmx4perl-mule-agent
 
-LEGACY JDK 1.4 SUPPORT
+OSGi AGENT SUPPORT
 
-  For legacy application servers like Weblogic 8.1 a JDK 1.4 backport
-  for the agent is provided. However, you need to build the agent on
-  your own by using 'ant jdk14' within the "agent" directory which
-  builds a j4p14.war. A maven build is provided as well within
-  agent/modules/jdk14. Please note the this support is experimentally
-  and the version is freezed to 0.36. j4p14.war has been successfully
-  tested with Weblogic 8.1. This JDK 1.4 support will be removed in
-  the next version (you can always download 0.50 if you need the JDK
-  1.4 support)
+  An j4p OSGi bundle can be deployed on any OSGi container where a
+  OSGi compliant HttpService is available. You can download the bundle
+  from http://labs.consol.de/maven/repository/org/jmx4perl/j4p-osgi
+  or build it from scratch with maven. The source is located in
+  agent/modules/j4p-osgi
+  
+JDK6 JVM AGENT
+
+  A native Java JVM agent is provided, too. The only dependency is on
+  Sun's JDK 6, which contains a lightweight HTTP Server used for
+  exporting the j4p data. You can download it from 
+  http://labs.consol.de/maven/repository/org/jmx4perl/j4p-jvm-jdk6
+  or build it from scratch with maven out of
+  agent/modules/j4p-jvm-jdk6.
+
+  To use it, simly provide the following argument to the Java
+  application to monitor (any Java 6 application can be used):
+
+  -javaagent:/path/to/j4p-jvm-jdk6-<version>-agent.jar
+
+  By default, it will listen on port 8778, but this can be configured
+  as well as other aspects like authentication:
+
+  * Provide options on the commandline as key-value pairs:
+    -javaagent:agent.jar=port=7777,host=localhots
+
+  * Via a properties file
+    -javaagent:agent.jar=config=/path/to/config.properties
+
+  * Via packaging a j4p-agent.properties top level in the agent.jar
+
+  Options are used in the given precedence, the former overwritting
+  the later values.
 
 RESOURCES
 
