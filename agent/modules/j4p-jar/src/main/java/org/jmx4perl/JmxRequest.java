@@ -4,8 +4,6 @@ import org.json.simple.JSONObject;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.remote.JMXServiceURL;
-import java.net.MalformedURLException;
 import java.util.*;
 
 /*
@@ -40,7 +38,6 @@ import java.util.*;
  * @since Apr 19, 2009
  */
 public class JmxRequest {
-
     /**
      * Enumeration for encapsulationg the request mode.
      */
@@ -72,7 +69,7 @@ public class JmxRequest {
     // Attributes
     private String objectNameS;
     private ObjectName objectName;
-    private String attributeName;
+    private List<String> attributeNames;
     private String value;
     private List<String> extraArgs;
     private String operation;
@@ -124,9 +121,16 @@ public class JmxRequest {
             objectNameS = s;
             objectName = new ObjectName(s);
         }
-        s = (String) pMap.get("attribute");
-        if (s != null) {
-            attributeName = s;
+        Object attrVal = pMap.get("attribute");
+        if (attrVal != null) {
+            attributeNames = new ArrayList<String>();
+            if (attrVal instanceof String) {
+                attributeNames.add((String) attrVal);
+            } else if (attrVal instanceof Collection) {
+                for (Object val : (Collection) attrVal) {
+                    attributeNames.add((String) val);
+                }
+            }
         }
         s = (String) pMap.get("path");
         if (s != null) {
@@ -163,7 +167,18 @@ public class JmxRequest {
     }
 
     public String getAttributeName() {
-        return attributeName;
+        if (attributeNames == null) {
+            return null;
+        }
+        if (attributeNames.size() != 1) {
+            throw new IllegalStateException("Request contains more than one attribute (attrs = " +
+                    "" + attributeNames + "). Use getAttributeNames() instead");
+        }
+        return attributeNames.get(0);
+    }
+
+    public List<String> getAttributeNames() {
+        return attributeNames;
     }
 
     public List<String> getExtraArgs() {
@@ -218,8 +233,18 @@ public class JmxRequest {
     }
 
     void setAttributeName(String pName) {
-        attributeName = pName;
+        if (attributeNames != null) {
+            attributeNames.clear();
+        } else {
+            attributeNames = new ArrayList<String>(1);
+        }
+        attributeNames.add(pName);
     }
+
+    void setAttributeNames(List<String> pAttributeNames) {
+        attributeNames = pAttributeNames;
+    }
+
 
     void setValue(String pValue) {
         value = pValue;
@@ -253,9 +278,21 @@ public class JmxRequest {
     public String toString() {
         StringBuffer ret = new StringBuffer("JmxRequest[");
         if (type == Type.READ) {
-            ret.append("READ mbean=").append(objectNameS).append(", attribute=").append(attributeName);
+            ret.append("READ mbean=").append(objectNameS);
+            if (attributeNames != null && attributeNames.size() > 1) {
+                ret.append(", attribute=[");
+                for (int i = 0;i<attributeNames.size();i++) {
+                    ret.append(attributeNames.get(i));
+                    if (i < attributeNames.size() - 1) {
+                        ret.append(",");
+                    }
+                }
+                ret.append("]");
+            } else {
+                ret.append(", attribute=").append(getAttributeName());
+            }
         } else if (type == Type.WRITE) {
-            ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(attributeName)
+            ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(getAttributeName())
                     .append(", value=").append(value);
         } else if (type == Type.EXEC) {
             ret.append("EXEC mbean=").append(objectNameS).append(", operation=").append(operation);
@@ -283,8 +320,12 @@ public class JmxRequest {
         if (objectName != null) {
             ret.put("mbean",objectName.getCanonicalName());
         }
-        if (attributeName != null) {
-            ret.put("attribute",attributeName);
+        if (attributeNames != null && attributeNames.size() > 0) {
+            if (attributeNames.size() > 1) {
+                ret.put("attribute",attributeNames);
+            } else {
+                ret.put("attribute",attributeNames.get(0));
+            }
         }
         if (extraArgs != null && extraArgs.size() > 0) {
             if (type == Type.READ || type == Type.WRITE) {
