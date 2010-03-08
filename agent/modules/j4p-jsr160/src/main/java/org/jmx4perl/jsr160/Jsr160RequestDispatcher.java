@@ -38,7 +38,7 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
      * the request.
      *
      * @param pJmxReq the request to dispatch
-     * @return
+     * @return result object
      * @throws InstanceNotFoundException
      * @throws AttributeNotFoundException
      * @throws ReflectionException
@@ -63,7 +63,7 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
         }
     }
 
-    // TODO: Add connector to a pool and release it on demand. For now, simpluy close it.
+    // TODO: Add connector to a pool and release it on demand. For now, simply close it.
     private JMXConnector getConnector(JmxRequest pJmxReq) throws IOException {
         JmxRequest.TargetConfig targetConfig = pJmxReq.getTargetConfig();
         if (targetConfig == null) {
@@ -71,7 +71,7 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
         }
         String urlS = targetConfig.getUrl();
         JMXServiceURL url = new JMXServiceURL(urlS);
-        Map env = prepareEnv(targetConfig.getEnv());
+        Map<String,Object> env = prepareEnv(targetConfig.getEnv());
         JMXConnector ret = JMXConnectorFactory.newJMXConnector(url,env);
         ret.connect();
         return ret;
@@ -81,7 +81,7 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
         pConnector.close();
     }
 
-    private Map prepareEnv(Map<String, Object> pEnv) {
+    private Map<String,Object> prepareEnv(Map<String, Object> pEnv) {
         if (pEnv == null || pEnv.size() == 0) {
             return pEnv;
         }

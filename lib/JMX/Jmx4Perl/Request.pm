@@ -162,6 +162,12 @@ For the options C<max_depth>, C<max_objects> and C<max_list_size>, you can mix
 them in into the hashref if using the hashed argument format. For the first
 format, these options are given as a final hashref.
 
+The option C<method> can be used to suggest a HTTP request method to use. By
+default, the agent decides automatically which HTTP method to use depending on
+the number of requests and whether an extended format should be used (which is
+only possible with an HTTP POST request). The value of this option can be
+either C<post> or C<get>, dependening on your preference. 
+
 If the request should be proxied through this request, a target configuration
 needs to be given as optional parameter. The target configuration consists of a
 JMX service C<url> and a optional environment, which is given as a key-value
@@ -184,6 +190,9 @@ named parameters are:
 
  Order    : $mbean, $attribute, $path
  Mandatory: $mbean, $attribute
+
+Note that C<$attribute> can be either a single name or a reference to a list
+of attribute names. 
 
 =item C<WRITE> 
 

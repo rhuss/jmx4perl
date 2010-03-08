@@ -172,7 +172,7 @@ public class JmxRequest {
         }
         if (attributeNames.size() != 1) {
             throw new IllegalStateException("Request contains more than one attribute (attrs = " +
-                    "" + attributeNames + "). Use getAttributeNames() instead");
+                    "" + attributeNames + "). Use getAttributeNames() instead.");
         }
         return attributeNames.get(0);
     }
@@ -205,8 +205,6 @@ public class JmxRequest {
         String[] elements = pPath.split("/");
         return Arrays.asList(elements);
     }
-
-
 
     public String getValue() {
         return value;
@@ -274,6 +272,14 @@ public class JmxRequest {
         return targetConfig;
     }
 
+    public String getTargetConfigUrl() {
+        if (targetConfig == null) {
+            return null;
+        } else {
+            return targetConfig.getUrl();
+        }
+    }
+
     @Override
     public String toString() {
         StringBuffer ret = new StringBuffer("JmxRequest[");
@@ -308,7 +314,6 @@ public class JmxRequest {
         ret.append("]");
         return ret.toString();
     }
-
 
     /**
      * Return this request in a proper JSON representation
