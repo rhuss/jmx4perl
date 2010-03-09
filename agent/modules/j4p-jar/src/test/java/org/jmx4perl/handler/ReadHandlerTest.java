@@ -39,7 +39,7 @@ public class ReadHandlerTest {
     @Test
     public void singleBeanSingleAttribute() throws Exception {
         JmxRequest request = new JmxRequestBuilder(READ, testBeanName.getCanonicalName()).
-                setAttributeName("testAttribute").
+                attribute("testAttribute").
                 build();
 
         MBeanServerConnection connection = createMock(MBeanServerConnection.class);
@@ -53,7 +53,7 @@ public class ReadHandlerTest {
     @Test
     public void singleBeanNoAttributes() throws Exception {
         JmxRequest request = new JmxRequestBuilder(READ, testBeanName.getCanonicalName()).
-                setAttributeName(null).
+                attribute(null).
                 build();
 
 
@@ -77,7 +77,7 @@ public class ReadHandlerTest {
     @Test
     public void singleBeanMultiAttributes() throws Exception {
         JmxRequest request = new JmxRequestBuilder(READ, testBeanName.getCanonicalName()).
-                setAttributeNames(Arrays.asList("attr0","attr1")).
+                attributes(Arrays.asList("attr0","attr1")).
                 build();
 
 
@@ -98,7 +98,7 @@ public class ReadHandlerTest {
     public void searchPatternNoMatch() throws Exception {
         ObjectName patternMBean = new ObjectName("bla:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
-                setAttributeName("mem1").
+                attribute("mem1").
                 build();
         MBeanServerConnection connection = createMock(MBeanServerConnection.class);
         expect(connection.queryNames(patternMBean,null)).andReturn(new HashSet());
@@ -113,7 +113,7 @@ public class ReadHandlerTest {
     public void searchPatternSingleAttribute() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
-                setAttributeName("mem1").
+                attribute("mem1").
                 build();
 
         ObjectName beans[] =  {
@@ -134,7 +134,7 @@ public class ReadHandlerTest {
     public void searchPatternNoAttribute() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
-                setAttributeName(null).
+                attribute(null).
                 build();
 
         ObjectName beans[] =  {
@@ -156,7 +156,7 @@ public class ReadHandlerTest {
     public void searchPatternMultiAttributes1() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
-                setAttributeNames(Arrays.asList("mem0","gc3")).
+                attributes(Arrays.asList("mem0","gc3")).
                 build();
 
         ObjectName beans[] =  {
@@ -180,7 +180,7 @@ public class ReadHandlerTest {
     public void searchPatternMultiAttributes3() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
-                setAttributeNames(Arrays.asList("bla")).
+                attributes(Arrays.asList("bla")).
                 build();
 
         ObjectName beans[] =  {
@@ -202,7 +202,7 @@ public class ReadHandlerTest {
     public void searchPatternMultiAttributes4() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
-                setAttributeNames(Arrays.asList("common")).
+                attributes(Arrays.asList("common")).
                 build();
 
         ObjectName beans[] =  {
@@ -246,7 +246,7 @@ public class ReadHandlerTest {
         handler = new ReadHandler(restrictor);
 
         JmxRequest request = new JmxRequestBuilder(READ, testBeanName).
-                setAttributeName("attr").
+                attribute("attr").
                 build();
         MBeanServerConnection connection = createMock(MBeanServerConnection.class);
         replay(restrictor,connection);

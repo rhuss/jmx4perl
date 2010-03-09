@@ -186,7 +186,7 @@ public class JmxRequest {
     }
 
     public String getExtraArgsAsPath() {
-        if (extraArgs.size() > 0) {
+        if (extraArgs != null && extraArgs.size() > 0) {
             StringBuffer buf = new StringBuffer();
             Iterator<String> it = extraArgs.iterator();
             while (it.hasNext()) {

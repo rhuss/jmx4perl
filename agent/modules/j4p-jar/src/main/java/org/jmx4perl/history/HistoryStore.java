@@ -60,8 +60,13 @@ public class HistoryStore implements Serializable {
         return globalMaxEntries;
     }
 
-    public void setGlobalMaxEntries(int pGlobalMaxEntries) {
+    synchronized public void setGlobalMaxEntries(int pGlobalMaxEntries) {
         globalMaxEntries = pGlobalMaxEntries;
+        // Refresh all entries
+        for (HistoryEntry entry : historyStore.values()) {
+            entry.setMaxEntries(globalMaxEntries);
+            entry.trim();
+        }
     }
 
     /**

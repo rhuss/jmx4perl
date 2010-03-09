@@ -1,9 +1,11 @@
 package org.jmx4perl;
 
 import com.sun.tools.internal.xjc.reader.xmlschema.ParticleBinder;
+import com.sun.tools.internal.xjc.reader.xmlschema.WildcardNameClassBuilder;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,13 +31,28 @@ public class JmxRequestBuilder {
         return request;
     }
 
-    public JmxRequestBuilder setAttributeName(String pAttribute) {
+    public JmxRequestBuilder attribute(String pAttribute) {
         request.setAttributeName(pAttribute);
         return this;
     }
 
-    public JmxRequestBuilder setAttributeNames(List<String> pAttributeNames) {
+    public JmxRequestBuilder attributes(List<String> pAttributeNames) {
         request.setAttributeNames(pAttributeNames);
+        return this;
+    }
+
+    public JmxRequestBuilder attributes(String ... pAttributeNames) {
+        request.setAttributeNames(Arrays.asList(pAttributeNames));
+        return this;
+    }
+
+    public JmxRequestBuilder operation(String pOperation) {
+        request.setOperation(pOperation);
+        return this;
+    }
+
+    public JmxRequestBuilder value(String pValue) {
+        request.setValue(pValue);
         return this;
     }
 }
