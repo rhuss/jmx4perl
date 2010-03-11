@@ -1,6 +1,12 @@
 0.65 
   - A JDK 6 java agent added for exporting the j4p protocol via
     HTTP/JSON.
+  - Extended READ operation to support MBean patternames and multiple
+    attributes with a single request
+  - Renamed 'max_depth', 'max_list_size','max_objects' as processing 
+    configuration parameters to 'maxDepth', 'maxCollectionSize' and
+    'maxObjects' respectively for consistencies sake.
+  - Bug fix: POST request respect these parameters as well now 
 
 0.60  (2009-02-28)
   - OSGi bundle (including dependencies) for exposing JSON export via

@@ -55,7 +55,7 @@
         collections are truncated.
       </description>
       <param-name>maxCollectionSize</param-name>
-      <param-value>0</param-value>
+      <param-value>1000</param-value>
     </init-param>
     <init-param>
       <description>

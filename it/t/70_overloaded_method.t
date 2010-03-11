@@ -17,6 +17,7 @@ $resp = $jmx->request($req);
 is($resp->{value},1,"First operation called");
 $req = new JMX::Jmx4Perl::Request(EXEC,"jmx4perl.it:type=operation", "overloadedMethod(java.lang.String,int)","bla",1);
 $resp = $jmx->request($req);
+#print Dumper($resp);
 is($resp->{value},2,"Second operation called");
 $req = new JMX::Jmx4Perl::Request(EXEC,"jmx4perl.it:type=operation", "overloadedMethod(java.lang.String,int,long)","bla",3,3);
 $resp = $jmx->request($req);

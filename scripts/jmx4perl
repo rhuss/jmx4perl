@@ -202,16 +202,16 @@ in this order):
 
 =over
 
-=item max_depth
+=item maxDepth
 
 Maximum nesting level of the returned JSON structure for a certain MBean
 (default: 5)
 
-=item max_list_size
+=item maxCollectionSize
 
 Maximum size of a collection after which it gets truncated (default: 150)
 
-=item max_objects
+=item maxObjects
 
 Maximum overall objects to fetch for a certain MBean (default: 1000)
 
@@ -237,9 +237,9 @@ sub command_attributes {
                 for my $a (keys %{$attrs}) {
                     print "$d:$p -- $a";
 					eval {
-						my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a,{max_depth => $max_depth,
-                                                                                         max_objects => $max_objects,
-                                                                                         max_list_size => $max_list_size});
+						my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a,{maxDepth => $max_depth,
+                                                                                         maxObjects => $max_objects,
+                                                                                         maxCollectionSize => $max_list_size});
                         my $response = $jmx->request($request);
                         if ($response->is_error) {                            
                             print "\nERROR: ",$response->error_text,"\n";

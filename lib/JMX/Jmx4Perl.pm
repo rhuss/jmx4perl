@@ -223,7 +223,7 @@ sub new {
 
 # ==========================================================================
 
-=item $resp => $jmx->get_attribute(...)
+=item $value => $jmx->get_attribute(...)
 
   $value = $jmx->get_attribute($mbean,$attribute,$path) 
   $value = $jmx->get_attribute($alias)
@@ -257,12 +257,68 @@ value, this argument is taken as alias (without any path). If you want to use
 aliases together with a path, you need to use the second form with a hash ref
 for providing the (named) arguments. 
 
-If no attribute name is provided the value of E<all> attributes of this MBean 
-is returned.
+Additionally you can use a pattern and/or an array ref for attributes to
+combine multiple reads into a single request. With an array ref as attribute
+argument, all the given attributes are queried. If C<$attribute> is C<undef>
+all attributes on the MBean are queried.
 
-This method returns the value as it is returned from the server. It will throw
-an exception (die), if an error occurs on the server side, like when the name
+If you provide a pattern as described for the L<"/search"> method, a search
+will be performed on the server side, an for all MBeans found which carry the
+given attribute(s), their value will be returned. Attributes which doesn't
+apply to an MBean are ignored.
+
+Note, that the C<path> feature is not available when using MBean patterns or
+multiple values.
+
+Depending on the arguments, this method return value has a different format:
+
+=over 4
+
+=item Single MBean, single attribute
+
+The return value is the result of the serverside read operation. It will throw
+an exception (die), if an error occurs on the server side, e.g. when the name
 couldn't be found.
+
+Example:
+
+  $val = $jmx->get_attribute("java.lang:type=Memory","HeapMemoryUsage");
+  print Dumper($val);
+
+  
+
+=item Single MBean, multiple attributes
+
+In this case, this method returns a map with the attribute name as keys and the
+attribute values as map values. It will die if not a single attribute could be
+fetched, otherwise unknown attributes are ignored.
+
+  $val = $jmx->get_attribute("java.lang:type=Memory",["HeapMemoryUsage","NonHeapMemoryUsage"]);
+  print Dumper($val);
+
+=item MBean pattern, one or more attributes
+
+  $val = $jmx->get_attribute("java.lang:type=*",["HeapMemoryUsage","NonHeapMemoryUsage"]);
+  print Dumper($val);
+
+The return value is a map with the matching MBean names as keys and as value
+another map, with attribute names keys and attribute value values. If not a
+singel MBean matches or not a single attribute can be found on the matching
+MBeans this method dies. This format is the same whether you are using a single
+attribute or an array ref of attribute names. 
+
+=back
+
+Please don't overuse pattern matching (i.e. don't use patterns like "*:*"
+except you really want) since this could easily blow up your Java
+application. The return value is generated completely in memory. E.g if you
+want to retrieve all attributes for Glassfish with 
+
+  $jmx->get_attribute("*:*",undef);
+
+you will load more than 200 MB in to the Heap. Probably not something which you
+want to do. So please be nice to your appserver and use a more restrictive
+pattern. 
 
 =cut 
 
@@ -278,6 +334,7 @@ sub get_attribute {
         #croak "No attribute provided for object $object" unless $attribute;        
         my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
         $response = $self->request($request);
+        #print Dumper($response);
     }
     if ($response->is_error) {
         my $o = "(".$object.",".$attribute.($path ? "," . $path : "").")";
@@ -655,7 +712,6 @@ sub _extract_get_set_parameters {
     my $p = $args{params};
     my $f = $p->[0];
     my $with_value = $args{with_value};
-
     my ($object,$attribute,$path,$value);
     if (ref($f) eq "HASH") {
         $value = $f->{value};

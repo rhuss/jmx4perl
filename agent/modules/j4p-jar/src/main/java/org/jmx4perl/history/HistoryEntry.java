@@ -33,7 +33,7 @@ import java.io.Serializable;
  * @author roland
 * @since Jun 12, 2009
 */
-public class HistoryEntry implements Serializable {
+class HistoryEntry implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
@@ -58,10 +58,6 @@ public class HistoryEntry implements Serializable {
         return jValues;
     }
 
-
-    public int getMaxEntries() {
-        return maxEntries;
-    }
 
     public void setMaxEntries(int pMaxEntries) {
         maxEntries = pMaxEntries;

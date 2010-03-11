@@ -309,7 +309,7 @@ List of arguments of C<EXEC> operations
 
 Inner path 
 
-=item max_depth, max_objects, max_list_size
+=item maxDepth, maxObjects, maxCollectionSize
 
 Optional parameters in order to influence the size of the returned JSON
 response. 

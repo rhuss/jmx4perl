@@ -5,10 +5,7 @@ import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -34,6 +31,8 @@ import java.util.Map;
  */
 
 /**
+ * Handler for managing READ requests for reading attributes.
+ *
  * @author roland
  * @since Jun 12, 2009
  */
@@ -51,26 +50,95 @@ public class ReadHandler extends JsonRequestHandler {
     @Override
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
-        if (request.getAttributeName() != null) {
-            checkRestriction(request, request.getAttributeName());
-            return server.getAttribute(request.getObjectName(), request.getAttributeName());
-        } else {
-            // Return the value of all attributes stored
-            List<String> attributeNames = getAttributesNames(server,request.getObjectName());
+        ObjectName oName = request.getObjectName();
+        if (oName.isPattern()) {
+            Set<ObjectName> names = server.queryNames(oName,null);
+            if (names == null || names.size() == 0) {
+                throw new InstanceNotFoundException("No MBean with pattern " + request.getObjectNameAsString() +
+                        " found for reading attributes");
+            }
             Map<String,Object> ret = new HashMap<String, Object>();
-            for (String attribute : attributeNames) {
-                checkRestriction(request, attribute);
-                ret.put(attribute,
-                        server.getAttribute(request.getObjectName(), attribute));
+            List<String> attributeNames = request.getAttributeNames();
+            boolean fetchAll =  attributeNames == null || (attributeNames.contains(null));
+            for (ObjectName name : names) {
+                List<String> filteredAttributeNames;
+                if (fetchAll) {
+                    filteredAttributeNames = null;
+                    Map values = (Map) fetchAttributes(server,name,filteredAttributeNames,true /* always as map */);
+                    if (values != null && values.size() > 0) {
+                        ret.put(name.getCanonicalName(),values);
+                    }
+                } else {
+                    filteredAttributeNames = filterAttributeNames(server,name,attributeNames);
+                    if (filteredAttributeNames.size() == 0) {
+                        continue;
+                    }
+                    ret.put(name.getCanonicalName(),
+                            fetchAttributes(server,name,filteredAttributeNames,true /* always as map */));
+                }
+            }
+            if (ret.size() == 0) {
+                throw new IllegalArgumentException("No matching attributes " + request.getAttributeNames() + " found on MBeans " + names);
             }
             return ret;
+        } else {
+            return fetchAttributes(server,oName,request.getAttributeNames(),false);
         }
     }
 
-    private List<String> getAttributesNames(MBeanServerConnection pServer, ObjectName pObjectName)
+    // Return only those attributes of an mbean which has one of the given names
+    private List<String> filterAttributeNames(MBeanServerConnection pServer,ObjectName pName, List<String> pNames)
+            throws InstanceNotFoundException, IOException, ReflectionException {
+        Set<String> attrs = new HashSet<String>(getAllAttributesNames(pServer,pName));
+        List<String> ret = new ArrayList<String>();
+        for (String name : pNames) {
+            if (attrs.contains(name)) {
+                ret.add(name);
+            }
+        }
+        return ret;
+    }
+
+    private Object fetchAttributes(MBeanServerConnection pServer, ObjectName pMBeanName, List<String> pAttributeNames, boolean pAlwaysAsMap)
+            throws InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
+        if (pAttributeNames != null && pAttributeNames.size() > 0 &&
+                !(pAttributeNames.size() == 1 && pAttributeNames.get(0) == null)) {
+            if (pAttributeNames.size() == 1) {
+                checkRestriction(pMBeanName, pAttributeNames.get(0));
+                // When only a single attribute is requested, return it as plain value (backward compatibility)
+                Object ret = pServer.getAttribute(pMBeanName, pAttributeNames.get(0));
+                if (pAlwaysAsMap) {
+                    Map<String,Object> retMap = new HashMap<String, Object>();
+                    retMap.put(pAttributeNames.get(0),ret);
+                    return retMap;
+                } else {
+                    return ret;
+                }
+            } else {
+                return fetchMultiAttributes(pServer,pMBeanName,pAttributeNames);
+            }
+        } else {
+            // Return the value of all attributes stored
+            List<String> allAttributesNames = getAllAttributesNames(pServer,pMBeanName);
+            return fetchMultiAttributes(pServer,pMBeanName,allAttributesNames);
+        }
+    }
+
+    // Return a set of attributes as a map with the attribute name as key and their values as values
+    private Map<String,Object> fetchMultiAttributes(MBeanServerConnection pServer, ObjectName pMBeanName, List<String> pAttributeNames)
+            throws InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
+        Map<String,Object> ret = new HashMap<String, Object>();
+        for (String attribute : pAttributeNames) {
+            checkRestriction(pMBeanName, attribute);
+            ret.put(attribute,pServer.getAttribute(pMBeanName, attribute));
+        }
+        return ret;
+    }
+
+    private List<String> getAllAttributesNames(MBeanServerConnection pServer, ObjectName pObjectName)
             throws InstanceNotFoundException, IOException, ReflectionException {
         try {
-            MBeanInfo mBeanInfo = null;
+            MBeanInfo mBeanInfo;
             mBeanInfo = pServer.getMBeanInfo(pObjectName);
             List<String> ret = new ArrayList<String>();
             for (MBeanAttributeInfo attrInfo : mBeanInfo.getAttributes()) {
@@ -82,10 +150,10 @@ public class ReadHandler extends JsonRequestHandler {
         }
     }
 
-    private void checkRestriction(JmxRequest request, String attribute) {
-        if (!restrictor.isAttributeReadAllowed(request.getObjectName(),attribute)) {
-            throw new SecurityException("Reading attribute " + request.getAttributeName() +
-                    " is forbidden for MBean " + request.getObjectNameAsString());
+    private void checkRestriction(ObjectName mBeanName, String attribute) {
+        if (!restrictor.isAttributeReadAllowed(mBeanName,attribute)) {
+            throw new SecurityException("Reading attribute " + attribute +
+                    " is forbidden for MBean " + mBeanName.getCanonicalName());
         }
     }
 }
