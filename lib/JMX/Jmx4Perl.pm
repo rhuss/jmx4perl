@@ -310,13 +310,13 @@ attribute or an array ref of attribute names.
 =back
 
 Please don't overuse pattern matching (i.e. don't use patterns like "*:*"
-except you really want) since this could easily blow up your Java
+except you really want to) since this could easily blow up your Java
 application. The return value is generated completely in memory. E.g if you
-want to retrieve all attributes for Glassfish with 
+want to retrieve all attributes for Weblogic with 
 
   $jmx->get_attribute("*:*",undef);
 
-you will load more than 200 MB in to the Heap. Probably not something which you
+you will load more than 200 MB in to the Heap. Probably not something you
 want to do. So please be nice to your appserver and use a more restrictive
 pattern. 
 
