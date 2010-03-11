@@ -162,22 +162,24 @@ public class ObjectToJsonConverter {
     private void initLimits(Map<Config, String> pConfig) {
         // Max traversal depth
         if (pConfig != null) {
-            hardMaxDepth = getNullSaveInt(MAX_DEPTH.getValue(pConfig));
+            hardMaxDepth = getNullSaveIntLimit(MAX_DEPTH.getValue(pConfig));
 
             // Max size of collections
-            hardMaxCollectionSize = getNullSaveInt(MAX_COLLECTION_SIZE.getValue(pConfig));
+            hardMaxCollectionSize = getNullSaveIntLimit(MAX_COLLECTION_SIZE.getValue(pConfig));
 
             // Maximum of overal objects returned by one traversal.
-            hardMaxObjects = getNullSaveInt(MAX_OBJECTS.getValue(pConfig));
+            hardMaxObjects = getNullSaveIntLimit(MAX_OBJECTS.getValue(pConfig));
         } else {
-            hardMaxDepth = getNullSaveInt(MAX_DEPTH.getDefaultValue());
-            hardMaxCollectionSize = getNullSaveInt(MAX_COLLECTION_SIZE.getDefaultValue());
-            hardMaxObjects = getNullSaveInt(MAX_OBJECTS.getDefaultValue());
+            hardMaxDepth = getNullSaveIntLimit(MAX_DEPTH.getDefaultValue());
+            hardMaxCollectionSize = getNullSaveIntLimit(MAX_COLLECTION_SIZE.getDefaultValue());
+            hardMaxObjects = getNullSaveIntLimit(MAX_OBJECTS.getDefaultValue());
         }
     }
 
-    private Integer getNullSaveInt(String pValue) {
-        return pValue != null ? Integer.parseInt(pValue) : null;
+    private Integer getNullSaveIntLimit(String pValue) {
+        Integer ret = pValue != null ? Integer.parseInt(pValue) : null;
+        // "0" is interpreted as no limit
+        return ret == 0 ? null : ret;
     }
 
     private Stack<String> reverseArgs(JmxRequest pRequest) {
