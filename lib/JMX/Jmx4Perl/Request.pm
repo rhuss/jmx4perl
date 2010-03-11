@@ -83,12 +83,12 @@ So, to fetch the C<"used"> value only, specify C<used> as path within the
 request. You can access deeper nested values by building up a path with "/" as
 separator. This looks a bit like a simplified form of XPath.
 
-=item max_depth, max_objects, max_list_size
+=item maxDepth, maxObjects, maxCollectionSize
 
 With these number you can restrict the size of the JSON structure
-returned. C<max_depth> gives the maximum nesting level of the JSON
-object,C<max_objects> returns the maximum number of objects to be returned in
-total and C<max_list_size> restrict the number of all arrays and collections
+returned. C<maxDepth> gives the maximum nesting level of the JSON
+object,C<maxObjects> returns the maximum number of objects to be returned in
+total and C<maxCollectionSize> restrict the number of all arrays and collections
 (maps, lists) in the answer. Note, that you should use this restrictions if you
 are doing massive bulk operations.
 
@@ -158,7 +158,7 @@ parameter and a hashref containing named parameter for the request parameters
 (for the names, see above). Finally you can specify the arguments completely as
 a hashref, using 'type' for the entry specifying the request type.
 
-For the options C<max_depth>, C<max_objects> and C<max_list_size>, you can mix
+For the options C<maxDepth>, C<maxObjects> and C<maxCollectionSize>, you can mix
 them in into the hashref if using the hashed argument format. For the first
 format, these options are given as a final hashref.
 
@@ -248,6 +248,10 @@ sub new {
                 $self->{mbean} = shift;
                 $self->{attribute} = shift;
                 $self->{path} = shift;
+                # Use post for complex read requests
+                if (ref($self->{attribute}) eq "ARRAY" || $self->{mbean} =~ /\*/) {
+                    $self->{method} = "POST";
+                }
             } elsif ($type eq WRITE) {
                 $self->{mbean} = shift;
                 $self->{attribute} = shift;
@@ -305,7 +309,7 @@ sub TO_JSON {
     my $ret = {
                type => $self->{type} ? uc($self->{type}) : undef,
               };
-    for my $k (qw(mbean attribute path value operation arguments max_depth max_objects max_list_size target)) {
+    for my $k (qw(mbean attribute path value operation arguments maxDepth maxObjects maxCollectionSize target)) {
         $ret->{$k} = $self->{$k} if $self->{$k};
     }
     return $ret;

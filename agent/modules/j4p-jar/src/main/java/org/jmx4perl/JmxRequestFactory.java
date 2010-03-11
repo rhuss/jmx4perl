@@ -238,16 +238,10 @@ final class JmxRequestFactory {
         return p;
     }
 
-    private static void extractParameters(JmxRequest pRequest,Map pParameterMap) {
+    private static void extractParameters(JmxRequest pRequest,Map<String,String> pParameterMap) {
         if (pParameterMap != null) {
-            if (pParameterMap.get("maxDepth") != null) {
-                pRequest.setMaxDepth(Integer.parseInt( ((String []) pParameterMap.get("maxDepth"))[0]));
-            }
-            if (pParameterMap.get("maxCollectionSize") != null) {
-                pRequest.setMaxCollectionSize(Integer.parseInt(((String []) pParameterMap.get("maxCollectionSize"))[0]));
-            }
-            if (pParameterMap.get("maxObjects") != null) {
-                pRequest.setMaxObjects(Integer.parseInt(((String []) pParameterMap.get("maxObjects"))[0]));
+            for (Map.Entry<String,String> entry : pParameterMap.entrySet()) {
+                pRequest.setProcessingConfig(entry.getKey(),entry.getValue());
             }
         }
     }

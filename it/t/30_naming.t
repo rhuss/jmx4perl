@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use Test::More tests => 14;
 use File::Temp qw/tmpnam/;
+use Data::Dumper;
 
 BEGIN { use_ok("JMX::Jmx4Perl"); }
 
@@ -42,6 +43,7 @@ sub search {
     my $jmx = shift;
     my $prefix = shift;
     my $ret = $jmx->search($prefix . ",*");
+    #print Dumper($ret);
     is(scalar(@$ret),1,"One MBean found");
     return $ret->[0];
 }

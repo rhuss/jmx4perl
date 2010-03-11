@@ -1,5 +1,6 @@
 package org.jmx4perl.converter.json;
 
+import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +48,7 @@ public class ObjectToJsonConverterTest {
     @Before
     public void setup() {
         converter = new ObjectToJsonConverter(new StringToObjectConverter(),null);
-        converter.setupContext(0,0,0);
+        converter.setupContext(null,null,null);
     }
 
     @After

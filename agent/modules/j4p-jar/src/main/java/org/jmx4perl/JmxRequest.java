@@ -38,6 +38,7 @@ import java.util.*;
  * @since Apr 19, 2009
  */
 public class JmxRequest {
+
     /**
      * Enumeration for encapsulationg the request mode.
      */
@@ -75,6 +76,9 @@ public class JmxRequest {
     private String operation;
     private Type type;
     private TargetConfig targetConfig = null;
+
+    // Processing configuration for tis request object
+    private Map<Config, String> processingConfig = new HashMap<Config, String>();
 
     // Max depth of returned JSON structure when deserializing.
     private int maxDepth = 0;
@@ -138,9 +142,12 @@ public class JmxRequest {
         } else {
             extraArgs = new ArrayList<String>();
         }
-        List<String> l = (List<String>) pMap.get("arguments");
-        if (l != null) {
-            extraArgs = l;
+        List l = (List) pMap.get("arguments");
+        if (l != null && l.size() > 0) {
+            extraArgs = new ArrayList<String>();
+            for (Object val : l) {
+                extraArgs.add(val != null ? val.toString() : null);
+            }
         }
         s = (String) pMap.get("value");
         if (s != null) {
@@ -156,6 +163,12 @@ public class JmxRequest {
             targetConfig = new TargetConfig(target);
         }
 
+        Map<String,?> config = (Map<String,?>) pMap.get("config");
+        if (config != null) {
+            for (String key : config.keySet()) {
+                setProcessingConfig(key,config.get(key));
+            }
+        }
     }
 
     public String getObjectNameAsString() {
@@ -218,17 +231,51 @@ public class JmxRequest {
         return operation;
     }
 
-    public int getMaxDepth() {
-        return maxDepth;
+    public Integer getMaxDepth() {
+        return getProcessingConfigAsInt(Config.MAX_DEPTH);
     }
 
-    public int getMaxCollectionSize() {
-        return maxCollectionSize;
+    public Integer getMaxCollectionSize() {
+        return getProcessingConfigAsInt(Config.MAX_COLLECTION_SIZE);
     }
 
-    public int getMaxObjects() {
-        return maxObjects;
+    public Integer getMaxObjects() {
+        return getProcessingConfigAsInt(Config.MAX_OBJECTS);
     }
+
+    /**
+     * Get a processing configuration or null if not set
+     * @param pConfig configuration key to fetch
+     * @return string value or <code>null</code> if not set
+     */
+    public String getProcessingConfig(Config pConfig) {
+        return processingConfig.get(pConfig);
+    }
+
+    /**
+     * Get a processing configuration as integer or null
+     * if not set
+     *
+     * @param pConfig configuration to lookup
+     * @return integer value of configuration or null if not set.
+     */
+    public Integer getProcessingConfigAsInt(Config pConfig) {
+        String value = processingConfig.get(pConfig);
+        if (value != null) {
+            return Integer.parseInt(value);
+        } else {
+            return null;
+        }
+    }
+
+    void setProcessingConfig(String pKey, Object pValue) {
+        Config cKey = Config.getByKey(pKey);
+        if (cKey != null) {
+            processingConfig.put(cKey,pValue != null ? pValue.toString() : null);
+        }
+    }
+
+
 
     void setAttributeName(String pName) {
         if (attributeNames != null) {
@@ -256,18 +303,6 @@ public class JmxRequest {
         extraArgs = pExtraArgs;
     }
 
-    void setMaxObjects(int pMaxObjects) {
-        maxObjects = pMaxObjects;
-    }
-
-    void setMaxCollectionSize(int pMaxCollectionSize) {
-        maxCollectionSize = pMaxCollectionSize;
-    }
-
-    void setMaxDepth(int pMaxDepth) {
-        maxDepth = pMaxDepth;
-    }
-
     public TargetConfig getTargetConfig() {
         return targetConfig;
     }
@@ -279,6 +314,7 @@ public class JmxRequest {
             return targetConfig.getUrl();
         }
     }
+
 
     @Override
     public String toString() {

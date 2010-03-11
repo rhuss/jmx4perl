@@ -133,8 +133,76 @@ public class ReadHandlerTest {
     @Test
     public void searchPatternNoAttribute() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
+        JmxRequest[] requests = new JmxRequest[] {
+                new JmxRequestBuilder(READ, patternMBean).
+                        attribute(null).
+                        build(),
+                new JmxRequestBuilder(READ, patternMBean).
+                        // A single null element is enough to denote "all"
+                        attributes(Arrays.asList("bla",null)).
+                        build()
+        };
+
+        for (JmxRequest request : requests) {
+            ObjectName beans[] =  {
+                    new ObjectName("java.lang:type=Memory"),
+                    new ObjectName("java.lang:type=GarbageCollection")
+            };
+            MBeanServerConnection connection = prepareMultiAttributeTest(patternMBean, beans);
+            expect(connection.getAttribute(beans[0],"mem0")).andReturn("memval0");
+            expect(connection.getAttribute(beans[0],"mem1")).andReturn("memval1");
+            expect(connection.getAttribute(beans[0],"common")).andReturn("commonVal0");
+            expect(connection.getAttribute(beans[1],"gc0")).andReturn("gcval0");
+            expect(connection.getAttribute(beans[1],"gc1")).andReturn("gcval1");
+            expect(connection.getAttribute(beans[1],"gc3")).andReturn("gcval3");
+            expect(connection.getAttribute(beans[1],"common")).andReturn("commonVal1");
+            replay(connection);
+
+            Map res = (Map) handler.handleRequest(connection, request);
+
+            assertEquals("memval0",((Map) res.get("java.lang:type=Memory")).get("mem0"));
+            assertEquals("memval1",((Map) res.get("java.lang:type=Memory")).get("mem1"));
+            assertEquals("commonVal0",((Map) res.get("java.lang:type=Memory")).get("common"));
+            assertEquals("gcval0",((Map) res.get("java.lang:type=GarbageCollection")).get("gc0"));
+            assertEquals("gcval1",((Map) res.get("java.lang:type=GarbageCollection")).get("gc1"));
+            assertEquals("gcval3",((Map) res.get("java.lang:type=GarbageCollection")).get("gc3"));
+            assertEquals("commonVal1",((Map) res.get("java.lang:type=GarbageCollection")).get("common"));
+
+            verify(connection);
+        }
+    }
+
+    @Test
+    public void searchPatternNoAttributesFound() throws Exception {
+        ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
                 attribute(null).
+                build();
+        ObjectName beans[] =  {
+                new ObjectName("java.lang:type=Memory"),
+                new ObjectName("java.lang:type=GarbageCollection")
+        };
+        MBeanServerConnection connection = createMock(MBeanServerConnection.class);
+        expect(connection.queryNames(patternMBean,null)).andReturn(new HashSet(Arrays.asList(beans)));
+        prepareMBeanInfos(connection,beans[0],new String[0]);
+        prepareMBeanInfos(connection,beans[1],new String[] { "gc0" });
+        expect(connection.getAttribute(beans[1],"gc0")).andReturn("gcval0");
+        replay(connection);
+
+        Map res = (Map) handler.handleRequest(connection, request);
+
+        // Only a single entry fetched
+        assertEquals(res.size(),1);
+        verify(connection);
+    }
+
+
+
+    @Test
+    public void searchPatternNoMatchingAttribute() throws Exception {
+        ObjectName patternMBean = new ObjectName("java.lang:type=*");
+        JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
+                attribute("blub").
                 build();
 
         ObjectName beans[] =  {
@@ -142,7 +210,6 @@ public class ReadHandlerTest {
                 new ObjectName("java.lang:type=GarbageCollection")
         };
         MBeanServerConnection connection = prepareMultiAttributeTest(patternMBean, beans);
-
         replay(connection);
         try {
             handler.handleRequest(connection, request);

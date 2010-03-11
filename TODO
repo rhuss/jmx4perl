@@ -2,20 +2,13 @@
 06 WS-Management integration ?
 07 Path handling for operation return values
 10 Bean Path accessor.
-12 Move 'get_attributes' to Jmx4Perl
+12 Adapt 'get_attributes' to use new bulk request feature
 14 JSON Schema for protocol
 15 Shell
+16 SSL Support for jvm-agent-6
+17 JVM agent with Jetty for Non Sun-JDK 6 environments
+18 More unit tests
+19 "ignore-errors" option
+20 Pattern switching of history
+21 Fix bug with POST and history (see iteration tests)
 
-
-IT for 0.60:
-  * Oracle WebLogic 9.2 MP3 & 10.0.2.0
-  * Apache Tomcat 5.5.28 & 6.0.20
-  * Jetty 5.1.15 & 6.1.21 & 7.0.0 (with JMX enabled)
-  * IBM Websphere 6.1 & 7.0
-
-Done:
-  * Resin 3.1.9
-  * Jonas 4.10.3 (with Jetty 5.1.10 and Tomcat 5.5.26) and 5.1.0
-  * JBoss 4.2.3 GA & 5.1.0 GA
-  * Glassfish 2.1.1 and v3
-  * Apache Geronimo 2.1.4 (Jetty 6 and Tomcat 6)

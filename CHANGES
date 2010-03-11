@@ -1,3 +1,11 @@
+0.65
+  - Extended READ operation to support MBean patternames and multiple
+    attributes with a single request
+  - Renamed 'max_depth', 'max_list_size','max_objects' as processing 
+    configuration parameters to 'maxDepth', 'maxCollectionSize' and
+    'maxObjects' respectively for consistencies sake.
+  - Bug fix: POST request respect these parameters as well now 
+
 0.60  (2009-02-28)
   - OSGi bundle (including dependencies) for exposing JSON export via
     the OSGi HTTP-Service. It's in agent/modules/j4p-osgi.

@@ -100,12 +100,7 @@ configuration if you are using the agent servlet as a proxy, e.g.
 =cut
 
 # HTTP Parameters to be used for transmitting the request
-my %PARAM_MAPPING = (
-                     "max_depth" => "maxDepth",
-                     "max_list_size" => "maxCollectionSize",
-                     "max_objects" => "maxObjects"
-                    );
-
+my @PARAMS = ("maxDepth","maxCollectionSize","maxObjects");
 
 # Init called by parent package within 'new' for specific initialization. See
 # above for the parameters recognized
@@ -193,7 +188,7 @@ sub request {
 sub _to_http_request {
     my $self = shift;
     my @reqs = @_;
-    if (@reqs == 1 && !$reqs[0]->get("target") && lc($reqs[0]->get("method")) ne "post") {
+    if ($self->_use_GET_request(\@reqs)) {
         # Old, rest-style
         my $url = $self->request_url($reqs[0]);
         return HTTP::Request->new(GET => $url);
@@ -201,10 +196,23 @@ sub _to_http_request {
         my $url = $self->cfg('url') || croak "No URL provided";
         $url .= "/" unless $url =~ m|/$|;
         my $request = HTTP::Request->new(POST => $url);
-        my $content = to_json(\@reqs, { convert_blessed => 1 });
+        my $content = to_json(@reqs > 1 ? \@reqs : $reqs[0], { convert_blessed => 1 });
+        #print Dumper($content);
         $request->content($content);
         return $request;
     }    
+}
+
+sub _use_GET_request {
+    my $self = shift;
+    my $reqs = shift;
+    if (@$reqs == 1) {
+        my $req = $reqs->[0];
+        # For proxy configs and explicite set POST request, get is not used
+        return !defined($req->get("target")) && lc($req->get("method")) ne "post" ;
+    } else {
+        return 0;
+    }
 }
 
 # Create one or more response objects for a given request
@@ -329,8 +337,8 @@ sub request_url {
     $req =~ s|/{2,}|/|g;
     #print "R: $req\n";
     my @params;
-    for my $k (keys %PARAM_MAPPING) {
-        push @params, $PARAM_MAPPING{$k} . "=" . $request->get($k)
+    for my $k (@PARAMS) {
+        push @params, $k . "=" . $request->get($k)
           if $request->get($k);
     }
     $req .= "?" . join("&",@params) if @params;

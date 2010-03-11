@@ -45,20 +45,20 @@ public enum Config {
     DISPATCHER_CLASSES("dispatcherClasses"),
 
     // Maximum traversal depth for serialization of complex objects.
-    MAX_DEPTH("maxDepth","0"),
+    MAX_DEPTH("maxDepth",null),
 
     // Maximum size of collections returned during serialization.
     // If larger, the collection is truncated
-    MAX_COLLECTIONS_SIZE("maxCollectionSize","0"),
+    MAX_COLLECTION_SIZE("maxCollectionSize",null),
 
     // Maximum number of objects returned by serialization
-    MAX_OBJECTS("maxObjects","0"),
+    MAX_OBJECTS("maxObjects",null),
 
     // Context used for agent, used e.g. in the OSGi activator
     // (but not for the servlet, this is done in web.xml)
     AGENT_CONTEXT("agentContext","/j4p"),
 
-    // User and password for authentication purposes. 
+    // User and password for authentication purposes.
     USER("user"),
     PASSWORD("password");
 

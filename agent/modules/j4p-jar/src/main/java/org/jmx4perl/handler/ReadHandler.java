@@ -58,14 +58,24 @@ public class ReadHandler extends JsonRequestHandler {
                         " found for reading attributes");
             }
             Map<String,Object> ret = new HashMap<String, Object>();
+            List<String> attributeNames = request.getAttributeNames();
+            boolean fetchAll =  attributeNames == null || (attributeNames.contains(null));
             for (ObjectName name : names) {
-                List<String> attributeNames = request.getAttributeNames();
-                List<String> filteredAttributeNames = filterAttributeNames(server,name,attributeNames);
-                if (filteredAttributeNames.size() == 0) {
-                    continue;
+                List<String> filteredAttributeNames;
+                if (fetchAll) {
+                    filteredAttributeNames = null;
+                    Map values = (Map) fetchAttributes(server,name,filteredAttributeNames,true /* always as map */);
+                    if (values != null && values.size() > 0) {
+                        ret.put(name.getCanonicalName(),values);
+                    }
+                } else {
+                    filteredAttributeNames = filterAttributeNames(server,name,attributeNames);
+                    if (filteredAttributeNames.size() == 0) {
+                        continue;
+                    }
+                    ret.put(name.getCanonicalName(),
+                            fetchAttributes(server,name,filteredAttributeNames,true /* always as map */));
                 }
-                ret.put(name.getCanonicalName(),
-                        fetchAttributes(server,name,filteredAttributeNames,true /* always as map */));
             }
             if (ret.size() == 0) {
                 throw new IllegalArgumentException("No matching attributes " + request.getAttributeNames() + " found on MBeans " + names);
@@ -76,7 +86,7 @@ public class ReadHandler extends JsonRequestHandler {
         }
     }
 
-    // Return only those attributres of an mbean which has one of the given names
+    // Return only those attributes of an mbean which has one of the given names
     private List<String> filterAttributeNames(MBeanServerConnection pServer,ObjectName pName, List<String> pNames)
             throws InstanceNotFoundException, IOException, ReflectionException {
         Set<String> attrs = new HashSet<String>(getAllAttributesNames(pServer,pName));

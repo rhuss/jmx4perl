@@ -309,6 +309,17 @@ attribute or an array ref of attribute names.
 
 =back
 
+Please don't overuse pattern matching (i.e. don't use patterns like "*:*"
+except you really want) since this could easily blow up your Java
+application. The return value is generated completely in memory. E.g if you
+want to retrieve all attributes for Glassfish with 
+
+  $jmx->get_attribute("*:*",undef);
+
+you will load more than 200 MB in to the Heap. Probably not something which you
+want to do. So please be nice to your appserver and use a more restrictive
+pattern. 
+
 =cut 
 
 sub get_attribute {
@@ -323,6 +334,7 @@ sub get_attribute {
         #croak "No attribute provided for object $object" unless $attribute;        
         my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
         $response = $self->request($request);
+        #print Dumper($response);
     }
     if ($response->is_error) {
         my $o = "(".$object.",".$attribute.($path ? "," . $path : "").")";
@@ -700,7 +712,6 @@ sub _extract_get_set_parameters {
     my $p = $args{params};
     my $f = $p->[0];
     my $with_value = $args{with_value};
-
     my ($object,$attribute,$path,$value);
     if (ref($f) eq "HASH") {
         $value = $f->{value};
