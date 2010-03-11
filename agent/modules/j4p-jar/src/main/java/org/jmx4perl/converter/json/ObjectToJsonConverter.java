@@ -179,7 +179,7 @@ public class ObjectToJsonConverter {
     private Integer getNullSaveIntLimit(String pValue) {
         Integer ret = pValue != null ? Integer.parseInt(pValue) : null;
         // "0" is interpreted as no limit
-        return ret == 0 ? null : ret;
+        return (ret != null && ret == 0) ? null : ret;
     }
 
     private Stack<String> reverseArgs(JmxRequest pRequest) {
