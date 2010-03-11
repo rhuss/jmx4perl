@@ -5,7 +5,7 @@
 
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-it</artifactId>
-  <version>0.60.0</version>
+  <version>0.65.0.M1</version>
   <packaging>war</packaging>
   <name>j4p-it</name>
   <description>j4p - servlet used for integration testing</description>
