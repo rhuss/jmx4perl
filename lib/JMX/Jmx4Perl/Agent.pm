@@ -100,7 +100,7 @@ configuration if you are using the agent servlet as a proxy, e.g.
 =cut
 
 # HTTP Parameters to be used for transmitting the request
-my @PARAMS = ("maxDepth","maxCollectionSize","maxObjects");
+my @PARAMS = ("maxDepth","maxCollectionSize","maxObjects","ignoreErrors");
 
 # Init called by parent package within 'new' for specific initialization. See
 # above for the parameters recognized
@@ -197,7 +197,7 @@ sub _to_http_request {
         $url .= "/" unless $url =~ m|/$|;
         my $request = HTTP::Request->new(POST => $url);
         my $content = to_json(@reqs > 1 ? \@reqs : $reqs[0], { convert_blessed => 1 });
-        #print Dumper($content);
+        #print Dumper($reqs[0],$content);
         $request->content($content);
         return $request;
     }    

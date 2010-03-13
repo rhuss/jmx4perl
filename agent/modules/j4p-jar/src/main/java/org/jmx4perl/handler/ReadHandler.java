@@ -51,6 +51,7 @@ public class ReadHandler extends JsonRequestHandler {
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
         ObjectName oName = request.getObjectName();
+        JmxRequest.ValueFaultHandler faultHandler = request.getValueFaultHandler();
         if (oName.isPattern()) {
             Set<ObjectName> names = server.queryNames(oName,null);
             if (names == null || names.size() == 0) {
@@ -64,7 +65,7 @@ public class ReadHandler extends JsonRequestHandler {
                 List<String> filteredAttributeNames;
                 if (fetchAll) {
                     filteredAttributeNames = null;
-                    Map values = (Map) fetchAttributes(server,name,filteredAttributeNames,true /* always as map */);
+                    Map values = (Map) fetchAttributes(server,name,filteredAttributeNames,faultHandler,true /* always as map */);
                     if (values != null && values.size() > 0) {
                         ret.put(name.getCanonicalName(),values);
                     }
@@ -74,15 +75,16 @@ public class ReadHandler extends JsonRequestHandler {
                         continue;
                     }
                     ret.put(name.getCanonicalName(),
-                            fetchAttributes(server,name,filteredAttributeNames,true /* always as map */));
+                            fetchAttributes(server,name,filteredAttributeNames,faultHandler,true /* always as map */));
                 }
             }
             if (ret.size() == 0) {
-                throw new IllegalArgumentException("No matching attributes " + request.getAttributeNames() + " found on MBeans " + names);
+                throw new IllegalArgumentException("No matching attributes " +
+                        request.getAttributeNames() + " found on MBeans " + names);
             }
             return ret;
         } else {
-            return fetchAttributes(server,oName,request.getAttributeNames(),false);
+            return fetchAttributes(server,oName,request.getAttributeNames(),faultHandler,false);
         }
     }
 
@@ -99,7 +101,8 @@ public class ReadHandler extends JsonRequestHandler {
         return ret;
     }
 
-    private Object fetchAttributes(MBeanServerConnection pServer, ObjectName pMBeanName, List<String> pAttributeNames, boolean pAlwaysAsMap)
+    private Object fetchAttributes(MBeanServerConnection pServer, ObjectName pMBeanName, List<String> pAttributeNames,
+                                   JmxRequest.ValueFaultHandler pFaultHandler,boolean pAlwaysAsMap)
             throws InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
         if (pAttributeNames != null && pAttributeNames.size() > 0 &&
                 !(pAttributeNames.size() == 1 && pAttributeNames.get(0) == null)) {
@@ -115,22 +118,42 @@ public class ReadHandler extends JsonRequestHandler {
                     return ret;
                 }
             } else {
-                return fetchMultiAttributes(pServer,pMBeanName,pAttributeNames);
+                return fetchMultiAttributes(pServer,pMBeanName,pAttributeNames,pFaultHandler);
             }
         } else {
             // Return the value of all attributes stored
             List<String> allAttributesNames = getAllAttributesNames(pServer,pMBeanName);
-            return fetchMultiAttributes(pServer,pMBeanName,allAttributesNames);
+            return fetchMultiAttributes(pServer,pMBeanName,allAttributesNames,pFaultHandler);
         }
     }
 
     // Return a set of attributes as a map with the attribute name as key and their values as values
-    private Map<String,Object> fetchMultiAttributes(MBeanServerConnection pServer, ObjectName pMBeanName, List<String> pAttributeNames)
-            throws InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
+    private Map<String,Object> fetchMultiAttributes(MBeanServerConnection pServer, ObjectName pMBeanName, List<String> pAttributeNames,
+                                                    JmxRequest.ValueFaultHandler pFaultHandler)
+    throws InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
         Map<String,Object> ret = new HashMap<String, Object>();
         for (String attribute : pAttributeNames) {
             checkRestriction(pMBeanName, attribute);
-            ret.put(attribute,pServer.getAttribute(pMBeanName, attribute));
+            try {
+                ret.put(attribute,pServer.getAttribute(pMBeanName, attribute));
+            } catch (MBeanException e) {
+                // The fault handler might to decide to rethrow the
+                // exception in which case nothing is put extra intor ret.
+                // Otherwise, the replacement value as returned by the
+                // fault handler is inserted.
+                ret.put(attribute, pFaultHandler.handleException(e));
+            } catch (AttributeNotFoundException e) {
+                ret.put(attribute, pFaultHandler.handleException(e));
+            } catch (InstanceNotFoundException e) {
+                ret.put(attribute, pFaultHandler.handleException(e));
+            } catch (ReflectionException e) {
+                ret.put(attribute, pFaultHandler.handleException(e));
+            } catch (IOException e) {
+                ret.put(attribute, pFaultHandler.handleException(e));
+            } catch (RuntimeException e) {
+                ret.put(attribute, pFaultHandler.handleException(e));
+            }
+
         }
         return ret;
     }

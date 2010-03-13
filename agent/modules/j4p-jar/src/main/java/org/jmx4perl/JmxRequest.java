@@ -80,10 +80,8 @@ public class JmxRequest {
     // Processing configuration for tis request object
     private Map<Config, String> processingConfig = new HashMap<Config, String>();
 
-    // Max depth of returned JSON structure when deserializing.
-    private int maxDepth = 0;
-    private int maxCollectionSize = 0;
-    private int maxObjects = 0;
+    // A value fault handler for dealing with exception when extracting values
+    ValueFaultHandler valueFaultHandler = NOOP_VALUE_FAULT_HANDLER;
 
     /**
      * Create a request with the given type (with no MBean name)
@@ -169,6 +167,11 @@ public class JmxRequest {
                 setProcessingConfig(key,config.get(key));
             }
         }
+
+        s = getProcessingConfig(Config.IGNORE_ERRORS);
+        if (s != null && s.matches("^(true|yes|on|1)$")) {
+            valueFaultHandler = IGNORE_VALUE_FAULT_HANDLER;
+        }
     }
 
     public String getObjectNameAsString() {
@@ -229,18 +232,6 @@ public class JmxRequest {
 
     public String getOperation() {
         return operation;
-    }
-
-    public Integer getMaxDepth() {
-        return getProcessingConfigAsInt(Config.MAX_DEPTH);
-    }
-
-    public Integer getMaxCollectionSize() {
-        return getProcessingConfigAsInt(Config.MAX_COLLECTION_SIZE);
-    }
-
-    public Integer getMaxObjects() {
-        return getProcessingConfigAsInt(Config.MAX_OBJECTS);
     }
 
     /**
@@ -387,6 +378,25 @@ public class JmxRequest {
         return ret;
     }
 
+    /**
+     * Handle an exception occured during value extraction
+     *
+     * @param pFault the fault occured
+     * @return a replacement value if this should be used instead or the exception is rethrown if
+     *         the handler doesn't handle it
+     */
+    public <T extends Throwable> Object handleValueFault(T pFault) throws T {
+        return valueFaultHandler.handleException(pFault);
+    }
+
+    /**
+     * Get tha value fault handler, which can be passwed around. {@link #handleValueFault(Throwable)}
+     * @return the value fault handler
+     */
+    public ValueFaultHandler getValueFaultHandler() {
+        return valueFaultHandler;
+    }
+
     // ===============================================================================
     // Proxy configuration
 
@@ -395,11 +405,10 @@ public class JmxRequest {
         private Map<String,Object> env;
 
         public TargetConfig(Map pMap) {
-            String url = (String) pMap.get("url");
+            url = (String) pMap.get("url");
             if (url == null) {
                 throw new IllegalArgumentException("No service url given for JSR-160 target");
             }
-            this.url = url;
             String user = (String) pMap.get("user");
             if (user != null) {
                 env = new HashMap<String, Object>();
@@ -436,5 +445,34 @@ public class JmxRequest {
                     "]";
         }
     }
+
+    // =======================================================================================================
+    // Inner interface in order to deal with value exception
+    public interface ValueFaultHandler {
+        /**
+         * Handle the given exception and return an object
+         * which can be used as a replacement for the real
+         * value
+         *
+         * @param exception exception to ignore
+         * @return replacement value or the exception is rethrown if this handler doesnt handle this exception
+         * @throws T if the handler doesnt handel the exception
+         */
+        <T extends Throwable> Object handleException(T exception) throws T;
+    }
+
+    final private static ValueFaultHandler NOOP_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
+        public <T extends Throwable> Object handleException(T exception) throws T {
+            // Dont handle exception on our own, we rethrow it
+            throw exception;
+        }
+    };
+
+    final private static ValueFaultHandler IGNORE_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
+        public <T extends Throwable> Object handleException(T exception) throws T {
+            return "ERROR: " + exception.getMessage() + " (" + exception.getClass() + ")";
+        }
+    };
+
 
 }

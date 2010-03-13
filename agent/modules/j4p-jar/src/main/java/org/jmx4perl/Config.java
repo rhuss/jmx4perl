@@ -60,7 +60,12 @@ public enum Config {
 
     // User and password for authentication purposes.
     USER("user"),
-    PASSWORD("password");
+    PASSWORD("password"),
+
+    // Runtime configuration (i.e. must come in with a request)
+    // for ignoring errors during JMX operations and JSON serialization.
+    // This works only for certain operations like pattern reads.
+    IGNORE_ERRORS("ignoreErrors");
 
     private String key;
     private String defaultValue;

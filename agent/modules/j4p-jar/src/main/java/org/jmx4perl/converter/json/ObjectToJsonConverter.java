@@ -59,6 +59,9 @@ public class ObjectToJsonConverter {
     // Thread-Local set in order to prevent infinite recursions
     private ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>();
 
+    // Thread-Local for the fault handler when extracting value
+    private ThreadLocal<JmxRequest.ValueFaultHandler> faultHandlerLocal = new ThreadLocal<JmxRequest.ValueFaultHandler>();
+
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
 
@@ -276,6 +279,7 @@ public class ObjectToJsonConverter {
     }
 
 
+
     // Check whether JSR77 classes are available
     // Not used for the moment, but left here for reference
     /*
@@ -323,6 +327,17 @@ public class ObjectToJsonConverter {
         }
     }
 
+    /**
+     * Get the fault handler used for dealing with exceptions during value extraction.
+     *
+     * @return the fault handler
+     */
+    public JmxRequest.ValueFaultHandler getValueFaultHandler() {
+        ObjectToJsonConverter.StackContext ctx = stackContextLocal.get();
+        return ctx.getValueFaultHandler();
+    }
+
+
     boolean exceededMaxObjects() {
         ObjectToJsonConverter.StackContext ctx = stackContextLocal.get();
         return ctx.getMaxObjects() != null && ctx.getObjectCount() > ctx.getMaxObjects();
@@ -337,11 +352,12 @@ public class ObjectToJsonConverter {
         Integer maxCollectionSize = getLimit(pRequest.getProcessingConfigAsInt(Config.MAX_COLLECTION_SIZE),hardMaxCollectionSize);
         Integer maxObjects = getLimit(pRequest.getProcessingConfigAsInt(Config.MAX_OBJECTS),hardMaxObjects);
 
-        setupContext(maxDepth,maxCollectionSize,maxObjects);
+        setupContext(maxDepth, maxCollectionSize, maxObjects, pRequest.getValueFaultHandler());
     }
 
-    void setupContext(Integer pMaxDepth,Integer pMaxCollectionSize,Integer pMaxObjects) {
-        StackContext stackContext = new StackContext(pMaxDepth,pMaxCollectionSize,pMaxObjects);
+    void setupContext(Integer pMaxDepth, Integer pMaxCollectionSize, Integer pMaxObjects,
+                      JmxRequest.ValueFaultHandler pValueFaultHandler) {
+        StackContext stackContext = new StackContext(pMaxDepth,pMaxCollectionSize,pMaxObjects,pValueFaultHandler);
         stackContextLocal.set(stackContext);
     }
 
@@ -378,11 +394,13 @@ public class ObjectToJsonConverter {
         private Integer maxObjects;
 
         private int objectCount = 0;
+        private JmxRequest.ValueFaultHandler valueFaultHandler;
 
-        public StackContext(Integer pMaxDepth, Integer pMaxCollectionSize, Integer pMaxObjects) {
+        public StackContext(Integer pMaxDepth, Integer pMaxCollectionSize, Integer pMaxObjects, JmxRequest.ValueFaultHandler pValueFaultHandler) {
             maxDepth = pMaxDepth;
             maxCollectionSize = pMaxCollectionSize;
             maxObjects = pMaxObjects;
+            valueFaultHandler = pValueFaultHandler;
         }
 
         void push(Object object) {
@@ -436,6 +454,10 @@ public class ObjectToJsonConverter {
 
         public Integer getMaxObjects() {
             return maxObjects;
+        }
+
+        public JmxRequest.ValueFaultHandler getValueFaultHandler() {
+            return valueFaultHandler;
         }
     }
 

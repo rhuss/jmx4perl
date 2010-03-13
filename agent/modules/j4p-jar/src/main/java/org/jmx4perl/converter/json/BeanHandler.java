@@ -1,5 +1,6 @@
 package org.jmx4perl.converter.json;
 
+import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.json.simple.JSONObject;
 
@@ -65,9 +66,10 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
     public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
                                 Stack<String> pExtraArgs,boolean jsonify)
             throws AttributeNotFoundException {
+        JmxRequest.ValueFaultHandler faultHandler = pConverter.getValueFaultHandler();
         if (!pExtraArgs.isEmpty()) {
             String attribute = pExtraArgs.pop();
-            Object attributeValue = extractBeanAttribute(pValue,attribute);
+            Object attributeValue = extractBeanAttribute(pValue,attribute,faultHandler);
             return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);
         } else {
             if (!jsonify) {
@@ -80,7 +82,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
                 if (attributes != null && attributes.size() > 0) {
                     Map ret = new JSONObject();
                     for (String attribute : attributes) {
-                        Object value = extractBeanAttribute(pValue,attribute);
+                        Object value = extractBeanAttribute(pValue,attribute,faultHandler);
                         if (value == null) {
                             ret.put(attribute,null);
                         } else if (value == pValue) {
@@ -121,7 +123,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         return attrs;
     }
 
-    private Object extractBeanAttribute(Object pValue, String pAttribute)
+    private Object extractBeanAttribute(Object pValue, String pAttribute, JmxRequest.ValueFaultHandler pFaultHandler)
             throws AttributeNotFoundException {
         Class clazz = pValue.getClass();
 
@@ -142,18 +144,18 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
             break;
         }
         if (method == null) {
-            throw new AttributeNotFoundException(
-                    "No getter known for attribute " + pAttribute + " for class " + pValue.getClass().getName());
+            return pFaultHandler.handleException(new AttributeNotFoundException(
+                    "No getter known for attribute " + pAttribute + " for class " + pValue.getClass().getName()));
         }
         try {
             method.setAccessible(true);
             return method.invoke(pValue);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Error while extracting " + pAttribute
-                    + " from " + pValue,e);
+            return pFaultHandler.handleException(new IllegalStateException("Error while extracting " + pAttribute
+                    + " from " + pValue,e));
         } catch (InvocationTargetException e) {
-            throw new IllegalStateException("Error while extracting " + pAttribute
-                    + " from " + pValue,e);
+            return pFaultHandler.handleException(new IllegalStateException("Error while extracting " + pAttribute
+                    + " from " + pValue,e));
         }
     }
 

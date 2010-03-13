@@ -7,6 +7,9 @@
     configuration parameters to 'maxDepth', 'maxCollectionSize' and
     'maxObjects' respectively for consistencies sake.
   - Bug fix: POST request respect these parameters as well now 
+  - Added 'ignoreErrors' request option in order to allow a bulk read
+    to succeed even if single read fails. In this case, the valu will
+    be set to an appropriate error message.
 
 0.60  (2009-02-28)
   - OSGi bundle (including dependencies) for exposing JSON export via

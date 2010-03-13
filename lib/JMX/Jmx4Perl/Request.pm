@@ -222,7 +222,6 @@ sub new {
     my $class = shift;
     my $type = shift;
     my $self;
-
     # Hash as argument
     if (ref($type) eq "HASH") {
         $self = $type;
@@ -242,8 +241,7 @@ sub new {
             if (ref($opts) eq "HASH") {
                 pop @_;
                 map { $self->{$_} = $opts->{$_} } keys %$opts;
-            } else {
-            }
+            } 
             if ($type eq READ) {
                 $self->{mbean} = shift;
                 $self->{attribute} = shift;
@@ -309,9 +307,14 @@ sub TO_JSON {
     my $ret = {
                type => $self->{type} ? uc($self->{type}) : undef,
               };
-    for my $k (qw(mbean attribute path value operation arguments maxDepth maxObjects maxCollectionSize target)) {
-        $ret->{$k} = $self->{$k} if $self->{$k};
+    for my $k (qw(mbean attribute path value operation arguments target)) {
+        $ret->{$k} = $self->{$k} if defined($self->{$k});
     }
+    my %config;
+    for my $k (qw(maxDepth maxObjects maxCollectionSize ignoreErrors)) {
+        $config{$k} = $self->{$k} if defined($self->{$k});
+    }
+    $ret->{config} = \%config if keys(%config);
     return $ret;
 }
 
