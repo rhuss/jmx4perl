@@ -237,6 +237,8 @@ sub new {
         } else {
             # Unnamed arguments
             $self = {type =>  $type};
+
+            # Options are given as last part
             my $opts = $_[scalar(@_)-1];
             if (ref($opts) eq "HASH") {
                 pop @_;

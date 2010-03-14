@@ -145,7 +145,7 @@ JDK6 JVM AGENT
   or build it from scratch with maven out of
   agent/modules/j4p-jvm-jdk6.
 
-  To use it, simly provide the following argument to the Java
+  To use it simply provide the following argument to the Java
   application to monitor (any Java 6 application can be used):
 
   -javaagent:/path/to/j4p-jvm-jdk6-<version>-agent.jar
@@ -154,7 +154,7 @@ JDK6 JVM AGENT
   as well as other aspects like authentication:
 
   * Provide options on the commandline as key-value pairs:
-    -javaagent:agent.jar=port=7777,host=localhots
+    -javaagent:agent.jar=port=7777,host=localhost
 
   * Via a properties file
     -javaagent:agent.jar=config=/path/to/config.properties

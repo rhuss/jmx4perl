@@ -19,6 +19,10 @@ $req = new JMX::Jmx4Perl::Request(EXEC,"jmx4perl.it:type=operation", "overloaded
 $resp = $jmx->request($req);
 #print Dumper($resp);
 is($resp->{value},2,"Second operation called");
+$req = new JMX::Jmx4Perl::Request(EXEC,"jmx4perl.it:type=operation", "overloadedMethod([Ljava.lang.String;)","bla,blub");
+$resp = $jmx->request($req);
+#print Dumper($resp);
+is($resp->{value},3,"Third operation called");
 $req = new JMX::Jmx4Perl::Request(EXEC,"jmx4perl.it:type=operation", "overloadedMethod(java.lang.String,int,long)","bla",3,3);
 $resp = $jmx->request($req);
 ok($resp->{error},"No such method");

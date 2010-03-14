@@ -14,4 +14,6 @@ public interface OperationCheckingMBean {
 
     int overloadedMethod(String arg,int arg2);
 
+    int overloadedMethod(String[] arg);
+
 }

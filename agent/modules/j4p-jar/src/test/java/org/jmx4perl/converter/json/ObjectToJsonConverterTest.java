@@ -78,7 +78,7 @@ public class ObjectToJsonConverterTest {
         ctx.setMaxDepth(1);
         Map result = (Map) converter.extractObject(new SelfRefBean1(),new Stack<String>(),true);
         String c = (String) ((Map) result.get("bean2")).get("bean1");
-        assertTrue("Recurence detected",c.contains("Depth limit"));
+        assertTrue("Recurence detected",c.contains("bean1: toString"));
     }
 
     // ============================================================================
@@ -106,6 +106,10 @@ public class ObjectToJsonConverterTest {
 
         public boolean isStrong() {
             return strong;
+        }
+
+        public String toString() {
+            return "bean1: toString";
         }
     }
 

@@ -2,7 +2,6 @@
 06 WS-Management integration ?
 07 Path handling for operation return values
 10 Bean Path accessor.
-12 Adapt 'get_attributes' to use new bulk request feature
 14 JSON Schema for protocol
 15 Shell
 16 SSL Support for jvm-agent-6
@@ -10,7 +9,6 @@
 18 More unit tests
 19 "ignore-errors" option
 20 Pattern switching of history
-21 Fix bug with POST and history (see iteration tests)
 22 16 Bug: Overloaded method with string array arguments 
    gets parsed badly: 
    No operation installBundles([Ljava.lang.String found on MBean osgi.core:type=framework,version=1.5

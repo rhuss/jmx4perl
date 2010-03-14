@@ -33,6 +33,10 @@ public class OperationChecking implements OperationCheckingMBean,MBeanRegistrati
         return 2;
     }
 
+    public int overloadedMethod(String[] arg) {
+        return 3;
+    }
+
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
         return new ObjectName("jmx4perl.it:type=operation");
 
