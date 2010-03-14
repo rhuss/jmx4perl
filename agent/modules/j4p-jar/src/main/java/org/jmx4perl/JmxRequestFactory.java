@@ -71,7 +71,7 @@ final public class JmxRequestFactory {
      * @param pParameterMap HTTP Query parameters
      * @return a newly created {@link org.jmx4perl.JmxRequest}
      */
-    static public JmxRequest createRequestFromUrl(String pPathInfo, Map pParameterMap) {
+    static public JmxRequest createRequestFromUrl(String pPathInfo, Map<String,String[]> pParameterMap) {
         JmxRequest request = null;
         try {
             if (pPathInfo != null && pPathInfo.length() > 0) {
@@ -238,10 +238,13 @@ final public class JmxRequestFactory {
         return p;
     }
 
-    private static void extractParameters(JmxRequest pRequest,Map<String,String> pParameterMap) {
+    private static void extractParameters(JmxRequest pRequest,Map<String,String[]> pParameterMap) {
         if (pParameterMap != null) {
-            for (Map.Entry<String,String> entry : pParameterMap.entrySet()) {
-                pRequest.setProcessingConfig(entry.getKey(),entry.getValue());
+            for (Map.Entry<String,String[]> entry : pParameterMap.entrySet()) {
+                String values[] = entry.getValue();
+                if (values != null && values.length > 0) {
+                    pRequest.setProcessingConfig(entry.getKey(),values[0]);
+                }
             }
         }
     }

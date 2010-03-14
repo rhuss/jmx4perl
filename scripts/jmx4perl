@@ -225,48 +225,48 @@ which results in markers of the form C<[Reference ...]>
 
 sub command_attributes {
     my $jmx = shift;
-    my $max_depth = defined($_[0]) ? $_[0] : 4;
+    my $max_depth = defined($_[0]) ? $_[0] : 6;
     my $max_list_size = defined($_[1]) ? $_[1] : 150;
-    my $max_objects = defined($_[2]) ? $_[2] : 1000;
-    my $data = $jmx->list();
+    my $max_objects = defined($_[2]) ? $_[2] : 2000;
+    my $mbeans = $jmx->search("*:*");
     
-    for my $d (keys %$data) {
-        for my $p (keys %{$data->{$d}}) {
-            my $attrs = $data->{$d}->{$p}->{'attr'};
-            if ($attrs) {
-                for my $a (keys %{$attrs}) {
-                    print "$d:$p -- $a";
-					eval {
-						my $request = JMX::Jmx4Perl::Request->new(READ,$d . ":" . $p,$a,{maxDepth => $max_depth,
-                                                                                         maxObjects => $max_objects,
-                                                                                         maxCollectionSize => $max_list_size});
-                        my $response = $jmx->request($request);
-                        if ($response->is_error) {                            
-                            print "\nERROR: ",$response->error_text,"\n";
-                            if ($opts{verbose}) {
-                                if ($response->stacktrace) {
-                                    print $response->stacktrace;
-                                } else {
-                                    print Dumper($response);
-                                }
-                            }
-                        } else {
-                            my $val = $response->value;
-                            if (ref($val)) {
-                                print "\n   ",Dumper($val);
-                            } else {
-                                print " = ",$val,"\n";
-                            }
-                        }
-                    };
-                    if ($@) {
-                        print "\nERROR: ",$@,"\n";
+    for my $mbean (@$mbeans) {
+        my $request = JMX::Jmx4Perl::Request->new(READ,$mbean,undef,{maxDepth => $max_depth,
+                                                                     maxObjects => $max_objects,
+                                                                     maxCollectionSize => $max_list_size,
+                                                                     ignoreErrors => 1});        
+        eval {
+            my $response = $jmx->request($request);
+            if ($response->is_error) {                            
+                print "\nERROR: ",$response->error_text,"\n";
+                if ($opts{verbose}) {
+                    if ($response->stacktrace) {
+                        print $response->stacktrace;
+                    } else {
+                        print Dumper($response);
                     }
                 }
+            } else {
+                my $values = $response->value;
+                if (keys %$values) {
+                    for my $a (keys %$values) {
+                        print "$mbean -- $a";
+                        my $val = $values->{$a};
+                        if (ref($val)) {
+                            print "\n   ",Dumper($val);
+                        } else {
+                            print " = ",$val,"\n";
+                        }
+                    }                                
+                }
             }
+        };
+        if ($@) {
+            print "\nERROR: ",$@,"\n";
         }
-    }   
-}
+    }
+}   
+
 
 =head2 read / get
 
