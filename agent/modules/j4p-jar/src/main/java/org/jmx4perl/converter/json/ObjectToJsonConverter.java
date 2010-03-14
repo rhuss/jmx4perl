@@ -226,7 +226,8 @@ public class ObjectToJsonConverter {
     private String checkForLimits(Object pValue, StackContext pStackContext) {
         Integer maxDepth = pStackContext.getMaxDepth();
         if (maxDepth != null && pStackContext.size() > maxDepth) {
-            return "[Depth limit " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
+            // We use its string representation
+            return pValue.toString();
         }
         if (pValue != null && pStackContext.alreadyVisited(pValue)) {
             return "[Reference " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
