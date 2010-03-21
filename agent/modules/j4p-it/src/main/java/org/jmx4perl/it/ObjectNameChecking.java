@@ -30,7 +30,7 @@ import javax.management.MalformedObjectNameException;
 
 /**
  * We need to use MBeanRegisration because Websphere wont let us set our name
- * directly while registerting (it always add some boilerplate to the name). Using this
+ * directly while registering (it always add some boilerplate to the name). Using this
  * way, it works (so the names under which we register correspond to those in the
  * integration test).
  *

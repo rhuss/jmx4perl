@@ -5,9 +5,8 @@ import org.jmx4perl.config.Restrictor;
 
 import javax.management.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -39,6 +38,9 @@ import java.util.Set;
  */
 public class SearchHandler extends JsonRequestHandler {
 
+    // Pattern for value in which case the value needs to be escaped
+    private final static Pattern INVALID_CHARS_PATTERN = Pattern.compile(":\",=\\*?");
+
     public SearchHandler(Restrictor pRestrictor) {
         super(pRestrictor);
     }
@@ -57,7 +59,28 @@ public class SearchHandler extends JsonRequestHandler {
         }
         List<String> ret = new ArrayList<String>();
         for (ObjectName name : names) {
-            ret.add(name.getCanonicalName());
+
+            // Check whether the property-list values needs to be escaped:
+            Map<String,String> props = name.getKeyPropertyList();
+            Hashtable<String,String> escapedProps = new Hashtable<String, String>();
+            boolean needsEscape = false;
+            for (Map.Entry<String,String> entry : props.entrySet()) {
+                String value = entry.getValue();
+                if (INVALID_CHARS_PATTERN.matcher(entry.getValue()).find()) {
+                    value = ObjectName.quote(value);
+                    needsEscape = true;
+                }
+                escapedProps.put(entry.getKey(),value);
+            }
+            if (needsEscape) {
+                try {
+                    ret.add(new ObjectName(name.getDomain(),escapedProps).getCanonicalName());
+                } catch (MalformedObjectNameException e) {
+                    throw new MBeanException(e,"Cannot properly escape " + name.getCanonicalName());
+                }
+            } else {
+                ret.add(name.getCanonicalName());
+            }
         }
         return ret;
     }

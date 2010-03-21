@@ -52,6 +52,21 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
 //            "äöüßÄÖÜ"
 
     };
+
+    private String[] escapedNames = {
+//            "name*with?strange=\"chars"
+              "name*withstrange=chars",
+              "name?withstrange=chars",
+              "namewithstrange=\"chars\"",
+              "namewithstrange:\"chars\"",
+              ",,,",
+              "===",
+              "***",
+              "\"\"\"",
+              ":::",
+              "???"
+    };
+
     private List<ObjectName> testBeans = new ArrayList<ObjectName>();
 
     @Override
@@ -67,6 +82,9 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
             // Register my test mbeans
             for (String name : strangeNames) {
                 registerMBean(new ObjectNameChecking(),domain + ":type=naming,name=" + name);
+            }
+            for (String name : escapedNames) {
+                registerMBean(new ObjectNameChecking(),domain + ":type=escape,name=" + ObjectName.quote(name));
             }
 
             // Other MBeans
