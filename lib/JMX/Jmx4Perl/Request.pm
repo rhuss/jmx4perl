@@ -243,14 +243,23 @@ sub new {
             if (ref($opts) eq "HASH") {
                 pop @_;
                 map { $self->{$_} = $opts->{$_} } keys %$opts;
+                if ($self->{method}) {
+                    # Canonicalize and verify
+                    &method($self,$self->{method});                    
+                }
             } 
             if ($type eq READ) {
                 $self->{mbean} = shift;
                 $self->{attribute} = shift;
                 $self->{path} = shift;
                 # Use post for complex read requests
-                if (ref($self->{attribute}) eq "ARRAY" || $self->{mbean} =~ /\*/) {
-                    $self->{method} = "POST";
+                if (ref($self->{attribute}) eq "ARRAY") {
+                    if (&method($self) eq "GET") {
+                        # Was already explicitely set
+                        die "Cannot query for multiple attributes " . join(",",@{$self->{attributes}}) . " with a GET request"
+                          if ref($self->{attribute}) eq "ARRAY";
+                    }                        
+                    &method($self,"POST");
                 }
             } elsif ($type eq WRITE) {
                 $self->{mbean} = shift;
@@ -265,6 +274,8 @@ sub new {
                 $self->{path} = shift;
             } elsif ($type eq SEARCH) {
                 $self->{mbean} = shift;
+                #No check here until now, is done on the server side as well.
+                #die "MBean name ",$self->{mbean}," is not a pattern" unless &is_mbean_pattern($self);
             } else {
                 croak "Type ",$type," not supported yet";
             }
@@ -273,6 +284,61 @@ sub new {
     bless $self,(ref($class) || $class);
     $self->_validate();
     return $self;
+}
+
+=item $req->method()
+
+=item $req->method("POST")
+
+Set the HTTP request method for this requst excplicitely. If not provided
+either during construction time (config key 'method') a prefered request
+method is determined dynamically based on the request contents.
+
+=cut 
+
+sub method {
+    my $self = shift;
+    my $value = shift;
+    if (defined($value)) {
+        die "Unknown request method ",$value if length($value) && $value !~ /^(POST|GET)$/i;
+        $self->{method} = uc($value);
+    }
+    return defined($self->{method}) ? $self->{method} : "";
+}
+
+=item $req->is_mbean_pattern
+
+Returns true, if the MBean name used in this request is a MBean pattern (which
+can be used in C<SEARCH> or for C<READ>) or not
+
+=cut
+
+sub is_mbean_pattern {
+    my $self = shift;
+    my $mbean = shift || $self->{mbean};
+    return 1 unless $mbean;
+    my ($domain,$rest) = split(/:/,$mbean,2);
+    return 1 if $domain =~ /[*?]/;
+    return 1 if $rest =~  /\*$/;
+
+    while ($rest) {
+        #print "R: $rest\n";
+        $rest =~ s/([^=]+)\s*=\s*//;
+        my $key = $1;
+        my $value;
+        if ($rest =~ /^"/) {
+            $rest =~ s/("(\\"|[^"])+")(\s*,\s*|$)//;
+            $value = $1;
+            # Pattern in quoted values must not be preceded by a \
+            return 1 if $value =~ /(?<!\\)[\*\?]/;
+        } else {
+            $rest =~ s/([^,]+)(\s*,\s*|$)//;
+            $value = $1;
+            return 1 if $value =~ /[\*\?]/;
+        }
+        #print "K: $key V: $value\n";
+    }
+    return 0;
 }
 
 =item $request->get("type")

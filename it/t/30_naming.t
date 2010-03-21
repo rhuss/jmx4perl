@@ -28,11 +28,13 @@ my @searches =
    [ "*:name=//server/client,*", qr|jmx4perl\.it:.*name=//server/client| ]
   );
 
+# Basic check:
 for my $name (@names) {
     my $mbean = &search($jmx,sprintf($name_p,$name));
     my $scalar = $jmx->get_attribute($mbean,"Ok");
     is($scalar,"OK",$name);
 }
+
 
 for my $s (@searches) {
     my $r = $jmx->search($s->[0]);

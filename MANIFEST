@@ -75,6 +75,7 @@ agent/modules/j4p-jvm-jdk6/src/main/assembly/agent.xml
 agent/modules/j4p-jvm-jdk6/src/main/java/org/jmx4perl/jvmagent/jdk6/CleanupThread.java
 agent/modules/j4p-jvm-jdk6/src/main/java/org/jmx4perl/jvmagent/jdk6/J4pHttpHandler.java
 agent/modules/j4p-jvm-jdk6/src/main/java/org/jmx4perl/jvmagent/jdk6/JvmAgentJdk6.java
+agent/modules/j4p-jvm-jdk6/src/main/java/org/jmx4perl/jvmagent/jdk6/ParsedUri.java
 agent/modules/j4p-jvm-jdk6/src/main/resources/j4p-agent.properties
 agent/modules/j4p-jvm-jdk6/src/test/java/org/jmx4perl/jvmagent/jdk6/TestMain.java
 agent/modules/j4p-mule/pom.xml
@@ -99,6 +100,7 @@ it/t/50_check_jmx4perl.t
 it/t/60_bulk_request.t
 it/t/70_overloaded_method.t
 it/t/80_read.t
+it/t/90_search.t
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Protocol.pod

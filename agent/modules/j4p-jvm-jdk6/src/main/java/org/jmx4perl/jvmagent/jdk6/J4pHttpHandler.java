@@ -1,12 +1,5 @@
 package org.jmx4perl.jvmagent.jdk6;
 
-import com.sun.net.httpserver.Headers;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import org.jmx4perl.*;
-import org.json.simple.JSONAware;
-import org.json.simple.JSONObject;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,6 +8,36 @@ import java.net.URI;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import org.jmx4perl.*;
+import org.json.simple.JSONAware;
+import org.json.simple.JSONObject;
+
+/*
+ * jmx4perl - WAR Agent for exporting JMX via JSON
+ *
+ * Copyright (C) 2009 Roland Huß, roland@cpan.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * A commercial license is available as well. Please contact roland@cpan.org for
+ * further details.
+ */
 
 /**
  * HttpHandler for handling a j4p request
@@ -37,7 +60,7 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
     private Pattern contentTypePattern = Pattern.compile(".*;\\s*charset=([^;,]+)\\s*.*");
 
 
-    public J4pHttpHandler(Map<Config,String> pConfig) {        
+    public J4pHttpHandler(Map<Config,String> pConfig) {
         context = pConfig.get(Config.AGENT_CONTEXT);
         if (!context.endsWith("/")) {
             context += "/";
@@ -59,18 +82,12 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
             // Dispatch for the proper HTTP request method
             URI uri = pExchange.getRequestURI();
             if ("GET".equalsIgnoreCase(method)) {
-                String path = uri.getPath();
-                if (path.startsWith(context)) {
-                    path = path.substring(context.length());
-                }
-                while (path.startsWith("/") && path.length() > 1) {
-                    path = path.substring(1);
-                }
+                ParsedUri parsedUri = new ParsedUri(uri,context);
                 JmxRequest jmxReq =
-                        JmxRequestFactory.createRequestFromUrl(path,null);
+                        JmxRequestFactory.createRequestFromUrl(parsedUri.getPathInfo(),parsedUri.getParameterMap());
                 if (backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {
                     debug("URI: " + uri);
-                    debug("Path-Info: " + path);
+                    debug("Path-Info: " + parsedUri.getPathInfo());
                     debug("Request: " + jmxReq.toString());
                 }
                 json = requestHandler.executeRequest(jmxReq);

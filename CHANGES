@@ -10,6 +10,15 @@
   - Added 'ignoreErrors' request option in order to allow a bulk read
     to succeed even if single read fails. In this case, the valu will
     be set to an appropriate error message.
+  - 'search' returns properly escaped MBean Names if unsafe characters
+    are used. 
+  - For GET request, instead of pathinfo a query with parameter 'p'
+    can be used as alternative. This works around certain issues with
+    special path handling with certain app-servers (e.g. Tomcat). 
+  - JMX::Jmx4Perl::Request and JMX::Jmx4Perl::Agent hardened in order
+    to be more smart with unsafe MBean Names and detect automatically
+    the most convenient HTTP Request method (if not explicitely set)
+  - Added more unit and integration tests.
 
 0.60  (2009-02-28)
   - OSGi bundle (including dependencies) for exposing JSON export via

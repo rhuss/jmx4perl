@@ -102,6 +102,9 @@ configuration if you are using the agent servlet as a proxy, e.g.
 # HTTP Parameters to be used for transmitting the request
 my @PARAMS = ("maxDepth","maxCollectionSize","maxObjects","ignoreErrors");
 
+# Regexp for detecting invalid chars which can not be used securily in pathinfos
+my $INVALID_PATH_CHARS = qr/%(5C|3F|3B|2F)/i; # \ ? ; /
+
 # Init called by parent package within 'new' for specific initialization. See
 # above for the parameters recognized
 sub init {
@@ -209,7 +212,7 @@ sub _use_GET_request {
     if (@$reqs == 1) {
         my $req = $reqs->[0];
         # For proxy configs and explicite set POST request, get is not used
-        return !defined($req->get("target")) && lc($req->get("method")) ne "post" ;
+        return !defined($req->get("target")) && $req->get("method") ne "POST" ;
     } else {
         return 0;
     }
@@ -336,12 +339,16 @@ sub request_url {
     # Squeeze multiple slashes
     $req =~ s|/{2,}|/|g;
     #print "R: $req\n";
+
+    if ($req =~ $INVALID_PATH_CHARS || $request->{use_query}) {
+        $req = "?p=$req";
+    }
     my @params;
     for my $k (@PARAMS) {
         push @params, $k . "=" . $request->get($k)
           if $request->get($k);
     }
-    $req .= "?" . join("&",@params) if @params;
+    $req .= ($req =~ /\?/ ? "&" : "?") . join("&",@params) if @params;
     return $url . $req;
 }
 
