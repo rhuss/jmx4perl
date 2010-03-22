@@ -212,7 +212,7 @@ sub _use_GET_request {
     if (@$reqs == 1) {
         my $req = $reqs->[0];
         # For proxy configs and explicite set POST request, get is not used
-        return !defined($req->get("target")) && $req->get("method") ne "POST" ;
+        return !defined($req->get("target")) && $req->method ne "POST" ;
     } else {
         return 0;
     }

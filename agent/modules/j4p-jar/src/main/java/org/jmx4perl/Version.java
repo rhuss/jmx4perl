@@ -34,9 +34,16 @@ public final class Version {
 
     private static final String VERSION = "0.65.0.M2";
 
+    // Version of the 
+    private static final String PROTOCOL = "3";
+
     private Version() {}
 
-    public static String getVersion() {
+    public static String getAgentVersion() {
         return VERSION;
+    }
+
+    public static String getProtocolVersion() {
+        return PROTOCOL;
     }
 }

@@ -1,5 +1,8 @@
 package org.jmx4perl.handler;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.Version;
 import org.jmx4perl.config.Restrictor;
@@ -30,6 +33,8 @@ import javax.management.*;
  */
 
 /**
+ * Get the version of this agent as well as the protocol version
+ * 
  * @author roland
  * @since Jun 12, 2009
  */
@@ -46,6 +51,9 @@ public class VersionHandler extends JsonRequestHandler {
 
     @Override
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request) {
-        return Version.getVersion();
+        Map<String,String> ret = new HashMap<String, String>();
+        ret.put("agent",Version.getAgentVersion());
+        ret.put("protocol",Version.getProtocolVersion());
+        return ret;
     }
 }

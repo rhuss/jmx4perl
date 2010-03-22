@@ -19,6 +19,8 @@
     to be more smart with unsafe MBean Names and detect automatically
     the most convenient HTTP Request method (if not explicitely set)
   - Added more unit and integration tests.
+  - Added VERSION command to JMX::Jmx4Perl to get to agent and
+    protocol version
 
 0.60  (2009-02-28)
   - OSGi bundle (including dependencies) for exposing JSON export via
