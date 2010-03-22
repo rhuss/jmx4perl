@@ -172,12 +172,34 @@ sub request {
         $json_resp = from_json($http_resp->content());
     };
     my $json_error = $@;
-    my $error_resp = $self->_validate_response($http_resp,$json_resp,$json_error);
-    if ($error_resp) {
-        $error_resp->{request} = @jmx_requests > 1 ? undef : $jmx_requests[0];
-        #print Dumper($error_resp);
-        return $error_resp;
+
+    if ($http_resp->is_error) {
+        if (scalar(@jmx_requests) == 1) {
+            return JMX::Jmx4Perl::Response->new
+              ( 
+               status => $http_resp->code,
+               value => $json_error ? $http_resp->content : $json_resp,
+               error => $json_error ? $self->_prepare_http_error_text($http_resp) : 
+               ref($json_resp) eq "ARRAY" ? join "\n",  map { $_->{error} } grep { $_->{error} } @$json_resp : $json_resp->{error},
+               stacktrace => ref($json_resp) eq "ARRAY" ? $self->_extract_stacktraces($json_resp) : $json_resp->{stacktrace},
+               request => $jmx_requests[0]
+              );        
+        }
+    } elsif ($json_error) {
+        # If is not an HTTP-Error and deserialization fails, then we
+        # probably got a wrong URL and get delivered some server side
+        # document (with HTTP code 200)
+        my $e = $json_error;
+        $e =~ s/(.*)at .*?line.*$/$1/;
+        return JMX::Jmx4Perl::Response->new
+          ( 
+           status => 400,
+           error => 
+           "Error while deserializing JSON answer (Wrong URL ?)\n" . $e,
+           value => $http_resp->content
+          );        
     }
+    
     my @responses = ($self->_from_http_response($json_resp,@jmx_requests));
     if (!wantarray && scalar(@responses) == 1) {
         return shift @responses;
@@ -226,7 +248,7 @@ sub _from_http_response {
     if (ref($json_resp) eq "HASH") {
         return JMX::Jmx4Perl::Response->new(%{$json_resp},request => $reqs[0]);
     } elsif (ref($json_resp) eq "ARRAY") {
-        die "Internal: Number of request and responses doesnt match (",scalar(@reqs)," vs. ",scalar(@$json_resp) 
+        die "Internal: Number of request and responses doesn't match (",scalar(@reqs)," vs. ",scalar(@$json_resp) 
           unless scalar(@reqs) == scalar(@$json_resp);
         
         my @ret = ();        
@@ -263,43 +285,6 @@ sub _clone_target {
         $target->{env} = { %{$target->{env}}};
     }
     return $target;
-}
-
-# Validate the JSON answer and the HttpResponse
-sub _validate_response {
-    my $self = shift;
-    my ($http_resp,$json_resp,$json_error) = @_;    
-    my $http_error = $http_resp->is_error;
-    
-    if (!$http_error) {
-        if (!$json_error) {
-            # If HTTP-Request suceeds and JSON deserialization was
-            # successful, no error occured
-            return undef;
-        } else {
-            # If is not an HTTP-Error and deserialization fails, then we
-            # probably got a wrong URL and get delivered some server side
-            # document (with HTTP code 200)
-            my $e = $json_error;
-            $e =~ s/(.*)at .*?line.*$/$1/;
-            return JMX::Jmx4Perl::Response->new
-              ( 
-               status => 400,
-               error => 
-               "Error while deserializing JSON answer (Wrong URL ?)\n" . $e,
-               content => $http_resp->content
-              );
-        }
-    } else {
-        return JMX::Jmx4Perl::Response->new
-          ( 
-           status => $http_resp->code,
-           content => $json_error ? $http_resp->content : $json_resp,
-           error => $json_error ? $self->_prepare_http_error_text($http_resp) : 
-           ref($json_resp) eq "ARRAY" ? join "\n",  map { $_->{error} } @$json_resp : $json_resp->{error},
-           stacktrace => ref($json_resp) eq "ARRAY" ? $self->_extract_stacktraces($json_resp) : $json_resp->{stacktrace}
-          );        
-    }
 }
 
 =item $url = $agent->request_url($request)

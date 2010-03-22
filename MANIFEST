@@ -93,6 +93,7 @@ CHANGES
 examples/jsr77.pl
 examples/threadDump.pl
 it/it.pl
+it/t/01_version.t
 it/t/10_base.t
 it/t/30_naming.t
 it/t/40_alias.t

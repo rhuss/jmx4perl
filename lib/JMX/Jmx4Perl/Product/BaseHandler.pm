@@ -539,8 +539,9 @@ sub _fetch_info {
     #print Dumper(\@resps);
     foreach my $resp (@resps) {
         my $alias = shift @aliases;
-        die "Error while fetching $alias: ",$resp->error_text if $resp->is_error;
-        $info_map->{$alias} = $resp->value;
+        if ($resp->{status} == 200) {
+            $info_map->{$alias} = $resp->{value};
+        }
     }
     return $info_map;
 }

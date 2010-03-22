@@ -1,6 +1,6 @@
 ---
 name: jmx4perl
-version: 0.65_2
+version: 0.65_3
 author:
   - Roland Huss (roland@cpan.org)
 abstract: Easy JMX access to Java JEE applications
@@ -30,7 +30,7 @@ configure_requires:
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.65_2
+    version: 0.65_3
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
