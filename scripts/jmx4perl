@@ -27,7 +27,8 @@ my %COMMANDS =
    set => \&command_write,
    exec => \&command_exec,
    call => \&command_exec,
-   search => \&command_search
+   search => \&command_search,
+   version => \&command_version
 );
 
 my %opts = ();
@@ -45,17 +46,13 @@ my $result = GetOptions(\%opts,
                         "help|h!" => sub { &Getopt::Long::HelpMessage() }
                        );
 
-if ($opts{version}) {
-    print "jmx4perl ",$JMX::Jmx4Perl::VERSION,"\n";
-    exit(0);
-}
 
 my $url;
 my $command;
 my @args;
 if (!@ARGV) {
     $opts{shell} = 1;
-} elsif(lc $ARGV[0] eq "aliases") {
+} elsif (lc $ARGV[0] eq "aliases") {
     &command_aliases;
     exit(0);
 } elsif (@ARGV == 1) {
@@ -65,6 +62,15 @@ if (!@ARGV) {
     $url = shift @ARGV;
     $command = lc shift @ARGV;
     @args = ( @ARGV );
+}
+
+if ($opts{version}) {
+    if ($url) {
+        $command = "version";
+    } else {
+        print "jmx4perl ",$JMX::Jmx4Perl::VERSION,"\n";
+        exit(0);
+    }
 }
 
 if ($opts{shell}) {
@@ -102,7 +108,7 @@ if ($opts{shell}) {
 
   jmx4perl --help
 
-  jmx4perl --version
+  jmx4perl --version [<agent-url>]
 
 Options:
 
@@ -414,6 +420,20 @@ If you are curious about the size of the history for all entries, use
 This will print out the history size in bytes.
 
 =cut
+
+# Command for printing out the version
+sub command_version {
+    my $jmx = shift;
+    
+    print "jmx4perl  ",$JMX::Jmx4Perl::VERSION,"\n";
+    my $resp = $jmx->request(new JMX::Jmx4Perl::Request(VERSION));
+    if ($resp->is_error) {
+        die "Cannot fetch agent version: ",$resp->error_text;
+    }
+    my $val = $resp->{value};
+    print "j4p-agent " . $val->{agent} . " (protocol: " . $val->{protocol} . ")\n";
+    exit(0);
+}
 
 # =============================================================================
 
