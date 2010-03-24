@@ -1,8 +1,5 @@
 package org.jmx4perl;
 
-import com.sun.tools.internal.xjc.reader.xmlschema.ParticleBinder;
-import com.sun.tools.internal.xjc.reader.xmlschema.WildcardNameClassBuilder;
-
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import java.util.Arrays;
