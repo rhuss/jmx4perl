@@ -66,7 +66,11 @@ public class ParsedUri {
             pathInfo = pathInfo.substring(1);
         }
 
-        parameters = parseQuery(pUri.getQuery());
+        if (pUri.getQuery() != null) {
+            parameters = parseQuery(pUri.getQuery());
+        } else {
+            parameters = new HashMap<String, String[]>();
+        }
     }
 
     /**

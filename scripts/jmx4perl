@@ -427,6 +427,7 @@ sub command_version {
     
     print "jmx4perl  ",$JMX::Jmx4Perl::VERSION,"\n";
     my $resp = $jmx->request(new JMX::Jmx4Perl::Request(VERSION));
+    print Dumper($resp);
     if ($resp->is_error) {
         die "Cannot fetch agent version: ",$resp->error_text;
     }

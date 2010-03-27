@@ -1,7 +1,5 @@
-package org.jmx4perl;
-
 /*
- * jmx4perl - WAR Agent for exporting JMX via JSON
+ * jmx4perl - Servlet for registering MBeans for jmx4perl integration test suite
  *
  * Copyright (C) 2009 Roland Huß, roland@cpan.org
  *
@@ -19,31 +17,34 @@ package org.jmx4perl;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * A commercial license is available as well. Please contact roland@cpan.org for
- * further details.
+ * A commercial license is available as well. You can either apply the GPL or
+ * obtain a commercial license for closed source development. Please contact
+ * roland@cpan.org for further information.
  */
+package org.jmx4perl.it.servlet;
 
-/**
- * Class holding the version of this agent. This gets updated automatically
- * when jmx4perl is build.
- *
- * @author roland
- * @since Jun 11, 2009
- */
-public final class Version {
 
-    private static final String VERSION = "0.65.0";
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 
-    // Version of the 
-    private static final String PROTOCOL = "3";
+import org.jmx4perl.it.ItSetup;
 
-    private Version() {}
 
-    public static String getAgentVersion() {
-        return VERSION;
+public class TestMBeanRegisteringServlet extends HttpServlet {
+
+    ItSetup itSetup;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        itSetup = new ItSetup();
+        itSetup.start();
     }
 
-    public static String getProtocolVersion() {
-        return PROTOCOL;
+    @Override
+    public void destroy() {
+        itSetup.stop();
     }
+
+
 }

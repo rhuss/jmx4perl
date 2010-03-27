@@ -3,11 +3,11 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 
-  <display-name>Webapp with test MBean for jmx4perl</display-name>
+  <display-name>Integration test webapplication</display-name>
 
   <servlet>
     <servlet-name>j4p-it</servlet-name>
-    <servlet-class>org.jmx4perl.it.TestMBeanRegisteringServlet</servlet-class>
+    <servlet-class>org.jmx4perl.it.servlet.TestMBeanRegisteringServlet</servlet-class>
      <load-on-startup>1</load-on-startup>
   </servlet>
 

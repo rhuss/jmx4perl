@@ -6,9 +6,8 @@
 <project name="json-jmx-agent" default="main" basedir=".">
 
   <property name="war-name" value="j4p.war"/>
-  <property name="it-war-name" value="j4p-it.war"/>
 
-  <target name="main" depends="war,it-war" description="Build agent (j4p.war) and integration test (j4p-it.war)"/>
+  <target name="main" depends="war" description="Build agent (j4p.war)"/>
 
   <!-- Get version from maven build -->
   <xmlproperty file="modules/j4p-jar/pom.xml"/>
@@ -19,7 +18,6 @@
     <mkdir dir="modules/j4p-jar/target/classes"/>
     <mkdir dir="modules/j4p-war/target"/>
     <mkdir dir="modules/j4p-jsr160/target/classes"/>
-    <mkdir dir="modules/j4p-it/target/classes"/>
   </target>
 
   <!-- =====================================================================================  -->
@@ -84,42 +82,6 @@
     <copy file="modules/j4p-war/target/${war-name}" todir="."/>
   </target>
 
-  <!-- ===============================================================  -->
-  <!-- Integration Test WAR -->
-
-  <target name="mkdir-it">
-    <mkdir dir="modules/j4p-it/target/classes"/>
-  </target>
-
-  <target name="compile-it" depends="mkdir-it,jar">
-    <javac 	srcdir="modules/j4p-it/src/main/java"
-            destdir="modules/j4p-it/target/classes"
-            includes="**/*.java"
-            debug="true"
-            target="1.5"
-            source="1.5">
-      <classpath>
-        <fileset dir="lib">
-          <include name="*.jar"/>
-        </fileset>
-        <fileset dir="modules/j4p-jar/target">
-          <include name="j4p-${version}.jar"/>
-        </fileset>
-      </classpath>
-    </javac>
-
-  </target>
-
-  <target name="it-war" depends="jar,compile-it">
-    <war destfile="modules/j4p-it/target/${it-war-name}" webxml="modules/j4p-it/src/main/webapp/WEB-INF/web.xml">
-      <lib dir="modules/j4p-jar/target">
-        <include name="j4p-${version}.jar"/>
-      </lib>
-      <classes dir="modules/j4p-it/target/classes"/>
-    </war>
-    <copy file="modules/j4p-it/target/${it-war-name}" todir="."/>
-  </target>
-
   <!-- =======================================================  -->
   <!-- Cleanup -->
 
@@ -128,7 +90,6 @@
       <fileset dir="modules/j4p-jar/target" includes="**/*"/>
       <fileset dir="modules/j4p-war/target" includes="**/*"/>
       <fileset dir="modules/j4p-jsr160/target" includes="**/*"/>
-      <fileset dir="modules/j4p-it/target" includes="**/*"/>
       <fileset dir="." includes="*.war"/>
     </delete>
   </target>

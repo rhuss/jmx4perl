@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-osgi</artifactId>
-  <version>0.65.0.M3</version>
+  <version>0.65.0</version>
   <packaging>bundle</packaging>
   <name>j4p-osgi</name>
   <description>j4p-osgi - OSGi Bundle</description>
@@ -12,7 +12,7 @@
   <parent>
     <groupId>org.jmx4perl</groupId>
     <artifactId>j4p-parent</artifactId>
-    <version>2</version>
+    <version>3</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 

@@ -21,20 +21,21 @@
  * obtain a commercial license for closed source development. Please contact
  * roland@cpan.org for further information.
  */
+
 package org.jmx4perl.it;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.management.ObjectName;
 
 import org.jmx4perl.backend.MBeanServerHandler;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.management.*;
-import java.util.List;
-import java.util.ArrayList;
-
-
-public class TestMBeanRegisteringServlet extends HttpServlet {
+/**
+ * @author roland
+ * @since Mar 27, 2010
+ */
+public class ItSetup {
 
     private static final long serialVersionUID = 42L;
 
@@ -69,15 +70,25 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
 
     private List<ObjectName> testBeans = new ArrayList<ObjectName>();
 
-    @Override
-    public void init(ServletConfig config) throws ServletException {
+    public ItSetup() {
         mBeanHandler = new MBeanServerHandler();
-        registerMBeans();
-
-
     }
 
-    private void registerMBeans() throws ServletException {
+    public void start() {
+        registerMBeans();
+    }
+
+    public void stop() {
+        unregisterMBeans();
+    }
+
+    public static void premain(String agentArgs) {
+        ItSetup itSetup = new ItSetup();
+        itSetup.start();
+    }
+    // ===================================================================================================
+
+    private void registerMBeans() {
         try {
             // Register my test mbeans
             for (String name : strangeNames) {
@@ -100,29 +111,24 @@ public class TestMBeanRegisteringServlet extends HttpServlet {
             registerMBean(new AttributeChecking(),isWebsphere ? null : domain + ":type=attribute");
 
         } catch (RuntimeException e) {
-            throw new ServletException("Error",e);
+            throw new RuntimeException("Error",e);
         } catch (Exception exp) {
-            throw new ServletException("Error",exp);
+            throw new RuntimeException("Error",exp);
         }
     }
 
     @SuppressWarnings("PMD.SystemPrintln")
-    private ObjectName registerMBean(Object pObject, String ... pName) throws ServletException {
+    private ObjectName registerMBean(Object pObject, String ... pName) {
         try {
             ObjectName oName = mBeanHandler.registerMBean(pObject,pName);
             System.out.println("Registered " + oName);
             testBeans.add(oName);
             return oName;
         } catch (RuntimeException e) {
-            throw new ServletException("Cannot register MBean " + (pName != null && pName.length > 0 ? pName[0] : pObject),e);
+            throw new RuntimeException("Cannot register MBean " + (pName != null && pName.length > 0 ? pName[0] : pObject),e);
         } catch (Exception e) {
-            throw new ServletException("Cannot register MBean " + (pName != null && pName.length > 0 ? pName[0] : pObject),e);
+            throw new RuntimeException("Cannot register MBean " + (pName != null && pName.length > 0 ? pName[0] : pObject),e);
         }
-    }
-
-    @Override
-    public void destroy() {
-        unregisterMBeans();
     }
 
     @SuppressWarnings("PMD.SystemPrintln")
