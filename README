@@ -77,18 +77,29 @@ INSTALLATION
 SUPPORTED APPLICATION SERVERS
   
   The following Java Application Servers has been confirmed to work
-  with jmx4perl in agent mode :
+  with jmx4perl in agent mode deployed as war:
 
-  * JBoss 4.2.3 GA, 5.1.0 GA & 6.0.0 M1
+  * JBoss 4.2.3 GA, 5.1.0 GA & 6.0.0 M2
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
-  * Jonas 4.10.6 (with Jetty 5.1.10 and Tomcat 5.5.28) and 5.1.1
+  * Jonas 4.10.7 (with Jetty 5.1.10 and Tomcat 5.5.28) and 5.1.1
   * Apache Geronimo 2.2 (Jetty 7 and Tomcat 6)
   * Glassfish 2.1.1 and v3
-  * Apache Tomcat 5.5.28 & 6.0.20
-  * Jetty 5.1.15 & 6.1.21 & 7.0.0 (with JMX enabled)
+  * Apache Tomcat 5.5.28 & 6.0.26
+  * Jetty 5.1.15 & 6.1.22 & 7.0.1 (with JMX enabled) & 8.0.0.M0
   * IBM Websphere 6.1 & 7.0
   * Resin 3.1.9
-  * Spring dm Server ....
+  * Spring dm Server 2.0.0.RELEASE
+
+  The OSGi agent budle has been tested on
+
+  * Felix 2.0.4
+  * Equinox 3.5.2
+
+  The JVM JDK 6 agent has been verified to work on 
+
+  * ActiveMQ 5.3.1
+  * Terracotta 3.2.1
+  * Hadoop 0.20.2
 
   The proxy mode has been explicitely tested for 
 

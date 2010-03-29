@@ -1,64 +1,53 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::Product::Jonas;
+package JMX::Jmx4Perl::Product::Hadoop;
 
 use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
 use base "JMX::Jmx4Perl::Product::BaseHandler";
+use Data::Dumper;
 
 use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Jonas - Handler for Jonas
+JMX::Jmx4Perl::Product::Hadoop - Handler for Hadoop
 
 =head1 DESCRIPTION
 
-This is the product handler support Jonas 4 and 5 (L<http://jonas.ow2.org/>)
+This is the product handler support Hadoop (L<http://hadoop.apache.org/>)
+which works with the JVM Agent provided for Sun JDK 6 based applications.
 
 =cut
 
 sub id {
-    return "jonas";
+    return "hadoop";
 }
 
 sub name {
-    return "Jonas";
+    return "Hadoop";
 }
 
+sub vendor {
+    return "Apache";
+}
+
+sub version {
+    # No way to detect version until yet.
+    return "";
+}
 sub order { 
-    return 10;
+    return 220;
 }
 
 sub autodetect_pattern {
-    return ("vendor",qr/OW2/i);
-}
-
-sub server_info { 
-    my $self = shift;
-    my $ret = $self->SUPER::server_info();
-    $ret .= sprintf("%-10.10s %s\n","Web:",$self->{jmx4perl}->get_attribute("jonas:name=webContainers,type=service","ServerName"));
-}
-
-sub jsr77 {
-    return 1;
-}
-
-sub init_aliases {
-    return 
-    {
-     attributes => 
-   {
-    #SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    #SERVER_HOSTNAME => [ "jonas:name=jonas,type=ServerProxy", "HostName"],
-   },
-     operations => 
-   {
-    #THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
-   }
-     # Alias => [ "mbean", "attribute", "path" ]
+    return sub { 
+        my $self = shift;
+        my $j4p = $self->{jmx4perl};        
+        my $ret = $j4p->search("hadoop:*");
+        #print Dumper($ret);
+        return $ret;
     };
 }
-
 
 =head1 LICENSE
 

@@ -24,6 +24,8 @@
   - Fixed error handling for bulk requests. Now each request object
     will return an associated response object even in the error case.
   - Fixed JMX::Jmx4Perl::info for IBM JVMs
+  - Added JMX::Jmx4Perl->parse_name() for splitting up a given MBean
+    object name into its parts
 
 0.60  (2009-02-28)
   - OSGi bundle (including dependencies) for exposing JSON export via

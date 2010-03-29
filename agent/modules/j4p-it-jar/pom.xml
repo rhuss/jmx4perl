@@ -57,7 +57,7 @@
             <Bundle-Name>Jmx4Perl Integration Test Bundle</Bundle-Name>
             <Embed-Dependency>j4p;inline=true</Embed-Dependency>
             <!-- Needed because we export an embedded package only -->
-            <Import-Package>!org.jmx4perl,*</Import-Package>
+            <Import-Package>!org.jmx4perl,!org.json.simple.*,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>

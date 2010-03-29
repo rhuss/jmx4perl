@@ -179,7 +179,7 @@ sub autodetect {
     return undef;
 }
 
-=item ($what,$pattern) = $handler->vendor_pattern()
+=item ($what,$pattern) = $handler->autodetect_pattern()
 
 Method returning a pattern which is applied to the vendor or version
 information provided by the L</"version"> or L</"vendor"> in order to detect,
@@ -417,8 +417,8 @@ sub server_info {
     my $jmx4perl = $self->{jmx4perl};
     my $ret = "";
     $ret .= sprintf("%-10.10s %s\n","Name:",$self->name);
-    $ret .= sprintf("%-10.10s %s\n","Vendor:",$self->vendor) if $self->vendor;
-    $ret .= sprintf("%-10.10s %s\n","Version:",$self->version);
+    $ret .= sprintf("%-10.10s %s\n","Vendor:",$self->vendor) if $self->vendor && $self->vendor ne $self->name;
+    $ret .= sprintf("%-10.10s %s\n","Version:",$self->version) if $self->version;
     return $ret;
 }
 

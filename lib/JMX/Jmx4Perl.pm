@@ -730,6 +730,62 @@ sub list {
 }
 
 
+=item ($domain,$attributes) = $jmx->parse_name($name)
+
+Parse an object name into its domain and attribute part. If successful,
+C<$domain> contains the domain part of the objectname, and C<$attribtutes> is a
+hahsref to the attributes of the name with the attribute names as keys and the
+attribute's values as values. This method returns C<undef> when the name could
+not be parsed. Result of a C<search()> operation can be savely feed into this
+method to get to the subparts of the name. JMX quoting is taken into account
+properly, too.
+
+Example:
+
+  my ($domain,$attrs) = 
+      $jmx->parse_name("java.lang:name=Code Cache,type=MemoryPool");
+  print $domain,"\n",Dumper($attrs);
+
+  java.lang
+  $VAR1 = {
+            'name' => 'Code Cache',
+            'type' => 'MemoryPool'
+          };
+
+=cut
+
+sub parse_name {
+    my $self = shift;
+    my $name = shift;
+
+    return undef unless $name =~ /:/;
+    my ($domain,$rest) = split(/:/,$name,2);
+    my $attrs = {};
+    while ($rest =~ s/([^=]+)\s*=\s*//) {
+        #print "R: $rest\n";
+        my $key = $1;
+        my $value = undef;
+        if ($rest =~ /^"/) {
+            $rest =~ s/("(\\"|[^"]+)")(\s*,\s*|$)//;
+            $value = $2;
+            # Unescape escaped chars
+            $value =~ s/\\([:",=*?])/$1/g;
+        } else {
+            if ($rest =~ s/([^,]+)(\s*,\s*|$)//) {
+                $value = $1;
+            } 
+        }
+        return undef unless $value;
+        $attrs->{$key} = $value;
+        #print "K: $key V: $value\n";
+    }
+    # If there is something left, we were not successful 
+    # in parsing the name
+    return undef if $rest;
+    return ($domain,$attrs);
+}
+
+
 =item $formatted_text = $jmx->formatted_list($path)
 
 =item $formatted_text = $jmx->formatted_list($resp)
@@ -886,10 +942,13 @@ sub _glue_mbean_name {
 
 sub _create_handler {
     my $self = shift;
-    $self->{product} ||= $self->_autodetect_product();
+    if (!$self->{product}) {
+        ($self->{product},$self->{product_handler}) = $self->_autodetect_product();
+    }
+    # Create product handler if not created during autodetectiong (e.g. if the
+    # product has been set explicitely)
+    $self->{product_handler} = $self->_new_handler($self->{product}) unless $self->{product_handler};
     croak "Cannot autodetect server product" unless $self->{product};
-    
-    $self->{product_handler} = $self->_new_handler($self->{product});
     return $self->{product_handler};        
 }
 
@@ -898,7 +957,7 @@ sub _autodetect_product {
     for my $id (@PRODUCT_HANDLER_ORDERING) {
 
         my $handler = $self->_new_handler($id);
-        return $id if $handler->autodetect();
+        return ($id,$handler) if $handler->autodetect();
     }
     return undef;
 }

@@ -1,64 +1,62 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::Product::Jonas;
+package JMX::Jmx4Perl::Product::SpringDM;
 
 use JMX::Jmx4Perl::Product::BaseHandler;
 use strict;
 use base "JMX::Jmx4Perl::Product::BaseHandler";
+use Data::Dumper;
 
 use Carp qw(croak);
 
 =head1 NAME
 
-JMX::Jmx4Perl::Product::Jonas - Handler for Jonas
+JMX::Jmx4Perl::Product::SpringDM - Handler for Spring dm-Server.
 
 =head1 DESCRIPTION
 
-This is the product handler support Jonas 4 and 5 (L<http://jonas.ow2.org/>)
+This is the product handler support for Spring dm Server
+(L<http://www.springsource.com/products/dmserver>).
 
 =cut
 
 sub id {
-    return "jonas";
+    return "springdm";
 }
 
 sub name {
-    return "Jonas";
+    return "Spring dm-Server";
+}
+
+sub vendor {
+    return "SpringSource";
 }
 
 sub order { 
-    return 10;
+    return 300;
+}
+
+sub version {
+    return shift->{version};
 }
 
 sub autodetect_pattern {
-    return ("vendor",qr/OW2/i);
-}
-
-sub server_info { 
-    my $self = shift;
-    my $ret = $self->SUPER::server_info();
-    $ret .= sprintf("%-10.10s %s\n","Web:",$self->{jmx4perl}->get_attribute("jonas:name=webContainers,type=service","ServerName"));
-}
-
-sub jsr77 {
-    return 1;
-}
-
-sub init_aliases {
-    return 
-    {
-     attributes => 
-   {
-    #SERVER_ADDRESS => [ "jboss.system:type=ServerInfo", "HostAddress"],
-    #SERVER_HOSTNAME => [ "jonas:name=jonas,type=ServerProxy", "HostName"],
-   },
-     operations => 
-   {
-    #THREAD_DUMP => [ "jboss.system:type=ServerInfo", "listThreadDump"]
-   }
-     # Alias => [ "mbean", "attribute", "path" ]
+    return sub { 
+        my $self = shift;
+        my $j4p = $self->{jmx4perl};        
+        my $ret = $j4p->search("com.springsource.kernel:name=com.springsource.kernel.agent.dm,*");
+        #print Dumper($ret);
+        if ($ret) {
+            for my $n (@$ret) {
+                my ($domain,$attrs)  = $j4p->parse_name($n);
+                if ($attrs->{version}) {
+                    $self->{version} = $attrs->{version};
+                    return 1;
+                }
+            }
+        }
+        return undef;
     };
 }
-
 
 =head1 LICENSE
 
