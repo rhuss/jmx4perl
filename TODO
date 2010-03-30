@@ -12,3 +12,9 @@
 22 16 Bug: Overloaded method with string array arguments 
    gets parsed badly: 
    No operation installBundles([Ljava.lang.String found on MBean osgi.core:type=framework,version=1.5
+
+
+
+-----
+
+* last_error handling in ServerHandlers
