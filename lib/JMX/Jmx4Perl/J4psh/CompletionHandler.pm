@@ -89,7 +89,6 @@ sub servers {
     }
 }
 
-
 =head1 LICENSE
 
 This file is part of jmx4perl.
