@@ -6,95 +6,133 @@ jp4sh - A JMX Shell
 
 =cut
 
-use Term::ReadLine;
-use Term::ANSIColor;
+use Getopt::Long qw(GetOptionsFromArray);
+use strict;
+use JMX::Jmx4Perl::Config;
+use JMX::Jmx4Perl::J4psh;
+use Config::General;
 
-# Menu
-my $MENU = 
-  [
-     {
-      command => "incoming",
-      shortcut => "inc",
-      submenu => [
-                    { command => "show", exec => \&cmd_incoming_show, regexp => qr/^(\d+)$/ },
-                    { command => "failed", exec => \&cmd_incoming_failed, },
-                    { command => "activate", exec => \&cmd_incoming_activate, },
-                    { command => "delete", exec => \&cmd_incoming_delete }
-                 ],
-     },
-     { 
-      label => "Message",
-      command => "message",
-      shortcut => "m",
-      submenu => [
-                    { command => "show", exec => \&cmd_message_show, regexp => qr/^(\d+)$/ },
-                    { command => "activate", exec => \&cmd_message_activate }
-                 ]
-     },
-     {
-      label => "Incident",
-      command =>  "incident",
-      shortcut => "i",
-      submenu => [
-                    { command => "show", exec => \&cmd_incident_show, regexp => qr/^(\d+)$/ },
-                 ]
-     },
-     {
-      label => "Logging",
-      command => "log" 
-     },
-     { 
-      label => "Statistics",
-      command =>  "stats" 
-     },
-  ];
+=head1 SYNOPSIS
 
-my $GLOBAL_COMMANDS =
-  [
-     { 
-      command => "cd",
-      exec => \&cmd_cd,
-      desc => "Change current operation level"
-     },
-     { 
-      command => "ls",
-      exec => \&cmd_ls,
-      desc => "Show content of current level"
-     },
-     { 
-      command => "set",
-      exec => \&cmd_set,
-      desc => "Set the value of an attribute"
-     },
-     {
-      command => "get",
-      exec => \&cmd_get,
-      desc => "Get the value of an attribute"
-     },
-     { 
-      command => "exec",
-      exec => \&cmd_exec,
-      desc  => "Execute an operation showing the result"
-     },
-     { 
-      command => "info"
-      exec => \&cmd_info,
-      desc => "Show information of the connected server"
-     },
-     {        
-      command => "quit",
-      exec => sub { exit 0; },
-      desc => "Quit this shell"
-     },
-     {        
-      command => "server",
-      exec => \&cmd_server,
-      desc => "Change the server"
-     },
-     {        
-      command => "quit",
-      exec => sub { exit 0; } 
-     }
-  ];
+  j4psh [options] 
+
+  j4psh --help
+
+  j4psh --version
+
+ Options:
+   --server <server>       URL or symbolic name of OSGi server to connect to
+   --user <user>           Credential used for authentication   
+   --password <pwd>  
+   --proxy <url>           URL to use as proxy proxy
+   --proxy-user <user>     Authentication information for a proxy
+   --proxy-password <pwd>
+   --config <cfg-file>     Path to an optional configuration file (default: ~/.j4p)
+   --color [yes|no]        Color option (default: yes)
+
+=head1 DESCRIPTION
+
+B<j4psh> is a frontend to C<JMX::Jmx4Perl> providing an interactive shell for
+accessing JMX MBeans on a remote Java server. 
+
+=over 4
+
+=item *
+
+Readline and history support based on GNU Readline/History as known from other
+shells like 'bash'. When GNU Readline is not available, a pure Perl Module is
+used instead.
+
+=item *
+
+Context sensitive argument completion, e.g. on MBean names and attributes.
+
+=item * 
+
+Colored output (can be switched off)
+
+=item *
+
+Multi-Server support
+
+=item * 
+
+Remote operation via HTTP(S)
+
+=back
+
+=cut
+
+my %opts = ();
+my $result = GetOptions(\%opts,
+                        "server|s=s",
+                        "user|u=s","password|p=s",
+                        "proxy=s",
+                        "proxy-user=s","proxy-password=s",
+                        "config=s",
+                        "version!",
+                        "color=s",
+                        "help|h!" => sub { &Getopt::Long::HelpMessage() }
+                       );
+
+if ($opts{version}) {
+    print "j4psh ",$JMX::Jmx4Perl::VERSION,"\n";
+    exit(0);
+}
+
+# Parse configuration files
+my $j4p_config = new JMX::Jmx4Perl::Config(&get_config($opts{config}));
+
+# Create global context object
+my $j4psh = new JMX::Jmx4Perl::J4psh(config => $j4p_config,args => \%opts);
+
+# Let the shell run
+$j4psh->run;
+
+sub get_config {
+    my $file = shift || $ENV{HOME} . "/.j4p";
+    my $ret = {};
+
+    if ($file && -e $file) {
+        $ret = { new Config::General(-ConfigFile => $file,-LowerCaseNames => 1)->getall };        
+    } 
+    return $ret;
+}
+
+=head1 LICENSE
+
+This file is part of jmx4perl.
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+A commercial license is available as well. Please contact roland@cpan.org for
+further details.
+
+=head1 PROFESSIONAL SERVICES
+
+Just in case you need professional support for this module (or Nagios or JMX in
+general), you might want to have a look at
+http://www.consol.com/opensource/nagios/. Contact roland.huss@consol.de for
+further information (or use the contact form at http://www.consol.com/contact/)
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
+
+1;
+
 
 
