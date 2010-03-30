@@ -44,12 +44,16 @@ provides:
     file: lib/JMX/Jmx4Perl/Config.pm
   JMX::Jmx4Perl::Nagios::CheckJmx4Perl:
     file: lib/JMX/Jmx4Perl/Nagios/CheckJmx4Perl.pm
+  JMX::Jmx4Perl::Product::ActiveMQ:
+    file: lib/JMX/Jmx4Perl/Product/ActiveMQ.pm
   JMX::Jmx4Perl::Product::BaseHandler:
     file: lib/JMX/Jmx4Perl/Product/BaseHandler.pm
   JMX::Jmx4Perl::Product::Geronimo:
     file: lib/JMX/Jmx4Perl/Product/Geronimo.pm
   JMX::Jmx4Perl::Product::Glassfish:
     file: lib/JMX/Jmx4Perl/Product/Glassfish.pm
+  JMX::Jmx4Perl::Product::Hadoop:
+    file: lib/JMX/Jmx4Perl/Product/Hadoop.pm
   JMX::Jmx4Perl::Product::JBoss:
     file: lib/JMX/Jmx4Perl/Product/JBoss.pm
   JMX::Jmx4Perl::Product::Jetty:
@@ -58,6 +62,10 @@ provides:
     file: lib/JMX/Jmx4Perl/Product/Jonas.pm
   JMX::Jmx4Perl::Product::Resin:
     file: lib/JMX/Jmx4Perl/Product/Resin.pm
+  JMX::Jmx4Perl::Product::SpringDM:
+    file: lib/JMX/Jmx4Perl/Product/SpringDM.pm
+  JMX::Jmx4Perl::Product::Terracotta:
+    file: lib/JMX/Jmx4Perl/Product/Terracotta.pm
   JMX::Jmx4Perl::Product::Tomcat:
     file: lib/JMX/Jmx4Perl/Product/Tomcat.pm
   JMX::Jmx4Perl::Product::Unknown:
