@@ -98,11 +98,9 @@ public class MBeanServerHandler {
                 // Must be there, otherwise we would nave have left the loop
                 throw objNotFoundException;
             } catch (ReflectionException e) {
-                throw new IllegalStateException("Internal error for '" + pJmxReq.getAttributeName() +
-                        "' on object " + pJmxReq.getObjectName() + ": " + e,e);
+                throw new IllegalStateException("Internal error while process " + pJmxReq + ": " + e,e);
             } catch (MBeanException e) {
-                throw new IllegalStateException("Exception while fetching the attribute '" + pJmxReq.getAttributeName() +
-                        "' on object " + pJmxReq.getObjectName() + ": " + e,e);
+                throw new IllegalStateException("Exception while processing request " + pJmxReq + ": " + e,e);
             }
         }
     }
@@ -123,7 +121,7 @@ public class MBeanServerHandler {
             Exception lastExp = null;
             for (MBeanServer server : mBeanServers) {
                 try {
-                    if (pName != null && pName.length > 0) {
+                    if (pName != null && pName.length > 0 && pName[0] != null) {
                         ObjectName oName = new ObjectName(pName[0]);
                         return server.registerMBean(pMBean,oName).getObjectName();
                     } else {
@@ -286,7 +284,7 @@ public class MBeanServerHandler {
         }
     }
 
-    private boolean checkForClass(String pClassName) {
+    boolean checkForClass(String pClassName) {
         try {
             Class.forName(pClassName);
             return true;

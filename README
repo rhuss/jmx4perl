@@ -77,22 +77,42 @@ INSTALLATION
 SUPPORTED APPLICATION SERVERS
   
   The following Java Application Servers has been confirmed to work
-  with jmx4perl in agent mode :
+  with jmx4perl in agent mode deployed as war:
 
-  * JBoss 4.2.3 GA & 5.1.0 GA
+  * JBoss 4.2.3 GA, 5.1.0 GA & 6.0.0 M2
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
-  * Jonas 4.10.3 (with Jetty 5.1.10 and Tomcat 5.5.26) and 5.1.0
-  * Apache Geronimo 2.1.4 (Jetty 6 and Tomcat 6)
+  * Jonas 4.10.7 (with Jetty 5.1.10 and Tomcat 5.5.28) and 5.1.1
+  * Apache Geronimo 2.2 (Jetty 7 and Tomcat 6)
   * Glassfish 2.1.1 and v3
-  * Apache Tomcat 5.5.28 & 6.0.20
-  * Jetty 5.1.15 & 6.1.21 & 7.0.0 (with JMX enabled)
+  * Apache Tomcat 5.5.28 & 6.0.26
+  * Jetty 5.1.15 & 6.1.22 & 7.0.1 (with JMX enabled) & 8.0.0.M0
   * IBM Websphere 6.1 & 7.0
+  * Resin 3.1.9
+  * Spring dm Server 2.0.0.RELEASE
+
+  The OSGi agent budle has been tested on
+
+  * Felix 2.0.4
+  * Equinox 3.5.2
+
+  The JVM JDK 6 agent has been verified to work on 
+
+  * ActiveMQ 5.3.1
+  * Terracotta 3.2.1
+  * Hadoop 0.20.2
 
   The proxy mode has been explicitely tested for 
 
   * JBoss 4.2.3 GA & 5.1.0 GA
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
   * Glassfish 2.1.1 and v3
+
+  The jmx4perl OSGi Bundle has been tested with the following containers: 
+
+  * Felix ...
+  * Equinox ...
+  * Knopflerfish ...
+  * Spring dm Server ...
 
   More test are scheduled, detailed setup instructions for individual
   JEE servers can be found at http://labs.consol.de/tags/jsr-160
@@ -112,24 +132,48 @@ MULE AGENT SUPPORT
   within the 'agent' directory, you find the agent then as
   'agent/modules/j4p-mule/target/j4p-mule-<version>-agent.jar'.
   Alternatively the agent jar can be downloaded from the maven
-  labs.conso.de's repository at
+  labs.consol.de's repository at
   http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/
 
   Installation instruction are included in JMX::Jmx4Perl::Manual
   The initial article related can be found at
   http://labs.consol.de/blog/jmx4perl/jmx4perl-mule-agent
 
-LEGACY JDK 1.4 SUPPORT
+OSGi AGENT SUPPORT
 
-  For legacy application servers like Weblogic 8.1 a JDK 1.4 backport
-  for the agent is provided. However, you need to build the agent on
-  your own by using 'ant jdk14' within the "agent" directory which
-  builds a j4p14.war. A maven build is provided as well within
-  agent/modules/jdk14. Please note the this support is experimentally
-  and the version is freezed to 0.36. j4p14.war has been successfully
-  tested with Weblogic 8.1. This JDK 1.4 support will be removed in
-  the next version (you can always download 0.50 if you need the JDK
-  1.4 support)
+  An j4p OSGi bundle can be deployed on any OSGi container where a
+  OSGi compliant HttpService is available. You can download the bundle
+  from http://labs.consol.de/maven/repository/org/jmx4perl/j4p-osgi
+  or build it from scratch with maven. The source is located in
+  agent/modules/j4p-osgi
+  
+JDK6 JVM AGENT
+
+  A native Java JVM agent is provided, too. The only dependency is on
+  Sun's JDK 6, which contains a lightweight HTTP Server used for
+  exporting the j4p data. You can download it from 
+  http://labs.consol.de/maven/repository/org/jmx4perl/j4p-jvm-jdk6
+  or build it from scratch with maven out of
+  agent/modules/j4p-jvm-jdk6.
+
+  To use it simply provide the following argument to the Java
+  application to monitor (any Java 6 application can be used):
+
+  -javaagent:/path/to/j4p-jvm-jdk6-<version>-agent.jar
+
+  By default, it will listen on port 8778, but this can be configured
+  as well as other aspects like authentication:
+
+  * Provide options on the commandline as key-value pairs:
+    -javaagent:agent.jar=port=7777,host=localhost
+
+  * Via a properties file
+    -javaagent:agent.jar=config=/path/to/config.properties
+
+  * Via packaging a j4p-agent.properties top level in the agent.jar
+
+  Options are used in the given precedence, the former overwritting
+  the later values.
 
 RESOURCES
 

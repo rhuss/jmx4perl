@@ -100,12 +100,10 @@ configuration if you are using the agent servlet as a proxy, e.g.
 =cut
 
 # HTTP Parameters to be used for transmitting the request
-my %PARAM_MAPPING = (
-                     "max_depth" => "maxDepth",
-                     "max_list_size" => "maxCollectionSize",
-                     "max_objects" => "maxObjects"
-                    );
+my @PARAMS = ("maxDepth","maxCollectionSize","maxObjects","ignoreErrors");
 
+# Regexp for detecting invalid chars which can not be used securily in pathinfos
+my $INVALID_PATH_CHARS = qr/%(5C|3F|3B|2F)/i; # \ ? ; /
 
 # Init called by parent package within 'new' for specific initialization. See
 # above for the parameters recognized
@@ -174,12 +172,34 @@ sub request {
         $json_resp = from_json($http_resp->content());
     };
     my $json_error = $@;
-    my $error_resp = $self->_validate_response($http_resp,$json_resp,$json_error);
-    if ($error_resp) {
-        $error_resp->{request} = @jmx_requests > 1 ? undef : $jmx_requests[0];
-        #print Dumper($error_resp);
-        return $error_resp;
+
+    if ($http_resp->is_error) {
+        if (scalar(@jmx_requests) == 1) {
+            return JMX::Jmx4Perl::Response->new
+              ( 
+               status => $http_resp->code,
+               value => $json_error ? $http_resp->content : $json_resp,
+               error => $json_error ? $self->_prepare_http_error_text($http_resp) : 
+               ref($json_resp) eq "ARRAY" ? join "\n",  map { $_->{error} } grep { $_->{error} } @$json_resp : $json_resp->{error},
+               stacktrace => ref($json_resp) eq "ARRAY" ? $self->_extract_stacktraces($json_resp) : $json_resp->{stacktrace},
+               request => $jmx_requests[0]
+              );        
+        }
+    } elsif ($json_error) {
+        # If is not an HTTP-Error and deserialization fails, then we
+        # probably got a wrong URL and get delivered some server side
+        # document (with HTTP code 200)
+        my $e = $json_error;
+        $e =~ s/(.*)at .*?line.*$/$1/;
+        return JMX::Jmx4Perl::Response->new
+          ( 
+           status => 400,
+           error => 
+           "Error while deserializing JSON answer (Wrong URL ?)\n" . $e,
+           value => $http_resp->content
+          );        
     }
+    
     my @responses = ($self->_from_http_response($json_resp,@jmx_requests));
     if (!wantarray && scalar(@responses) == 1) {
         return shift @responses;
@@ -193,7 +213,7 @@ sub request {
 sub _to_http_request {
     my $self = shift;
     my @reqs = @_;
-    if (@reqs == 1 && !$reqs[0]->get("target")) {
+    if ($self->_use_GET_request(\@reqs)) {
         # Old, rest-style
         my $url = $self->request_url($reqs[0]);
         return HTTP::Request->new(GET => $url);
@@ -201,10 +221,23 @@ sub _to_http_request {
         my $url = $self->cfg('url') || croak "No URL provided";
         $url .= "/" unless $url =~ m|/$|;
         my $request = HTTP::Request->new(POST => $url);
-        my $content = to_json(\@reqs, { convert_blessed => 1 });
+        my $content = to_json(@reqs > 1 ? \@reqs : $reqs[0], { convert_blessed => 1 });
+        #print Dumper($reqs[0],$content);
         $request->content($content);
         return $request;
     }    
+}
+
+sub _use_GET_request {
+    my $self = shift;
+    my $reqs = shift;
+    if (@$reqs == 1) {
+        my $req = $reqs->[0];
+        # For proxy configs and explicite set POST request, get is not used
+        return !defined($req->get("target")) && $req->method ne "POST" ;
+    } else {
+        return 0;
+    }
 }
 
 # Create one or more response objects for a given request
@@ -215,7 +248,7 @@ sub _from_http_response {
     if (ref($json_resp) eq "HASH") {
         return JMX::Jmx4Perl::Response->new(%{$json_resp},request => $reqs[0]);
     } elsif (ref($json_resp) eq "ARRAY") {
-        die "Internal: Number of request and responses doesnt match (",scalar(@reqs)," vs. ",scalar(@$json_resp) 
+        die "Internal: Number of request and responses doesn't match (",scalar(@reqs)," vs. ",scalar(@$json_resp) 
           unless scalar(@reqs) == scalar(@$json_resp);
         
         my @ret = ();        
@@ -254,42 +287,6 @@ sub _clone_target {
     return $target;
 }
 
-# Validate the JSON answer and the HttpResponse
-sub _validate_response {
-    my $self = shift;
-    my ($http_resp,$json_resp,$json_error) = @_;    
-    my $http_error = $http_resp->is_error;
-    
-    if (!$http_error) {
-        if (!$json_error) {
-            # If HTTP-Request suceeds and JSON deserialization was
-            # successful, no error occured
-            return undef;
-        } else {
-            # If is not an HTTP-Error and deserialization fails, then we
-            # probably got a wrong URL and get delivered some server side
-            # document (with HTTP code 200)
-            my $e = $json_error;
-            $e =~ s/(.*)at .*?line.*$/$1/;
-            return JMX::Jmx4Perl::Response->new
-              ( 
-               status => 400,
-               error => 
-               "Error while deserializing JSON answer (Wrong URL ?)\n" . $e,
-               content => $http_resp->content
-              );
-        }
-    } else {
-        return JMX::Jmx4Perl::Response->new
-          ( 
-           status => $http_resp->code,
-           content => $json_error ? $http_resp->content : $json_resp,
-           error => $json_error ? $self->_prepare_http_error_text($http_resp) : $json_resp->{error},
-           stacktrace => ref($json_resp) eq "ARRAY" ? $self->_extract_stacktraces($json_resp) : $json_resp->{stacktrace}
-          );        
-    }
-}
-
 =item $url = $agent->request_url($request)
 
 Generate the URL for accessing the java agent based on a given request. 
@@ -316,18 +313,27 @@ sub request_url {
         $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq EXEC) {
         $req .= "/" . $self->_escape($request->get("operation"));
-        $req .= "/" . $self->_escape($self->_null_escape($_)) for @{$request->get("arguments")};
+        for my $arg (@{$request->get("arguments")}) {
+            # Array refs are sticked together via ","
+            my $a = ref($arg) eq "ARRAY" ? join ",",@{$arg} : $arg;
+            $req .= "/" . $self->_escape($self->_null_escape($a));
+        }
     } elsif ($type eq SEARCH) {
         # Nothing further to append.
     }
     # Squeeze multiple slashes
     $req =~ s|/{2,}|/|g;
+    #print "R: $req\n";
+
+    if ($req =~ $INVALID_PATH_CHARS || $request->{use_query}) {
+        $req = "?p=$req";
+    }
     my @params;
-    for my $k (keys %PARAM_MAPPING) {
-        push @params, $PARAM_MAPPING{$k} . "=" . $request->get($k)
+    for my $k (@PARAMS) {
+        push @params, $k . "=" . $request->get($k)
           if $request->get($k);
     }
-    $req .= "?" . join("&",@params) if @params;
+    $req .= ($req =~ /\?/ ? "&" : "?") . join("&",@params) if @params;
     return $url . $req;
 }
 
@@ -351,7 +357,9 @@ sub _escape {
     my $input = shift;
     my $opts = { @_ };
     $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
-    $input =~ s|-/$|+/|; # The last slash needs a special escape
+    $input =~ s|-/$|+/|; # The last slash needs a special escape    
+    $input =~ s|^/-|/^|; # as well as the first slash
+
     return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
                                                               # default
                                                               # set. See L<URI>

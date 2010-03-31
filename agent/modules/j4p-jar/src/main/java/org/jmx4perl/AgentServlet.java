@@ -1,6 +1,5 @@
 package org.jmx4perl;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
@@ -10,13 +9,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /*
@@ -72,13 +67,16 @@ public class AgentServlet extends HttpServlet {
     private static final long serialVersionUID = 42L;
 
     // POST- and GET- HttpRequestHandler
-    private HttpRequestHandler httpGetHandler, httpPostHandler;
+    private ServletRequestHandler httpGetHandler, httpPostHandler;
 
     // Backend dispatcher
     private BackendManager backendManager;
 
     // Used for logging
     private LogHandler logHandler;
+
+    // Request handler for parsing request parameters and building up a response
+    private HttpRequestHandler requestHandler;
 
     public AgentServlet() {
         this(null);
@@ -97,6 +95,7 @@ public class AgentServlet extends HttpServlet {
         httpPostHandler = newPostHttpRequestHandler();
 
         backendManager = new BackendManager(servletConfigAsMap(pConfig),logHandler);
+        requestHandler = new HttpRequestHandler(backendManager,logHandler);
     }
 
     @Override
@@ -117,28 +116,21 @@ public class AgentServlet extends HttpServlet {
         handle(httpPostHandler,req,resp);
     }
 
-    private void handle(HttpRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
+    private void handle(ServletRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
         JSONAware json = null;
         int code = 200;
         try {
             // Check access policy
-            checkClientIPAccess(pReq);
+            requestHandler.checkClientIPAccess(pReq.getRemoteHost(),pReq.getRemoteAddr());
 
             // Dispatch for the proper HTTP request method
             json = pReqHandler.handleRequest(pReq,pResp);
-            code = extractResultCode(json);
+            code = requestHandler.extractResultCode(json);
             if (backendManager.isDebug()) backendManager.info("Response: " + json);
-        } catch (IllegalArgumentException exp) {
-            json = getErrorJSON(code = 400,exp);
-        } catch (IllegalStateException exp) {
-            json = getErrorJSON(code = 500,exp);
-        } catch (SecurityException exp) {
-            // Wipe out stacktrace
-            json = getErrorJSON(code = 403,new Exception(exp.getMessage()));
-        } catch (Exception exp) {
-            json = getErrorJSON(code = 500,exp);
-        } catch (Error error) {
-            json = getErrorJSON(code = 500,error);
+        } catch (Throwable exp) {
+            JSONObject error = requestHandler.handleThrowable(exp);
+            code = (Integer) error.get("status");
+            json = error;
         } finally {
             sendResponse(pResp,code,json.toJSONString());
         }
@@ -146,95 +138,42 @@ public class AgentServlet extends HttpServlet {
 
     // Extract an return code. It's the highest status number contained
     // in within the responnses
-    private int extractResultCode(JSONAware pJson) {
-        if (pJson instanceof List) {
-            int maxCode = 0;
-            for (JSONAware j : (List<JSONAware>) pJson) {
-                int code = extractStatus(j);
-                if (code > maxCode) {
-                    maxCode = code;
-                }
-            }
-            return maxCode;
-        } else {
-            return extractStatus(pJson);
-        }
-    }
 
-    private int extractStatus(JSONAware pJson) {
-        if (pJson instanceof JSONObject) {
-            JSONObject jsonObject = (JSONObject) pJson;
-            if (!jsonObject.containsKey("status")) {
-                throw new IllegalStateException("No status given in response " + pJson);
-            }
-            return (Integer) jsonObject.get("status");
-        } else {
-            throw new IllegalStateException("Internal: Not a JSONObject but a " + pJson.getClass() + " " + pJson);
-        }
-    }
-
-    private interface HttpRequestHandler {
-        JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) throws IOException, MalformedObjectNameException;
+    private interface ServletRequestHandler {
+        JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp)
+                throws IOException, MalformedObjectNameException;
     }
 
 
-    private HttpRequestHandler newPostHttpRequestHandler() {
-        return new HttpRequestHandler() {
+    private ServletRequestHandler newPostHttpRequestHandler() {
+        return new ServletRequestHandler() {
             public JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp)
                     throws IOException, MalformedObjectNameException {
-                List<JmxRequest> jmxRequests;
-                String encoding = pReq.getCharacterEncoding();
-                jmxRequests = JmxRequestFactory.createRequestsFromInputStream(
-                        encoding != null ?
-                                new InputStreamReader(pReq.getInputStream(),encoding) :
-                                new InputStreamReader(pReq.getInputStream()));
-                JSONArray responseList = new JSONArray();
-                for (JmxRequest jmxReq : jmxRequests) {
-                    boolean debug = backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation());
-                    if (debug) logRequest(pReq, jmxReq);
-
-                    // Call handler and retrieve return value
-                    JSONObject resp = executeRequest(jmxReq);
-                    responseList.add(resp);
+                if (backendManager.isDebug()) {
+                    logHandler.debug("URI: " + pReq.getRequestURI());
+                    logHandler.debug("Path-Info: " + pReq.getPathInfo());
                 }
-                return responseList;
+                String encoding = pReq.getCharacterEncoding();
+                InputStream is = pReq.getInputStream();
+                return requestHandler.handleRequestInputStream(is, encoding);
             }
         };
     }
 
-    private HttpRequestHandler newGetHttpRequestHandler() {
-        return new HttpRequestHandler() {
+    private ServletRequestHandler newGetHttpRequestHandler() {
+        return new ServletRequestHandler() {
             public JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp) {
                 JmxRequest jmxReq =
                         JmxRequestFactory.createRequestFromUrl(pReq.getPathInfo(),pReq.getParameterMap());
                 if (backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {
-                    logRequest(pReq, jmxReq);
+                    logHandler.debug("URI: " + pReq.getRequestURI());
+                    logHandler.debug("Path-Info: " + pReq.getPathInfo());
+                    logHandler.debug("Request: " + jmxReq.toString());
                 }
-                return executeRequest(jmxReq);
+                return requestHandler.executeRequest(jmxReq);
             }
         };
     }
-
-
-    private JSONObject executeRequest(JmxRequest jmxReq) {
-        // Call handler and retrieve return value
-        try {
-            return backendManager.handleRequest(jmxReq);
-        } catch (ReflectionException e) {
-            return getErrorJSON(404,e);
-        } catch (InstanceNotFoundException e) {
-            return getErrorJSON(404,e);
-        } catch (MBeanException e) {
-            return getErrorJSON(500,e);
-        } catch (AttributeNotFoundException e) {
-            return getErrorJSON(404,e);
-        } catch (UnsupportedOperationException e) {
-            return getErrorJSON(500,e);
-        } catch (IOException e) {
-            return getErrorJSON(500,e);
-        }
-    }
-
     // =======================================================================
 
     private Map<Config, String> servletConfigAsMap(ServletConfig pConfig) {
@@ -249,33 +188,6 @@ public class AgentServlet extends HttpServlet {
         }
         return ret;
     }
-
-    private void logRequest(HttpServletRequest pReq, JmxRequest pJmxReq) {
-        logHandler.debug("URI: " + pReq.getRequestURI());
-        logHandler.debug("Path-Info: " + pReq.getPathInfo());
-        logHandler.debug("Request: " + pJmxReq.toString());
-    }
-
-    private void checkClientIPAccess(HttpServletRequest pReq) {
-        if (!backendManager.isRemoteAccessAllowed(pReq.getRemoteHost(),pReq.getRemoteAddr())) {
-            throw new SecurityException("No access from client " + pReq.getRemoteAddr() + " allowed");
-        }
-    }
-
-
-    private JSONObject getErrorJSON(int pErrorCode, Throwable pExp) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("status",pErrorCode);
-        jsonObject.put("error",pExp.toString());
-        StringWriter writer = new StringWriter();
-        pExp.printStackTrace(new PrintWriter(writer));
-        jsonObject.put("stacktrace",writer.toString());
-        if (backendManager.isDebug()) {
-            backendManager.error("Error " + pErrorCode,pExp);
-        }
-        return jsonObject;
-    }
-
 
     private void sendResponse(HttpServletResponse pResp, int pStatusCode, String pJsonTxt) throws IOException {
         try {

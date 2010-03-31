@@ -45,23 +45,27 @@ public enum Config {
     DISPATCHER_CLASSES("dispatcherClasses"),
 
     // Maximum traversal depth for serialization of complex objects.
-    MAX_DEPTH("maxDepth","0"),
+    MAX_DEPTH("maxDepth",null),
 
     // Maximum size of collections returned during serialization.
     // If larger, the collection is truncated
-    MAX_COLLECTIONS_SIZE("maxCollectionSize","0"),
+    MAX_COLLECTION_SIZE("maxCollectionSize",null),
 
     // Maximum number of objects returned by serialization
-    MAX_OBJECTS("maxObjects","0"),
+    MAX_OBJECTS("maxObjects",null),
 
     // Context used for agent, used e.g. in the OSGi activator
     // (but not for the servlet, this is done in web.xml)
     AGENT_CONTEXT("agentContext","/j4p"),
 
-    // User and password for authentication purposes. 
+    // User and password for authentication purposes.
     USER("user"),
-    PASSWORD("password");
+    PASSWORD("password"),
 
+    // Runtime configuration (i.e. must come in with a request)
+    // for ignoring errors during JMX operations and JSON serialization.
+    // This works only for certain operations like pattern reads.
+    IGNORE_ERRORS("ignoreErrors");
 
     private String key;
     private String defaultValue;
@@ -109,5 +113,17 @@ public enum Config {
             value = this.getDefaultValue();
         }
         return value;
+    }
+
+    // Extract config options from a given map
+    public static Map<Config,String> extractConfig(Map<String,String> pMap) {
+        Map<Config,String> ret = new HashMap<Config, String>();
+        for (Config c : Config.values()) {
+            String value = pMap.get(c.getKeyValue());
+            if (value != null) {
+                ret.put(c,value);
+            }
+        }
+        return ret;
     }
 }

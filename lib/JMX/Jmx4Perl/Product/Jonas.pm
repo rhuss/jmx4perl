@@ -29,11 +29,6 @@ sub order {
     return 10;
 }
 
-sub __try_version {
-    my $self = shift;
-    return $self->try_attribute("version","jonas:j2eeType=J2EEServer,name=jonas","serverVersion");
-}
-
 sub autodetect_pattern {
     return ("vendor",qr/OW2/i);
 }

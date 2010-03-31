@@ -4,8 +4,6 @@ import org.json.simple.JSONObject;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.remote.JMXServiceURL;
-import java.net.MalformedURLException;
 import java.util.*;
 
 /*
@@ -72,17 +70,18 @@ public class JmxRequest {
     // Attributes
     private String objectNameS;
     private ObjectName objectName;
-    private String attributeName;
+    private List<String> attributeNames;
     private String value;
     private List<String> extraArgs;
     private String operation;
     private Type type;
     private TargetConfig targetConfig = null;
 
-    // Max depth of returned JSON structure when deserializing.
-    private int maxDepth = 0;
-    private int maxCollectionSize = 0;
-    private int maxObjects = 0;
+    // Processing configuration for tis request object
+    private Map<Config, String> processingConfig = new HashMap<Config, String>();
+
+    // A value fault handler for dealing with exception when extracting values
+    ValueFaultHandler valueFaultHandler = NOOP_VALUE_FAULT_HANDLER;
 
     /**
      * Create a request with the given type (with no MBean name)
@@ -124,9 +123,16 @@ public class JmxRequest {
             objectNameS = s;
             objectName = new ObjectName(s);
         }
-        s = (String) pMap.get("attribute");
-        if (s != null) {
-            attributeName = s;
+        Object attrVal = pMap.get("attribute");
+        if (attrVal != null) {
+            attributeNames = new ArrayList<String>();
+            if (attrVal instanceof String) {
+                attributeNames.add((String) attrVal);
+            } else if (attrVal instanceof Collection) {
+                for (Object val : (Collection) attrVal) {
+                    attributeNames.add((String) val);
+                }
+            }
         }
         s = (String) pMap.get("path");
         if (s != null) {
@@ -134,9 +140,12 @@ public class JmxRequest {
         } else {
             extraArgs = new ArrayList<String>();
         }
-        List<String> l = (List<String>) pMap.get("arguments");
-        if (l != null) {
-            extraArgs = l;
+        List l = (List) pMap.get("arguments");
+        if (l != null && l.size() > 0) {
+            extraArgs = new ArrayList<String>();
+            for (Object val : l) {
+                extraArgs.add(val != null ? val.toString() : null);
+            }
         }
         s = (String) pMap.get("value");
         if (s != null) {
@@ -152,6 +161,17 @@ public class JmxRequest {
             targetConfig = new TargetConfig(target);
         }
 
+        Map<String,?> config = (Map<String,?>) pMap.get("config");
+        if (config != null) {
+            for (String key : config.keySet()) {
+                setProcessingConfig(key,config.get(key));
+            }
+        }
+
+        s = getProcessingConfig(Config.IGNORE_ERRORS);
+        if (s != null && s.matches("^(true|yes|on|1)$")) {
+            valueFaultHandler = IGNORE_VALUE_FAULT_HANDLER;
+        }
     }
 
     public String getObjectNameAsString() {
@@ -163,7 +183,18 @@ public class JmxRequest {
     }
 
     public String getAttributeName() {
-        return attributeName;
+        if (attributeNames == null) {
+            return null;
+        }
+        if (attributeNames.size() != 1) {
+            throw new IllegalStateException("Request contains more than one attribute (attrs = " +
+                    "" + attributeNames + "). Use getAttributeNames() instead.");
+        }
+        return attributeNames.get(0);
+    }
+
+    public List<String> getAttributeNames() {
+        return attributeNames;
     }
 
     public List<String> getExtraArgs() {
@@ -171,7 +202,7 @@ public class JmxRequest {
     }
 
     public String getExtraArgsAsPath() {
-        if (extraArgs.size() > 0) {
+        if (extraArgs != null && extraArgs.size() > 0) {
             StringBuffer buf = new StringBuffer();
             Iterator<String> it = extraArgs.iterator();
             while (it.hasNext()) {
@@ -191,8 +222,6 @@ public class JmxRequest {
         return Arrays.asList(elements);
     }
 
-
-
     public String getValue() {
         return value;
     }
@@ -205,21 +234,53 @@ public class JmxRequest {
         return operation;
     }
 
-    public int getMaxDepth() {
-        return maxDepth;
+    /**
+     * Get a processing configuration or null if not set
+     * @param pConfig configuration key to fetch
+     * @return string value or <code>null</code> if not set
+     */
+    public String getProcessingConfig(Config pConfig) {
+        return processingConfig.get(pConfig);
     }
 
-    public int getMaxCollectionSize() {
-        return maxCollectionSize;
+    /**
+     * Get a processing configuration as integer or null
+     * if not set
+     *
+     * @param pConfig configuration to lookup
+     * @return integer value of configuration or null if not set.
+     */
+    public Integer getProcessingConfigAsInt(Config pConfig) {
+        String value = processingConfig.get(pConfig);
+        if (value != null) {
+            return Integer.parseInt(value);
+        } else {
+            return null;
+        }
     }
 
-    public int getMaxObjects() {
-        return maxObjects;
+    void setProcessingConfig(String pKey, Object pValue) {
+        Config cKey = Config.getByKey(pKey);
+        if (cKey != null) {
+            processingConfig.put(cKey,pValue != null ? pValue.toString() : null);
+        }
     }
+
+
 
     void setAttributeName(String pName) {
-        attributeName = pName;
+        if (attributeNames != null) {
+            attributeNames.clear();
+        } else {
+            attributeNames = new ArrayList<String>(1);
+        }
+        attributeNames.add(pName);
     }
+
+    void setAttributeNames(List<String> pAttributeNames) {
+        attributeNames = pAttributeNames;
+    }
+
 
     void setValue(String pValue) {
         value = pValue;
@@ -233,29 +294,38 @@ public class JmxRequest {
         extraArgs = pExtraArgs;
     }
 
-    void setMaxObjects(int pMaxObjects) {
-        maxObjects = pMaxObjects;
-    }
-
-    void setMaxCollectionSize(int pMaxCollectionSize) {
-        maxCollectionSize = pMaxCollectionSize;
-    }
-
-    void setMaxDepth(int pMaxDepth) {
-        maxDepth = pMaxDepth;
-    }
-
     public TargetConfig getTargetConfig() {
         return targetConfig;
     }
+
+    public String getTargetConfigUrl() {
+        if (targetConfig == null) {
+            return null;
+        } else {
+            return targetConfig.getUrl();
+        }
+    }
+
 
     @Override
     public String toString() {
         StringBuffer ret = new StringBuffer("JmxRequest[");
         if (type == Type.READ) {
-            ret.append("READ mbean=").append(objectNameS).append(", attribute=").append(attributeName);
+            ret.append("READ mbean=").append(objectNameS);
+            if (attributeNames != null && attributeNames.size() > 1) {
+                ret.append(", attribute=[");
+                for (int i = 0;i<attributeNames.size();i++) {
+                    ret.append(attributeNames.get(i));
+                    if (i < attributeNames.size() - 1) {
+                        ret.append(",");
+                    }
+                }
+                ret.append("]");
+            } else {
+                ret.append(", attribute=").append(getAttributeName());
+            }
         } else if (type == Type.WRITE) {
-            ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(attributeName)
+            ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(getAttributeName())
                     .append(", value=").append(value);
         } else if (type == Type.EXEC) {
             ret.append("EXEC mbean=").append(objectNameS).append(", operation=").append(operation);
@@ -272,7 +342,6 @@ public class JmxRequest {
         return ret.toString();
     }
 
-
     /**
      * Return this request in a proper JSON representation
      * @return this object in a JSON representation
@@ -283,8 +352,12 @@ public class JmxRequest {
         if (objectName != null) {
             ret.put("mbean",objectName.getCanonicalName());
         }
-        if (attributeName != null) {
-            ret.put("attribute",attributeName);
+        if (attributeNames != null && attributeNames.size() > 0) {
+            if (attributeNames.size() > 1) {
+                ret.put("attribute",attributeNames);
+            } else {
+                ret.put("attribute",attributeNames.get(0));
+            }
         }
         if (extraArgs != null && extraArgs.size() > 0) {
             if (type == Type.READ || type == Type.WRITE) {
@@ -305,6 +378,25 @@ public class JmxRequest {
         return ret;
     }
 
+    /**
+     * Handle an exception occured during value extraction
+     *
+     * @param pFault the fault occured
+     * @return a replacement value if this should be used instead or the exception is rethrown if
+     *         the handler doesn't handle it
+     */
+    public <T extends Throwable> Object handleValueFault(T pFault) throws T {
+        return valueFaultHandler.handleException(pFault);
+    }
+
+    /**
+     * Get tha value fault handler, which can be passwed around. {@link #handleValueFault(Throwable)}
+     * @return the value fault handler
+     */
+    public ValueFaultHandler getValueFaultHandler() {
+        return valueFaultHandler;
+    }
+
     // ===============================================================================
     // Proxy configuration
 
@@ -313,11 +405,10 @@ public class JmxRequest {
         private Map<String,Object> env;
 
         public TargetConfig(Map pMap) {
-            String url = (String) pMap.get("url");
+            url = (String) pMap.get("url");
             if (url == null) {
                 throw new IllegalArgumentException("No service url given for JSR-160 target");
             }
-            this.url = url;
             String user = (String) pMap.get("user");
             if (user != null) {
                 env = new HashMap<String, Object>();
@@ -354,5 +445,34 @@ public class JmxRequest {
                     "]";
         }
     }
+
+    // =======================================================================================================
+    // Inner interface in order to deal with value exception
+    public interface ValueFaultHandler {
+        /**
+         * Handle the given exception and return an object
+         * which can be used as a replacement for the real
+         * value
+         *
+         * @param exception exception to ignore
+         * @return replacement value or the exception is rethrown if this handler doesnt handle this exception
+         * @throws T if the handler doesnt handel the exception
+         */
+        <T extends Throwable> Object handleException(T exception) throws T;
+    }
+
+    final private static ValueFaultHandler NOOP_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
+        public <T extends Throwable> Object handleException(T exception) throws T {
+            // Dont handle exception on our own, we rethrow it
+            throw exception;
+        }
+    };
+
+    final private static ValueFaultHandler IGNORE_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
+        public <T extends Throwable> Object handleException(T exception) throws T {
+            return "ERROR: " + exception.getMessage() + " (" + exception.getClass() + ")";
+        }
+    };
+
 
 }

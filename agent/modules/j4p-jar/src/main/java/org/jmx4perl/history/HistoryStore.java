@@ -3,8 +3,12 @@ package org.jmx4perl.history;
 import org.json.simple.JSONObject;
 
 import org.jmx4perl.JmxRequest;
+
+import javax.management.ObjectName;
+
 import static org.jmx4perl.JmxRequest.Type.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.Serializable;
@@ -56,8 +60,13 @@ public class HistoryStore implements Serializable {
         return globalMaxEntries;
     }
 
-    public void setGlobalMaxEntries(int pGlobalMaxEntries) {
+    synchronized public void setGlobalMaxEntries(int pGlobalMaxEntries) {
         globalMaxEntries = pGlobalMaxEntries;
+        // Refresh all entries
+        for (HistoryEntry entry : historyStore.values()) {
+            entry.setMaxEntries(globalMaxEntries);
+            entry.trim();
+        }
     }
 
     /**
@@ -101,7 +110,7 @@ public class HistoryStore implements Serializable {
         pJson.put("timestamp",timestamp);
 
         JmxRequest.Type type  = pJmxReq.getType();
-        if (type == EXEC || type == READ || type == WRITE) {
+        if (type == EXEC || type == WRITE) {
             HistoryEntry entry = historyStore.get(new HistoryKey(pJmxReq));
             if (entry != null) {
                 synchronized(entry) {
@@ -109,7 +118,7 @@ public class HistoryStore implements Serializable {
                     pJson.put("history",entry.jsonifyValues());
 
                     // Update history for next time
-                    if (type == EXEC || type == READ) {
+                    if (type == EXEC) {
                         entry.add(pJson.get("value"),timestamp);
                     } else if (type == WRITE) {
                         // The new value to set as string representation
@@ -117,8 +126,85 @@ public class HistoryStore implements Serializable {
                     }
                 }
             }
+        } else if (type == READ) {
+            updateReadHistory(pJmxReq, pJson, timestamp);
         }
     }
 
+    // Update potentially multiple history entries for a READ request which could
+    // return multiple values with a single request
+    private void updateReadHistory(JmxRequest pJmxReq, JSONObject pJson, long pTimestamp) {
+        ObjectName name = pJmxReq.getObjectName();
+        List<String> attributeNames = pJmxReq.getAttributeNames();
+        if (name.isPattern()) {
+            // We have a pattern and hence a value structure
+            // of bean -> attribute_key -> attribute_value
+            JSONObject history = new JSONObject();
+            for (Map.Entry<String,Object> beanEntry : ((Map<String,Object>) pJson.get("value")).entrySet()) {
+                String beanName = beanEntry.getKey();
+                JSONObject beanHistory =
+                        addAttributesFromComplexValue(
+                                pJmxReq,
+                                ((Map<String,Object>) beanEntry.getValue()),
+                                beanName,
+                                pTimestamp);
+                if (beanHistory.size() > 0) {
+                    history.put(beanName,beanHistory);
+                }
+            }
+            if (history.size() > 0) {
+                pJson.put("history",history);
+            }
+        } else if (attributeNames != null && attributeNames.size() > 1) {
+            // Multiple attributes, but a single bean.
+            // Value has the following structure:
+            // attribute_key -> attribute_value
+            JSONObject history = addAttributesFromComplexValue(
+                    pJmxReq,
+                    ((Map<String,Object>) pJson.get("value")),
+                    pJmxReq.getObjectNameAsString(),
+                    pTimestamp);
+            if (history.size() > 0) {
+                pJson.put("history",history);
+            }
+        } else if (pJmxReq.getAttributeName() != null) {
+            // Single attribute, single bean. Value is the attribute_value
+            // itself.
+            addAttributeFromSingleValue(pJson,
+                                        "history",
+                                        new HistoryKey(pJmxReq),
+                                        pJson.get("value"),
+                                        pTimestamp);
+        }
+    }
+
+    private JSONObject addAttributesFromComplexValue(JmxRequest pJmxReq,Map<String,Object> pAttributesMap,
+                                                           String pBeanName,long pTimestamp) {
+        JSONObject ret = new JSONObject();
+        for (Map.Entry<String,Object> attrEntry : pAttributesMap.entrySet()) {
+            String attrName = attrEntry.getKey();
+            Object value = attrEntry.getValue();
+            HistoryKey key =
+                    new HistoryKey(pBeanName,attrName,null /* No path support for complex read handling */,
+                                   pJmxReq.getTargetConfigUrl());
+            addAttributeFromSingleValue(ret,
+                                        attrName,
+                                        key,
+                                        value,
+                                        pTimestamp);
+        }
+        return ret;
+    }
+
+    private void addAttributeFromSingleValue(JSONObject pHistMap, String pAttrName, HistoryKey pKey,
+                                             Object pValue, long pTimestamp) {
+        HistoryEntry entry = historyStore.get(pKey);
+        if (entry != null) {
+            synchronized (entry) {
+                pHistMap.put(pAttrName,entry.jsonifyValues());
+                entry.add(pValue,pTimestamp);
+            }
+        }
+    }
 
 }

@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.55_2";
+$VERSION = "0.65";
 
 my $REGISTRY = {
                 # Agent based
@@ -223,7 +223,7 @@ sub new {
 
 # ==========================================================================
 
-=item $resp => $jmx->get_attribute(...)
+=item $value => $jmx->get_attribute(...)
 
   $value = $jmx->get_attribute($mbean,$attribute,$path) 
   $value = $jmx->get_attribute($alias)
@@ -257,9 +257,105 @@ value, this argument is taken as alias (without any path). If you want to use
 aliases together with a path, you need to use the second form with a hash ref
 for providing the (named) arguments. 
 
-This method returns the value as it is returned from the server. It will throw
-an exception (die), if an error occurs on the server side, like when the name
+Additionally you can use a pattern and/or an array ref for attributes to
+combine multiple reads into a single request. With an array ref as attribute
+argument, all the given attributes are queried. If C<$attribute> is C<undef>
+all attributes on the MBean are queried.
+
+If you provide a pattern as described for the L<"/search"> method, a search
+will be performed on the server side, an for all MBeans found which carry the
+given attribute(s), their value will be returned. Attributes which doesn't
+apply to an MBean are ignored.
+
+Note, that the C<path> feature is not available when using MBean patterns or
+multiple values.
+
+Depending on the arguments, this method return value has a different format:
+
+=over 4
+
+=item Single MBean, single attribute
+
+The return value is the result of the serverside read operation. It will throw
+an exception (die), if an error occurs on the server side, e.g. when the name
 couldn't be found.
+
+Example:
+
+  $val = $jmx->get_attribute("java.lang:type=Memory","HeapMemoryUsage");
+  print Dumper($val);
+
+  $VAR1 = {
+          'committed' => '174530560',
+          'used' => '35029320',
+          'max' => '1580007424',
+          'init' => '134217728'
+        };
+
+=item Single MBean, multiple attributes
+
+In this case, this method returns a map with the attribute name as keys and the
+attribute values as map values. It will die if not a single attribute could be
+fetched, otherwise unknown attributes are ignored.
+
+  $val = $jmx->get_attribute("java.lang:type=Memory",["HeapMemoryUsage","NonHeapMemoryUsage"]);
+  print Dumper($val);
+
+  $VAR1 = {
+          'NonHeapMemoryUsage' => {
+                                    'committed' => '87552000',
+                                    'used' => '50510976',
+                                    'max' => '218103808',
+                                    'init' => '24317952'
+                                  },
+          'HeapMemoryUsage' => {
+                                 'committed' => '174530560',
+                                 'used' => '37444832',
+                                 'max' => '1580007424',
+                                 'init' => '134217728'
+                               }
+        };
+
+=item MBean pattern, one or more attributes
+
+  $val = $jmx->get_attribute("java.lang:type=*",["HeapMemoryUsage","NonHeapMemoryUsage"]);
+  print Dumper($val);
+
+  $VAR1 = {
+          'java.lang:type=Memory' => {
+                                       'NonHeapMemoryUsage' => {
+                                                                 'committed' => '87552000',
+                                                                 'used' => '50514304',
+                                                                 'max' => '218103808',
+                                                                 'init' => '24317952'
+                                                               },
+                                       'HeapMemoryUsage' => {
+                                                              'committed' => '174530560',
+                                                              'used' => '38868584',
+                                                              'max' => '1580007424',
+                                                              'init' => '134217728'
+                                                            }
+                                     }
+        };
+
+The return value is a map with the matching MBean names as keys and as value
+another map, with attribute names keys and attribute value values. If not a
+singel MBean matches or not a single attribute can be found on the matching
+MBeans this method dies. This format is the same whether you are using a single
+attribute or an array ref of attribute names. 
+
+=back
+
+Please don't overuse pattern matching (i.e. don't use patterns like "*:*"
+except you really want to) since this could easily blow up your Java
+application. The return value is generated completely in memory. E.g if you
+want to retrieve all attributes for Weblogic with 
+
+  $jmx->get_attribute("*:*",undef);
+
+you will load more than 200 MB in to the Heap. Probably not something you
+want to do. So please be nice to your appserver and use a more restrictive
+pattern. 
 
 =cut 
 
@@ -272,9 +368,10 @@ sub get_attribute {
     if (ref($object) eq "CODE") {       
         $response = $self->delegate_to_handler($object);                
     } else {
-        croak "No attribute provided for object $object" unless $attribute;        
+        #croak "No attribute provided for object $object" unless $attribute;        
         my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
         $response = $self->request($request);
+        #print Dumper($response);
     }
     if ($response->is_error) {
         my $o = "(".$object.",".$attribute.($path ? "," . $path : "").")";
@@ -410,8 +507,17 @@ exported by L<JMX::Jmx4Perl::Alias>, otherwise it is guessed, whether the first
 string value is an alias or a MBean name. To be sure, use the variant with an
 hashref as argument.
 
-This method will croak, if something fails during execution of this operation
-or when the MBean/Operation combination could not be found.
+If you are calling an overloaded JMX operation (i.e. operations with the same
+name but a different argument signature), the operation name must include the
+signature as well. This is be done by adding the parameter types comma
+separated within parentheses:
+
+  ...
+  operation => "overloadedMethod(java.lang.String,int)"
+  ...
+
+This method will croak, if something fails during execution of this
+operation or when the MBean/Operation combination could not be found.
 
 The return value of this method is the return value of the JMX operation.
 
@@ -438,6 +544,29 @@ sub execute {
     return $response->value;
 }
 
+
+=item $resp = $jmx->version()
+
+This method return the version of the agent as well as the j4p protocol
+version. The agent's version is a regular program version and corresponds to 
+jmx4perl's version from which the agent has been taken. The protocol version
+is an integer number which indicates the version of the protocol specification.
+
+The return value is a hash with the keys C<agent> and C<protocol>
+
+=cut
+
+sub version {
+    my $self = shift;
+    
+    my $request = new JMX::Jmx4Perl::Request(VERSION);
+    my $response = $self->request($request);
+
+    if ($response->is_error) {
+        die "Error getting the agent's version: ",$response->error_text;
+    }
+    return $response->value;    
+}
 
 =item $resp = $jmx->request($request)
 
@@ -601,6 +730,62 @@ sub list {
 }
 
 
+=item ($domain,$attributes) = $jmx->parse_name($name)
+
+Parse an object name into its domain and attribute part. If successful,
+C<$domain> contains the domain part of the objectname, and C<$attribtutes> is a
+hahsref to the attributes of the name with the attribute names as keys and the
+attribute's values as values. This method returns C<undef> when the name could
+not be parsed. Result of a C<search()> operation can be savely feed into this
+method to get to the subparts of the name. JMX quoting is taken into account
+properly, too.
+
+Example:
+
+  my ($domain,$attrs) = 
+      $jmx->parse_name("java.lang:name=Code Cache,type=MemoryPool");
+  print $domain,"\n",Dumper($attrs);
+
+  java.lang
+  $VAR1 = {
+            'name' => 'Code Cache',
+            'type' => 'MemoryPool'
+          };
+
+=cut
+
+sub parse_name {
+    my $self = shift;
+    my $name = shift;
+
+    return undef unless $name =~ /:/;
+    my ($domain,$rest) = split(/:/,$name,2);
+    my $attrs = {};
+    while ($rest =~ s/([^=]+)\s*=\s*//) {
+        #print "R: $rest\n";
+        my $key = $1;
+        my $value = undef;
+        if ($rest =~ /^"/) {
+            $rest =~ s/("(\\"|[^"]+)")(\s*,\s*|$)//;
+            $value = $2;
+            # Unescape escaped chars
+            $value =~ s/\\([:",=*?])/$1/g;
+        } else {
+            if ($rest =~ s/([^,]+)(\s*,\s*|$)//) {
+                $value = $1;
+            } 
+        }
+        return undef unless $value;
+        $attrs->{$key} = $value;
+        #print "K: $key V: $value\n";
+    }
+    # If there is something left, we were not successful 
+    # in parsing the name
+    return undef if $rest;
+    return ($domain,$attrs);
+}
+
+
 =item $formatted_text = $jmx->formatted_list($path)
 
 =item $formatted_text = $jmx->formatted_list($resp)
@@ -643,7 +828,6 @@ sub _extract_get_set_parameters {
     my $p = $args{params};
     my $f = $p->[0];
     my $with_value = $args{with_value};
-
     my ($object,$attribute,$path,$value);
     if (ref($f) eq "HASH") {
         $value = $f->{value};
@@ -758,10 +942,13 @@ sub _glue_mbean_name {
 
 sub _create_handler {
     my $self = shift;
-    $self->{product} ||= $self->_autodetect_product();
+    if (!$self->{product}) {
+        ($self->{product},$self->{product_handler}) = $self->_autodetect_product();
+    }
+    # Create product handler if not created during autodetectiong (e.g. if the
+    # product has been set explicitely)
+    $self->{product_handler} = $self->_new_handler($self->{product}) unless $self->{product_handler};
     croak "Cannot autodetect server product" unless $self->{product};
-    
-    $self->{product_handler} = $self->_new_handler($self->{product});
     return $self->{product_handler};        
 }
 
@@ -770,7 +957,7 @@ sub _autodetect_product {
     for my $id (@PRODUCT_HANDLER_ORDERING) {
 
         my $handler = $self->_new_handler($id);
-        return $id if $handler->autodetect();
+        return ($id,$handler) if $handler->autodetect();
     }
     return undef;
 }
@@ -861,8 +1048,14 @@ sub _format_attribute {
 sub _format_operation {
     my ($ret,$name,$op,$level) = @_;
     $ret .= &_get_space($level);
-    my $method = &_format_method($name,$op->{args},$op->{ret});
-    $ret .= sprintf("%-35s \"%s\"\n",$method,$op->{desc});
+    my $list = ref($op) eq "HASH" ? [ $op ] : $op;
+    my $first = 1;
+    for my $o (@$list) {
+        my $method = &_format_method($name,$o->{args},$o->{ret});
+        $ret .= &_get_space($level) unless $first;
+        $ret .= sprintf("%-35s \"%s\"\n",$method,$o->{desc});
+        $first = 0;
+    }
     return $ret;
 }
 

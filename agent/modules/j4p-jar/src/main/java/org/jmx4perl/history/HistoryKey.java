@@ -57,6 +57,9 @@ public class HistoryKey implements Serializable {
         } else {
             type = "attribute";
             secondary = pJmxReq.getAttributeName();
+            if (pJmxReq.getType() == JmxRequest.Type.READ && secondary == null) {
+                secondary = "(all)";
+            }
             path = pJmxReq.getExtraArgsAsPath();
         }
         if (secondary == null) {
@@ -72,6 +75,12 @@ public class HistoryKey implements Serializable {
         }
         if (pJmxRequest.getObjectNameAsString() == null) {
             throw new IllegalArgumentException("Mbean name must not be null");
+        }
+        if (pJmxRequest.getObjectName().isPattern()) {
+            throw new IllegalArgumentException("Mbean name must not be a pattern");
+        }
+        if (pJmxRequest.getAttributeNames() != null && pJmxRequest.getAttributeNames().size() > 1) {
+            throw new IllegalArgumentException("A key cannot contain more than one attribute");
         }
     }
 

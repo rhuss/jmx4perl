@@ -46,7 +46,7 @@
         If set to 0, depth checking is disabled
       </description>
       <param-name>maxDepth</param-name>
-      <param-value>5</param-value>
+      <param-value>15</param-value>
     </init-param>
     <init-param>
       <description>
@@ -55,7 +55,7 @@
         collections are truncated.
       </description>
       <param-name>maxCollectionSize</param-name>
-      <param-value>0</param-value>
+      <param-value>1000</param-value>
     </init-param>
     <init-param>
       <description>
@@ -66,7 +66,7 @@
         not limit is used.
       </description>
       <param-name>maxObjects</param-name>
-      <param-value>10000</param-value>
+      <param-value>0</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>

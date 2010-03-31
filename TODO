@@ -1,13 +1,14 @@
 04 Deployment instructions for various application servers
-05 Additional Agents which start a JVM (e.g. with "Java::Import") 
-   and call the appserver via JSR 160 connector
 06 WS-Management integration ?
 07 Path handling for operation return values
-08 Security options in Agent to restrict operations
-09 User/Password authentication in web.xml
 10 Bean Path accessor.
-11 'attributes' on a single bean
-12 Move 'get_attributes' to Jmx4Perl
-13 OSGi bundle for jmx4perl (using HTTP-Service)
 14 JSON Schema for protocol
-
+15 Shell
+16 SSL Support for jvm-agent-6
+17 JVM agent with Jetty for Non Sun-JDK 6 environments
+18 More unit tests
+19 "ignore-errors" option
+20 Pattern switching of history
+22 16 Bug: Overloaded method with string array arguments 
+   gets parsed badly: 
+   No operation installBundles([Ljava.lang.String found on MBean osgi.core:type=framework,version=1.5

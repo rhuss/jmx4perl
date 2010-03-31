@@ -12,16 +12,39 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/*
+ * jmx4perl - WAR Agent for exporting JMX via JSON
+ *
+ * Copyright (C) 2009 Roland Huß, roland@cpan.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * A commercial license is available as well. Please contact roland@cpan.org for
+ * further details.
+ */
+
 /**
  * Factory for creating {@link org.jmx4perl.JmxRequest}s
  *
  * @author roland
  * @since Oct 29, 2009
  */
-final class JmxRequestFactory {
+final public class JmxRequestFactory {
 
     // Pattern for detecting escaped slashes in URL encoded requests
-    private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^-*\\+?$");
+    private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^\\^?-*\\+?$");
 
     // private constructor for static class
     private JmxRequestFactory() { }
@@ -71,13 +94,25 @@ final class JmxRequestFactory {
      * @param pParameterMap HTTP Query parameters
      * @return a newly created {@link org.jmx4perl.JmxRequest}
      */
-    static JmxRequest createRequestFromUrl(String pPathInfo, Map pParameterMap) {
+    static public JmxRequest createRequestFromUrl(String pPathInfo, Map<String,String[]> pParameterMap) {
         JmxRequest request = null;
         try {
-            if (pPathInfo != null && pPathInfo.length() > 0) {
+            String pathInfo = pPathInfo;
 
+            // If no pathinfo is given directly, we look for a query parameter named 'p'.
+            // This variant is helpful, if there are problems with the server mangling
+            // up the pathinfo (e.g. for security concerns, often '/','\',';' and other are not
+            // allowed in econded form within the pathinfo)
+            if (pPathInfo == null || pPathInfo.length() == 0 || pathInfo.matches("^/+$")) {
+                String[] vals = pParameterMap.get("p");
+                if (vals != null && vals.length > 0) {
+                    pathInfo = vals[0];
+                }
+            }
+
+            if (pathInfo != null && pathInfo.length() > 0) {
                 // Get all path elements as a reverse stack
-                Stack<String> elements = extractElementsFromPath(pPathInfo);
+                Stack<String> elements = extractElementsFromPath(pathInfo);
                 Type type = extractType(elements.pop());
 
                 Processor processor = PROCESSOR_MAP.get(type);
@@ -93,8 +128,10 @@ final class JmxRequestFactory {
 
                 // Setup JSON representation
                 extractParameters(request,pParameterMap);
+                return request;
+            } else {
+                throw new IllegalArgumentException("No pathinfo given and no query parameter 'p'");
             }
-            return request;
         } catch (NoSuchElementException exp) {
             throw new IllegalArgumentException("Invalid path info " + pPathInfo,exp);
         } catch (MalformedObjectNameException e) {
@@ -113,7 +150,7 @@ final class JmxRequestFactory {
      * @param content JSON representation of a {@link org.jmx4perl.JmxRequest}
      * @return list with one or more requests
      */
-    static List<JmxRequest> createRequestsFromInputStream(Reader content) throws MalformedObjectNameException, IOException {
+    static List<JmxRequest> createRequestsFromInputReader(Reader content) throws MalformedObjectNameException, IOException {
         try {
             JSONParser parser = new JSONParser();
             Object json = parser.parse(content);
@@ -181,12 +218,17 @@ final class JmxRequestFactory {
                 return;
             }
             StringBuffer val;
-            if (previousBuffer == null) {
+
+            // Special escape at the beginning indicates that the this element belongs
+            // to the next one
+            if (element.substring(0,1).equals("^")) {
+                val = new StringBuffer();
+            } else if (previousBuffer == null) {
                 val = new StringBuffer(ret.pop());
             } else {
                 val = previousBuffer;
             }
-            // Decode to value
+            // Append approp. nr of slashes
             for (int j=0;j<element.length();j++) {
                 val.append("/");
             }
@@ -233,16 +275,13 @@ final class JmxRequestFactory {
         return p;
     }
 
-    private static void extractParameters(JmxRequest pRequest,Map pParameterMap) {
+    private static void extractParameters(JmxRequest pRequest,Map<String,String[]> pParameterMap) {
         if (pParameterMap != null) {
-            if (pParameterMap.get("maxDepth") != null) {
-                pRequest.setMaxDepth(Integer.parseInt( ((String []) pParameterMap.get("maxDepth"))[0]));
-            }
-            if (pParameterMap.get("maxCollectionSize") != null) {
-                pRequest.setMaxCollectionSize(Integer.parseInt(((String []) pParameterMap.get("maxCollectionSize"))[0]));
-            }
-            if (pParameterMap.get("maxObjects") != null) {
-                pRequest.setMaxObjects(Integer.parseInt(((String []) pParameterMap.get("maxObjects"))[0]));
+            for (Map.Entry<String,String[]> entry : pParameterMap.entrySet()) {
+                String values[] = entry.getValue();
+                if (values != null && values.length > 0) {
+                    pRequest.setProcessingConfig(entry.getKey(),values[0]);
+                }
             }
         }
     }
@@ -264,7 +303,9 @@ final class JmxRequestFactory {
         PROCESSOR_MAP.put(Type.READ,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 JmxRequest req = new JmxRequest(Type.READ,e.pop());
-                req.setAttributeName(e.pop());
+                if (!e.isEmpty()) {
+                    req.setAttributeName(e.pop());
+                }
                 return req;
             }
         });

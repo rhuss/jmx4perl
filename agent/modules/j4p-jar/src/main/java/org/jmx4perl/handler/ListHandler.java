@@ -108,10 +108,26 @@ public class ListHandler extends JsonRequestHandler {
             map.put("args",argList);
             map.put("ret",opInfo.getReturnType());
             map.put("desc",opInfo.getDescription());
-            // TODO: There can be more than one operation with the same name
-            // IDEA: In case of overloading use an array of maps as value with the variants within the list
-            // Check whether this is somewhat backward compatible
-            opMap.put(opInfo.getName(),map);
+            Object ops = opMap.get(opInfo.getName());
+            if (ops != null) {
+                if (ops instanceof List) {
+                    // If it is already a list, simply add it to the end
+                    ((List) ops).add(map);
+                } else if (ops instanceof Map) {
+                    // If it is a map, add a list with two elements
+                    // (the old one and the new one)
+                    List opList = new ArrayList();
+                    opList.add(ops);
+                    opList.add(map);
+                    opMap.put(opInfo.getName(), opList);
+                } else {
+                    throw new IllegalArgumentException("Internal: list, addOperations: Expected Map or List, not "
+                            + ops.getClass());
+                }
+            } else {
+                // No value set yet, simply add the map as plain value
+                opMap.put(opInfo.getName(),map);
+            }
         }
         if (opMap.size() > 0) {
             pMBeanMap.put("op",opMap);

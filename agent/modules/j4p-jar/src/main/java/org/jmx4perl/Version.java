@@ -32,11 +32,18 @@ package org.jmx4perl;
  */
 public final class Version {
 
-    private static final String VERSION = "0.55.0.M2";
+    private static final String VERSION = "0.65.0";
+
+    // Version of the 
+    private static final String PROTOCOL = "3";
 
     private Version() {}
 
-    public static String getVersion() {
+    public static String getAgentVersion() {
         return VERSION;
+    }
+
+    public static String getProtocolVersion() {
+        return PROTOCOL;
     }
 }

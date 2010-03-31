@@ -59,10 +59,13 @@ public class ObjectToJsonConverter {
     // Thread-Local set in order to prevent infinite recursions
     private ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>();
 
+    // Thread-Local for the fault handler when extracting value
+    private ThreadLocal<JmxRequest.ValueFaultHandler> faultHandlerLocal = new ThreadLocal<JmxRequest.ValueFaultHandler>();
+
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
 
-    private int hardMaxDepth,hardMaxCollectionSize,hardMaxObjects;
+    private Integer hardMaxDepth,hardMaxCollectionSize,hardMaxObjects;
 
     public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter,
                                  Map<Config,String> pConfig) {
@@ -95,9 +98,7 @@ public class ObjectToJsonConverter {
             throws AttributeNotFoundException {
         Stack<String> extraStack = reverseArgs(pRequest);
 
-        setupContext(pRequest.getMaxDepth(),
-                     pRequest.getMaxCollectionSize(),
-                     pRequest.getMaxObjects());
+        setupContext(pRequest);
 
         try {
             Object jsonResult = extractObject(pValue,extraStack,true);
@@ -164,18 +165,24 @@ public class ObjectToJsonConverter {
     private void initLimits(Map<Config, String> pConfig) {
         // Max traversal depth
         if (pConfig != null) {
-            hardMaxDepth = Integer.parseInt(MAX_DEPTH.getValue(pConfig));
+            hardMaxDepth = getNullSaveIntLimit(MAX_DEPTH.getValue(pConfig));
 
             // Max size of collections
-            hardMaxCollectionSize = Integer.parseInt(MAX_COLLECTIONS_SIZE.getValue(pConfig));
+            hardMaxCollectionSize = getNullSaveIntLimit(MAX_COLLECTION_SIZE.getValue(pConfig));
 
             // Maximum of overal objects returned by one traversal.
-            hardMaxObjects = Integer.parseInt(MAX_OBJECTS.getValue(pConfig));
+            hardMaxObjects = getNullSaveIntLimit(MAX_OBJECTS.getValue(pConfig));
         } else {
-            hardMaxDepth = 0;
-            hardMaxCollectionSize = 0;
-            hardMaxObjects = 0;
+            hardMaxDepth = getNullSaveIntLimit(MAX_DEPTH.getDefaultValue());
+            hardMaxCollectionSize = getNullSaveIntLimit(MAX_COLLECTION_SIZE.getDefaultValue());
+            hardMaxObjects = getNullSaveIntLimit(MAX_OBJECTS.getDefaultValue());
         }
+    }
+
+    private Integer getNullSaveIntLimit(String pValue) {
+        Integer ret = pValue != null ? Integer.parseInt(pValue) : null;
+        // "0" is interpreted as no limit
+        return (ret != null && ret == 0) ? null : ret;
     }
 
     private Stack<String> reverseArgs(JmxRequest pRequest) {
@@ -217,9 +224,10 @@ public class ObjectToJsonConverter {
     }
 
     private String checkForLimits(Object pValue, StackContext pStackContext) {
-        int maxDepth = pStackContext.getMaxDepth();
-        if (maxDepth != 0 && pStackContext.size() > maxDepth) {
-            return "[Depth limit " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
+        Integer maxDepth = pStackContext.getMaxDepth();
+        if (maxDepth != null && pStackContext.size() > maxDepth) {
+            // We use its string representation
+            return pValue.toString();
         }
         if (pValue != null && pStackContext.alreadyVisited(pValue)) {
             return "[Reference " + pValue.getClass().getName() + "@" + Integer.toHexString(pValue.hashCode()) + "]";
@@ -272,6 +280,7 @@ public class ObjectToJsonConverter {
     }
 
 
+
     // Check whether JSR77 classes are available
     // Not used for the moment, but left here for reference
     /*
@@ -311,40 +320,53 @@ public class ObjectToJsonConverter {
 
     int getCollectionLength(int originalLength) {
         ObjectToJsonConverter.StackContext ctx = stackContextLocal.get();
-        int maxSize = ctx.getMaxCollectionSize();
-        if (maxSize > 0 && originalLength > maxSize) {
+        Integer maxSize = ctx.getMaxCollectionSize();
+        if (maxSize != null && originalLength > maxSize) {
             return maxSize;
         } else {
             return originalLength;
         }
     }
 
-    void incObjectCount() {
+    /**
+     * Get the fault handler used for dealing with exceptions during value extraction.
+     *
+     * @return the fault handler
+     */
+    public JmxRequest.ValueFaultHandler getValueFaultHandler() {
         ObjectToJsonConverter.StackContext ctx = stackContextLocal.get();
-        ctx.incObjectCount();
+        return ctx.getValueFaultHandler();
     }
 
 
     boolean exceededMaxObjects() {
         ObjectToJsonConverter.StackContext ctx = stackContextLocal.get();
-        return ctx.getMaxObjects() > 0 && ctx.getObjectCount() > ctx.getMaxObjects();
+        return ctx.getMaxObjects() != null && ctx.getObjectCount() > ctx.getMaxObjects();
     }
 
     void clearContext() {
         stackContextLocal.remove();
     }
 
-    void setupContext(int pMaxDepth, int pMaxCollectionSize, int pMaxObjects) {
-        int maxDepth = getLimit(pMaxDepth,hardMaxDepth);
-        int maxCollectionSize = getLimit(pMaxCollectionSize,hardMaxCollectionSize);
-        int maxObjects = getLimit(pMaxObjects,hardMaxObjects);
+    void setupContext(JmxRequest pRequest) {
+        Integer maxDepth = getLimit(pRequest.getProcessingConfigAsInt(Config.MAX_DEPTH),hardMaxDepth);
+        Integer maxCollectionSize = getLimit(pRequest.getProcessingConfigAsInt(Config.MAX_COLLECTION_SIZE),hardMaxCollectionSize);
+        Integer maxObjects = getLimit(pRequest.getProcessingConfigAsInt(Config.MAX_OBJECTS),hardMaxObjects);
 
-        StackContext stackContext = new StackContext(maxDepth,maxCollectionSize,maxObjects);
+        setupContext(maxDepth, maxCollectionSize, maxObjects, pRequest.getValueFaultHandler());
+    }
+
+    void setupContext(Integer pMaxDepth, Integer pMaxCollectionSize, Integer pMaxObjects,
+                      JmxRequest.ValueFaultHandler pValueFaultHandler) {
+        StackContext stackContext = new StackContext(pMaxDepth,pMaxCollectionSize,pMaxObjects,pValueFaultHandler);
         stackContextLocal.set(stackContext);
     }
 
-    private int getLimit(int pReqValue, int pHardLimit) {
-        if (pHardLimit != 0) {
+    private Integer getLimit(Integer pReqValue, Integer pHardLimit) {
+        if (pReqValue == null) {
+            return pHardLimit;
+        }
+        if (pHardLimit != null) {
             return pReqValue > pHardLimit ? pHardLimit : pReqValue;
         } else {
             return pReqValue;
@@ -368,16 +390,18 @@ public class ObjectToJsonConverter {
 
         private Set objectsInCallStack = new HashSet();
         private Stack callStack = new Stack();
-        private int maxDepth;
-        private int maxCollectionSize;
-        private int maxObjects;
+        private Integer maxDepth;
+        private Integer maxCollectionSize;
+        private Integer maxObjects;
 
         private int objectCount = 0;
+        private JmxRequest.ValueFaultHandler valueFaultHandler;
 
-        public StackContext(int pMaxDepth, int pMaxCollectionSize, int pMaxObjects) {
+        public StackContext(Integer pMaxDepth, Integer pMaxCollectionSize, Integer pMaxObjects, JmxRequest.ValueFaultHandler pValueFaultHandler) {
             maxDepth = pMaxDepth;
             maxCollectionSize = pMaxCollectionSize;
             maxObjects = pMaxObjects;
+            valueFaultHandler = pValueFaultHandler;
         }
 
         void push(Object object) {
@@ -408,19 +432,16 @@ public class ObjectToJsonConverter {
             return objectsInCallStack.size();
         }
 
-        public void setMaxDepth(int pMaxDepth) {
+        public void setMaxDepth(Integer pMaxDepth) {
             maxDepth = pMaxDepth;
         }
 
-        public int getMaxDepth() {
+        public Integer getMaxDepth() {
             return maxDepth;
         }
 
-        public void setMaxCollectionSize(int pMaxCollectionSize) {
-            maxCollectionSize = pMaxCollectionSize;
-        }
 
-        public int getMaxCollectionSize() {
+        public Integer getMaxCollectionSize() {
             return maxCollectionSize;
         }
 
@@ -432,12 +453,12 @@ public class ObjectToJsonConverter {
             return objectCount;
         }
 
-        public int getMaxObjects() {
+        public Integer getMaxObjects() {
             return maxObjects;
         }
 
-        public void setMaxObjects(int pMaxObjects) {
-            maxObjects = pMaxObjects;
+        public JmxRequest.ValueFaultHandler getValueFaultHandler() {
+            return valueFaultHandler;
         }
     }
 
