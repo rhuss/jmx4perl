@@ -17,4 +17,7 @@
 
 -----
 
-* last_error handling in ServerHandlers
+* last_error handling in ServerHandler
+
+* Completion in MBeans must complete on deeper levels as well, and then, when chosen
+  update multiple stack entries at once.

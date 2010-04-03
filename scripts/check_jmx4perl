@@ -161,7 +161,7 @@ will result in an output like
 
  OK - Heap-Memory: 3.48% used (17.68 MB / 508.06 MB) | '[MEMORY_HEAP_USED]'=3.48%;;:80
 
-<check_jmx4perl> can be used in a proxy mode as well. When the option
+C<check_jmx4perl> can be used in a proxy mode as well. When the option
 C<--target> is given, the agent servlet use this url as a JMX Service URL and
 tries to connect via a JSR-160 to specified target to obtain the JMX
 information from there. Additionally C<--target-user> and C<--target-password>

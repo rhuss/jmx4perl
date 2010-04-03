@@ -122,7 +122,7 @@ sub execute {
             return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit));                    }
     };
     if ($@) {
-        # p1.pl, the executing script of the embedded nagios perl interpreted
+        # p1.pl, the executing script of the embedded nagios perl interpreter
         # uses this tag to catch an exit code of a plugin. We rethrow this
         # exception if we detect this pattern.
         if ($@ !~ /^ExitTrap:/) {

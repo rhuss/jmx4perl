@@ -6,8 +6,9 @@ use JMX::Jmx4Perl::J4psh::CompletionHandler;
 use JMX::Jmx4Perl::J4psh::ServerHandler;
 use JMX::Jmx4Perl::J4psh::CommandHandler;
 use JMX::Jmx4Perl::J4psh::Shell;
+use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl;
-
+use Data::Dumper;
 use strict;
 
 =head1 NAME
@@ -32,7 +33,7 @@ sub init {
     my $no_color_prompt = $self->{shell}->readline ne "Term::ReadLine::Gnu";
     $self->{commands} = new JMX::Jmx4Perl::J4psh::CommandHandler($self,$self->{shell},
                                                                  no_color_prompt => $no_color_prompt,
-                                                                command_packages => $self->command_packages);
+                                                                 command_packages => $self->command_packages);
 }
 
 sub command_packages {
@@ -101,13 +102,151 @@ sub create_agent {
     my $self = shift;
     my $args = shift;
     my $j4p = new JMX::Jmx4Perl($args);
+    $self->load_list($j4p);
     $self->agent($j4p);
     return $j4p;
+}
+
+sub load_list {
+    my $self = shift;
+    my $j4p = shift;
+    
+    my $old_list = $self->{list};
+    eval { 
+        my $req = new JMX::Jmx4Perl::Request(LIST);
+        $self->{list} = $self->request($req,$j4p);
+        ($self->{mbeans_by_domain},$self->{mbeans_by_name}) = $self->_prepare_mbean_names($j4p,$self->{list});
+    };
+    if ($@) {
+        $self->{list} = $old_list;
+        die $@;
+    }      
+};
+
+sub list {
+    return shift->{list};
+}
+
+sub mbeans_by_domain {
+    return shift->{mbeans_by_domain};
+}
+
+sub mbeans_by_name {
+    return shift->{mbeans_by_name};
+}
+
+sub request { 
+    my $self = shift;
+    my $request = shift;
+    my $j4p = shift || $self->agent;
+
+    my $response = $j4p->request($request);
+    if ($response->is_error) {
+        #print Dumper($response);
+        if ($response->status == 404) {
+            die "No agent running [Not found: ",$request->{mbean},",",$request->{operation},"].\n"
+        } else {
+            $self->{last_error} = $response->{error} . 
+              ($response->stacktrace ? "\nStacktrace:\n" . $response->stacktrace : "");
+            die $self->_prepare_error_message($response) . ".\n";
+        }
+    }
+    return $response->value;
+}
+
+sub _prepare_error_message {
+    my $self = shift;
+    my $resp = shift;
+    my $st = $resp->stacktrace;
+    return "Connection refused" if $resp->{error} =~ /Connection\s+refused/i;
+
+    if ($resp->{error} =~ /^(\d{3} [^\n]+)\n/m) {
+        return $1;
+    }
+    return "Server Error: " . $resp->{error};
 }
 
 
 sub name { 
     return "j4psh";
+}
+
+
+# =========================================
+
+
+sub _prepare_mbean_names {
+    my $self = shift;
+    my $j4p = shift;
+    my $list = shift;
+    my $s2mbean = {};
+    my $ret = {};
+    for my $domain (keys %$list) {
+        for my $name (keys %{$list->{$domain}}) {
+            my $full_name = $domain . ":" . $name;
+            my ($domain_p,$attrs) = $j4p->parse_name($full_name);
+            my $k_v = $ret->{$domain} || [];
+            my $e = {};
+            $e->{attrs} = $attrs;
+            my $keys = $self->_order_keys($attrs);
+            $e->{string} = join ",", map { $_ . "=" . $attrs->{$_ } } @$keys;
+            $e->{prompt} = length($e->{string}) > 25 ?  $self->_prepare_prompt($attrs,25,$keys) : $e->{string};
+            $e->{full} = $full_name;
+            push @$k_v,$e;
+            $s2mbean->{$domain . ":" . $e->{string}} = $e;
+            $ret->{$domain} = $k_v;
+        }
+    }
+    return ($ret,$s2mbean);
+}
+
+# Order keys according to importane first and the alphabetically
+my @PREFERED_PROPS = qw(name type service);
+sub _order_keys {
+    my $self = shift;
+    my $attrs = shift;
+
+    # Get additional properties, not known to the prefered ones
+    my $extra = { map { $_ => 1 } keys %$attrs };
+    my @ret = ();
+    for my $p (@PREFERED_PROPS) {
+        if (exists($attrs->{$p})) {
+            push @ret,$p;
+            delete $extra->{$p};
+        }
+    }
+    push @ret,sort keys %{$extra};
+    return \@ret;
+}
+
+# Prepare attribute part of a mbean suitable for using in 
+# a shell prompt
+sub _prepare_prompt {
+    my $self = shift;
+    my $attrs = shift;
+    my $max = shift;
+    my $keys = shift;
+    my $len = $max - 3;
+    my $ret = "";
+
+    for my $k (@$keys) {
+        if (exists($attrs->{$k})) {
+            my $p = $k . "=" . $attrs->{$k};
+            if (!length($ret)) {
+                $ret = $p;
+                if (length($ret) > $max) {
+                    return substr($ret,0,$len) . "...";
+                }
+            } else {
+                if (length($ret) + length($p) > $len) {
+                    return $ret . ", ...";
+                } else {
+                    $ret .= "," . $p;
+                }
+            }
+        }
+    }
+
 }
 
 =head1 LICENSE
