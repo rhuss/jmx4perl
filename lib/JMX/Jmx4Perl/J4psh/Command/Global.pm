@@ -73,7 +73,7 @@ EOT
 Quit shell.
 EOT
                    },
-         "q" => { alias => 'quit', exclude_from_completion => 1 }
+         "q" => { alias => 'quit', exclude_from_completion => 1 },
          "exit" => { alias => 'quit', exclude_from_completion => 1 }
         };
 }

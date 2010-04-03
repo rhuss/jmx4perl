@@ -766,7 +766,7 @@ sub parse_name {
         my $key = $1;
         my $value = undef;
         if ($rest =~ /^"/) {
-            $rest =~ s/("(\\"|[^"]+)")(\s*,\s*|$)//;
+            $rest =~ s/("((\\"|[^"])+)")(\s*,\s*|$)//;
             $value = $2;
             # Unescape escaped chars
             $value =~ s/\\([:",=*?])/$1/g;

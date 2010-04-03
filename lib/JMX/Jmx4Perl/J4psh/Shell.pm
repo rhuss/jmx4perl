@@ -93,9 +93,12 @@ sub _init {
 
     # Create shell object
     my $term = new Term::ShellUI(
-                                 history_file => "~/.agent_history",
-                                );
+                                 history_file => "~/.j4psh_history",
+                                );    
     $self->{term} = $term;
+    my $rl_attribs = $term->{term}->Attribs;
+    #$rl_attribs->{basic_word_break_characters} = " \t\n\"\\'`@$><;|&{(";
+    $rl_attribs->{completer_word_break_characters} = " \t\n\\";
     $term->{term}->ornaments(0);
     # Initial theme
     my $theme_light = { 

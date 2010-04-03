@@ -78,8 +78,9 @@ sub push_on_stack {
     my $context = shift;
     # Sub-commands within the context
     my $sub_cmds = shift;
+    my $separator = shift || "/";
     my $contexts = $self->{stack};
-    push @$contexts,{ name => $context, cmds => $sub_cmds };
+    push @$contexts,{ name => $context, cmds => $sub_cmds, separator => $separator };
     #print Dumper(\@contexts);
 
     my $shell = $self->{shell};
@@ -244,16 +245,16 @@ sub _prompt {
     return sub {
         my $term = shift;
         my $stack = $self->{stack};
-        my $osgi = $context->agent;
-        my ($yellow,$cyan,$red,$reset) = 
+        my $agent = $context->agent;
+        my ($c_host,$c_context,$c_empty,$reset) = 
           $self->{no_color_prompt} ? ("","","","") : $shell->color("host","prompt_context","prompt_empty",RESET,{escape => 1});
         my $p = "[";
-        $p .= $osgi ? $yellow . $context->server : $red . $context->name;
+        $p .= $agent ? $c_host . $context->server : $c_empty . $context->name;
         $p .= $reset;
-        $p .= ":" . $cyan if @$stack;
+        $p .= " " . $c_context if @$stack;
         for my $i (0 .. $#{$stack}) {
             $p .= $stack->[$i]->{name};
-            $p .= $i < $#{$stack} ? "/" : $reset;
+            $p .= $i < $#{$stack} ? $stack->[$i]->{separator} : $reset;
         }
         $p .= "] : ";
         return $p;

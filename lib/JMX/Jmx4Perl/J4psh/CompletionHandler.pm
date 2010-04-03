@@ -89,6 +89,49 @@ sub servers {
     }
 }
 
+# Complete on mbean names
+sub mbeans {
+    my $self = shift;
+    my %args = @_;
+    my $attr;
+    return sub {
+        my ($term,$cmpl) = @_;
+        my $all = $args{all};
+        my $domain = $args{domain};
+        #$term->{debug_complete}=5;
+        my $context = $self->{context};
+        my $mbeans = $context->mbeans_by_domain;
+        my $str = $cmpl->{str} || "";
+        my $len = length($str);
+        if ($domain) {
+            my $attrs = $mbeans->{$domain};
+            return [] unless $attrs;
+            my @kv = map { $_->{string} } @$attrs;
+            return [ map { $_ } grep { substr($_,0,$len) eq $str } @kv ];
+        } else {
+            ($domain,$attr) = split(/:/,$str,2);
+            if ($attr || $str =~ /:$/) {
+                # Complete on attributes
+                my $attrs = $mbeans->{$domain};
+                return [] unless $attrs;
+                my @kv = map { $_->{string} } @$attrs;
+                if ($attr) {
+                    return [ map { $domain . ":" . $_ } grep { substr($_,0,length($attr)) eq $attr } @kv ];
+                } else {
+                    return [ map { $domain . ":" . $_} @kv ];
+                }            
+            } else {
+                # Complete on domains
+                my $domains = $str ? [ grep { substr($_,0,$len) eq $str } keys %$mbeans ] : [ keys %$mbeans ];
+                if ($all) {
+                    $term->suppress_completion_append_character();
+                }
+                return $domains;
+            }
+        }
+    };
+}
+
 =head1 LICENSE
 
 This file is part of jmx4perl.

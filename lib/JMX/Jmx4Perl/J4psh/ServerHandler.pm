@@ -59,7 +59,7 @@ sub connect_to_server {
     };
     if ($@) {
         $context->last_error($@);
-        $self->{server} = $old_server;
+        $self->{server} = $old_server if $old_server;
         $context->agent($old_agent);
         die $@;
     }   
