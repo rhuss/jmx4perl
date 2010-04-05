@@ -187,7 +187,9 @@ sub _prepare_mbean_names {
             my ($domain_p,$attrs) = $j4p->parse_name($full_name);
             my $k_v = $ret->{$domain} || [];
             my $e = {};
+            $e->{domain} = $domain;
             $e->{attrs} = $attrs;
+            $e->{info} = $list->{$domain}->{$name};
             my $keys = $self->_order_keys($attrs);
             $e->{string} = join ",", map { $_ . "=" . $attrs->{$_ } } @$keys;
             $e->{prompt} = length($e->{string}) > 25 ?  $self->_prepare_prompt($attrs,25,$keys) : $e->{string};
