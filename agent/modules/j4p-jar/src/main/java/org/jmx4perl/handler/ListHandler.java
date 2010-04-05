@@ -32,6 +32,9 @@ import java.util.*;
  */
 
 /**
+ * Handler for obtaining a list of all available MBeans and its attributes
+ * and operations.
+ *
  * @author roland
  * @since Jun 12, 2009
  */
@@ -66,10 +69,10 @@ public class ListHandler extends JsonRequestHandler {
 
                     try {
                         MBeanInfo mBeanInfo = server.getMBeanInfo(name);
-                        String description = mBeanInfo.getDescription();
-                        mBeanMap.put("desc",description != null ? description : "");
+                        mBeanMap.put("desc",mBeanInfo.getDescription());
                         addAttributes(mBeanMap, mBeanInfo);
                         addOperations(mBeanMap, mBeanInfo);
+                        addNotifications(mBeanMap, mBeanInfo);
                         // Trim if needed
                         if (mBeanMap.size() == 0) {
                             mBeansMap.remove(name.getCanonicalKeyPropertyListString());
@@ -93,6 +96,18 @@ public class ListHandler extends JsonRequestHandler {
 
     }
 
+    private void addNotifications(Map pMBeanMap,MBeanInfo pMBeanInfo) {
+        Map notMap = new HashMap();
+        for (MBeanNotificationInfo notInfo : pMBeanInfo.getNotifications()) {
+            Map map = new HashMap();
+            map.put("name",notInfo.getName());
+            map.put("desc",notInfo.getDescription());
+            map.put("types",notInfo.getNotifTypes());
+        }
+        if (notMap.size() > 0) {
+            pMBeanMap.put("not",notMap);
+        }
+    }
 
     private void addOperations(Map pMBeanMap, MBeanInfo pMBeanInfo) {
         // Extract operations
@@ -137,7 +152,7 @@ public class ListHandler extends JsonRequestHandler {
     }
 
     private void addAttributes(Map pMBeanMap, MBeanInfo pMBeanInfo) {
-        // Extract atributes
+        // Extract attributes
         Map attrMap = new HashMap();
         for (MBeanAttributeInfo attrInfo : pMBeanInfo.getAttributes()) {
             Map map = new HashMap();
