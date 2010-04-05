@@ -66,7 +66,8 @@ public class ListHandler extends JsonRequestHandler {
 
                     try {
                         MBeanInfo mBeanInfo = server.getMBeanInfo(name);
-
+                        String description = mBeanInfo.getDescription();
+                        mBeanMap.put("desc",description != null ? description : "");
                         addAttributes(mBeanMap, mBeanInfo);
                         addOperations(mBeanMap, mBeanInfo);
                         // Trim if needed
@@ -91,6 +92,7 @@ public class ListHandler extends JsonRequestHandler {
         }
 
     }
+
 
     private void addOperations(Map pMBeanMap, MBeanInfo pMBeanInfo) {
         // Extract operations
