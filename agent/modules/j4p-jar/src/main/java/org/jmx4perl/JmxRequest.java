@@ -392,9 +392,9 @@ public class JmxRequest {
     }
 
     /**
-     * Handle an exception occured during value extraction
+     * Handle an exception happened during value extraction
      *
-     * @param pFault the fault occured
+     * @param pFault the fault raised
      * @return a replacement value if this should be used instead or the exception is rethrown if
      *         the handler doesn't handle it
      */
