@@ -206,7 +206,7 @@ public class JmxRequest {
             StringBuffer buf = new StringBuffer();
             Iterator<String> it = extraArgs.iterator();
             while (it.hasNext()) {
-                buf.append(it.next());
+                buf.append(escapePathPart(it.next()));
                 if (it.hasNext()) {
                     buf.append("/");
                 }
@@ -217,9 +217,22 @@ public class JmxRequest {
         }
     }
 
-    private List<String> splitPath(String pPath) {
-        String[] elements = pPath.split("/");
-        return Arrays.asList(elements);
+    private String escapePathPart(String pPathPart) {
+        return pPathPart.replaceAll("/","\\\\/");
+    }
+
+    private String unescapePathPart(String pPathPart) {
+        return pPathPart.replaceAll("\\\\/","/");
+    }
+
+    List<String> splitPath(String pPath) {
+        // Split on '/' but not on '\/':
+        String[] elements = pPath.split("(?<!\\\\)/");
+        List<String> ret = new ArrayList<String>();
+        for (String element : elements) {
+            ret.add(unescapePathPart(element));
+        }
+        return ret;
     }
 
     public String getValue() {
