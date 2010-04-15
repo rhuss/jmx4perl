@@ -78,7 +78,7 @@ final public class JmxRequestFactory {
      *   <li>Type: <b>write</b> ({@link Type#WRITE}<br/>
      *       Parameters: <code>param1</code> = MBean name, <code>param2</code> = Attribute name,
      *       <code>param3</code> = value, <code>param4 ... paramN</code> = Inner Path.
-     *       The value must be URL encoded (with UTF-8 as charset), and must be convertable into
+     *       The value must be URL encoded (with UTF-8 as charset), and must be convertible into
      *       a data structure</li>
      *   <li>Type: <b>exec</b> ({@link Type#EXEC}<br/>
      *       Parameters: <code>param1</code> = MBean name, <code>param2</code> = operation name,
@@ -102,7 +102,7 @@ final public class JmxRequestFactory {
             // If no pathinfo is given directly, we look for a query parameter named 'p'.
             // This variant is helpful, if there are problems with the server mangling
             // up the pathinfo (e.g. for security concerns, often '/','\',';' and other are not
-            // allowed in econded form within the pathinfo)
+            // allowed in encoded form within the pathinfo)
             if (pPathInfo == null || pPathInfo.length() == 0 || pathInfo.matches("^/+$")) {
                 String[] vals = pParameterMap.get("p");
                 if (vals != null && vals.length > 0) {
@@ -219,7 +219,7 @@ final public class JmxRequestFactory {
             }
             StringBuffer val;
 
-            // Special escape at the beginning indicates that the this element belongs
+            // Special escape at the beginning indicates that this element belongs
             // to the next one
             if (element.substring(0,1).equals("^")) {
                 val = new StringBuffer();
@@ -228,7 +228,7 @@ final public class JmxRequestFactory {
             } else {
                 val = previousBuffer;
             }
-            // Append approp. nr of slashes
+            // Append appropriate nr of slashes
             for (int j=0;j<element.length();j++) {
                 val.append("/");
             }
@@ -325,7 +325,6 @@ final public class JmxRequestFactory {
                 return req;
             }
         });
-
         PROCESSOR_MAP.put(Type.LIST,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 return new JmxRequest(Type.LIST);

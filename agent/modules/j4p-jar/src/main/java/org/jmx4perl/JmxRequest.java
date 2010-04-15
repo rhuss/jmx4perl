@@ -40,7 +40,7 @@ import java.util.*;
 public class JmxRequest {
 
     /**
-     * Enumeration for encapsulationg the request mode.
+     * Enumeration for encapsulating the request mode.
      */
     public enum Type {
         // Supported:
