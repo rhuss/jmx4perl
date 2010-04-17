@@ -157,6 +157,7 @@ sub default_theme {
                       domain_name => YELLOW,
                       property_key => GREEN,
                       property_value => undef,
+                      stat_val => RED,
                       reset => RESET
                      };    
     return $theme_dark;
