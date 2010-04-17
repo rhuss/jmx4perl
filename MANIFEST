@@ -119,6 +119,7 @@ lib/JMX/Jmx4Perl/Config.pm
 lib/JMX/Jmx4Perl/J4psh.pm
 lib/JMX/Jmx4Perl/J4psh/Command.pm
 lib/JMX/Jmx4Perl/J4psh/Command/Global.pm
+lib/JMX/Jmx4Perl/J4psh/Command/MBean.pm
 lib/JMX/Jmx4Perl/J4psh/Command/Server.pm
 lib/JMX/Jmx4Perl/J4psh/CommandHandler.pm
 lib/JMX/Jmx4Perl/J4psh/CompletionHandler.pm

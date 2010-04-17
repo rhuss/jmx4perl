@@ -72,7 +72,7 @@ sub property_commands {
     return {
             "ls" => { 
                      desc => "List MBeans for a domain",
-                     proc => $self->cmd_list_mbeans($domain),
+                     proc => $self->cmd_list_domains($domain),
                      args => $self->complete->mbeans(domain => $domain),
                     },
             "cd" => { 
@@ -140,16 +140,13 @@ sub cmd_list_domains {
         if (@filters) {
             for my $filter (@filters) {
                 my $regexp = $self->convert_wildcard_pattern_to_regexp($filter);
-                if ($filter && $filter =~ /:/) {
-                    # It's a MBean name (pattern)
-                    $self->show_mbeans($self->_filter($context->mbeans_by_name,$filter));
-                } else {
-                    # It's a domain (pattern)
-                    $self->show_domain($self->_filter($context->mbeans_by_domain,$filter));
-                }
+                my $mbean_filter;
+                ($filter,$mbean_filter) = ($1,$2) if ($filter && $filter =~ /(.*?):(.*)/) ;
+                # It's a domain (pattern)
+                $self->show_domain($opts,$self->_filter($context->mbeans_by_domain,$filter),$mbean_filter);
             }
         } else {
-            $self->show_domain($self->_filter($context->mbeans_by_domain));
+            $self->show_domain($opts,$self->_filter($context->mbeans_by_domain));
         }
     }
 }
@@ -164,30 +161,63 @@ sub cmd_show_mbean {
 
 sub show_mbeans {
     my $self = shift;
+    my $opts = shift;
     my $infos = shift;
-    for my $mbean (keys  %$infos) {
-        print $mbean,"\n";
+    my $mbean_filter;
+    my $l = "";
+    for my $m_info (sort { $a->{string} cmp $b->{string} } values %$infos) {
+        my ($c_d,$c_s,$c_r) = $self->color("domain_name","stat_val","reset");
+        $l .= $c_d . $m_info->{domain} . $c_r . ":";
+        $l .= $self->_color_props($m_info) . "\n";
     }
+    $self->print_paged($l);
 }
 
 
 sub show_domain {
     my $self = shift;
+    my $opts = shift;
     my $infos = shift;
-    my $l = "";
+    my $mbean_filter = shift;
+    $mbean_filter = $self->convert_wildcard_pattern_to_regexp($mbean_filter) if $mbean_filter;
+    my $text = "";
     for my $domain (keys %$infos) {
         my ($c_d,$c_reset) = $self->color("domain_name","reset");
-        $l .= $c_d . "$domain:" . $c_reset . "\n";
-        for my $m_info (@{$infos->{$domain}}) {
-            $l .= "    ".$self->_color_name_props($m_info)."\n";
-            $l .= "         ".$m_info->{info}->{desc}."\n" if $m_info->{info}->{desc};
-        }
-        $l .= "\n";
+        $text .= $c_d . "$domain:" . $c_reset . "\n";
+        for my $m_info (sort { $a->{string} cmp $b->{string} } @{$infos->{$domain}}) {
+            next if ($mbean_filter && $m_info->{string} !~ $mbean_filter);
+            $text .= "    ".$self->_color_props($m_info)."\n";
+            $text .= $self->_list_details("         ",$m_info) if $opts->{l};
+        }        
+        $text .= "\n";
     }
-    $self->print_paged($l);
+    $self->print_paged($text);
 }
 
-sub _color_name_props {
+sub _list_details {
+    my $self = shift;
+    my $indent = shift;
+    my $m_info = shift;
+    my ($c_s,$c_r) = $self->color("stat_val","reset");
+
+    my $line = "";
+    if ($m_info->{info}->{desc}) {
+        $line .= $m_info->{info}->{desc};
+    }
+    my $nr_attr = scalar(keys %{$m_info->{info}->{attr}});
+    my $nr_op = scalar(keys %{$m_info->{info}->{op}});
+    my $nr_notif = scalar(keys %{$m_info->{info}->{notif}});
+    if ($nr_attr || $nr_op || $nr_notif) {
+        my @f;
+        push @f,"Attributes: " . $c_s . $nr_attr . $c_r if $nr_attr;
+        push @f,"Operations: " . $c_s . $nr_op . $c_r if $nr_op;
+        push @f,"Notifications: " . $c_s . $nr_notif . $c_r if $nr_notif;
+        $line .= $indent . join(", ",@f) . "\n";
+    }
+    return $line;
+}
+
+sub _color_props {
     my $self = shift;
     my $info = shift;
     my ($c_k,$c_v,$c_r) = $self->color("property_key","property_value","reset");
