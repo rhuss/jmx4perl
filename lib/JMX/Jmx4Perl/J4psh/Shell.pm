@@ -3,6 +3,7 @@ package JMX::Jmx4Perl::J4psh::Shell;
 use strict;
 use Term::ShellUI;
 use Term::ANSIColor qw(:constants);
+use Data::Dumper;
 
 =head1 NAME 
 
@@ -64,13 +65,23 @@ sub color_theme {
     return shift->_get_set("color_theme",@_);
 }
 
+sub use_color { 
+    my $self = shift;
+    my $use_color = "yes";
+    if (exists $self->{args}->{color}) {
+        $use_color = $self->{args}->{color};
+    } elsif (exists $self->{config}->{use_color}) {
+        $use_color = $self->{config}->{use_color};
+    } 
+    return $use_color =~ /(yes|true|on)$/;
+}
+
+
 sub use_color {
     my $self = shift;
     my $value = shift;
-    if ($value) {
-        my $use_color = $value;
-        $use_color = 0 if $use_color =~ /^(no|never|false)$/i;
-        $self->{use_color} = $use_color;
+    if (defined($value)) {
+        $self->{use_color} = $value !~ /^(0|no|never|false)$/i;
     }
     return $self->{use_color};
 }
@@ -100,58 +111,12 @@ sub _init {
     #$rl_attribs->{basic_word_break_characters} = " \t\n\"\\'`@$><;|&{(";
     $rl_attribs->{completer_word_break_characters} = " \t\n\\";
     $term->{term}->ornaments(0);
-    # Initial theme
-    my $theme_light = { 
-                       host => YELLOW,
-                       bundle_active =>  GREEN . ON_WHITE,
-                       bundle_installed => RED,
-                       bundle_resolved => DARK . YELLOW,
-                       bundle_fragment => CYAN,
-                       service_id => DARK . GREEN,
-                       service_interface => undef,
-                       service_using => RED,
-                       prompt_context => BLUE,
-                       prompt_empty => RED,
-                       upload_installed => DARK . GREEN,
-                       upload_uninstalled => RED,
-                       package_resolved => DARK . GREEN,
-                       package_optional => DARK . YELLOW,
-                       package_version => BLUE,
-                       package_imported_from => RED,
-                       package_exported_to => RED,
-                       bundle_id => RED,
-                       bundle_name => RED,
-                       header_name => DARK . YELLOW,
-                       header_value => ""
-                      };
-    my $theme_dark = { 
-                      host => YELLOW,
-                      bundle_id => RED,
-                      bundle_name => RED,                      
-                      bundle_active => GREEN,
-                      bundle_installed => RED,
-                      bundle_resolved => YELLOW,
-                      bundle_fragment => CYAN,
-                      bundle_referenced => YELLOW,
-                      bundle_version => CYAN,
-                      service_id => GREEN,
-                      service_interface => undef,
-                      service_using => YELLOW,
-                      service_registered => YELLOW,
-                      prompt_context => CYAN,
-                      prompt_empty => RED,
-                      upload_installed => GREEN,
-                      upload_uninstalled => RED,
-                      package_resolved => GREEN,
-                      package_optional => YELLOW,
-                      package_version => CYAN,
-                      package_imported_from => RED,
-                      package_exported_to => RED,
-                      header_name => YELLOW,
-                      header_value => ""
-                     };
-    
-    $self->{color_theme} = $theme_dark;
+
+    my $config = $self->{config};
+    # Set color mode
+    $self->use_color(defined($self->{use_color}) || defined($config->{UseColor}) || "yes");
+    # Init color theme
+    $self->_init_theme($config->{theme});
 
     # Force pipe, quit if less than a screen-full.
     my @args = (
@@ -177,10 +142,45 @@ sub _init {
     }
 }
 
+sub default_theme {
+    my $self = shift;
+    # Initial theme
+    my $theme_light = { 
+                       host => YELLOW,
+                       prompt_context => BLUE,
+                       prompt_empty => RED,
+                      };
+    my $theme_dark = { 
+                      host => YELLOW,
+                      prompt_context => CYAN,
+                      prompt_empty => RED,
+                      domain_name => YELLOW,
+                      property_key => GREEN,
+                      property_value => undef,
+                      reset => RESET
+                     };    
+    return $theme_dark;
+}
+
+
 sub readline {
     my $self = shift;
     my $term = $self->term;
     return $term->{term}->ReadLine;
+}
+
+sub _init_theme {
+    my $self = shift;
+    my $theme_config = shift;
+    my $theme = $self->default_theme;
+    if ($theme_config) {
+        for my $k (keys %$theme_config) {
+            my $c = $theme_config->{$k};
+            $theme->{$k} = $c eq "undef" ? undef : Term::ANSIColor::color($c);
+        }
+    }
+    $self->{color_theme} = $theme;
+    return $theme;
 }
 
 =head1 LICENSE

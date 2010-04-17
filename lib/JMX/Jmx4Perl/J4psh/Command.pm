@@ -7,6 +7,17 @@ use Term::Clui;
 
 use Getopt::Long qw(GetOptionsFromArray);
 
+my $USE_TERM_SIZE;
+BEGIN {
+    
+    eval {
+        require "Term/Size.pm";
+        Term::Size->import('chars');
+    };
+    $USE_TERM_SIZE = $@ ? 0 : 1;
+
+}
+
 =head1 NAME 
 
 JMX::Jmx4Perl::J4psh::Command - Base object for commands
@@ -137,6 +148,28 @@ sub push_on_stack {
     };
 }
 
+=item $cmd->pop_off_stack 
+
+Go up one level in the stack
+
+=cut
+
+sub pop_off_stack {
+    my $self = shift;
+    $self->{context}->{commands}->pop_off_stack();
+}
+
+=item $cmd->reset_stack
+
+Reset the stack completely effectively jumping on top of it
+
+=cut
+
+sub reset_stack {
+    my $self = shift;
+    $self->{context}->{commands}->reset_stack();
+}
+
 =item ($opts,@args) = $cmd->extract_command_options($spec,@args);
 
 Extract any options from a command specified via C<$spec>. This method uses
@@ -188,7 +221,11 @@ sub print_paged {
     if (!$nr) {
         $nr = scalar(split /\n/s,$text);
     }
-    if (defined($nr) && $nr < 24) {
+    my $max_rows = 24;
+    if ($USE_TERM_SIZE) {
+        $max_rows = (chars)[1];
+    }
+    if (defined($nr) && $nr < $max_rows) {
         print $text;
     } else {
         view("",$text);
