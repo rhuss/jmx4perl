@@ -3,7 +3,6 @@
 package JMX::Jmx4Perl::J4psh::Command::MBean;
 use strict;
 use vars qw(@ISA);
-use Term::ANSIColor qw(:constants);
 use JMX::Jmx4Perl::J4psh::Command;
 use Data::Dumper;
 
@@ -48,15 +47,23 @@ sub domain_commands {
                          if ($domain) {
                              $domain =~ s/:+$//;
                              ($domain,$prop) = split(/:/,$domain,2) if $domain =~ /:/;
-                         }
+                         }    
                          $self->_cd_domain($domain);
-                         $self->_cd_mbean($domain,$prop) if $prop;
+                         if ($prop) {
+                             eval {
+                                 $self->_cd_mbean($domain,$prop);
+                             };
+                             if ($@) {
+                                 # We already entered the domain successfully
+                                 $self->pop_off_stack;
+                                 die $@;
+                             }
+                         } 
                      },
                      args => $self->complete->mbeans(all => 1),
                     }
            };
 }
-
 
 sub property_commands { 
     my $self = shift;
@@ -71,7 +78,10 @@ sub property_commands {
             "cd" => { 
                      desc => "Enter a MBean",
                      proc => sub {
-                         $self->_cd_mbean($domain,shift);
+                         my $input = shift;
+                         if (!$self->_handle_navigation($input)) {
+                             $self->_cd_mbean($domain,$input);
+                         }
                      },
                      args => $self->complete->mbeans(domain => $domain),
                     }
@@ -87,9 +97,18 @@ sub mbean_commands {
                      proc => $self->cmd_show_mbean($mbean_props),
                      #args => $self->complete->mbean_attribs($mbean_props),
                     },
+            "cd" => {
+                     desc => "Navigate up (..) or to the top (/)",
+                     proc => sub {
+                         my $input = shift;
+                         $self->_handle_navigation($input);
+                     },
+                    }
            };
     # Commands for examining a certain MBean
 }
+
+
 # =================================================================================================== 
 
 =item cmd_list
@@ -118,16 +137,19 @@ sub cmd_list_domains {
         print "Not connected to a server\n" and return unless $agent;        
         my ($opts,@filters) = $self->extract_command_options(["l!"],@_);
         # Show all
-        @filters = (undef) unless @filters;
-        for my $filter (@filters) {
-            my $regexp = $self->convert_wildcard_pattern_to_regexp($filter);
-            if ($filter && $filter =~ /:/) {
-                # It's a MBean name (pattern)
-                $self->show_mbeans($self->_filter($context->mbeans_by_name,$filter));
-            } else {
-                # It's a domain (pattern)
-                $self->show_domain($self->_filter($context->mbeans_by_domain,$filter));
+        if (@filters) {
+            for my $filter (@filters) {
+                my $regexp = $self->convert_wildcard_pattern_to_regexp($filter);
+                if ($filter && $filter =~ /:/) {
+                    # It's a MBean name (pattern)
+                    $self->show_mbeans($self->_filter($context->mbeans_by_name,$filter));
+                } else {
+                    # It's a domain (pattern)
+                    $self->show_domain($self->_filter($context->mbeans_by_domain,$filter));
+                }
             }
+        } else {
+            $self->show_domain($self->_filter($context->mbeans_by_domain));
         }
     }
 }
@@ -152,17 +174,25 @@ sub show_mbeans {
 sub show_domain {
     my $self = shift;
     my $infos = shift;
+    my $l = "";
     for my $domain (keys %$infos) {
-        print "$domain:\n";
+        my ($c_d,$c_reset) = $self->color("domain_name","reset");
+        $l .= $c_d . "$domain:" . $c_reset . "\n";
         for my $m_info (@{$infos->{$domain}}) {
-            print "    ",$m_info->{string},"\n";
-            print "         ",$m_info->{info}->{desc},"\n";
+            $l .= "    ".$self->_color_name_props($m_info)."\n";
+            $l .= "         ".$m_info->{info}->{desc}."\n" if $m_info->{info}->{desc};
         }
-        print "\n";
+        $l .= "\n";
     }
+    $self->print_paged($l);
 }
 
-
+sub _color_name_props {
+    my $self = shift;
+    my $info = shift;
+    my ($c_k,$c_v,$c_r) = $self->color("property_key","property_value","reset");
+    return join ",",map { $c_k . $_ . $c_r . "=" . $c_v . $info->{props}->{$_} . $c_r } sort keys %{$info->{props}};
+}
 
 sub _filter {
     my $self = shift;
@@ -224,6 +254,20 @@ sub _get_mbean {
     return $context->mbeans_by_name->{$domain . ":" . $mbean};
 }
 
+# Handle navigational commands
+sub _handle_navigation {
+    my $self = shift;
+    my $input = shift;
+    if ($input eq "..") {
+        $self->pop_off_stack;
+        return 1;
+    } elsif ($input eq "/" || !$input) {
+        $self->reset_stack;
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
 sub _filter_domains {
 

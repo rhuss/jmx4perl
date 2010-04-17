@@ -99,6 +99,7 @@ sub new {
     if ($config) {
         $self->{config} = &_prepare_server_hash($config);
         $self->{servers} = &_get_configured_servers($config);
+        map { $self->{$_} = $config->{$_ } } grep { $_ ne "server" } keys %$config;
     }
 
     bless $self,(ref($class) || $class);

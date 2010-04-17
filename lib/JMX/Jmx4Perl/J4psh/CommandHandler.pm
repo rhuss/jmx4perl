@@ -157,22 +157,7 @@ sub _navigation_commands {
                       desc => "Go up one level",
                       proc => 
                       sub { 
-                          my $stack = $self->{stack};
-                          my $parent = pop @$stack;
-                          if (@$stack > 0) {
-                              $shell->commands
-                                ({
-                                  %{$stack->[$#{$stack}]->{cmds}},
-                                  %{$self->_global_commands},
-                                  %{$self->_navigation_commands},
-                                 }
-                                );    
-                          } else { 
-                              $shell->commands({ 
-                                                %{$self->_top_commands},
-                                                %{$self->_global_commands},
-                                               });
-                          }
+                          $self->pop_off_stack();
                       }
                      },
              "/" => { 
@@ -185,6 +170,28 @@ sub _navigation_commands {
             };
     } else {
         return {};
+    }
+}
+
+# Go up one in the hierarchy
+sub pop_off_stack {
+    my $self = shift;
+    my $shell = $self->{shell};
+    my $stack = $self->{stack};
+    my $parent = pop @$stack;
+    if (@$stack > 0) {
+        $shell->commands
+          ({
+            %{$stack->[$#{$stack}]->{cmds}},
+            %{$self->_global_commands},
+            %{$self->_navigation_commands},
+           }
+          );    
+    } else { 
+        $shell->commands({ 
+                          %{$self->_top_commands},
+                          %{$self->_global_commands},
+                         });
     }
 }
 

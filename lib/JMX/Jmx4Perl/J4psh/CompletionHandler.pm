@@ -132,6 +132,26 @@ sub mbeans {
     };
 }
 
+# Method for completing based on key=value for an 
+# arbitrary order of key, value pairs
+sub _complete_props {
+    my $self = shift;
+    # List of MBeans for this domain
+    my $mbeans_ref = shift;
+    my @mbeans = ( @{$mbeans_ref} );
+    my $input = shift;
+    my $context = $self->{context};
+    # Get all already completed
+    my @parts = split /,/,$input;
+    my $last = pop @parts;
+    # Filter out already set types
+    for my $p (@parts) {
+        my ($k,$v) = split /=/m,$p,2;
+        @mbeans = grep { $_->{props}->{$k} eq $v } @mbeans;
+    }
+    
+}
+
 =head1 LICENSE
 
 This file is part of jmx4perl.

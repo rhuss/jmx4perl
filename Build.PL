@@ -179,7 +179,10 @@ my $build = $class->new
                },
    recommends => {
                    "Nagios::Plugin" => "0.27",
-                   "Config::General" => "0"
+                   "Config::General" => "0",
+                   "Term::Size" => "0.207",
+                   "Term::Clui" => 0
+                   # Add j4psh dependencies
                   },
    build_requires => {
                       "Module::Build" => "0.35",

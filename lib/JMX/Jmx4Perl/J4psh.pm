@@ -29,7 +29,7 @@ sub init {
     my $self = shift;
     $self->{complete} = new JMX::Jmx4Perl::J4psh::CompletionHandler($self);
     $self->{servers} = new JMX::Jmx4Perl::J4psh::ServerHandler($self);
-    $self->{shell} = new JMX::Jmx4Perl::J4psh::Shell(use_color => $self->use_color =~ /(yes|true|on)$/);;
+    $self->{shell} = new JMX::Jmx4Perl::J4psh::Shell(config => $self->config->{shell},use_color => $self->{args}->{color});;
     my $no_color_prompt = $self->{shell}->readline ne "Term::ReadLine::Gnu";
     $self->{commands} = new JMX::Jmx4Perl::J4psh::CommandHandler($self,$self->{shell},
                                                                  no_color_prompt => $no_color_prompt,
@@ -40,20 +40,13 @@ sub command_packages {
     return [ "JMX::Jmx4Perl::J4psh::Command" ];
 }
 
-sub use_color { 
-    my $self = shift;
-    if (exists $self->{args}->{color}) {
-        return $self->{args}->{color};
-    } elsif (exists $self->{config}->{use_color}) {
-        return $self->{config}->{use_color};
-    } else {
-        return "yes";
-    }    
-}
-
 sub run {
     my $self = shift;
     $self->{shell}->run;
+}
+
+sub config {
+    return shift->{config};
 }
 
 sub complete {
@@ -179,40 +172,42 @@ sub _prepare_mbean_names {
     my $self = shift;
     my $j4p = shift;
     my $list = shift;
-    my $s2mbean = {};
-    my $ret = {};
+    my $mbeans_by_name = {};
+    my $mbeans_by_domain = {};
     for my $domain (keys %$list) {
         for my $name (keys %{$list->{$domain}}) {
             my $full_name = $domain . ":" . $name;
-            my ($domain_p,$attrs) = $j4p->parse_name($full_name);
-            my $k_v = $ret->{$domain} || [];
+            
             my $e = {};
+            my ($domain_p,$props) = $j4p->parse_name($full_name);
             $e->{domain} = $domain;
-            $e->{attrs} = $attrs;
+            $e->{props} = $props;
             $e->{info} = $list->{$domain}->{$name};
-            my $keys = $self->_order_keys($attrs);
-            $e->{string} = join ",", map { $_ . "=" . $attrs->{$_ } } @$keys;
-            $e->{prompt} = length($e->{string}) > 25 ?  $self->_prepare_prompt($attrs,25,$keys) : $e->{string};
+            my $keys = $self->_canonical_ordered_keys($props);
+            $e->{string} = join ",", map { $_ . "=" . $props->{$_ } } @$keys;
+            $e->{prompt} = length($e->{string}) > 25 ?  $self->_prepare_prompt($props,25,$keys) : $e->{string};
             $e->{full} = $full_name;
+            
+            $mbeans_by_name->{$full_name} = $e;
+            my $k_v = $mbeans_by_domain->{$domain} || [];
             push @$k_v,$e;
-            $s2mbean->{$domain . ":" . $e->{string}} = $e;
-            $ret->{$domain} = $k_v;
+            $mbeans_by_domain->{$domain} = $k_v;
         }
     }
-    return ($ret,$s2mbean);
+    return ($mbeans_by_domain,$mbeans_by_name);
 }
 
-# Order keys according to importane first and the alphabetically
+# Order keys according to importance first and the alphabetically
 my @PREFERED_PROPS = qw(name type service);
 sub _order_keys {
     my $self = shift;
-    my $attrs = shift;
+    my $props = shift;
 
     # Get additional properties, not known to the prefered ones
-    my $extra = { map { $_ => 1 } keys %$attrs };
+    my $extra = { map { $_ => 1 } keys %$props };
     my @ret = ();
     for my $p (@PREFERED_PROPS) {
-        if (exists($attrs->{$p})) {
+        if (exists($props->{$p})) {
             push @ret,$p;
             delete $extra->{$p};
         }
@@ -221,19 +216,26 @@ sub _order_keys {
     return \@ret;
 }
 
-# Prepare attribute part of a mbean suitable for using in 
+# Canonical ordered means lexically sorted
+sub _canonical_ordered_keys {
+    my $self = shift;
+    my $props = shift;
+    return [ sort keys %{$props} ];
+}
+
+# Prepare property part of a mbean suitable for using in 
 # a shell prompt
 sub _prepare_prompt {
     my $self = shift;
-    my $attrs = shift;
+    my $props = shift;
     my $max = shift;
     my $keys = shift;
     my $len = $max - 3;
     my $ret = "";
 
     for my $k (@$keys) {
-        if (exists($attrs->{$k})) {
-            my $p = $k . "=" . $attrs->{$k};
+        if (exists($props->{$k})) {
+            my $p = $k . "=" . $props->{$k};
             if (!length($ret)) {
                 $ret = $p;
                 if (length($ret) > $max) {
