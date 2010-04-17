@@ -217,17 +217,17 @@ public class JmxRequest {
         }
     }
 
-    private String escapePathPart(String pPathPart) {
+    private static String escapePathPart(String pPathPart) {
         return pPathPart.replaceAll("/","\\\\/");
     }
 
-    private String unescapePathPart(String pPathPart) {
+    private static String unescapePathPart(String pPathPart) {
         return pPathPart.replaceAll("\\\\/","/");
     }
 
-    List<String> splitPath(String pPath) {
+    static List<String> splitPath(String pPath) {
         // Split on '/' but not on '\/':
-        String[] elements = pPath.split("(?<!\\\\)/");
+        String[] elements = pPath.split("(?<!\\\\)/+");
         List<String> ret = new ArrayList<String>();
         for (String element : elements) {
             ret.add(unescapePathPart(element));

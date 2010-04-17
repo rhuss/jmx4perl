@@ -17,15 +17,12 @@ public class JmxRequestTest {
 
     @Test
     public void testPathSplitting() throws MalformedObjectNameException {
-        JmxRequest req =
-                new JmxRequestBuilder(JmxRequest.Type.LIST,"test:name=split").
-                        build();
-        List<String> paths = req.splitPath("hello/world");
+        List<String> paths = JmxRequest.splitPath("hello/world");
         assertEquals(2,paths.size());
         assertEquals("hello",paths.get(0));
         assertEquals("world",paths.get(1));
 
-        paths = req.splitPath("hello\\/world/second");
+        paths = JmxRequest.splitPath("hello\\/world/second");
         assertEquals(2,paths.size());
         assertEquals("hello/world",paths.get(0));
         assertEquals("second",paths.get(1));
