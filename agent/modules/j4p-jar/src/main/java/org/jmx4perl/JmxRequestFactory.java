@@ -124,7 +124,7 @@ final public class JmxRequestFactory {
                 request = processor.process(elements);
 
                 // Extract all additional args from the remaining path info
-                request.setExtraArgs(toList(elements));
+                request.setExtraArgs(prepareExtraArgs(elements));
 
                 // Setup JSON representation
                 extractParameters(request,pParameterMap);
@@ -267,12 +267,17 @@ final public class JmxRequestFactory {
         throw new IllegalArgumentException("Invalid request type '" + pTypeS + "'");
     }
 
-    private static List<String>toList(Stack<String> pElements) {
-        List<String> p = new ArrayList<String>();
+    private static List<String> prepareExtraArgs(Stack<String> pElements) {
+        List<String> ret = new ArrayList<String>();
         while (!pElements.isEmpty()) {
-            p.add(pElements.pop());
+            String element = pElements.pop();
+            // Check for escapes
+            while (element.endsWith("\\") && !pElements.isEmpty()) {
+                element = element.substring(0,element.length() - 1) + "/" + pElements.pop();
+            }
+            ret.add(element);
         }
-        return p;
+        return ret;
     }
 
     private static void extractParameters(JmxRequest pRequest,Map<String,String[]> pParameterMap) {
