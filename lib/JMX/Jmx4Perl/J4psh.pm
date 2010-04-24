@@ -69,6 +69,14 @@ sub color {
     return shift->{shell}->color(@_);
 }
 
+sub term_height {
+    return shift->{shell}->term_height;
+}
+
+sub term_width {
+    return shift->{shell}->term_width;
+}
+
 sub agent {
     my $self = shift;
     my $agent = shift;
