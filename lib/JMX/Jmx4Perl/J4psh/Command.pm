@@ -221,10 +221,7 @@ sub print_paged {
     if (!$nr) {
         $nr = scalar(split /\n/s,$text);
     }
-    my $max_rows = 24;
-    if ($USE_TERM_SIZE) {
-        $max_rows = (chars)[1];
-    }
+    my $max_rows = $self->context->term_height;
     if (defined($nr) && $nr < $max_rows) {
         print $text;
     } else {

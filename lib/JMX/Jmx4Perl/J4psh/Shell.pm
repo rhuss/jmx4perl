@@ -17,6 +17,17 @@ JMX::Jmx4Perl::J4psh::Shell - Facade to Term::ShellUI
 
 =cut
 
+my $USE_TERM_SIZE;
+BEGIN {
+    
+    eval {
+        require "Term/Size.pm";
+        Term::Size->import('chars');
+    };
+    $USE_TERM_SIZE = $@ ? 0 : 1;
+
+}
+
 
 sub new { 
     my $class = shift;
@@ -157,6 +168,9 @@ sub default_theme {
                       domain_name => YELLOW,
                       property_key => GREEN,
                       property_value => undef,
+                      mbean_name => YELLOW,
+                      attribute_name => GREEN,
+                      operation_name => YELLOW,
                       stat_val => RED,
                       reset => RESET
                      };    
@@ -182,6 +196,22 @@ sub _init_theme {
     }
     $self->{color_theme} = $theme;
     return $theme;
+}
+
+sub term_width { 
+    if ($USE_TERM_SIZE) {
+        return (chars)[0];
+    } else {
+        return 120;
+    }
+}
+
+sub term_height {
+    if ($USE_TERM_SIZE) {
+        return (chars)[1];
+    } else {
+        return 24;
+    }
 }
 
 =head1 LICENSE

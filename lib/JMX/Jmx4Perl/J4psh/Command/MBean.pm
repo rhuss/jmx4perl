@@ -105,7 +105,6 @@ sub mbean_commands {
                      },
                     }
            };
-    # Commands for examining a certain MBean
 }
 
 
@@ -136,6 +135,13 @@ sub cmd_list_domains {
         my $agent = $context->agent;
         print "Not connected to a server\n" and return unless $agent;        
         my ($opts,@filters) = $self->extract_command_options(["l!"],@_);
+        if ($domain) {
+            if (@filters) {
+                @filters = map { $domain . ":" .$_ } @filters
+            } else {
+                @filters = "$domain:*";
+            }
+        }
         # Show all
         if (@filters) {
             for my $filter (@filters) {
@@ -151,12 +157,119 @@ sub cmd_list_domains {
     }
 }
 
-sub cmd_list_mbeans {
+sub cmd_show_mbean {
+    my $self = shift;
+    my $m_info = shift;
+    return sub {
+        my $info = $m_info->{info};
+        my ($c_m,$c_a,$c_o,$c_r) = $self->color("mbean_name","attribute_name","operation_name","reset");
+        my $op_len = 50 + length($c_o) + length($c_r);
+        
+        my $p = "";
+        
+        my $name = $m_info->{full};
+        $p .= $c_m . $name . $c_r;
+        $p .= "\n\n";
+        
+        #print Dumper($m_info);
 
+        my $attrs = $info->{attr};
+        if ($attrs && keys %$attrs) {
+            $p .= "Attributes:\n";
+            for my $attr (keys %$attrs) {
+                if (length($attr) > 31) {
+                    $p .= sprintf("  $c_a%s$c_r\n",$attr);
+                    $p .= sprintf("  %-31.31s %-13.13s %-4.4s %s\n",
+                                  $self->_pretty_print_type($attrs->{$attr}->{type}),
+                                  $attrs->{$attr}->{rw} eq "false" ? "[ro]" : "",$attrs->{$attr}->{desc});
+                } else {
+                    $p .= sprintf("  $c_a%-31.31s$c_r %-13.13s %-4.4s %s\n",$attr,
+                                  $self->_pretty_print_type($attrs->{$attr}->{type}),
+                                  $attrs->{$attr}->{rw} eq "false" ? "[ro]" : "",$attrs->{$attr}->{desc});
+                }
+            }
+            $p .= "\n";
+        }
+        my $ops = $info->{op};
+        if ($ops && keys %$ops) {
+            $p .= "Operations:\n";
+            for my $op (keys %$ops) {
+                my $overloaded = ref($ops->{$op}) eq "ARRAY" ? $ops->{$op} : [ $ops->{$op} ];
+                for my $m_info (@$overloaded) {
+                    my $sig = $self->_signature_to_print($op,$m_info);
+                    if (length($sig) > $op_len) {
+                        $p .= sprintf("  %s\n",$sig);
+                        $p .= sprintf("  %-50.50s %s\n","",$m_info->{desc}) if $m_info->{desc};                        
+                    } else {
+                        $p .= sprintf("  %-${op_len}.${op_len}s %s\n",$sig,$m_info->{desc});
+                    }
+                }
+            }
+            $p .= "\n";
+        }
+        $self->print_paged($p);
+        #print Dumper($info);
+    }
 }
 
-sub cmd_show_mbean {
+sub _line_aligned {
+    my $self = shift;
+    my $max_lengths = shift;
+    my $lengths = shift;
+    my $parts = shift;
+    my $opts = shift;
+        
+    my $term_width = $self->context->term_width;
+    my $overflow = $opts->{overflow_col} || 0;
+    my $wrap_last = $opts->{wrap};
+    my $ret = "";
+    for my $i (0 .. $overflow) {
+        if ($lengths->[$i] > $max_lengths->[$i]) {
+            
+            # Do overflow
+        }
+    }
+    
+}
 
+sub _signature_to_print {
+    my $self = shift;
+    my $op = shift;
+    my $info = shift;
+    my ($c_o,$c_r) = $self->color("operation_name","reset");
+#    print Dumper($info);
+    my $ret = $self->_pretty_print_type($info->{ret}) . " ";
+    $ret .= $c_o . $op . $c_r;
+    $ret .= "(";
+    my $args = $info->{args};
+    my @arg_cl = ();
+    for my $a (@$args) {
+        if (ref($a) eq "HASH") {
+            push @arg_cl,$self->_pretty_print_type($a->{type})
+        } else {
+            push @arg_cl,$self->_pretty_print_type($a);
+        }
+    }
+    $ret .= join ",",@arg_cl;
+    $ret .= ")";
+    return $ret;
+}
+
+sub _pretty_print_type {
+    my $self = shift;
+    my $type = shift;
+    my $suffix = "";
+    my $type_p;
+    if ($type eq "[J") {
+        return "long[]";
+    } elsif ($type =~ /^\[L(.*);/) {
+        $type_p = $1;
+        $suffix = "[]";
+    } else {
+        $type_p = $type;
+    }
+    $type_p =~ s/^.*\.([^\.]+)$/$1/;
+    return $type_p . $suffix;
 }
 
 sub show_mbeans {
@@ -221,6 +334,7 @@ sub _color_props {
     my $self = shift;
     my $info = shift;
     my ($c_k,$c_v,$c_r) = $self->color("property_key","property_value","reset");
+    #return Dumper($info);
     return join ",",map { $c_k . $_ . $c_r . "=" . $c_v . $info->{props}->{$_} . $c_r } sort keys %{$info->{props}};
 }
 
