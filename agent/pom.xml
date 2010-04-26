@@ -19,6 +19,7 @@
     <module>modules/j4p-mule</module>
     <module>modules/j4p-osgi</module>
     <module>modules/j4p-osgi-bundle</module>
+    <module>modules/j4p-client</module>
   </modules>
 
   <build>

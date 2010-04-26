@@ -3,10 +3,13 @@ package org.jmx4perl;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import javax.management.*;
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -40,10 +43,19 @@ import java.util.List;
  */
 public class HttpRequestHandler {
 
+    // handler for contacting the MBean server(s)
     private BackendManager backendManager;
+
+    // Logging abstraction
     private LogHandler logHandler;
 
-
+    /**
+     * Request handler for parsing HTTP request and dispatching to the appropriate
+     * request handler (with help of the backend manager)
+     *
+     * @param pBackendManager backend manager to user
+     * @param pLogHandler log handler to where to put out logging
+     */
     public HttpRequestHandler(BackendManager pBackendManager, LogHandler pLogHandler) {
         backendManager = pBackendManager;
         logHandler = pLogHandler;
@@ -63,22 +75,41 @@ public class HttpRequestHandler {
      */
     public JSONAware handleRequestInputStream(InputStream pInputStream, String pEncoding)
             throws MalformedObjectNameException, IOException {
-        List<JmxRequest> jmxRequests;
-        jmxRequests = JmxRequestFactory.createRequestsFromInputReader(
-                pEncoding != null ?
-                        new InputStreamReader(pInputStream, pEncoding) :
-                        new InputStreamReader(pInputStream));
-        JSONArray responseList = new JSONArray();
-        for (JmxRequest jmxReq : jmxRequests) {
-            boolean debug = backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation());
-            if (debug) {
-                logHandler.debug("Request: " + jmxReq.toString());
+        JSONAware jsonRequest = extractJsonRequest(pInputStream,pEncoding);
+        if (jsonRequest instanceof List) {
+            List<JmxRequest> jmxRequests = JmxRequestFactory.createRequestsFromJson((List) jsonRequest);
+
+            JSONArray responseList = new JSONArray();
+            for (JmxRequest jmxReq : jmxRequests) {
+                boolean debug = backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation());
+                if (debug) {
+                    logHandler.debug("Request: " + jmxReq.toString());
+                }
+                // Call handler and retrieve return value
+                JSONObject resp = executeRequest(jmxReq);
+                responseList.add(resp);
             }
-            // Call handler and retrieve return value
-            JSONObject resp = executeRequest(jmxReq);
-            responseList.add(resp);
+            return responseList;
+        } else if (jsonRequest instanceof Map) {
+            JmxRequest jmxReq = JmxRequestFactory.createSingleRequestFromJson((Map<String, ?>) jsonRequest);
+            return executeRequest(jmxReq);
+        } else {
+            throw new IllegalArgumentException("Invalid JSON Request " + jsonRequest.toJSONString());
         }
-        return responseList;
+    }
+
+    private JSONAware extractJsonRequest(InputStream pInputStream, String pEncoding) throws IOException {
+        InputStreamReader reader = null;
+        try {
+            reader =
+                    pEncoding != null ?
+                            new InputStreamReader(pInputStream, pEncoding) :
+                            new InputStreamReader(pInputStream);
+            JSONParser parser = new JSONParser();
+            return (JSONAware) parser.parse(reader);
+        } catch (ParseException exp) {
+            throw new IllegalArgumentException("Invalid JSON request " + reader,exp);
+        }
     }
 
     /**
@@ -196,6 +227,4 @@ public class HttpRequestHandler {
             throw new IllegalStateException("Internal: Not a JSONObject but a " + pJson.getClass() + " " + pJson);
         }
     }
-
-
 }
