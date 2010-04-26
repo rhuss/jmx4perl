@@ -3,7 +3,6 @@ package org.jmx4perl.client.request;
 import org.jmx4perl.AgentServlet;
 import org.jmx4perl.client.J4pClient;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.Context;
@@ -13,7 +12,7 @@ import org.mortbay.jetty.servlet.ServletHolder;
  * @author roland
  * @since Apr 26, 2010
  */
-public class AbstractJ4pIntegrationTest {
+abstract public class AbstractJ4pIntegrationTest {
 
     private static Server jettyServer;
 

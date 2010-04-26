@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.management.ObjectName;
 
+import org.jmx4perl.client.response.J4pReadResponse;
 import org.jmx4perl.client.response.J4pResponse;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -84,8 +85,8 @@ public class J4pReadRequest extends J4pMBeanRequest {
     }
 
     @Override
-    <T extends J4pRequest> J4pResponse<T> createResponse(JSONObject pResponse) {
-        return null;
+    J4pReadResponse createResponse(JSONObject pResponse) {
+        return new J4pReadResponse(this,pResponse);
     }
 
     private boolean hasSingleAttribute() {

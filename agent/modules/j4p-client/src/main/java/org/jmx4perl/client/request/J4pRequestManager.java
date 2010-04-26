@@ -93,7 +93,7 @@ public class J4pRequestManager {
      * @throws java.io.IOException when extracting of the answer fails
      * @throws org.json.simple.parser.ParseException when parsing of the JSON answer fails
      */
-    protected <T extends J4pRequest> J4pResponse<T> extractResponse(T pRequest, HttpResponse pHttpResponse)
+    protected <R extends J4pResponse<T>,T extends J4pRequest> R extractResponse(T pRequest, HttpResponse pHttpResponse)
             throws IOException, ParseException {
         HttpEntity entity = pHttpResponse.getEntity();
         JSONParser parser = new JSONParser();
@@ -104,6 +104,6 @@ public class J4pRequestManager {
         } else {
             responseJSON = (JSONObject) parser.parse(new InputStreamReader(entity.getContent()));
         }
-        return pRequest.createResponse(responseJSON);
+        return pRequest.<R>createResponse(responseJSON);
     }
 }

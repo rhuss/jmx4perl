@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.apache.http.client.methods.HttpPost;
 import org.jmx4perl.Version;
-import org.jmx4perl.client.J4pClient;
 import org.jmx4perl.client.response.J4pVersionResponse;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
@@ -21,10 +20,11 @@ public class J4pVersionIntegrationTest extends AbstractJ4pIntegrationTest {
     @Test
     public void versionGetRequest() throws IOException, ParseException {
         J4pVersionRequest req = new J4pVersionRequest();
-        J4pVersionResponse resp = (J4pVersionResponse) j4pClient.execute(req);
+        J4pVersionResponse resp = j4pClient.execute(req);
         assertEquals("Proper agent version",Version.getAgentVersion(),resp.getAgentVersion());
         assertEquals("Proper protocol version",Version.getProtocolVersion(),resp.getProtocolVersion());
         assertTrue("Request timestamp",resp.getRequestDate().getTime() <= System.currentTimeMillis());
+
     }
 
     @Test

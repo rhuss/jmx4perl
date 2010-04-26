@@ -1,6 +1,7 @@
 package org.jmx4perl.client;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -36,8 +37,12 @@ public class J4pClient extends J4pRequestManager {
      * @throws java.io.IOException when the execution fails
      * @throws org.json.simple.parser.ParseException if parsing of the JSON answer fails
      */
-    public <T extends J4pRequest> J4pResponse<T> execute(T pRequest) throws IOException, ParseException {
+    public <R extends J4pResponse<T>,T extends J4pRequest> R execute(T pRequest) throws IOException, ParseException {
         HttpResponse response = httpClient.execute(getHttpRequest(pRequest,null));
-        return extractResponse(pRequest,response);
+        return this.<R,T>extractResponse(pRequest,response);
+    }
+
+    public <R extends J4pResponse<T>,T extends J4pRequest> List<R> execute(List<T> pRequests) throws IOException,ParseException {
+        return null;
     }
 }

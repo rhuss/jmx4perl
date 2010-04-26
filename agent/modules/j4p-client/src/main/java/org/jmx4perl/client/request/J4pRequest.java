@@ -44,10 +44,9 @@ abstract public class J4pRequest {
      * Create a response from a given JSON response
      *
      * @param pResponse http response as obtained from the Http-Request
-     * @param <T> the concrete request
      * @return the create response
      */
-    abstract <R extends J4pResponse<T>,T extends J4pRequest> R createResponse(JSONObject pResponse);
+    abstract <R extends J4pResponse<? extends J4pRequest>> R createResponse(JSONObject pResponse);
 
     public String getPreferredHttpMethod() {
         return preferredHttpMethod;
