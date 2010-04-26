@@ -2,6 +2,7 @@ package org.jmx4perl.client.request;
 
 import org.jmx4perl.AgentServlet;
 import org.jmx4perl.client.J4pClient;
+import org.jmx4perl.it.ItSetup;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mortbay.jetty.Server;
@@ -15,6 +16,7 @@ import org.mortbay.jetty.servlet.ServletHolder;
 abstract public class AbstractJ4pIntegrationTest {
 
     private static Server jettyServer;
+    private static ItSetup itSetup;
 
     private static final int JETTY_DEFAULT_PORT = 8234;
     private static final String SEVER_BASE_URL = "http://localhost:" + JETTY_DEFAULT_PORT;
@@ -40,8 +42,11 @@ abstract public class AbstractJ4pIntegrationTest {
             jettyContext.addServlet(new ServletHolder(new AgentServlet()), J4P_CONTEXT + "/*");
             jettyServer.start();
             j4pUrl = J4P_DEFAULT_URL;
+            itSetup = new ItSetup();
+            itSetup.start();
         } else {
             j4pUrl = testUrl;
+            itSetup = null;
         }
 	}
 
@@ -50,5 +55,8 @@ abstract public class AbstractJ4pIntegrationTest {
 		if (jettyServer != null) {
 			jettyServer.stop();
 		}
+        if (itSetup != null) {
+            itSetup.stop();
+        }
 	}
 }
