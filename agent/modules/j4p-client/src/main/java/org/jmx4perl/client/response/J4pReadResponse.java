@@ -4,6 +4,8 @@ import org.jmx4perl.client.request.J4pReadRequest;
 import org.json.simple.JSONObject;
 
 /**
+ * Response for a {@link org.jmx4perl.client.request.J4pType#READ} request
+ *
  * @author roland
  * @since Apr 26, 2010
  */
@@ -11,4 +13,5 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
     public J4pReadResponse(J4pReadRequest pRequest, JSONObject pJsonResponse) {
         super(pRequest, pJsonResponse);
     }
+
 }

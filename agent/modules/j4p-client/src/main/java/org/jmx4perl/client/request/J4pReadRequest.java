@@ -3,6 +3,7 @@ package org.jmx4perl.client.request;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.jmx4perl.client.response.J4pReadResponse;
@@ -22,6 +23,9 @@ public class J4pReadRequest extends J4pMBeanRequest {
     // Name of attribute to request
     private String[] attributes;
 
+    // Path for extracting return value
+    private String path;
+
     /**
      * Create a READ request to request one or more attributes
      * from the remote j4p agent
@@ -36,6 +40,20 @@ public class J4pReadRequest extends J4pMBeanRequest {
         super(J4pType.READ, pObjectName);
         attributes = pAttribute;
     }
+
+
+    /**
+     * Create a READ request to request one or more attributes
+     * from the remote j4p agent
+     *
+     * @param pObjectName object name as sting which gets converted to a {@link javax.management.ObjectName}}
+     * @param pAttribute one or more attributes to request.
+     * @throws javax.management.MalformedObjectNameException when argument is not a valid object name
+     */
+    protected J4pReadRequest(String pObjectName,String ... pAttribute) throws MalformedObjectNameException {
+        this(new ObjectName(pObjectName),pAttribute);
+    }
+
 
     /**
      * Get all attributes of this request
@@ -65,6 +83,9 @@ public class J4pReadRequest extends J4pMBeanRequest {
         if (hasSingleAttribute()) {
             List<String> ret = super.getRequestParts();
             ret.add(attributes[0]);
+            if (path != null) {
+                ret.addAll(Arrays.asList(path.split("/")));
+            }
             return ret;
         } else {
             return null;
@@ -81,6 +102,9 @@ public class J4pReadRequest extends J4pMBeanRequest {
             attrs.addAll(Arrays.asList(attributes));
             ret.put("attribute",attrs);
         }
+        if (path != null) {
+            ret.put("path",path);
+        }
         return ret;
     }
 
@@ -91,6 +115,23 @@ public class J4pReadRequest extends J4pMBeanRequest {
 
     private boolean hasSingleAttribute() {
         return attributes != null && attributes.length == 1;
+    }
+
+    /**
+     * Get the path for extracting parts of the return value
+     * @return path used for extracting
+     */
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * Set the path for diving into the return value
+     *
+     * @param pPath path to set
+     */
+    public void setPath(String pPath) {
+        path = pPath;
     }
 
 

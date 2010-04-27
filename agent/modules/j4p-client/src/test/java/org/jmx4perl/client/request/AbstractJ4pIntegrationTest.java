@@ -16,7 +16,7 @@ import org.mortbay.jetty.servlet.ServletHolder;
 abstract public class AbstractJ4pIntegrationTest {
 
     private static Server jettyServer;
-    private static ItSetup itSetup;
+    protected static ItSetup itSetup;
 
     private static final int JETTY_DEFAULT_PORT = 8234;
     private static final String SEVER_BASE_URL = "http://localhost:" + JETTY_DEFAULT_PORT;

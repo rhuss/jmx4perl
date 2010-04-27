@@ -16,7 +16,6 @@ import static org.junit.Assert.*;
  */
 public class J4pVersionIntegrationTest extends AbstractJ4pIntegrationTest {
 
-
     @Test
     public void versionGetRequest() throws IOException, ParseException {
         J4pVersionRequest req = new J4pVersionRequest();

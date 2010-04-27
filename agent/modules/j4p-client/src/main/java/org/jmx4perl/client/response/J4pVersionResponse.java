@@ -15,7 +15,7 @@ public class J4pVersionResponse extends J4pResponse<J4pVersionRequest> {
 
     public J4pVersionResponse(J4pVersionRequest pRequest, JSONObject pResponse) {
         super(pRequest,pResponse);
-        JSONObject value = getValue();
+        JSONObject value = (JSONObject) getValue();
         agentVersion = (String) value.get("agent");
         protocolVersion = (String) value.get("protocol");
     }
