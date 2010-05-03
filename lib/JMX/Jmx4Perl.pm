@@ -775,7 +775,7 @@ sub parse_name {
                 $value = $1;
             } 
         }
-        return undef unless $value;
+        return undef unless defined($value);
         $attrs->{$key} = $value;
         #print "K: $key V: $value\n";
     }
