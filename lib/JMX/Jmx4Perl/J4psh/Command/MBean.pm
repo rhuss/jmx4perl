@@ -291,6 +291,7 @@ sub show_domain {
     my $self = shift;
     my $opts = shift;
     my $infos = shift;
+
     my $mbean_filter = shift;
     $mbean_filter = $self->convert_wildcard_pattern_to_regexp($mbean_filter) if $mbean_filter;
     my $text = "";
