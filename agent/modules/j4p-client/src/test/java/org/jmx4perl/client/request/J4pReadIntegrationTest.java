@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
  * @author roland
  * @since Apr 27, 2010
  */
-public class J4ReadIntegrationTest extends AbstractJ4pIntegrationTest {
+public class J4pReadIntegrationTest extends AbstractJ4pIntegrationTest {
 
     @Test
     public void nameTest() throws MalformedObjectNameException, IOException, ParseException {

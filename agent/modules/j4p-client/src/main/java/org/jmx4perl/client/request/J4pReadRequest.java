@@ -1,7 +1,6 @@
 package org.jmx4perl.client.request;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -21,7 +20,7 @@ import org.json.simple.JSONObject;
 public class J4pReadRequest extends J4pMBeanRequest {
 
     // Name of attribute to request
-    private String[] attributes;
+    private List<String> attributes;
 
     // Path for extracting return value
     private String path;
@@ -38,7 +37,7 @@ public class J4pReadRequest extends J4pMBeanRequest {
      */
     protected J4pReadRequest(ObjectName pObjectName,String ... pAttribute) {
         super(J4pType.READ, pObjectName);
-        attributes = pAttribute;
+        attributes = Arrays.asList(pAttribute);
     }
 
 
@@ -60,7 +59,7 @@ public class J4pReadRequest extends J4pMBeanRequest {
      *
      * @return attributes
      */
-    public String[] getAttributes() {
+    public Collection<String> getAttributes() {
         return attributes;
     }
 
@@ -75,19 +74,21 @@ public class J4pReadRequest extends J4pMBeanRequest {
         if (attributes == null || !hasSingleAttribute()) {
             throw new IllegalArgumentException("More than one attribute given for this request");
         }
-        return attributes[0];
+        return attributes.get(0);
     }
 
     @Override
     List<String> getRequestParts() {
         if (hasSingleAttribute()) {
             List<String> ret = super.getRequestParts();
-            ret.add(attributes[0]);
+            ret.add(getAttribute());
             if (path != null) {
+                // Split up path
                 ret.addAll(Arrays.asList(path.split("/")));
             }
             return ret;
         } else {
+            // A GET request cant be used for multiple attribute fetching.
             return null;
         }
     }
@@ -96,7 +97,7 @@ public class J4pReadRequest extends J4pMBeanRequest {
     JSONObject toJson() {
         JSONObject ret = super.toJson();
         if (hasSingleAttribute()) {
-            ret.put("attribute",attributes[0]);
+            ret.put("attribute",attributes.get(0));
         } else {
             JSONArray attrs = new JSONArray();
             attrs.addAll(Arrays.asList(attributes));
@@ -113,8 +114,8 @@ public class J4pReadRequest extends J4pMBeanRequest {
         return new J4pReadResponse(this,pResponse);
     }
 
-    private boolean hasSingleAttribute() {
-        return attributes != null && attributes.length == 1;
+    public boolean hasSingleAttribute() {
+        return attributes != null && attributes.size() == 1;
     }
 
     /**
