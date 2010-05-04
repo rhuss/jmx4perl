@@ -4,6 +4,7 @@ package JMX::Jmx4Perl::J4psh::Command::MBean;
 use strict;
 use vars qw(@ISA);
 use JMX::Jmx4Perl::J4psh::Command;
+use JMX::Jmx4Perl::Request;
 use Data::Dumper;
 
 @ISA = qw(JMX::Jmx4Perl::J4psh::Command);
@@ -103,11 +104,146 @@ sub mbean_commands {
                          my $input = shift;
                          $self->_handle_navigation($input);
                      },
-                    }
+                    },
+            "cat" => { 
+                      desc => "Show value of an attribute",
+                      proc => $self->cmd_show_attributes($mbean_props),
+                      args => $self->complete->mbean_attributes($mbean_props),
+                     },
+            "set" => { 
+                      desc => "Set value of an attribute",
+                      proc => $self->cmd_set_attribute($mbean_props),
+                      args => $self->complete->mbean_attributes($mbean_props),
+                     },
+             
+            "exec" => { 
+                       desc => "Execute an operation",
+                       proc => $self->cmd_execute_operation($mbean_props),
+                       args => $self->complete->mbean_operations($mbean_props),
+                      },
+             
            };
 }
 
+sub cmd_show_attributes {
+    my $self = shift;
+    my $m_info = shift; 
+    return sub {
+        my $attributes = @_;
+        my $info = $m_info->{info};
+        my $mbean = $m_info->{full};
+        my $context = $self->context;
+        my $agent = $context->agent;
+        my @attrs = ();
+        for my $a (@_) {
+            if ($a =~ /[\*\?]/) {
+                my $regexp = $self->convert_wildcard_pattern_to_regexp($a);
+                push @attrs, grep { $_ =~ /^$regexp$/ } keys %{$m_info->{info}->{attr}};
+            } else {
+                push @attrs,$a;
+            }
+        }
+        # Use only unique values
+        my %attrM =  map { $_ => 1 } @attrs;
+        @attrs = keys %attrM;
+        if (@attrs == 0) {
+            die "No attribute given\n";
+        }
+        my $request = JMX::Jmx4Perl::Request->new(READ,$mbean,\@attrs,{ignoreErrors => 1});
+        my $response = $agent->request($request);
+        if ($response->is_error) {
+            die "Error: " . $response->error_text;
+        }
+        my $values = $response->value;
+        my $p = "";
+        my ($c_a,$c_r) = $self->color("attribute_name","reset");
+        if (@attrs > 1) {
+            # Print as list
+            for my $attr (@attrs) {
+                my $value = $values->{$attr};
+                if (ref($value)) {
+                    $p .= sprintf(" $c_a%-31.31s$c_r\n",$attr);
+                    $p .= $self->_dump($value);
+                } else {
+                    $p .= sprintf(" $c_a%-31.31s$c_r %s\n",$attr,$value);
+                }
+            }
+        } else {
+            # Print single attribute
+            my $value =  $values->{$attrs[0]};
+            if (ref($value)) {
+                $p .= $self->_dump($value);
+            } else {
+                $p .= $value."\n";
+            }
+        }
+        $self->print_paged($p);
+    };
 
+}
+
+sub cmd_set_attribute {
+    my $self = shift;
+    my $m_info = shift;
+    return sub {
+        my @args = @_;
+        die "Usage: set <attribute-name> <value> [<path>]\n" if (@args != 2 && @args != 3);
+        my $mbean = $m_info->{full};
+        my $agent = $self->context->agent;
+        my $req = new JMX::Jmx4Perl::Request(WRITE,$mbean,$args[0],$args[1],$args[2]);
+        my $resp = $agent->request($req);
+        if ($resp->is_error) {
+            die $resp->error_text . "\n";
+        }
+        my $old_value = $resp->value;
+        my ($c_l,$c_r) = $self->color("label","reset");
+
+        my $p = "";
+        if (ref($old_value)) {
+            $p .= sprintf(" $c_l%-5.5ss$c_r\n","Old:");
+            $p .= $self->_dump($old_value);
+        } else {
+            $p .= sprintf(" $c_l%-5.5s$c_r %s\n","Old:",$old_value);
+        }
+        $p .= sprintf(" $c_l%-5.5s$c_r %s\n","New:",$args[1]);;
+        $self->print_paged($p);
+    }
+}
+
+sub cmd_execute_operation {
+    my $self = shift;
+    my $m_info = shift;
+    return sub {
+        my @args = @_;
+        die "Usage: exec <attribute-name> <value> [<path>]\n" if (!@args);
+        my $mbean = $m_info->{full};
+        my $agent = $self->context->agent;
+        my $req = new JMX::Jmx4Perl::Request(EXEC,$mbean,@args);
+        my $resp = $agent->request($req);
+        if ($resp->is_error) {
+            die $resp->error_text . "\n";
+        }
+        my $value = $resp->value;
+        my ($c_l,$c_r) = $self->color("label","reset");
+
+        my $p = "";
+        if (ref($value)) {
+            $p .= sprintf(" $c_l%-7.7ss$c_r\n","Return:");
+            $p .= $self->_dump($value);
+        } else {
+            $p .= sprintf(" $c_l%-7.7s$c_r %s\n","Return:",$value);
+        }
+        $self->print_paged($p);
+    }
+}
+
+sub _dump {
+    my $self = shift;
+    my $value = shift;
+    my $ret = Dumper($value);
+    $ret =~ s/^([^=]+=)/" " x length($1)/e;
+    return $ret;
+}
 # =================================================================================================== 
 
 =item cmd_list

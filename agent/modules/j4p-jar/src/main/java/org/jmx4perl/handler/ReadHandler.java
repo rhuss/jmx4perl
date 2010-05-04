@@ -84,7 +84,7 @@ public class ReadHandler extends JsonRequestHandler {
             }
             return ret;
         } else {
-            return fetchAttributes(server,oName,request.getAttributeNames(),faultHandler,false);
+            return fetchAttributes(server,oName,request.getAttributeNames(),faultHandler,!request.isSingleAttribute());
         }
     }
 

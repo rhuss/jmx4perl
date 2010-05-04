@@ -374,7 +374,8 @@ sub get_attribute {
         #print Dumper($response);
     }
     if ($response->is_error) {
-        my $o = "(".$object.",".$attribute.($path ? "," . $path : "").")";
+        my $a = ref($attribute) eq "ARRAY" ? "[" . join(",",@$attribute) . "]" : $attribute;
+        my $o = "(".$object.",".$a.($path ? "," . $path : "").")";
         croak "The attribute $o is not registered on the server side"
           if $response->status == 404;
         croak "Error requesting $o: ",$response->error_text;
@@ -433,7 +434,7 @@ sub set_attribute {
         $response =  $self->delegate_to_handler($object,$value);        
     } else {
         croak "No attribute provided for object $object" unless $attribute;
-        croak "No value to set provided for object $object and attribute $attribute" unless $value;
+        croak "No value to set provided for object $object and attribute $attribute" unless defined($value);
         
         my $request = JMX::Jmx4Perl::Request->new(WRITE,$object,$attribute,$value,$path);
         $response = $self->request($request);

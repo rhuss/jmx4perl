@@ -132,6 +132,32 @@ sub mbeans {
     };
 }
 
+sub mbean_attributes {
+    return shift->_complete_attr_op(shift,"attr");
+}
+
+sub mbean_operations {
+    return shift->_complete_attr_op(shift,"op");
+}
+
+sub _complete_attr_op {
+    my $self = shift;
+    my $m_info = shift;
+    my $what = shift;
+    my $attr;
+    #print "> ",Dumper($m_info->{info}->{attr});
+    return sub {
+        my ($term,$cmpl) = @_;
+        my $attrs = $m_info->{info}->{$what};
+        #$term->{debug_complete}=5;
+        my $context = $self->{context};
+        my $str = $cmpl->{str} || "";
+        my $len = length($str);
+        return [ grep { substr($_,0,$len) eq $str } keys %$attrs ];
+    }; 
+}
+
+
 # Method for completing based on key=value for an 
 # arbitrary order of key, value pairs
 sub _complete_props {
