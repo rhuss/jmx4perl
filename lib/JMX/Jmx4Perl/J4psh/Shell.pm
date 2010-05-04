@@ -163,6 +163,7 @@ sub default_theme {
                       };
     my $theme_dark = { 
                       host => YELLOW,
+                      label => YELLOW,
                       prompt_context => CYAN,
                       prompt_empty => RED,
                       domain_name => YELLOW,
