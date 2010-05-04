@@ -15,9 +15,9 @@
        given as IP or FQDN. If any of the given hosts matches, access will be allowed
       (respecting further restrictions, though). If <remote> ... </remote> is given
       without any host no access is allowed at all (probably not what you want).
-      
-      You can also specify a subnetmask behind a numeric IP adress in which case any 
-      host within the specified subnet is allowed to access the agent. The netmask can 
+
+      You can also specify a subnetmask behind a numeric IP adress in which case any
+      host within the specified subnet is allowed to access the agent. The netmask can
       be given either in CIDR format (e.g "/16") or as a full netmask (e.g. "/255.255.0.0")
   -->
   <remote>
@@ -42,7 +42,8 @@
 
   <!-- Access to the following MBeans with their attributes/operations is allowed. If the
        <mbeans> sections is present, access to any MBean not mentioned there will be
-       rejected. If the <mbeans> section is missing, access to all MBeans is allowed -->
+       rejected. If the <mbeans> section is missing, access to all MBeans is allowed. MBean
+       names can be patterns, too -->
   <mbeans>
     <mbean>
       <name>java.lang:type=Memory</name>
