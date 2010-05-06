@@ -22,10 +22,7 @@
 * Formatting for overlength MBean lines
   (complete MBean->_lign_aligned)
 * Wildcard for 'cd' in MBean/Domain listing
-* 'cat': Multiple attributes and wildcards, formatted list printing 
 * 'cat': Proper Error-Handling
-* Implement 'set'
-* Implement 'exec' (with completion on operations)
 * Implement 'find/search' (attribute/operation names, content of attributes)
 * Implement 'version'
 * History Handling

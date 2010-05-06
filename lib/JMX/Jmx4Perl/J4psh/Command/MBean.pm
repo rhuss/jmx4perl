@@ -218,7 +218,7 @@ sub cmd_execute_operation {
         die "Usage: exec <attribute-name> <value> [<path>]\n" if (!@args);
         my $mbean = $m_info->{full};
         my $agent = $self->context->agent;
-        my $req = new JMX::Jmx4Perl::Request(EXEC,$mbean,@args);
+        my $req = new JMX::Jmx4Perl::Request(EXEC,$mbean,@args,{ignoreErrors => 1});
         my $resp = $agent->request($req);
         if ($resp->is_error) {
             die $resp->error_text . "\n";
@@ -228,7 +228,7 @@ sub cmd_execute_operation {
 
         my $p = "";
         if (ref($value)) {
-            $p .= sprintf(" $c_l%-7.7ss$c_r\n","Return:");
+            $p .= sprintf(" $c_l%-7.7s$c_r\n","Return:");
             $p .= $self->_dump($value);
         } else {
             $p .= sprintf(" $c_l%-7.7s$c_r %s\n","Return:",$value);
