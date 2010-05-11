@@ -1,3 +1,7 @@
+0.70
+  - Extended configuration syntax for check_jmx4perl as alternative to
+    command line options
+  - Added '--value' as a shortcut for --mbean/--attribute/--value                                                                                                                                
 0.67
   - Path elements containing '/' can now be escaped with '\/'
   - j4p-osgi-bundle including pax-web-bundle so only a single bundle
@@ -15,8 +19,7 @@
     'maxObjects' respectively for consistencies sake.
   - Bug fix: POST request respect these parameters as well now 
   - Added 'ignoreErrors' request option in order to allow a bulk read
-    to succeed even if single read fails. In this case, the valu will
-    be set to an appropriate error message.
+    to succeed even if single read fails. In this case, the valu will 
   - 'search' returns properly escaped MBean Names if unsafe characters
     are used. 
   - For GET request, instead of pathinfo a query with parameter 'p'

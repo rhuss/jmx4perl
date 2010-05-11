@@ -100,6 +100,7 @@ sub new {
         $self->{config} = &_prepare_server_hash($config);
         $self->{servers} = &_get_configured_servers($config);
         map { $self->{$_} = $config->{$_ } } grep { $_ ne "server" } keys %$config;
+        #print Dumper($self);
     }
 
     bless $self,(ref($class) || $class);

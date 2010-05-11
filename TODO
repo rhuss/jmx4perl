@@ -28,3 +28,5 @@
 * History Handling
 * Plugin architecture
 * Alias support
+* MBean Description for 'list' command
+* Escaping for --base / --value
