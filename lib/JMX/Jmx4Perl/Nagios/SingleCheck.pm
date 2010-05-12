@@ -22,10 +22,11 @@ JMX::Jmx4Perl::Nagios::SingleCheck - A single nagios check
 
 sub new { 
     my $class = shift;
-    
+    my $np = shift || die "No Nagios Plugin given";
+    my $config = shift;
     my $self = { 
-                np => shift || die "No Nagios Plugin given",
-                config => shift
+                np => $np,
+                config => $config
                };
     bless $self,(ref($class) || $class);
     return $self;

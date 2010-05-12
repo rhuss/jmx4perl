@@ -128,7 +128,6 @@ sub _verify_and_initialize {
     
     # Now, if a specific check is given, extract it, too.
     my $check_configs = $self->_extract_checks($config,$o->check);
-
     if ($check_configs) {
         for my $c (@$check_configs) {
             my $s_c = new JMX::Jmx4Perl::Nagios::SingleCheck($np,$c);
@@ -137,7 +136,6 @@ sub _verify_and_initialize {
     } else {
         $self->{checks} = [ new JMX::Jmx4Perl::Nagios::SingleCheck($np) ];
     }
-    
     # If a server name is given, we use that for the connection parameters
     if ($o->server) {
         $self->{server_config} = $config->get_server_config($o->server)

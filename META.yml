@@ -25,6 +25,8 @@ requires:
 recommends:
   Config::General: 0
   Nagios::Plugin: 0.27
+  Term::Clui: 0
+  Term::Size: 0.207
 configure_requires:
   Module::Build: 0.35
 provides:
@@ -42,6 +44,24 @@ provides:
     file: lib/JMX/Jmx4Perl/Alias/Object.pm
   JMX::Jmx4Perl::Config:
     file: lib/JMX/Jmx4Perl/Config.pm
+  JMX::Jmx4Perl::J4psh:
+    file: lib/JMX/Jmx4Perl/J4psh.pm
+  JMX::Jmx4Perl::J4psh::Command:
+    file: lib/JMX/Jmx4Perl/J4psh/Command.pm
+  JMX::Jmx4Perl::J4psh::Command::Global:
+    file: lib/JMX/Jmx4Perl/J4psh/Command/Global.pm
+  JMX::Jmx4Perl::J4psh::Command::MBean:
+    file: lib/JMX/Jmx4Perl/J4psh/Command/MBean.pm
+  JMX::Jmx4Perl::J4psh::Command::Server:
+    file: lib/JMX/Jmx4Perl/J4psh/Command/Server.pm
+  JMX::Jmx4Perl::J4psh::CommandHandler:
+    file: lib/JMX/Jmx4Perl/J4psh/CommandHandler.pm
+  JMX::Jmx4Perl::J4psh::CompletionHandler:
+    file: lib/JMX/Jmx4Perl/J4psh/CompletionHandler.pm
+  JMX::Jmx4Perl::J4psh::ServerHandler:
+    file: lib/JMX/Jmx4Perl/J4psh/ServerHandler.pm
+  JMX::Jmx4Perl::J4psh::Shell:
+    file: lib/JMX/Jmx4Perl/J4psh/Shell.pm
   JMX::Jmx4Perl::Nagios::CheckJmx4Perl:
     file: lib/JMX/Jmx4Perl/Nagios/CheckJmx4Perl.pm
   JMX::Jmx4Perl::Product::ActiveMQ:
