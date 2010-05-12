@@ -17,6 +17,8 @@
 
 -----
 
+j4psh:
+
 * last_error handling in ServerHandler
 * Completion on MBeans with spaces
 * Formatting for overlength MBean lines
@@ -29,4 +31,8 @@
 * Plugin architecture
 * Alias support
 * MBean Description for 'list' command
+
+check_jmx4perl:
+
 * Escaping for --base / --value
+* target mode in check_jmx4perl
