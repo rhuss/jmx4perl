@@ -74,10 +74,10 @@ public class HistoryKey implements Serializable {
                     "History supports only READ/WRITE/EXEC commands (and not " + rType + ")");
         }
         if (pJmxRequest.getObjectNameAsString() == null) {
-            throw new IllegalArgumentException("Mbean name must not be null");
+            throw new IllegalArgumentException("MBean name must not be null");
         }
         if (pJmxRequest.getObjectName().isPattern()) {
-            throw new IllegalArgumentException("Mbean name must not be a pattern");
+            throw new IllegalArgumentException("MBean name must not be a pattern");
         }
         if (pJmxRequest.getAttributeNames() != null && pJmxRequest.getAttributeNames().size() > 1) {
             throw new IllegalArgumentException("A key cannot contain more than one attribute");

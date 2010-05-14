@@ -11,6 +11,8 @@ use Nagios::Plugin;
 use Nagios::Plugin::Functions qw(:codes %STATUS_TEXT);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Carp;
+use Text::ParseWords;
+
 our $AUTOLOAD;
 
 =head1 NAME
@@ -78,7 +80,7 @@ sub execute {
         if (@extra_requests) {
             $self->_send_requests($jmx,@extra_requests);
         }
-        $np->nagios_exit($np->check_messages);
+        $np->nagios_exit($np->check_messages($self->{multi_check_opts} ? %{$self->{multi_check_opts}} : ()));
     };
     if ($@) {
         # p1.pl, the executing script of the embedded nagios perl interpreter
@@ -127,7 +129,8 @@ sub _verify_and_initialize {
     my $config = $self->_get_config($o->config);
     
     # Now, if a specific check is given, extract it, too.
-    my $check_configs = $self->_extract_checks($config,$o->check);
+    my $check_configs;
+    ($check_configs,$self->{multi_check_opts}) = $self->_extract_checks($config,$o->check);
     if ($check_configs) {
         for my $c (@$check_configs) {
             my $s_c = new JMX::Jmx4Perl::Nagios::SingleCheck($np,$c);
@@ -160,9 +163,9 @@ sub _extract_checks {
     my $self = shift;
     my $config = shift;
     my $check = shift;
-
+    
     my $np = $self->{np};
-
+    my $multi_check_opts = {};
     if ($check) {
         $np->nagios_die("No configuration given") unless $config;
         $np->nagios_die("No checks defined in configuration") unless $config->{check};
@@ -173,23 +176,93 @@ sub _extract_checks {
             my $multi_checks = $config->{multicheck};
             if ($multi_checks)  {
                 my $m_check = $multi_checks->{$check};
+                $multi_check_opts = $self->_extract_multi_check_options($m_check);
                 if ($m_check && $m_check->{check}) {
-                    # Resolve all check;
+                    # Resolve all checks
                     my $c_names = ref($m_check->{check}) eq "ARRAY" ? $m_check->{check} : [ $m_check->{check} ];
                     for my $c_name (@$c_names) {
                         my $check = $config->{check}->{$c_name} ||
                           $np->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check);
+                        $check->{key} = $c_name;
                         push @{$check_config},$check;
                     }
                 }
             }
         } else {
             $check_config = ref($check_config) eq "ARRAY" ? $check_config : [ $check_config ];
+            $check_config->[0]->{key} = $check;
         }
         $np->nagios_die("No check configuration with name " . $check . " found") unless ($check_config);
-        return $check_config;
+
+        # Resolve parent values
+        for my $c (@{$check_config}) {
+            $self->_resolve_check_config($c,$config);
+        }
+        return ($check_config,$multi_check_opts);
     } else {
         return undef;
+    }
+}
+
+sub _extract_multi_check_options {
+    my $self = shift;
+    my $config = shift;
+    my $ret = {};
+    if ($config->{multiline} && $config->{multiline} =~ /^(on|true|1|yes)$/i) {
+        $ret->{join} = "\n";
+    }
+    return $ret;
+}
+
+sub _resolve_check_config {
+    my $self = shift;
+    my $check = shift;
+    my $config = shift;
+    my $np = $self->{np};
+
+    if ($check->{use}) {
+        my $parents = ref($check->{use}) eq "ARRAY" ? $check->{use} : [ $check->{use} ];
+        my $parent_merged = {};
+        for my $p (@$parents) {
+            my ($p_name,$p_args) = $self->_parse_parent_check_ref($p);
+            my $p_config = $config->{check}->{$p_name};
+            $np->nagios_die("Unknown parent check '" . $p_name . "' for check " . ($check->{key} ? $check->{key} : $p_config->{name})) 
+              unless $p_config;
+            $p_config = $self->_resolve_check_config($p_config,$config);
+            for my $k (keys(%$p_config)) {
+                my $parent_val = $p_config->{$k};
+                if ($p_args) {
+                    # Replace argument placeholders
+                    for my $i (0 ... $#$p_args) {
+                        $parent_val =~ s/\$P$i/$p_args->[$i]/g;
+                    }
+                }
+                $parent_merged->{$k} = $parent_val;
+            }
+        }
+        for my $k (keys %$parent_merged) {
+            my $parent_val = $parent_merged->{$k} || "";
+            if (defined($check->{$k})) {
+                $check->{$k} =~ s/\$BASE/$parent_val/g;
+            } else {
+                $check->{$k} = $parent_val;
+            }
+        }
+    }
+    return $check;
+}
+
+# Split up a 'Use' parent config reference, including possibly arguments
+sub _parse_parent_check_ref {
+    my $self = shift;
+    my $parent_ref = shift;
+    if ($parent_ref =~/^\s*([^(]+)\(([^)]*)\)\s*$/) {
+        my $name = $1;
+        my $args_s = $2;
+        my $args = [ &parse_line('\s*,\s*',0,$args_s) ];
+        return ($name,$args);
+    } else {
+        return $parent_ref;
     }
 }
 
@@ -209,12 +282,6 @@ sub _server_config {
 sub _check_config {
     return shift->{check_config};
 }
-
-# =========================================================================================== 
-  
-# =========================================================================================== 
-
-# =========================================================================================== 
 
 sub _create_nagios_plugin {
     my $args = shift;
@@ -257,6 +324,10 @@ sub _create_nagios_plugin {
     $np->add_arg(
                  spec => "operation|o=s",
                  help => "Operation to execute",
+                );
+    $np->add_arg(
+                 spec => "value|v=s",
+                 help => "Shortcut for specifying mbean/attribute/path. Slashes within names must be escaped with \\",
                 );
     $np->add_arg(
                  spec => "base|base-alias|b=s",

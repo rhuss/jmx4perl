@@ -34,5 +34,8 @@ j4psh:
 
 check_jmx4perl:
 
-* Escaping for --base / --value
 * target mode in check_jmx4perl
+* Multi-Line output optimized in check_multi format (i.e. with a
+  summary line) so that it can be used for pnp as well
+* Delta-Values with MBean pattern requests
+* History with patterns (Aufloesen bei Config-MBean)

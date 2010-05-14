@@ -12,6 +12,7 @@ use Nagios::Plugin::Functions qw(:codes %STATUS_TEXT);
 use Carp;
 use Scalar::Util qw(looks_like_number);
 use URI::Escape;
+use Text::ParseWords;
 our $AUTOLOAD;
 
 =head1 NAME
@@ -83,10 +84,11 @@ sub extract_responses {
     # Get response/request pair
     my $resp = shift @{$responses};
     my $request = shift @{$requests};
-
+    #print Dumper($resp);
     my @extra_requests = ();
-    $self->_verify_response($resp);
-    my $value = $resp->value;
+    $self->_verify_response($request,$resp);
+    my $value = $self->_extract_value($request,$resp);
+   
     # Delta handling
     my $delta = $self->delta;
     if (defined($delta)) {
@@ -104,7 +106,7 @@ sub extract_responses {
     if ($self->base) {
         # Calc relative value 
         my $base_value = $self->_base_value($self->base,$responses,$requests);
-        my $rel_value = sprintf "%2.2f",(int((($value / $base_value) * 10000) + 0.5) / 100) ;
+        my $rel_value = sprintf "%2.2f",$base_value ? (int((($value / $base_value) * 10000) + 0.5) / 100) : 0;
                 
         # Performance data. Convert to absolute values before
         my ($critical,$warning) = $self->_convert_relative_to_absolute($base_value,$self->critical,$self->warning);
@@ -117,8 +119,8 @@ sub extract_responses {
         my ($code,$mode) = $self->_check_threshhold($rel_value);
         my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
-                                                           value => $value_conv, unit => $unit,base => $base_conv, 
-                                                           base_unit => $base_unit));            
+                                                    value => $value_conv, unit => $unit,base => $base_conv, 
+                                                    base_unit => $base_unit));            
     } else {
         # Performance data
         $np->add_perfdata(label => $label,
@@ -132,6 +134,27 @@ sub extract_responses {
     return @extra_requests;
 }
 
+# Extract a single value, which is different, if the request was a pattern read
+# request
+sub _extract_value {
+    my $self = shift;
+    my $req = shift;
+    my $resp = shift;
+    my $np = $self->{np};
+    if ($req->get('type') eq READ && $req->is_mbean_pattern) {
+        my $val = $resp->value;
+        $np->nagios_die("Pattern request doesnt result in a proper return format: " . Dumper($val))
+          if (ref($val) ne "HASH");
+        $np->nagios_die("More than one MBean found for a pattern request: " . Dumper([keys %$val])) if keys %$val != 1;
+        my $attr_val = (values(%$val))[0];
+        $np->nagios_die("Invalid response for pattern match: " . Dumper($attr_val)) unless ref($attr_val) eq "HASH";
+        $np->nagios_die("Only a single attribute can be used. Given: " . Dumper([keys %$attr_val])) if keys %$attr_val != 1;
+        return (values(%$attr_val))[0];
+    } else {
+        return $resp->value;
+    }
+}
+
 sub _delta_value {
     my ($self,$request,$resp,$delta) = @_;
     
@@ -143,6 +166,7 @@ sub _delta_value {
         my $old_value = $history->[0]->{value};
         my $old_time = $history->[0]->{timestamp};
         if ($delta) {
+            # Time average
             return (($resp->value - $old_value) / ($resp->timestamp - $old_time)) * $delta;
         } else {
             return $resp->value - $old_value;
@@ -173,10 +197,8 @@ sub _base_value {
         return $name;
     }
     my $resp = shift @{$responses};
-    # Clear request
-    shift @{$requests};
-    die "Base value is not a plain value but ",Dumper($resp->value) if ref($resp->value);
-    return $resp->value;
+    my $req = shift @{$requests};
+    return $self->_extract_value($req,$resp);
 }
 
 # Normalize value if a unit-of-measurement is given.
@@ -242,7 +264,7 @@ sub _normalize_value {
 
 
 sub _verify_response {
-    my ($self,$resp) = @_;
+    my ($self,$req,$resp) = @_;
     my $np = $self->{np};
     if ($resp->is_error) {
         $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
@@ -252,9 +274,9 @@ sub _verify_response {
                         " returned a null value which can't be used yet. " . 
                         "Please let me know, whether you need such check for a null value");
     }
-    if (ref($resp->value)) { 
-        $np->nagios_die("Response value is a ".ref($resp->value).
-                        ", not a plain value. Did you forget a --path parameter ?","Value: " . 
+    if (!$req->is_mbean_pattern && ref($resp->value)) { 
+        $np->nagios_die("Response value is a " . ref($resp->value) .
+                        ", not a plain value. Did you forget a --path parameter ?". " Value: " . 
                         Dumper($resp->value));
     }
 }
@@ -321,8 +343,7 @@ sub _split_attr_spec {
     my $self = shift;
     my $name = shift;
 
-    # TODO: Implement escaping
-    return split m|/|,$name;
+    return &parse_line('/',0,$name);
 }
 
 
@@ -342,7 +363,7 @@ my $CHECK_CONFIG_KEYS = {
                          "string" => "string",
                          "label" => "label",
                          # New:
-                         "value" => "value"
+                         "value" => "value",
                         };
 
 

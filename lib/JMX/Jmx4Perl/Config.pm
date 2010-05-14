@@ -84,7 +84,9 @@ sub new {
         if (-e $file) {
             if ($HAS_CONFIG_GENERAL) {
                 $config = {
-                           new Config::General(-ConfigFile => $file,-LowerCaseNames => 1)->getall
+                           new Config::General(-ConfigFile => $file,-LowerCaseNames => 1,
+                                               -UseApacheInclude => 1,-IncludeRelative => 1, 
+                                               -IncludeGlob => 1, -IncludeDirectories => 1,  -CComments => 0)->getall
                           };
             } else {
                 warn "Configuration file $file found, but Config::General is not installed.\n" . 
