@@ -133,7 +133,8 @@ Beside unit handling, you can provide your own label for the Nagios output via
 C<--label>. The provided option is interpreted as a pattern with the following
 placeholders: 
 
- %v   the absolute value
+ %v   the absolute value 
+ %f   the absolute value as floating point number
  %r   the relative value for relative calculations (--base)
  %u   the value's unit for the output when --unit is used
  %w   the the base value's for the output unit when --unit is used
@@ -142,6 +143,7 @@ placeholders:
       or "UNKNOWN"
  %t   Threshold value which fails ("" when the check doesn't fail)
  %n   name, either calulated automatically or given with --name
+ %d   the delta value used for normalization when using incremental mode
 
 Note that C<%u> and C<%w> are typically I<not> the same as the C<--unit>
 option. They specify the unit I<after> the conversion for the plugin output as

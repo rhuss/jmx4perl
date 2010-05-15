@@ -140,36 +140,49 @@ sub _extract_value {
     my $self = shift;
     my $req = shift;
     my $resp = shift;
-    my $np = $self->{np};
     if ($req->get('type') eq READ && $req->is_mbean_pattern) {
-        my $val = $resp->value;
-        $np->nagios_die("Pattern request doesnt result in a proper return format: " . Dumper($val))
-          if (ref($val) ne "HASH");
-        $np->nagios_die("More than one MBean found for a pattern request: " . Dumper([keys %$val])) if keys %$val != 1;
-        my $attr_val = (values(%$val))[0];
-        $np->nagios_die("Invalid response for pattern match: " . Dumper($attr_val)) unless ref($attr_val) eq "HASH";
-        $np->nagios_die("Only a single attribute can be used. Given: " . Dumper([keys %$attr_val])) if keys %$attr_val != 1;
-        return (values(%$attr_val))[0];
+        return $self->_extract_value_from_pattern_request($resp->value);
     } else {
         return $resp->value;
     }
 }
 
+sub _extract_value_from_pattern_request {
+    my $self = shift;
+    my $val = shift;
+    my $np = $self->{np};
+    $np->nagios_die("Pattern request does not result in a proper return format: " . Dumper($val))
+      if (ref($val) ne "HASH");
+    $np->nagios_die("More than one MBean found for a pattern request: " . Dumper([keys %$val])) if keys %$val != 1;
+    my $attr_val = (values(%$val))[0];
+    $np->nagios_die("Invalid response for pattern match: " . Dumper($attr_val)) unless ref($attr_val) eq "HASH";
+    $np->nagios_die("Only a single attribute can be used. Given: " . Dumper([keys %$attr_val])) if keys %$attr_val != 1;
+    return (values(%$attr_val))[0];
+}
+
 sub _delta_value {
-    my ($self,$request,$resp,$delta) = @_;
+    my ($self,$req,$resp,$delta) = @_;
     
     my $history = $resp->history;
     if (!$history) {
         # No delta on the first run
         return undef;
     } else {
-        my $old_value = $history->[0]->{value};
-        my $old_time = $history->[0]->{timestamp};
+        my $hist_val;
+        if ($req->is_mbean_pattern) {
+            $hist_val = $self->_extract_value_from_pattern_request($history);
+        } else {
+            $hist_val = $history;
+        }
+        my $old_value = $hist_val->[0]->{value};
+        my $old_time = $hist_val->[0]->{timestamp};
+        my $value = $self->_extract_value($req,$resp);
         if ($delta) {
             # Time average
-            return (($resp->value - $old_value) / ($resp->timestamp - $old_time)) * $delta;
+            my $time_delta = $resp->timestamp - $old_time;
+            return (($value - $old_value) / ($time_delta ? $time_delta : 1)) * $delta;
         } else {
-            return $resp->value - $old_value;
+            return $value - $old_value;
         }
     }    
 }
@@ -498,7 +511,7 @@ sub _format_label {
     # %b : base value
     # %t : threshold failed ("" for OK or UNKNOWN)
     # %c : code ("OK", "WARNING", "CRITICAL", "UNKNOWN")
-
+    # %d : delta
     my @parts = split /(\%[\w\.\-]*\w)/,$label;
     my $ret = "";
     foreach my $p (@parts) {
@@ -511,9 +524,11 @@ sub _format_label {
             } elsif ($what eq "u" || $what eq "w") {
                 $ret .= sprintf $format . "s",($what eq "u" ? $args->{unit} : $args->{base_unit}) || "";
                 $ret =~ s/\s$//;
+            } elsif ($what eq "f") {
+                $ret .= sprintf $format . "f",$args->{value};
             } elsif ($what eq "v") {
                 if ($args->{mode} ne "numeric") {
-                    $ret .= sprintf $format . "s",$args->{value};
+                    $ret .= sprintf $format . "d",$args->{value};
                 } else {
                     $ret .= sprintf $format . &_format_char($args->{value}),$args->{value};
                 }
@@ -524,6 +539,8 @@ sub _format_label {
                 $ret .= sprintf $format . "s",$STATUS_TEXT{$args->{code}};
             } elsif ($what eq "n") {
                 $ret .= sprintf $format . "s",$self->_get_name();
+            } elsif ($what eq "d") {
+                $ret .= sprintf $format . "d",$self->delta;
             }
         } else {
             $ret .= $p;
