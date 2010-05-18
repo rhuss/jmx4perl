@@ -31,7 +31,7 @@ public class J4pReadRequest extends J4pMBeanRequest {
      *
      * @param pObjectName Name of the MBean to request, which can be a pattern in
      *                    which case the given attributes are looked at all MBeans matched
-     *                    by this pattern. If an attribute doesnt fit to a matched MBean it is
+     *                    by this pattern. If an attribute does not fit to a matched MBean it is
      *                    ignored.
      * @param pAttribute one or more attributes to request.
      */

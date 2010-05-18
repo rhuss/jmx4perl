@@ -16,4 +16,7 @@ public interface OperationCheckingMBean {
 
     int overloadedMethod(String[] arg);
 
+    boolean nullArgumentCheck(String arg1,Object arg2);
+
+    boolean emptyStringArgumentCheck(String arg1);
 }

@@ -25,6 +25,14 @@ public class OperationChecking implements OperationCheckingMBean,MBeanRegistrati
         }
     }
 
+    public boolean nullArgumentCheck(String arg1,Object arg2) {
+        return arg1 == null && arg2 == null;
+    }
+
+    public boolean emptyStringArgumentCheck(String arg1) {
+        return arg1 != null && arg1.length() == 0;
+    }
+
     public int overloadedMethod(String arg) {
         return 1;
     }

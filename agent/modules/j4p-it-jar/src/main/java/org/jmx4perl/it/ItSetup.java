@@ -114,14 +114,22 @@ public class ItSetup {
             } catch (ClassNotFoundException exp) {
                 isWebsphere = false;
             }
-            registerMBean(new OperationChecking(),isWebsphere ? null : domain + ":type=operation");
-            registerMBean(new AttributeChecking(),isWebsphere ? null : domain + ":type=attribute");
+            registerMBean(new OperationChecking(),isWebsphere ? null : getOperationMBean());
+            registerMBean(new AttributeChecking(),isWebsphere ? null : getAttributeMBean());
 
         } catch (RuntimeException e) {
             throw new RuntimeException("Error",e);
         } catch (Exception exp) {
             throw new RuntimeException("Error",exp);
         }
+    }
+
+    private String getAttributeMBean() {
+        return domain + ":type=attribute";
+    }
+
+    public String getOperationMBean() {
+        return domain + ":type=operation";
     }
 
     @SuppressWarnings("PMD.SystemPrintln")
