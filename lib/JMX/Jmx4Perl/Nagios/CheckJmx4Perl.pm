@@ -17,13 +17,13 @@ our $AUTOLOAD;
 
 =head1 NAME
 
-JMX::Jmx4Perl::CheckJmx4Perl - Module for encapsulating the functionality of
+JMX::Jmx4Perl::Nagios::CheckJmx4Perl - Module for encapsulating the functionality of
 L<check_jmx4perl> 
 
 =head1 SYNOPSIS
 
   # One line in check_jmx4perl to rule them all
-  JMX::Jmx4Perl::CheckJmx4Perl->new()->execute();
+  JMX::Jmx4Perl::Nagios::CheckJmx4Perl->new()->execute();
 
 =head1 DESCRIPTION
 
@@ -33,6 +33,20 @@ Nagios perl interpreter (ePN) wihout interfering with other, potential
 concurrent, runs of this check. Please refer to L<check_jmx4perl> for
 documentation on how to use this check. This module is probably I<not> of 
 general interest and serves only the purpose described above.
+
+Its main task is to set up one ore more L<JMX::Jmx4Perl::Nagios::SingleCheck>
+objects from command line arguments and optionally from a configuration file. 
+
+=head1 METHODS
+
+=over
+
+=cut
+
+=item $JMX::Jmx4Perl::Nagios::CheckJmx4Perl()
+
+Set up a object used for a single check. It will parse the command line
+arguments and any configuation file given.
 
 =cut
 
@@ -47,6 +61,11 @@ sub new {
     return $self;
 }
 
+=head1 $check->execute()
+
+Send the JMX request to the server monitored and print out a nagios output. 
+
+=cut
 
 sub execute {
     my $self = shift;
@@ -95,6 +114,7 @@ sub execute {
     }
 }
 
+# Send the requests via the build up agent
 sub _send_requests {
     my ($self,$jmx,@requests) = @_;
     my $o = $self->{opts};
@@ -119,6 +139,10 @@ sub _send_requests {
     return \@responses;
 }
 
+# Initialize this object and validate the mandatory parameters (obtained from
+# the command line or a configuration file). It will also build up 
+# one or more SingleCheck which are later on sent as a bulk request to 
+# the server.
 sub _verify_and_initialize { 
     my $self = shift;
     my $np = $self->{np};
@@ -159,7 +183,8 @@ sub _verify_and_initialize {
     }
 }
 
-# Extract one or more check configurations
+# Extract one or more check configurations which can be 
+# simle <Check>s or <MultiCheck>s
 sub _extract_checks {
     my $self = shift;
     my $config = shift;
@@ -172,7 +197,7 @@ sub _extract_checks {
         
         my $check_configs;
         unless ($config->{check}->{$check}) {
-            $check_configs = $self->_resolve_multicheck($config,$check);
+            $check_configs = $self->_resolve_multicheck($config,$check,$self->{cmd_args});
         } else {
             my $check_config = $config->{check}->{$check};
             $check_configs = ref($check_config) eq "ARRAY" ? $check_config : [ $check_config ];
@@ -182,18 +207,20 @@ sub _extract_checks {
 
         # Resolve parent values
         for my $c (@{$check_configs}) {
-            $self->_resolve_check_config($c,$config);
+            $self->_resolve_check_config($c,$config,$self->{cmd_args});
         }
         return $check_configs;
     } else {
         return undef;
-    }
+    }    
 }
 
+# Resolve a multicheck configuration (<MultiCheck>)
 sub _resolve_multicheck {
     my $self = shift;
     my $config = shift;
     my $check = shift;
+    my $args = shift;
     my $np = $self->{np};
     my $multi_checks = $config->{multicheck};    
     my $check_config = [];
@@ -203,19 +230,24 @@ sub _resolve_multicheck {
             if ($m_check->{check}) {
                 # Resolve all checks
                 my $c_names = ref($m_check->{check}) eq "ARRAY" ? $m_check->{check} : [ $m_check->{check} ];
-                for my $c_name (@$c_names) {
+                for my $name (@$c_names) {
+                    my ($c_name,$c_args) = $self->_parse_check_ref($name);
+                    my $args_merged = $self->_merge_multicheck_args($c_args,$args);
                     my $check = $config->{check}->{$c_name} ||
                       $np->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check);
                     $check->{key} = $c_name;
+                    $check->{args} = $args_merged;
                     push @{$check_config},$check;
                 }
             }
             if ($m_check->{multicheck}) {
                 my $mc_names = ref($m_check->{multicheck}) eq "ARRAY" ? $m_check->{multicheck} : [ $m_check->{multicheck} ];
-                for my $m (@$mc_names) {                    
-                    $np->nagios_die("Unknown multi check '" . $m . "'")
-                      unless $multi_checks->{$m};
-                    push @{$check_config},@{$self->_resolve_multicheck($config,$m)};
+                for my $name (@$mc_names) {                    
+                    my ($mc_name,$mc_args) = $self->_parse_check_ref($name);
+                    my $args_merged = $self->_merge_multicheck_args($mc_args,$args);
+                    $np->nagios_die("Unknown multi check '" . $mc_name . "'")
+                      unless $multi_checks->{$mc_name};
+                    push @{$check_config},@{$self->_resolve_multicheck($config,$mc_name,$args_merged)};
                 }
             }
         }
@@ -223,27 +255,55 @@ sub _resolve_multicheck {
     return $check_config;
 }
 
+sub _merge_multicheck_args {
+    my $self = shift;
+    my $check_params = shift;
+    my $args = shift;
+    if (!$args || !$check_params) {
+        return $check_params;
+    }
+    my $ret = [ @$check_params ]; # Copy it over
+    for my $i (0 .. $#$check_params) {
+        if ($check_params->[$i] =~ /^\$(\d+)$/) {
+            my $j = $1;
+            if ($j <= $#$args) {
+                $ret->[$i] = $args->[$j];
+                next;
+            }
+            # Nothing to replace
+            $ret->[$i] = $check_params->[$i];
+        }
+    }
+    return $ret;
+}
+
+# Resolve a singe <Check> configuration
 sub _resolve_check_config {
     my $self = shift;
     my $check = shift;
     my $config = shift;
-    my $args = shift;
+    # Args can come from the outside, but also as part of a multicheck (stored
+    # in $self->{args})
+    my $args = $check->{args} && @{$check->{args}} ? $check->{args} : shift;
     my $np = $self->{np};
 
-    # Replace argument placeholders
     if ($check->{use}) {
+        # Resolve parents
         my $parents = ref($check->{use}) eq "ARRAY" ? $check->{use} : [ $check->{use} ];
         my $parent_merged = {};
         for my $p (@$parents) {
-            my ($p_name,$p_args) = $self->_parse_parent_check_ref($p);
+            my ($p_name,$p_args) = $self->_parse_check_ref($p);
             my $p_check = $config->{check}->{$p_name};
-            $np->nagios_die("Unknown parent check '" . $p_name . "' for check '" . ($check->{key} ? $check->{key} : $check->{name}) . "'") 
+            $np->nagios_die("Unknown parent check '" . $p_name . "' for check '" . 
+                            ($check->{key} ? $check->{key} : $check->{name}) . "'") 
               unless $p_check;
             $p_check->{key} = $p_name;
             $self->_resolve_check_config($p_check,$config,$p_args);
-            $self->_replace_args($p_check,$config,$p_args);
+            #$self->_replace_args($p_check,$config,$p_args);
             $parent_merged->{$_} = $p_check->{$_} for keys %$p_check;
         }
+
+        # Replace inherited values
         for my $k (keys %$parent_merged) {
             my $parent_val = $parent_merged->{$k} || "";
             if (defined($check->{$k})) {
@@ -253,9 +313,11 @@ sub _resolve_check_config {
             }
         }
     }
+    $self->_replace_args($check,$config,$args);
     return $check;
 }
 
+# Replace argument placeholders with a given list of arguments
 sub _replace_args {
     my $self = shift;
     my $check = shift;
@@ -263,10 +325,12 @@ sub _replace_args {
     my $args = shift;
 
     for my $k (keys(%$check)) {
+        next if $k =~ /^(key|args)$/; # Internal keys
         my $val = $check->{$k};
         if ($args) {
             for my $i (0 ... $#$args) {
-                $val =~ s/\$$i/$args->[$i]/g;
+                my $repl = $args->[$i];
+                $val =~ s/\$$i/$repl/g if defined($repl);
             }
             $check->{$k} = $val;
         }
@@ -274,19 +338,20 @@ sub _replace_args {
 }
 
 # Split up a 'Use' parent config reference, including possibly arguments
-sub _parse_parent_check_ref {
+sub _parse_check_ref {
     my $self = shift;
-    my $parent_ref = shift;
-    if ($parent_ref =~/^\s*([^(]+)\(([^)]*)\)\s*$/) {
+    my $check_ref = shift;
+    if ($check_ref =~/^\s*([^(]+)\(([^)]*)\)\s*$/) {
         my $name = $1;
         my $args_s = $2;
         my $args = [ &parse_line('\s*,\s*',0,$args_s) ];
         return ($name,$args);
     } else {
-        return $parent_ref;
+        return $check_ref;
     }
 }
 
+# Get the configuration as a hash
 sub _get_config {
     my $self = shift;
     my $path = shift;
@@ -296,30 +361,31 @@ sub _get_config {
     return new JMX::Jmx4Perl::Config($path);
 }
 
+# The global server config part
 sub _server_config {
     return shift->{server_config};
 }
 
-sub _check_config {
-    return shift->{check_config};
-}
-
+# Create the nagios plugin used for preparing the nagious output
 sub _create_nagios_plugin {
     my $args = shift;
     my $np = Nagios::Plugin->
       new(
           usage => 
-          "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning> -n <label>\n" . 
-          "                      [--alias <alias>] [--base <alias/number/mbean>] [--delta <time-base>] [--product <product>]\n".
+          "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning>\n" . 
+          "                      [--alias <alias>] [--value <shortcut>] [--base <alias/number/mbean>] [--delta <time-base>]\n" .
+          "                      [--name <perf-data label>] [--label <output-label>] [--product <product>]\n".
           "                      [--user <user>] [--password <password>] [--proxy <proxy>]\n" .
           "                      [--target <target-url>] [--target-user <user>] [--target-password <password>]\n" .
-          "                      [-v] [--help]",
+          "                      [--config <config-file>] [--check <check-name>] [--server <server-alias>] [-v] [--help]\n" .
+          "                      arg1 arg2 ....",
           version => $JMX::Jmx4Perl::VERSION,
           url => "http://www.consol.com/opensource/nagios/",
           plugin => "check_jmx4perl",
           blurb => "This plugin checks for JMX attribute values on a remote Java application server",
           extra => "\n\nYou need to deploy j4p.war on the target application server or as an intermediate proxy.\n" .
-          "Please refer to the documentation for JMX::Jmx4Perl for further details"
+          "Please refer to the documentation for JMX::Jmx4Perl for further details.\n\n" .
+          "For a comprehensive documentation please consult the man page of check_jmx4perl"
          );
     $np->shortname(undef);
     $np->add_arg(
@@ -454,6 +520,7 @@ my $SERVER_CONFIG_KEYS = {
                           "proxy_password" => "proxy/password"
                          };
 
+# Autoloading is used to fetch the proper connection parameters
 sub AUTOLOAD {
     my $self = shift;
     my $np = $self->{np};
@@ -482,6 +549,7 @@ sub AUTOLOAD {
     }
 }
 
+# Declared here to avoid AUTOLOAD confusions
 sub DESTROY {
 
 }

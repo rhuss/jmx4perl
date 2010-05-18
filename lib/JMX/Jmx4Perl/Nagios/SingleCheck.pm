@@ -176,6 +176,8 @@ sub _delta_value {
         }
         my $old_value = $hist_val->[0]->{value};
         my $old_time = $hist_val->[0]->{timestamp};
+        #print Dumper($req);
+        #print Dumper($resp);
         my $value = $self->_extract_value($req,$resp);
         if ($delta) {
             # Time average
@@ -360,46 +362,6 @@ sub _split_attr_spec {
 }
 
 
-my $CHECK_CONFIG_KEYS = {
-                         "critical" => "critical",
-                         "warning" => "warning",
-                         "mbean" => "mbean",
-                         "attribute" => "attribute",
-                         "operation" => "operation",
-                         "alias" => "alias",        
-                         "path" => "path",
-                         "delta" => "delta",
-                         "name" => "name",
-                         "base" => "base",
-                         "unit" => "unit",
-                         "numeric" => "numeric",
-                         "string" => "string",
-                         "label" => "label",
-                         # New:
-                         "value" => "value",
-                        };
-
-
-# Get the proper configuration values
-sub AUTOLOAD {
-    my $self = shift;
-    my $np = $self->{np};
-    my $name = $AUTOLOAD;
-    $name =~ s/.*://;   # strip fully-qualified portion
-    $name =~ s/-/_/g;
-
-    if ($CHECK_CONFIG_KEYS->{$name}) {
-        return $np->opts->{$name} if defined($np->opts->{$name});
-        if ($self->{config}) {
-            return $self->{config}->{$CHECK_CONFIG_KEYS->{$name}};
-        } else {
-            return undef;
-        }
-    } else {
-        $np->nagios_die("No config attribute \"" . $name . "\" known");
-    }
-}
-
 sub _check_threshhold {
     my $self = shift;
     my $value = shift;
@@ -555,9 +517,73 @@ sub _format_char {
 }
 
 
+my $CHECK_CONFIG_KEYS = {
+                         "critical" => "critical",
+                         "warning" => "warning",
+                         "mbean" => "mbean",
+                         "attribute" => "attribute",
+                         "operation" => "operation",
+                         "alias" => "alias",        
+                         "path" => "path",
+                         "delta" => "delta",
+                         "name" => "name",
+                         "base" => "base",
+                         "unit" => "unit",
+                         "numeric" => "numeric",
+                         "string" => "string",
+                         "label" => "label",
+                         # New:
+                         "value" => "value",
+                        };
+
+
+# Get the proper configuration values
+sub AUTOLOAD {
+    my $self = shift;
+    my $np = $self->{np};
+    my $name = $AUTOLOAD;
+    $name =~ s/.*://;   # strip fully-qualified portion
+    $name =~ s/-/_/g;
+
+    if ($CHECK_CONFIG_KEYS->{$name}) {
+        return $np->opts->{$name} if defined($np->opts->{$name});
+        if ($self->{config}) {
+            return $self->{config}->{$CHECK_CONFIG_KEYS->{$name}};
+        } else {
+            return undef;
+        }
+    } else {
+        $np->nagios_die("No config attribute \"" . $name . "\" known");
+    }
+}
+
+
 # To keep autoload happy
 sub DESTROY {
 
 }
+
+=head1 LICENSE
+
+This file is part of jmx4perl.
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
 
 1;
