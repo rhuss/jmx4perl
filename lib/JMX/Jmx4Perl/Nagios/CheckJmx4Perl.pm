@@ -41,9 +41,7 @@ objects from command line arguments and optionally from a configuration file.
 
 =over
 
-=cut
-
-=item $JMX::Jmx4Perl::Nagios::CheckJmx4Perl()
+=item $check = new $JMX::Jmx4Perl::Nagios::CheckJmx4Perl()
 
 Set up a object used for a single check. It will parse the command line
 arguments and any configuation file given.
@@ -553,6 +551,8 @@ sub AUTOLOAD {
 sub DESTROY {
 
 }
+
+=back 
 
 =head1 LICENSE
 

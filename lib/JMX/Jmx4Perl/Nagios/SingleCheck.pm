@@ -19,6 +19,21 @@ our $AUTOLOAD;
 
 JMX::Jmx4Perl::Nagios::SingleCheck - A single nagios check
 
+This is an package used internally by
+L<JMX::Jmx4Perl::Nagios::CheckJmx4Perl>. It encapsulates the configuration for
+single checks, which can be combined to a bulk JMX-Request so only a single
+server turnaround is used to obtain multiple checks results at once.
+
+=head1 METHODS
+
+=over
+
+=item $single_check = new $JMX::Jmx4Perl::Nagios::SingleCheck($nagios_plugin,$check_config)
+
+Construct a new single check from a given L<Nagios::Plugin> object
+C<$nagios_plugin> and a parsed check configuration $check_config, which is a
+hash. 
+
 =cut
 
 sub new { 
@@ -32,6 +47,17 @@ sub new {
     bless $self,(ref($class) || $class);
     return $self;
 }
+
+=item $requests = $single_check->get_requests($jmx,$args)
+
+Called to obtain an arrayref of L<JMX::Jmx4Perl::Request> objects which should
+be send to the server agent. C<$jmx> ist the L<JMX::Jmx4Perl> agent, C<$args>
+are additonal arguments used for exec-operations,
+
+Multiple request object are returned e.g. if a relative check has to be
+performed in order to get the base value as well.
+
+=cut
 
 sub get_requests {
     my $self = shift;
@@ -73,6 +99,22 @@ sub get_requests {
     
     return \@requests;
 }
+
+=item $single_check->exract_responses($responses,$requests,$target)
+
+Extract L<JMX::Jmx4Perl::Response> objects and add the deducted results to 
+the nagios plugin (which was given at construction time).
+
+C<$responses> is an arrayref to the returned responses, C<$requests> is an
+arrayref to the original requests. Any response consumed from C<$requests>
+should be removed from the array, as well as the corresponding request.
+The requests/responses for this single request are always a the beginning of 
+the arrays.
+
+C<$target> is an optional target configuration if the request was used in
+target proxy mode.
+
+=cut
 
 sub extract_responses {
     my $self = shift;    
@@ -562,6 +604,8 @@ sub AUTOLOAD {
 sub DESTROY {
 
 }
+
+=back
 
 =head1 LICENSE
 
