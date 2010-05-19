@@ -284,23 +284,23 @@ sub _resolve_check_config {
     # in $self->{args})
     my $args = $check->{args} && @{$check->{args}} ? $check->{args} : shift;
     my $np = $self->{np};
-
     if ($check->{use}) {
         # Resolve parents
         my $parents = ref($check->{use}) eq "ARRAY" ? $check->{use} : [ $check->{use} ];
         my $parent_merged = {};
         for my $p (@$parents) {
             my ($p_name,$p_args) = $self->_parse_check_ref($p);
-            my $p_check = $config->{check}->{$p_name};
+            # Clone it to avoid side effects when replacing checks inline
+            my $p_check = { %{$config->{check}->{$p_name}} };
             $np->nagios_die("Unknown parent check '" . $p_name . "' for check '" . 
                             ($check->{key} ? $check->{key} : $check->{name}) . "'") 
               unless $p_check;
             $p_check->{key} = $p_name;
             $self->_resolve_check_config($p_check,$config,$p_args);
+
             #$self->_replace_args($p_check,$config,$p_args);
             $parent_merged->{$_} = $p_check->{$_} for keys %$p_check;
         }
-
         # Replace inherited values
         for my $k (keys %$parent_merged) {
             my $parent_val = $parent_merged->{$k} || "";
