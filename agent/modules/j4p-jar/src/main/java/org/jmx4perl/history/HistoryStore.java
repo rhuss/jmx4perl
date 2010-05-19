@@ -144,7 +144,7 @@ public class HistoryStore implements Serializable {
 
         JmxRequest.Type type  = pJmxReq.getType();
         if (type == EXEC || type == WRITE) {
-            HistoryEntry entry = getEntry(new HistoryKey(pJmxReq));
+            HistoryEntry entry = historyStore.get(new HistoryKey(pJmxReq));
             if (entry != null) {
                 synchronized(entry) {
                     // A history data to json object for the response
@@ -217,8 +217,7 @@ public class HistoryStore implements Serializable {
         for (Map.Entry<String,Object> attrEntry : pAttributesMap.entrySet()) {
             String attrName = attrEntry.getKey();
             Object value = attrEntry.getValue();
-            HistoryKey key =
-                    null;
+            HistoryKey key;
             try {
                 key = new HistoryKey(pBeanName,attrName,null /* No path support for complex read handling */,
                                      pJmxReq.getTargetConfigUrl());
@@ -238,7 +237,7 @@ public class HistoryStore implements Serializable {
 
     private void addAttributeFromSingleValue(JSONObject pHistMap, String pAttrName, HistoryKey pKey,
                                              Object pValue, long pTimestamp) {
-        HistoryEntry entry = getEntry(pKey);
+        HistoryEntry entry = getEntry(pKey,pValue,pTimestamp);
         if (entry != null) {
             synchronized (entry) {
                 pHistMap.put(pAttrName,entry.jsonifyValues());
@@ -247,7 +246,7 @@ public class HistoryStore implements Serializable {
         }
     }
 
-    private HistoryEntry getEntry(HistoryKey pKey) {
+    private HistoryEntry getEntry(HistoryKey pKey,Object pValue,long pTimestamp) {
         HistoryEntry entry = historyStore.get(pKey);
         if (entry != null) {
             return entry;
@@ -256,6 +255,7 @@ public class HistoryStore implements Serializable {
         for (HistoryKey key : patterns.keySet()) {
             if (key.matches(pKey)) {
                 entry = new HistoryEntry(patterns.get(key));
+                entry.add(pValue,pTimestamp);
                 historyStore.put(pKey,entry);
                 return entry;
             }

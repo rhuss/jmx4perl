@@ -32,9 +32,6 @@ j4psh:
 * Alias support
 * MBean Description for 'list' command
 
-
-* Bug HistoryHandler: On first request, returns an empty history value.
-
 check_jmx4perl:
 
 * Multi-Line output optimized in check_multi format (i.e. with a
