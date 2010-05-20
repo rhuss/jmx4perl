@@ -148,4 +148,17 @@ public class HistoryKey implements Serializable {
         result = 31 * result + (target != null ? target.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("HistoryKey");
+        sb.append("{type='").append(type).append('\'');
+        sb.append(", mBean=").append(mBean);
+        sb.append(", secondary='").append(secondary).append('\'');
+        sb.append(", path='").append(path).append('\'');
+        sb.append(", target='").append(target).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

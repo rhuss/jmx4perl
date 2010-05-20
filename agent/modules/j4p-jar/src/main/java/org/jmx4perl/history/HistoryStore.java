@@ -1,5 +1,6 @@
 package org.jmx4perl.history;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import org.jmx4perl.JmxRequest;
@@ -206,7 +207,7 @@ public class HistoryStore implements Serializable {
             addAttributeFromSingleValue(pJson,
                                         "history",
                                         new HistoryKey(pJmxReq),
-                                        pJson.get("value"),
+                                        ((Map) pJson.get("value")).get(pJmxReq.getAttributeName()),
                                         pTimestamp);
         }
     }

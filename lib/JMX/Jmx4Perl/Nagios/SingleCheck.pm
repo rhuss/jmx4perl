@@ -218,8 +218,6 @@ sub _delta_value {
         }
         my $old_value = $hist_val->[0]->{value};
         my $old_time = $hist_val->[0]->{timestamp};
-        #print Dumper($req);
-        #print Dumper($resp);
         my $value = $self->_extract_value($req,$resp);
         if ($delta) {
             # Time average

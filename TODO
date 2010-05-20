@@ -31,6 +31,9 @@ j4psh:
 * Plugin architecture
 * Alias support
 * MBean Description for 'list' command
+* Glassfish, cat in servlet:
+[localhost:8080 com.sun.appserv:J2EEApplication=null, ...] : cat *
+Error: java.lang.ClassCastException: org.json.simple.JSONArray cannot be cast to java.lang.String at /opt/local/lib/perl5/site_perl/5.8.9/JMX/Jmx4Perl/J4psh/Command/MBean.pm line 155.
 
 check_jmx4perl:
 
@@ -38,3 +41,5 @@ check_jmx4perl:
   summary line) so that it can be used for pnp as well
 * Sample configuration for Tomcat
 * Check EXEC checks
+
+
