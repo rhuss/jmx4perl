@@ -68,6 +68,7 @@ agent/modules/j4p-jar/src/test/java/org/jmx4perl/converter/StringToObjectConvert
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/handler/ReadHandlerTest.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/history/HistoryStoreTest.java
 agent/modules/j4p-jar/src/test/java/org/jmx4perl/JmxRequestBuilder.java
+agent/modules/j4p-jar/src/test/java/org/jmx4perl/JmxRequestTest.java
 agent/modules/j4p-jar/src/test/resources/access-sample1.xml
 agent/modules/j4p-jar/src/test/resources/access-sample2.xml
 agent/modules/j4p-jar/src/test/resources/access-sample3.xml
@@ -84,6 +85,8 @@ agent/modules/j4p-jvm-jdk6/src/test/java/org/jmx4perl/jvmagent/jdk6/TestMain.jav
 agent/modules/j4p-mule/pom.xml
 agent/modules/j4p-mule/src/main/assembly/agent.xml
 agent/modules/j4p-mule/src/main/java/org/jmx4perl/mule/J4pAgent.java
+agent/modules/j4p-osgi-bundle/pom.xml
+agent/modules/j4p-osgi-bundle/src/main/java/org/jmx4perl/osgi/bundle/Activator.java
 agent/modules/j4p-osgi/pom.xml
 agent/modules/j4p-osgi/src/main/java/org/jmx4perl/osgi/J4pActivator.java
 agent/modules/j4p-osgi/src/main/java/org/jmx4perl/osgi/J4pAuthenticatedHttpContext.java
@@ -104,6 +107,7 @@ it/t/50_check_jmx4perl.t
 it/t/60_bulk_request.t
 it/t/70_overloaded_method.t
 it/t/80_read.t
+it/t/85_path_escaping.t
 it/t/90_search.t
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
