@@ -52,9 +52,6 @@ public class J4pActivator implements BundleActivator {
     // Context associated with this activator
     private BundleContext bundleContext;
 
-    // Listener used for monitoring HttpService
-    private ServiceListener httpServiceListener;
-
     // Tracker to be used for the LogService
     private ServiceTracker logTracker;
 

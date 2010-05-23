@@ -38,7 +38,7 @@ class J4pAuthenticatedHttpContext extends J4pHttpContext {
         StringTokenizer stok = new StringTokenizer(pAuth);
         String method = stok.nextToken();
         if (!"basic".equalsIgnoreCase(method)) {
-            throw new IllegalArgumentException("Only BasiAuthentication is supported");
+            throw new IllegalArgumentException("Only BasicAuthentication is supported");
         }
         String b64Auth = stok.nextToken();
         String auth = new String(decode(b64Auth));

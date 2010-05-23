@@ -18,6 +18,7 @@
     <module>modules/j4p-jsr160</module>
     <module>modules/j4p-mule</module>
     <module>modules/j4p-osgi</module>
+    <module>modules/j4p-osgi-bundle</module>
   </modules>
 
   <build>

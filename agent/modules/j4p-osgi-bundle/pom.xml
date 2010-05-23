@@ -3,11 +3,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
-  <artifactId>j4p-osgi</artifactId>
+  <artifactId>j4p-osgi-bundle</artifactId>
   <version>0.65.0</version>
   <packaging>bundle</packaging>
-  <name>j4p-osgi</name>
-  <description>j4p-osgi - OSGi Bundle</description>
+  <name>j4p-osgi-bundle</name>
+  <description>j4p-osgi-bundle - OSGi Bundle</description>
 
   <parent>
     <groupId>org.jmx4perl</groupId>
@@ -19,7 +19,7 @@
   <dependencies>
     <dependency>
       <groupId>org.jmx4perl</groupId>
-      <artifactId>j4p</artifactId>
+      <artifactId>j4p-osgi</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -42,10 +42,18 @@
       <version>4.2.0</version>
       <scope>provided</scope>
     </dependency>
+
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
       <version>4.2.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.ops4j.pax.web</groupId>
+      <artifactId>pax-web-jetty-bundle</artifactId>
+      <version>0.7.0</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -59,21 +67,31 @@
 
         <configuration>
           <instructions>
-            <Bundle-SymbolicName>org.jmx4perl.osgi</Bundle-SymbolicName>
-            <Bundle-Description>Jmx4Perl agent exposing JMX via HTTP/JSON</Bundle-Description>
+            <Bundle-SymbolicName>org.jmx4perl.osgi.bundle</Bundle-SymbolicName>
+            <Bundle-Description>Jmx4Perl agent exposing JMX via HTTP/JSON (including an embedded Jetty)</Bundle-Description>
             <Bundle-Version>${project.version}</Bundle-Version>
-            <Bundle-Activator>org.jmx4perl.osgi.J4pActivator</Bundle-Activator>
-            <Bundle-Name>Jmx4Perl Agent</Bundle-Name>
+            <Bundle-Activator>org.jmx4perl.osgi.bundle.Activator</Bundle-Activator>
+            <Bundle-Name>Jmx4Perl Agent with Jetty</Bundle-Name>
             <Embed-Directory>lib</Embed-Directory>
-            <Embed-Dependency>json-simple;inline=false,j4p;inline=true</Embed-Dependency>
+            <Embed-Dependency>
+              j4p-osgi;inline=false,
+              <!-- Must be included again to be visible in the classpath -->
+              json-simple;inline=false,
+              pax-web-jetty-bundle;inline=false
+            </Embed-Dependency>
             <!-- Needed because we export an embedded package only -->
             <_exportcontents>org.jmx4perl;version="${project.version}"</_exportcontents>
             <Import-Package>
               !org.jmx4perl,
+              <!-- Included internally -->
+              !org.json.simple.*,
+              !org.ops4j.pax.web.*,
+              !org.slf4j,
               org.osgi.framework;version="[1.0.0,2.0.0)",
               org.osgi.service.http;version="[1.0.0,2.0.0)",
               org.osgi.service.log;version="[1.0.0,2.0.0)",
               org.osgi.util.tracker;version="[1.0.0,2.0.0)",
+              org.osgi.service.cm;version="[1.0.0,2.0.0)",
               *
             </Import-Package>
           </instructions>
