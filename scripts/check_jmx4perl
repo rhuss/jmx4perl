@@ -58,8 +58,120 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --critical 10000000 \
                 --target service:jmx:rmi:///jndi/rmi://bhut:9999/jmxrmi
   
+ # Use predefined checks in a configuration file with a server alias
+ # Server alias is 'webshop', check is about requests per minute for the 
+ # servlet 'socks_shop'
+ check_jmx4perl --config /etc/nagios/check_jmx4perl/tomcat.cfg
+                --server webshop \
+                --check tc_servlet_requests \
+                --critical 1000 \
+                socks_shop
 
 =head1 DESCRIPTION
+
+Nagios plugin for monitoring Java applications which expose JMX data via a
+jmx4perl agent.
+
+This plugin can be used in two ways: First, all required parameters for
+identifying the JMX information can be given via the command line. Second, a
+configuration file can be used to define one or more nagios checks. This is the
+recommend mode, since it allows for more advanced features not available when
+using the command line alone. Each command line argument has an equivalent
+configuration option.
+
+Before we describe the w
+
+=head1 BASICS
+
+=head1 MBeans
+
+JMX's central entity is an E<MBean>. An MBean exposes management information in
+a well defined way. Each MBean has a unique name with the following structure:
+
+  domain:attribute1=value1,attribute2=value2, .....
+
+E.g.
+
+  java.lang:type=Memory
+
+Before you start monitoring, you need to know the MBean name. There are various
+ways to identify the MBean:
+
+=over 
+
+=item * 
+
+Use C<jmx4perl --list> to list all registered MBeans. In addition C<jmx4perl
+--attributes> dumps out all known MBean attributes along with their values. 
+(Be careful, the output can be quite large)
+
+=item *
+
+Use C<j4psh> for interactively exploring the JMX namespace.
+
+=item *
+
+Use an alias. An alias is a shortcut for an MBean name, predefined by
+L<JMX::Jmx4Perl>. All known aliases can be shown with C<jmx4perl>.  Since each
+platform can have slightly different MBean names for the same information, this
+is extra level of indirection might help in identifying MBeans. See below for
+more about aliases.
+
+=item *
+
+Use a predefined check. C<check_jmx4perl> comes with quite some checks
+predefined in various configuration files. These are ready for use out of the
+box. 
+
+=item *
+
+As your Java application development team for application specific MBean names. 
+
+=back.
+
+
+=head2 Operational Modes
+
+C<check_jmx4perl> can obtain the information to monitor from two sources:
+Either MBean I<attributes> or as return value from JMX I<operations>. 
+
+=head3 Pathes
+
+
+=head3 Attributes
+
+Attribute are values which can be obtained from MBeans. They can be of a simple
+data type like a string or an integer, but they can be arbitrarly complex (e.g
+an arbitrary Java type). Simple data types can be used directly for threshold
+checking. For more complex types, C<check_jmx4perl> provides the concept of so
+called I<pathes> for specifying an inner attribute of a more complex attribute
+or operation return value. A path is build of parts, separated by slashes
+(/). It's simplified variant of an XPath expression for accessing parts of an
+XML document.Each part points to an level of the JSON serialized object.
+
+
+
+-- Values
+-- 
+- Operations
+
+=head2 Aliases
+
+=head2 Relative Checks
+
+=head2 Incremental Checks
+
+=head2 Output Tuning
+
+=head2 Proxy mode
+ 
+=head1 COMMAND LINE 
+
+=head2 Command Line Options
+
+The pure command line interface (without a configuration file) is mostly suited
+for 
+
 
 Command for providing Nagios conmpliant output for JMX response fetched via
 L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
@@ -170,6 +282,18 @@ information from there. Additionally C<--target-user> and C<--target-password>
 can be used to provide credentials if the target server is secure with user-
 and password name. Please see the manual for more information about the proxy
 mode and its limitations.
+
+=head1 CONFIGURATION
+
+=head2 Multichecks
+
+=head2 Parent checks
+
+=head2 Parameterized checks
+
+=head2 Predefined checks
+
+
 
 =cut
 
