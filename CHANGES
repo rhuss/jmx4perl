@@ -7,6 +7,9 @@
     + Predefined checks for certain environments (as sample configuration files)
   - Added '--value' as a shortcut for --mbean/--attribute/--value  
   - Better documentation for check_jmx4perl                                                                                 
+  - <Server> sections are now named blocks, taking the server name as block 
+    name (similar to <Check>). The old syntax with an "Name" argument is 
+    still support but must not mixed with the new syntax.
 
 0.67
   - Path elements containing '/' can now be escaped with '\/'

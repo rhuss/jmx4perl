@@ -99,8 +99,8 @@ sub new {
         die "Invalid argument ",$file_or_hash;
     }
     if ($config) {
-        $self->{config} = &_prepare_server_hash($config);
-        $self->{servers} = &_get_configured_servers($config);
+        $self->{server_config} = &_extract_servers($config);
+        $self->{servers} = [ values %{$self->{server_config}} ];
         map { $self->{$_} = $config->{$_ } } grep { $_ ne "server" } keys %$config;
         #print Dumper($self);
     }
@@ -133,7 +133,7 @@ if no such configuration exist.
 sub get_server_config {
     my $self = shift;
     my $name = shift || die "No server name given to reference to get config for";
-    return $self->{config} ? $self->{config}->{$name} : undef;
+    return $self->{server_config} ? $self->{server_config}->{$name} : undef;
 }
 
 =item $servers = $config->get_servers 
@@ -147,24 +147,21 @@ sub get_servers {
     return $self->{servers} || [];
 }
 
-sub _prepare_server_hash {
-    my $config = shift;
-    my $servers = &_get_configured_servers($config);
-    my $ret = {};
-    for my $server (@$servers) {
-        $ret->{$server->{name}} = $server;
-    };
-    return $ret;
-}
-
-sub _get_configured_servers {
+sub _extract_servers {
     my $config = shift;
     my $servers = $config->{server};
-    return [] unless $servers;
-    if (ref($servers) eq "HASH") {
-        return [ $servers ];
-    } else {
+    my $ret = {};
+    return $ret unless $servers;
+    if (ref($servers) eq "ARRAY") {
+        for my $s (@$servers) {
+            die "No name given for server config " . Dumper($s) . "\n" unless $s->{name};
+            $ret->{$s->{name}} = $s;
+        }
+        return $ret;
+    } elsif (ref($servers) eq "HASH") {
         return $servers;
+    } else {
+        die "Invalid configuration type ",ref($servers),"\n";        
     }
 }
 
