@@ -207,10 +207,9 @@ public class HistoryStore implements Serializable {
             addAttributeFromSingleValue(pJson,
                                         "history",
                                         new HistoryKey(pJmxReq),
-//                                        ((Map) pJson.get("value")).get(pJmxReq.getAttributeName()),
                                         pJson.get("value"),
                                         pTimestamp);
-        } 
+        }
     }
 
     private JSONObject addAttributesFromComplexValue(JmxRequest pJmxReq,Map<String,Object> pAttributesMap,
