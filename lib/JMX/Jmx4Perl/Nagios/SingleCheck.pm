@@ -185,7 +185,18 @@ sub _extract_value {
     if ($req->get('type') eq READ && $req->is_mbean_pattern) {
         return $self->_extract_value_from_pattern_request($resp->value);
     } else {
-        return $resp->value;
+        return $self->_null_safe_value($resp->value);
+    }
+}
+
+sub _null_safe_value {
+    my $self = shift;
+    my $value = shift;
+    if (defined($value)) {
+        return $value;
+    } else {
+        # Our null value
+        return $self->null || "null";
     }
 }
 
@@ -199,7 +210,7 @@ sub _extract_value_from_pattern_request {
     my $attr_val = (values(%$val))[0];
     $np->nagios_die("Invalid response for pattern match: " . Dumper($attr_val)) unless ref($attr_val) eq "HASH";
     $np->nagios_die("Only a single attribute can be used. Given: " . Dumper([keys %$attr_val])) if keys %$attr_val != 1;
-    return (values(%$attr_val))[0];
+    return $self->_null_safe_value((values(%$attr_val))[0]);
 }
 
 sub _delta_value {
@@ -323,11 +334,6 @@ sub _verify_response {
     my $np = $self->{np};
     if ($resp->is_error) {
         $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
-    }
-    if (!defined($resp->value)) {
-        $np->nagios_die("JMX Request " . $self->_get_name() . 
-                        " returned a null value which can't be used yet. " . 
-                        "Please let me know, whether you need such check for a null value");
     }
     if (!$req->is_mbean_pattern && ref($resp->value)) { 
         $np->nagios_die("Response value is a " . ref($resp->value) .
@@ -530,7 +536,7 @@ sub _format_label {
                 $ret .= sprintf $format . "f",$args->{value};
             } elsif ($what eq "v") {
                 if ($args->{mode} ne "numeric") {
-                    $ret .= sprintf $format . "d",$args->{value};
+                    $ret .= sprintf $format . "s",$args->{value};
                 } else {
                     $ret .= sprintf $format . &_format_char($args->{value}),$args->{value};
                 }
@@ -574,6 +580,7 @@ my $CHECK_CONFIG_KEYS = {
                          "label" => "label",
                          # New:
                          "value" => "value",
+                         "null" => "null"
                         };
 
 

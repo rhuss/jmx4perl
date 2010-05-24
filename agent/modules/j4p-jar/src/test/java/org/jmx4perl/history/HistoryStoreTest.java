@@ -102,7 +102,7 @@ public class HistoryStoreTest {
                         .build();
         store.configure(new HistoryKey(req),3);
         /** 3 fresh updates yield 2 history entries returned (and 3 stored) */
-        assertEquals("2 history entries",2,updateNTimesAsList(req,3).size());
+        assertEquals("2 history entries",2,updateNTimesAsList(req,3,"42").size());
 
     }
 

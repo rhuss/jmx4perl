@@ -42,5 +42,11 @@ is($ret,2,"String: CRITICAL");
 
 # Check for a null value
 ($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=attribute --attribute Null --critical null");
-is($ret,3,"null: UNKNOWN");
+is($ret,2,"null: CRITICAL");
+($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=attribute --attribute Null --critical null --null bla");
+is($ret,0,"null: OK");
+($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=attribute --attribute Null --critical bla --null bla");
+is($ret,2,"null: CRITICAL");
+($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=attribute --attribute Null --critical !null --string");
+is($ret,0,"null: OK");
 

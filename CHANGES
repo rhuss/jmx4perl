@@ -5,6 +5,7 @@
     + Multichecks (one HTTP request, many JMX requests)
     + Check-Inheritance
     + Predefined checks for certain environments (as sample configuration files)
+    + Added null value check, can be tuned with --null
   - Added '--value' as a shortcut for --mbean/--attribute/--value  
   - Better documentation for check_jmx4perl                                                                                 
   - <Server> sections are now named blocks, taking the server name as block 

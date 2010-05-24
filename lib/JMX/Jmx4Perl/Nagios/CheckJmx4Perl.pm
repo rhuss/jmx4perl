@@ -427,6 +427,10 @@ sub _create_nagios_plugin {
                  help => "Inner path for extracting a single value from a complex attribute or return value (e.g. \"used\")",
                 );
     $np->add_arg(
+                 spec => "null=s",
+                 help => "Value which should be used in case of a null return value of an operation or attribute. Is \"null\" by default"
+                );
+    $np->add_arg(
                  spec => "string",
                  help => "Force string comparison for critical and warning checks"
                 );

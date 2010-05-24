@@ -190,7 +190,7 @@ public class JmxRequest {
         if (attributeNames == null) {
             return null;
         }
-        if (attributeNames.size() != 1) {
+        if (!isSingleAttribute()) {
             throw new IllegalStateException("Request contains more than one attribute (attrs = " +
                     "" + attributeNames + "). Use getAttributeNames() instead.");
         }
@@ -295,6 +295,11 @@ public class JmxRequest {
 
     void setAttributeNames(List<String> pAttributeNames) {
         attributeNames = pAttributeNames;
+        if (attributeNames != null && pAttributeNames.size() > 1) {
+            singleAttribute = false;
+        } else {
+            singleAttribute = true;
+        }
     }
 
     public boolean isSingleAttribute() {

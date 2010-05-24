@@ -189,7 +189,7 @@ public class HistoryStore implements Serializable {
             if (history.size() > 0) {
                 pJson.put("history",history);
             }
-        } else if (attributeNames != null && attributeNames.size() > 1) {
+        } else if (!pJmxReq.isSingleAttribute() || pJmxReq.getAttributeName() == null) {
             // Multiple attributes, but a single bean.
             // Value has the following structure:
             // attribute_key -> attribute_value
@@ -201,15 +201,16 @@ public class HistoryStore implements Serializable {
             if (history.size() > 0) {
                 pJson.put("history",history);
             }
-        } else if (pJmxReq.getAttributeName() != null) {
+        } else {
             // Single attribute, single bean. Value is the attribute_value
             // itself.
             addAttributeFromSingleValue(pJson,
                                         "history",
                                         new HistoryKey(pJmxReq),
-                                        ((Map) pJson.get("value")).get(pJmxReq.getAttributeName()),
+//                                        ((Map) pJson.get("value")).get(pJmxReq.getAttributeName()),
+                                        pJson.get("value"),
                                         pTimestamp);
-        }
+        } 
     }
 
     private JSONObject addAttributesFromComplexValue(JmxRequest pJmxReq,Map<String,Object> pAttributesMap,
