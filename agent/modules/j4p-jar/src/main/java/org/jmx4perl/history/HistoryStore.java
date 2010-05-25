@@ -169,7 +169,6 @@ public class HistoryStore implements Serializable {
     // return multiple values with a single request
     private void updateReadHistory(JmxRequest pJmxReq, JSONObject pJson, long pTimestamp)  {
         ObjectName name = pJmxReq.getObjectName();
-        List<String> attributeNames = pJmxReq.getAttributeNames();
         if (name.isPattern()) {
             // We have a pattern and hence a value structure
             // of bean -> attribute_key -> attribute_value
