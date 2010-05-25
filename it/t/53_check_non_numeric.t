@@ -50,3 +50,9 @@ is($ret,2,"null: CRITICAL");
 ($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=attribute --attribute Null --critical !null --string");
 is($ret,0,"null: OK");
 
+# Check for a string array value
+($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=attribute --attribute StringArray --string --critical qr/Stopped/");
+is($ret,2,"String Array: CRITICAL");
+ok($content =~ /Stopped/,"Matches Threshhold");
+
+

@@ -193,7 +193,16 @@ sub _null_safe_value {
     my $self = shift;
     my $value = shift;
     if (defined($value)) {
-        return $value;
+        if (ref($value) && $self->string) {
+            # We can deal with complex values withing string comparison
+            if (ref($value) eq "ARRAY") {
+                return join ",",@{$value};
+            } else {
+                return Dumper($value);
+            }
+        } else {
+            return $value;
+        }
     } else {
         # Our null value
         return $self->null || "null";
@@ -335,7 +344,7 @@ sub _verify_response {
     if ($resp->is_error) {
         $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
     }
-    if (!$req->is_mbean_pattern && ref($resp->value)) { 
+    if (!$req->is_mbean_pattern && (ref($resp->value) && !$self->string)) { 
         $np->nagios_die("Response value is a " . ref($resp->value) .
                         ", not a plain value. Did you forget a --path parameter ?". " Value: " . 
                         Dumper($resp->value));
