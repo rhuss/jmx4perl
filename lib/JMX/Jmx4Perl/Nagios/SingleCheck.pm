@@ -205,7 +205,7 @@ sub _null_safe_value {
         }
     } else {
         # Our null value
-        return $self->null || "null";
+        return defined($self->null) ? $self->null : "null";
     }
 }
 
@@ -343,6 +343,9 @@ sub _verify_response {
     my $np = $self->{np};
     if ($resp->is_error) {
         $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
+    }
+    if (!$self->string && !defined($resp->value) && (!defined($self->null) || !looks_like_number($self->null))) {
+        $np->nagios_die("Undefined (null) Response values can only be used for string checks (--string)");
     }
     if (!$req->is_mbean_pattern && (ref($resp->value) && !$self->string)) { 
         $np->nagios_die("Response value is a " . ref($resp->value) .
