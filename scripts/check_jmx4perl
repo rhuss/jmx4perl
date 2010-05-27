@@ -133,27 +133,81 @@ As your Java application development team for application specific MBean names.
 =head2 Operational Modes
 
 C<check_jmx4perl> can obtain the information to monitor from two sources:
-Either MBean I<attributes> or as return value from JMX I<operations>. 
+Either as MBean I<attributes> or as return value from JMX I<operations>.  Since
+JMX values can be any Java Object, it is important to understand, how
+C<check_jmx4perl> (or JMX::Jmx4Perl in general) handles this situation.
+
+Simple data types can be used directly in threshhold checking. I.e. the
+following data types can be used directly
+
+=over
+
+=item Integer
+
+=item Long
+
+=item Float
+
+=item Double
+
+=item Boolean
+
+=item String
+
+=back
+
+C<String> and C<Boolean> can be used in I<string> checks only, whereas the others
+can be used in both, I<numeric> and I<string> checks.
+
 
 =head3 Pathes
 
+For more complex types, C<check_jmx4perl> provides the concept of so called
+I<pathes> for specifying an inner attribute of a more complex attribute or
+operation return value. A path is build of parts, separated by slashes
+(/). It's simplified variant of an XPath expression for accessing parts of an
+XML document. Each part points to an level of the JSON serialized object. 
 
+For example, the MBean C<java.lang:type=Memory> exposes an attribute called
+C<HeapMemoryUsage>. This attribute is a combound data type, which contains
+multiple entries. Looking with C<jmx4perl> at this attribute
+
+ $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
+ $VAR1 = {
+           'committed' => '85000192',
+           'used' => '8135440',
+           'max' => '129957888',
+           'init' => '0'
+         };
+
+one sees, that there are 4 values coming with the reponse. With a path C<used>
+one can directly pick the used heap memory usage (8135440 bytes in this case)
+which can be used in a threshold check. This path can be used with
+C<check_jmx4perl> like 
+
+ $ check_jmx4perl --url http://localhost:8080/j4p \ 
+                  --mbean java.lang:type=Memory \ 
+                  --attribute HeapMemoryUsage \
+                  --path used \
+                  --critical 100000000
+ OK - [java.lang:type=Memory,HeapMemoryUsage,used] : Value 10136056 in range | ...
+1
 =head3 Attributes
 
 Attribute are values which can be obtained from MBeans. They can be of a simple
 data type like a string or an integer, but they can be arbitrarly complex (e.g
 an arbitrary Java type). Simple data types can be used directly for threshold
-checking. For more complex types, C<check_jmx4perl> provides the concept of so
-called I<pathes> for specifying an inner attribute of a more complex attribute
-or operation return value. A path is build of parts, separated by slashes
-(/). It's simplified variant of an XPath expression for accessing parts of an
-XML document.Each part points to an level of the JSON serialized object.
+checking where the value is compared against a critical or warning threshold
+directly. 
+
 
 
 
 -- Values
 -- 
-- Operations
+
+=head3 Operations
+
 
 =head2 Aliases
 
@@ -167,10 +221,13 @@ XML document.Each part points to an level of the JSON serialized object.
  
 =head1 COMMAND LINE 
 
+The pure command line interface (without a configuration file) is mostly suited
+for simple checks where the predefined defaults are suitable. For all other use
+case, a configuration file fits better. 
+
 =head2 Command Line Options
 
-The pure command line interface (without a configuration file) is mostly suited
-for 
+
 
 
 Command for providing Nagios conmpliant output for JMX response fetched via
