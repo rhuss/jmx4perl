@@ -23,9 +23,6 @@
        be called. If the section <commands> is missing completely, all
        commands are allowed -->
   <commands>
-    <command>read</command>
-    <command>write</command>
-    <command>exec</command>
     <command>list</command>
     <command>version</command>
     <command>search</command>

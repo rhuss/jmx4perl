@@ -1,22 +1,18 @@
 package org.jmx4perl.config;
 
-import org.jmx4perl.JmxRequest;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
+
+import org.jmx4perl.JmxRequest;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -50,16 +46,17 @@ import java.util.regex.Pattern;
 public class PolicyBasedRestrictor implements Restrictor {
 
     private Set<JmxRequest.Type> typeSet;
-    private Set<ObjectName> patternNameSet;
-    private Map<ObjectName,Set<String>> mBeanReadAttributes;
-    private Map<ObjectName, Set<String>> mBeanWriteAttributes;
-    private Map<ObjectName, Set<String>> mBeanOperations;
+
     private Set<String> allowedHostsSet;
     private Set<String> allowedSubnetsSet;
 
     // Simple patterns, could be mor specific
     private static final Pattern IP_PATTERN = Pattern.compile("^[\\d.]+$");
     private static final Pattern SUBNET_PATTERN = Pattern.compile("^[\\d.]+/[\\d.]+$");
+
+    // Configuration for allowed and denied MBean attributes and operations.
+    private MBeanPolicyConfig allow;
+    private MBeanPolicyConfig deny;
 
     public PolicyBasedRestrictor(InputStream pInput) {
         Exception exp = null;
@@ -89,15 +86,27 @@ public class PolicyBasedRestrictor implements Restrictor {
     }
 
     public boolean isAttributeReadAllowed(ObjectName pName, String pAttribute) {
-        return lookupMBean(mBeanReadAttributes,pName, pAttribute);
+        return check(JmxRequest.Type.READ,pName,pAttribute);
     }
 
     public boolean isAttributeWriteAllowed(ObjectName pName, String pAttribute) {
-        return lookupMBean(mBeanWriteAttributes,pName, pAttribute);
+        return check(JmxRequest.Type.WRITE,pName, pAttribute);
     }
 
     public boolean isOperationAllowed(ObjectName pName, String pOperation) {
-        return lookupMBean(mBeanOperations,pName, pOperation);
+        return check(JmxRequest.Type.EXEC,pName, pOperation);
+    }
+
+    private boolean check(JmxRequest.Type pType, ObjectName pName, String pValue) {
+        if (isTypeAllowed(pType)) {
+            // Its allowed in general, so we only need to check
+            // the denied section, whether its forbidded
+            return deny == null || !matches(deny, pType, pName, pValue);
+        } else {
+            // Its forbidden by default, so we need to check the
+            // allowed section
+            return allow != null && matches(allow, pType, pName, pValue);
+        }
     }
 
     public boolean isRemoteAccessAllowed(String ... pHostOrAddress) {
@@ -121,29 +130,20 @@ public class PolicyBasedRestrictor implements Restrictor {
 
     // ===============================================================================
     // Lookup methods
-
-    private boolean lookupMBean(Map<ObjectName, Set<String>> pMap, ObjectName pName, String pAttribute) {
-        if (pMap == null) {
+    private boolean matches(MBeanPolicyConfig pConfig, JmxRequest.Type pType, ObjectName pName, String pValue) {
+        if (pConfig == null) {
             return true;
         }
-        Set<String> attributes = pMap.get(pName);
-        if (attributes == null) {
-            ObjectName pattern = findMatchingMBeanPattern(pName);
+        Set<String> values = pConfig.getValues(pType,pName);
+        if (values == null) {
+            ObjectName pattern = pConfig.findMatchingMBeanPattern(pName);
             if (pattern != null) {
-                attributes = pMap.get(pattern);
+                values = pConfig.getValues(pType,pattern);
             }
         }
-        return attributes != null && attributes.contains(pAttribute);
+        return values != null && values.contains(pValue);
     }
 
-    private ObjectName findMatchingMBeanPattern(ObjectName pName) {
-        for (ObjectName pattern : patternNameSet) {
-            if (pattern.apply(pName)) {
-                return pattern;
-            }
-        }
-        return null;
-    }
 
 
     // ===============================================================================
@@ -171,16 +171,27 @@ public class PolicyBasedRestrictor implements Restrictor {
     }
 
     private void initMBeanSets(Document pDoc) throws MalformedObjectNameException {
-        NodeList nodes = pDoc.getElementsByTagName("mbeans");
-        if (nodes.getLength() > 0) {
-            // Build up maps only if mbeans are given to restrict
-            patternNameSet = new HashSet<ObjectName>();
-            mBeanReadAttributes = new HashMap<ObjectName, Set<String>>();
-            mBeanWriteAttributes = new HashMap<ObjectName, Set<String>>();
-            mBeanOperations = new HashMap<ObjectName, Set<String>>();
+        for (String tag : new String[] { "allow", "mbeans" }) {
+            NodeList nodes = pDoc.getElementsByTagName(tag);
+            if (nodes.getLength() > 0) {
+                // "allow" and "mbeans" are synonyms
+                if (allow == null) {
+                    allow = new MBeanPolicyConfig();
+                }
+                extractMbeanConfiguration(nodes, allow);
+            }
         }
-        for (int i = 0;i<nodes.getLength();i++) {
-            Node node = nodes.item(i);
+        NodeList nodes = pDoc.getElementsByTagName("deny");
+        if (nodes.getLength() > 0) {
+            deny = new MBeanPolicyConfig();
+            extractMbeanConfiguration(nodes,deny);
+        }
+    }
+
+    // Extract configuration and put it into a given MBeanPolicyConfig
+    private void extractMbeanConfiguration(NodeList pNodes,MBeanPolicyConfig pConfig) throws MalformedObjectNameException {
+        for (int i = 0;i< pNodes.getLength();i++) {
+            Node node = pNodes.item(i);
             if (node.getNodeType() != Node.ELEMENT_NODE) {
                 continue;
             }
@@ -217,18 +228,16 @@ public class PolicyBasedRestrictor implements Restrictor {
                         }
                     } else {
                         operations.add(param.getTextContent().trim());
-                    }
+                }
                 }
                 if (name == null) {
                     throw new IllegalStateException("No <name> given for <mbean>");
                 }
                 ObjectName oName = new ObjectName(name);
                 if (oName.isPattern()) {
-                    patternNameSet.add(oName);
+                    pConfig.addPattern(oName);
                 }
-                mBeanReadAttributes.put(oName,readAttributes);
-                mBeanWriteAttributes.put(oName,writeAttributes);
-                mBeanOperations.put(oName,operations);
+                pConfig.addValues(oName,readAttributes,writeAttributes,operations);
             }
         }
     }
@@ -282,5 +291,45 @@ public class PolicyBasedRestrictor implements Restrictor {
     }
 
 
+    // ====================================================================================================
 
+    // Class combining various maps for attributes, operations and name patterns
+    private class MBeanPolicyConfig {
+        Set<ObjectName> patterns = new HashSet<ObjectName>();
+        Map<ObjectName,Set<String>> readAttributes = new HashMap<ObjectName, Set<String>>();
+        Map<ObjectName,Set<String>> writeAttributes = new HashMap<ObjectName, Set<String>>();
+        Map<ObjectName,Set<String>> operations = new HashMap<ObjectName, Set<String>>();
+
+        public void addPattern(ObjectName pObjectName) {
+            patterns.add(pObjectName);
+        }
+
+        public void addValues(ObjectName pOName, Set<String> pReadAttributes, Set<String> pWriteAttributes, Set<String> pOperations) {
+            readAttributes.put(pOName,pReadAttributes);
+            writeAttributes.put(pOName,pWriteAttributes);
+            operations.put(pOName,pOperations);
+        }
+
+        public Set<String> getValues(JmxRequest.Type pType, ObjectName pName) {
+            if (JmxRequest.Type.READ == pType) {
+                return readAttributes.get(pName);
+            } else if (JmxRequest.Type.WRITE == pType) {
+                return writeAttributes.get(pName);
+            } else if (JmxRequest.Type.EXEC == pType) {
+                return operations.get(pName);
+            } else {
+                throw new IllegalArgumentException("Invalid type " + pType);
+            }
+        }
+
+        public ObjectName findMatchingMBeanPattern(ObjectName pName) {
+            // Check all stored patterns for a match and return the pattern if one is found
+            for (ObjectName pattern : patterns) {
+                if (pattern.apply(pName)) {
+                    return pattern;
+                }
+            }
+            return null;
+        }
+    }
 }

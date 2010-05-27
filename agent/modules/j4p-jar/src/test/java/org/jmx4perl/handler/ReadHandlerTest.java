@@ -308,7 +308,6 @@ public class ReadHandlerTest {
     @Test
     public void restrictAccess() throws Exception {
         Restrictor restrictor = createMock(Restrictor.class);
-        expect(restrictor.isTypeAllowed(READ)).andReturn(true);
         expect(restrictor.isAttributeReadAllowed(testBeanName,"attr")).andReturn(false);
         handler = new ReadHandler(restrictor);
 

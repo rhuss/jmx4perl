@@ -81,14 +81,15 @@ public abstract class JsonRequestHandler {
      */
     public Object handleRequest(MBeanServerConnection server,JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
-        checkForType();
+        checkForType(request);
         return doHandleRequest(server,request);
     }
 
     /**
      * Check whether there is a restriction on the type to apply
+     * @param pRequest
      */
-    protected void checkForType() {
+    protected void checkForType(JmxRequest pRequest) {
         if (!restrictor.isTypeAllowed(getType())) {
             throw new SecurityException("Command type " +
                     getType() + " not allowed due to policy used");
@@ -122,7 +123,7 @@ public abstract class JsonRequestHandler {
      */
     public Object handleRequest(Set<MBeanServerConnection> servers, JmxRequest request)
             throws ReflectionException, InstanceNotFoundException, MBeanException, AttributeNotFoundException, IOException {
-        checkForType();
+        checkForType(request);
         return doHandleRequest(servers,request);
     }
 

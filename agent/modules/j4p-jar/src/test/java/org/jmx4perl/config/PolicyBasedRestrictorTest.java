@@ -49,7 +49,6 @@ public class PolicyBasedRestrictorTest {
         assertFalse(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"NonHeapMemoryUsage"));
         assertTrue(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Memory"),"gc"));
         assertFalse(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Threading"),"gc"));
-        assertTrue(restrictor.isTypeAllowed(JmxRequest.Type.READ));
     }
 
     @Test
@@ -85,7 +84,6 @@ public class PolicyBasedRestrictorTest {
         assertFalse(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"NonHeapMemoryUsage"));
         assertTrue(restrictor.isAttributeReadAllowed(new ObjectName("jmx4perl:type=Config,name=Bla"),"Debug"));
         assertFalse(restrictor.isOperationAllowed(new ObjectName("jmx4perl:type=Threading"),"gc"));
-        assertTrue(restrictor.isTypeAllowed(JmxRequest.Type.READ));
     }
 
     @Test

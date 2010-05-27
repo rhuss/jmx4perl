@@ -53,12 +53,16 @@ public class ExecHandler extends JsonRequestHandler {
     }
 
     @Override
+    protected void checkForType(JmxRequest pRequest) {
+        if (!restrictor.isOperationAllowed(pRequest.getObjectName(),pRequest.getOperation())) {
+            throw new SecurityException("Operation " + pRequest.getOperation() +
+                    " forbidden for MBean " + pRequest.getObjectNameAsString());
+        }
+    }
+
+    @Override
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
-        if (!restrictor.isOperationAllowed(request.getObjectName(),request.getOperation())) {
-            throw new SecurityException("Operation " + request.getOperation() +
-                    " forbidden for MBean " + request.getObjectNameAsString());
-        }
         OperationAndParamType types = extractOperationTypes(server,request);
         Object[] params = new Object[types.paramClasses.length];
         List<String> args = request.getExtraArgs();

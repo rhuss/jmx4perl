@@ -179,4 +179,11 @@ public class ReadHandler extends JsonRequestHandler {
                     " is forbidden for MBean " + mBeanName.getCanonicalName());
         }
     }
+
+    @Override
+    // We override it here with a noop since we do a more fine grained
+    // check during processin of the request.
+    protected void checkForType(JmxRequest pRequest) {
+
+    }
 }

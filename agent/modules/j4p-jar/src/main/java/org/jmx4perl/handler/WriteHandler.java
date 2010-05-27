@@ -50,13 +50,16 @@ public class WriteHandler extends JsonRequestHandler {
     }
 
     @Override
+    protected void checkForType(JmxRequest pRequest) {
+        if (!restrictor.isAttributeWriteAllowed(pRequest.getObjectName(),pRequest.getAttributeName())) {
+            throw new SecurityException("Writing attribute " + pRequest.getAttributeName() +
+                    " forbidden for MBean " + pRequest.getObjectNameAsString());
+        }
+    }
+
+    @Override
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
-
-        if (!restrictor.isAttributeWriteAllowed(request.getObjectName(),request.getAttributeName())) {
-            throw new SecurityException("Writing attribute " + request.getAttributeName() +
-                    " forbidden for MBean " + request.getObjectNameAsString());
-        }
 
         try {
             return setAttribute(request, server);
