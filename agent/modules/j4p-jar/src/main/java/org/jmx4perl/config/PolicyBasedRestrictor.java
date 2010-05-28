@@ -60,6 +60,9 @@ public class PolicyBasedRestrictor implements Restrictor {
 
     public PolicyBasedRestrictor(InputStream pInput) {
         Exception exp = null;
+        if (pInput == null) {
+            throw new SecurityException("No policy file given");
+        }
         try {
             Document doc =
                     DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(pInput);
@@ -73,7 +76,7 @@ public class PolicyBasedRestrictor implements Restrictor {
         catch (MalformedObjectNameException e) { exp = e; }
         finally {
             if (exp != null) {
-                throw new IllegalStateException("Cannot parse policy file",exp);
+                throw new SecurityException("Cannot parse policy file: " + exp,exp);
             }
         }
     }
@@ -131,9 +134,6 @@ public class PolicyBasedRestrictor implements Restrictor {
     // ===============================================================================
     // Lookup methods
     private boolean matches(MBeanPolicyConfig pConfig, JmxRequest.Type pType, ObjectName pName, String pValue) {
-        if (pConfig == null) {
-            return true;
-        }
         Set<String> values = pConfig.getValues(pType,pName);
         if (values == null) {
             ObjectName pattern = pConfig.findMatchingMBeanPattern(pName);
@@ -141,9 +141,18 @@ public class PolicyBasedRestrictor implements Restrictor {
                 values = pConfig.getValues(pType,pattern);
             }
         }
-        return values != null && values.contains(pValue);
+        return values != null && (values.contains(pValue) || wildcardMatch(values,pValue));
     }
 
+    // Check whether a value matches patterns in pValues
+    private boolean wildcardMatch(Set<String> pValues, String pValue) {
+        for (String pattern : pValues) {
+            if (pattern.contains("*") && pValue.matches(pattern.replaceAll("\\*",".*"))) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     // ===============================================================================
@@ -216,7 +225,7 @@ public class PolicyBasedRestrictor implements Restrictor {
                     String tag = param.getNodeName();
                     if (tag.equals("name")) {
                         if (name != null) {
-                            throw new IllegalStateException("<name> given twice as MBean name");
+                            throw new SecurityException("<name> given twice as MBean name");
                         } else {
                             name = param.getTextContent().trim();
                         }
@@ -231,7 +240,7 @@ public class PolicyBasedRestrictor implements Restrictor {
                 }
                 }
                 if (name == null) {
-                    throw new IllegalStateException("No <name> given for <mbean>");
+                    throw new SecurityException("No <name> given for <mbean>");
                 }
                 ObjectName oName = new ObjectName(name);
                 if (oName.isPattern()) {
@@ -286,7 +295,7 @@ public class PolicyBasedRestrictor implements Restrictor {
                 buffer.append(",");
             }
         }
-        throw new IllegalStateException(
+        throw new SecurityException(
                 "Expected element " + buffer.toString() + " but got " + pNode.getNodeName());
     }
 
@@ -304,13 +313,13 @@ public class PolicyBasedRestrictor implements Restrictor {
             patterns.add(pObjectName);
         }
 
-        public void addValues(ObjectName pOName, Set<String> pReadAttributes, Set<String> pWriteAttributes, Set<String> pOperations) {
+        void addValues(ObjectName pOName, Set<String> pReadAttributes, Set<String> pWriteAttributes, Set<String> pOperations) {
             readAttributes.put(pOName,pReadAttributes);
             writeAttributes.put(pOName,pWriteAttributes);
             operations.put(pOName,pOperations);
         }
 
-        public Set<String> getValues(JmxRequest.Type pType, ObjectName pName) {
+        Set<String> getValues(JmxRequest.Type pType, ObjectName pName) {
             if (JmxRequest.Type.READ == pType) {
                 return readAttributes.get(pName);
             } else if (JmxRequest.Type.WRITE == pType) {
@@ -322,7 +331,7 @@ public class PolicyBasedRestrictor implements Restrictor {
             }
         }
 
-        public ObjectName findMatchingMBeanPattern(ObjectName pName) {
+        ObjectName findMatchingMBeanPattern(ObjectName pName) {
             // Check all stored patterns for a match and return the pattern if one is found
             for (ObjectName pattern : patterns) {
                 if (pattern.apply(pName)) {

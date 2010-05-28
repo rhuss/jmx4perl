@@ -9,7 +9,7 @@
   attributes and operations in detail.
 -->
 
-<j4p-restrict>
+<restrict>
 
   <!-- List of remote hosts which are allowed to access this agent. The name can be
        given as IP or FQDN. If any of the given hosts matches, access will be allowed
@@ -28,9 +28,30 @@
     -->
   </remote>
 
-  <!-- List of allowed commands. Remove the commands you dont want to
-       be called. If the section <commands> is missing completely, all
-       commands are allowed -->
+
+  <!--
+  List of allowed commands.
+
+  If this sections is present, it influence the following section.
+
+  For each command type present, the principle behaviour is allow this command for all
+  MBeans. To remove an MBean (attribute/operation), a <deny> section has to be added.
+
+  For each comman type missing, the command is disabled by default. For certain MBeans
+  it can be selectively by enabled by using an <allow> section below
+
+  Known types are:
+
+  * read
+  * write
+  * exec
+  * list
+  * version
+  * search
+
+  A missing <commands> section implies that every operation type is allowed (and can
+  be selectively controlled by a <deny> section)
+  -->
   <commands>
     <command>read</command>
     <command>write</command>
@@ -40,11 +61,13 @@
     <command>search</command>
   </commands>
 
-  <!-- Access to the following MBeans with their attributes/operations is allowed. If the
-       <mbeans> sections is present, access to any MBean not mentioned there will be
-       rejected. If the <mbeans> section is missing, access to all MBeans is allowed. MBean
-       names can be patterns, too -->
-  <mbeans>
+  <!-- For each command type missing in a given <commands> section, for certain MBeans (which
+       be a pattern, too) an command be alloed. Note that an <allow> entry e.g. for reading
+       an attribute of an certain MBean has no influence if reading is enabled globally anyway -->
+  <allow>
+    <!-- Allow for this MBean the attribute "HeapMemoryUsage" for reading and writing, the attribute
+         "Verbose" for reading only and the operation "gc". "read", "write" and/or "exec" has to be omitted
+          in the <commands> section above -->
     <mbean>
       <name>java.lang:type=Memory</name>
       <attribute>HeapMemoryUsage</attribute>
@@ -55,8 +78,27 @@
       <name>java.lang:type=Threading</name>
       <attribute>ThreadCount</attribute>
     </mbean>
-  </mbeans>
-</j4p-restrict>
+    <!-- Allow access to the j4p configuration operations, which are needed for proper check_jmx4perl
+         operation -->
+    <mbean>
+      <name>jmx4perl:type=Config</name>
+      <operation>*</operation>
+      <attribute>*</attribute>
+    </mbean>
+
+    <!-- TODO: Example with an MBean pattern -->
+  </allow>
+
+  <!-- MBean access can be restricted by a <deny> section for commands enabled in a <commands> section
+       (or when the <commands> section is missing completely in which case all commands are allowed)
+  -->
+  <deny>
+    <!-- TODO: C3P0 password hiding -->
+    <mbean>
+      <name>c3p0</name>
+    </mbean>
+  </deny>
+</restrict>
 
 
 

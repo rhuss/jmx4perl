@@ -84,7 +84,7 @@ public class BackendManager {
         objectToJsonConverter = new ObjectToJsonConverter(stringToObjectConverter,pConfig);
 
         // Access restrictor
-        restrictor = RestrictorFactory.buildRestrictor();
+        restrictor = RestrictorFactory.buildRestrictor(pLogHandler);
 
         // Log handler for putting out debug
         logHandler = pLogHandler;
