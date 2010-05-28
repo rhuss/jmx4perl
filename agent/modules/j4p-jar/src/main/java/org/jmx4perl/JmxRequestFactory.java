@@ -1,6 +1,7 @@
 package org.jmx4perl;
 
 import org.jmx4perl.JmxRequest.Type;
+import org.json.simple.JSONAware;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -145,32 +146,33 @@ final public class JmxRequestFactory {
 
 
     /**
-     * Create a list of {@link JmxRequest}s from the (POST) JSON content of an agent.
+     * Create a list of {@link JmxRequest}s from a JSON list representing jmx requests
      *
-     * @param content JSON representation of a {@link org.jmx4perl.JmxRequest}
-     * @return list with one or more requests
+     * @param pJsonRequests JSON representation of a list of {@link org.jmx4perl.JmxRequest}
+     * @return list with one or more {@link org.jmx4perl.JmxRequest}
+     * @throws javax.management.MalformedObjectNameException if the MBean name within the request is invalid
      */
-    static List<JmxRequest> createRequestsFromInputReader(Reader content) throws MalformedObjectNameException, IOException {
-        try {
-            JSONParser parser = new JSONParser();
-            Object json = parser.parse(content);
-            List<JmxRequest> ret = new ArrayList<JmxRequest>();
-            if (json instanceof List) {
-                for (Object o : (List) json) {
-                    if (!(o instanceof Map)) {
-                        throw new IllegalArgumentException("Not a request within the list for the " + content + ". Expected map, but found: " + o);
-                    }
-                    ret.add(new JmxRequest((Map) o));
-                }
-            } else if (json instanceof Map) {
-                ret.add(new JmxRequest((Map) json));
-            } else {
-                throw new IllegalArgumentException("Invalid JSON Request " + content);
+    public static List<JmxRequest> createRequestsFromJson(List pJsonRequests) throws MalformedObjectNameException {
+        List<JmxRequest> ret = new ArrayList<JmxRequest>();
+        for (Object o : pJsonRequests) {
+            if (!(o instanceof Map)) {
+                throw new IllegalArgumentException("Not a request within the list of requests " + pJsonRequests +
+                        ". Expected map, but found: " + o);
             }
-            return ret;
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Invalid JSON request " + content,e);
+            ret.add(new JmxRequest((Map) o));
         }
+        return ret;
+    }
+
+    /**
+     * Create a single {@link JmxRequest}s from a JSON map representation of a request
+     *
+     * @param pJsonRequest JSON representation of a {@link org.jmx4perl.JmxRequest}
+     * @return the created {@link org.jmx4perl.JmxRequest}
+     * @throws javax.management.MalformedObjectNameException if the MBean name within the request is invalid
+     */
+    public static JmxRequest createSingleRequestFromJson(Map<String,?> pJsonRequest) throws MalformedObjectNameException {
+        return new JmxRequest(pJsonRequest);
     }
 
     /*
