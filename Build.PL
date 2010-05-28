@@ -183,7 +183,6 @@ my $build = $class->new
                    "Config::General" => 0,
                    "Term::Size" => "0.207",
                    "Term::Clui" => 0
-                   # Add j4psh dependencies
                   },
    build_requires => {
                       "Module::Build" => "0.35",

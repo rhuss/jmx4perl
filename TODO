@@ -42,5 +42,3 @@ check_jmx4perl:
 * Multi-Line output optimized in check_multi format (i.e. with a
   summary line) so that it can be used for pnp as well
 * Sample configuration for Tomcat
-
-
