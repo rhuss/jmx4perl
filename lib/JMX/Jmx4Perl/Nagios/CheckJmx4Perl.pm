@@ -497,10 +497,6 @@ sub _create_nagios_plugin {
                  spec => "check=s",
                  help => "Name of a check configuration as defined in the configuration file"
                 );
-    $np->add_arg(
-                 spec => "verbose|v!",
-                 help => "Print out processing infos"
-                );
     $np->getopts();
     return $np;
 }

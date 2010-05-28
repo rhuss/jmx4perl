@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.67_1";
+$VERSION = "0.70_2";
 
 my $REGISTRY = {
                 # Agent based
@@ -758,6 +758,7 @@ Example:
 sub parse_name {
     my $self = shift;
     my $name = shift;
+    my $escaped = shift;
 
     return undef unless $name =~ /:/;
     my ($domain,$rest) = split(/:/,$name,2);
@@ -768,9 +769,9 @@ sub parse_name {
         my $value = undef;
         if ($rest =~ /^"/) {
             $rest =~ s/("((\\"|[^"])+)")(\s*,\s*|$)//;
-            $value = $1;
+            $value = $escaped ? $1 : $2;
             # Unescape escaped chars
-            $value =~ s/\\([:",=*?])/$1/g;
+            $value =~ s/\\([:",=*?])/$1/g unless $escaped;
         } else {
             if ($rest =~ s/([^,]+)(\s*,\s*|$)//) {
                 $value = $1;

@@ -11,8 +11,6 @@
   - <Server> sections are now named blocks, taking the server name as block 
     name (similar to <Check>). The old syntax with an "Name" argument is 
     still support but must not mixed with the new syntax.
-
-0.67
   - Path elements containing '/' can now be escaped with '\/'
   - j4p-osgi-bundle including pax-web-bundle so only a single bundle
     is needed for deploying (when no OSGi HttpService is installed)
@@ -25,7 +23,9 @@
       read the comments in j4p-access.xml.template
     + Add logging (level info) for printing out which security policy
       is used
-     
+  - Started to add a java client library
+  - j4psh beta version added
+   
 0.65 (2010-3-30)
   - A JDK 6 java agent added for exporting the j4p protocol via
     HTTP/JSON.

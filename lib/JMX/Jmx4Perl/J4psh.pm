@@ -187,7 +187,7 @@ sub _prepare_mbean_names {
             my $full_name = $domain . ":" . $name;
             
             my $e = {};
-            my ($domain_p,$props) = $j4p->parse_name($full_name);
+            my ($domain_p,$props) = $j4p->parse_name($full_name,1);
             $e->{domain} = $domain;
             $e->{props} = $props;
             $e->{info} = $list->{$domain}->{$name};

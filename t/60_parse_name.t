@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use JMX::Jmx4Perl;
 use Data::Dumper;
-use Test::More tests => 14;
+use Test::More tests => 16;
 
 my $data = 
     {
