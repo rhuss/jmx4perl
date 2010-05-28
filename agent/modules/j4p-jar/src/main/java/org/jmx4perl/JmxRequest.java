@@ -1,10 +1,11 @@
 package org.jmx4perl;
 
-import org.json.simple.JSONObject;
+import java.util.*;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import java.util.*;
+
+import org.json.simple.JSONObject;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -71,6 +72,7 @@ public class JmxRequest {
     private String objectNameS;
     private ObjectName objectName;
     private List<String> attributeNames;
+    private boolean singleAttribute = true;
     private String value;
     private List<String> extraArgs;
     private String operation;
@@ -128,10 +130,12 @@ public class JmxRequest {
             attributeNames = new ArrayList<String>();
             if (attrVal instanceof String) {
                 attributeNames.add((String) attrVal);
+                singleAttribute = true;
             } else if (attrVal instanceof Collection) {
                 for (Object val : (Collection) attrVal) {
                     attributeNames.add((String) val);
                 }
+                singleAttribute = false;
             }
         }
         s = (String) pMap.get("path");
@@ -186,7 +190,7 @@ public class JmxRequest {
         if (attributeNames == null) {
             return null;
         }
-        if (attributeNames.size() != 1) {
+        if (!isSingleAttribute()) {
             throw new IllegalStateException("Request contains more than one attribute (attrs = " +
                     "" + attributeNames + "). Use getAttributeNames() instead.");
         }
@@ -279,8 +283,6 @@ public class JmxRequest {
         }
     }
 
-
-
     void setAttributeName(String pName) {
         if (attributeNames != null) {
             attributeNames.clear();
@@ -288,12 +290,21 @@ public class JmxRequest {
             attributeNames = new ArrayList<String>(1);
         }
         attributeNames.add(pName);
+        singleAttribute = true;
     }
 
     void setAttributeNames(List<String> pAttributeNames) {
         attributeNames = pAttributeNames;
+        if (attributeNames != null && pAttributeNames.size() > 1) {
+            singleAttribute = false;
+        } else {
+            singleAttribute = true;
+        }
     }
 
+    public boolean isSingleAttribute() {
+        return singleAttribute;
+    }
 
     void setValue(String pValue) {
         value = pValue;
@@ -392,9 +403,9 @@ public class JmxRequest {
     }
 
     /**
-     * Handle an exception occured during value extraction
+     * Handle an exception happened during value extraction
      *
-     * @param pFault the fault occured
+     * @param pFault the fault raised
      * @return a replacement value if this should be used instead or the exception is rethrown if
      *         the handler doesn't handle it
      */

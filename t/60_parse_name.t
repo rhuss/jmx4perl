@@ -13,6 +13,7 @@ my $data =
      "jmx4perl:lang=java:perl,type=x" => [ "jmx4perl",{ lang => "java:perl", type => "x"} ],
      "jmx4perl:lang=\"A\\*B\",type=\",\"" => [ "jmx4perl",{ lang => "A*B", type => ","} ],
      "jmx4perl:lang=\"A\\,B\",type=x" => [ "jmx4perl",{ lang => "A,B", type => "x"} ],
+     'jmx4perl:name="\\"\\"\\"",type=escape' => [ "jmx4perl", { name => '"""', type => "escape" }],
      "bla:blub" => [ undef, undef ],
      "bla:blub=" => [ undef, undef ],
      "sDSDSADSDA" => [ undef, undef]

@@ -76,6 +76,10 @@ public class AttributeChecking implements AttributeCheckingMBean,MBeanRegistrati
         return  1f/60 * 0.01;
     }
 
+    public String[] getStringArray() {
+        return strings;
+    }
+
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
         return new ObjectName("jmx4perl.it:type=attribute");
     }

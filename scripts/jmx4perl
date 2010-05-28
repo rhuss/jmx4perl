@@ -50,9 +50,8 @@ my $result = GetOptions(\%opts,
 my $url;
 my $command;
 my @args;
-if (!@ARGV) {
-    $opts{shell} = 1;
-} elsif (lc $ARGV[0] eq "aliases") {
+
+if (lc $ARGV[0] eq "aliases") {
     &command_aliases;
     exit(0);
 } elsif (@ARGV == 1) {
@@ -72,25 +71,14 @@ if ($opts{version}) {
         exit(0);
     }
 }
-
-if ($opts{shell}) {
-    print "Interactive shell mode not supported yet.\nPlease provide a command as argument\n\n";
-    &Getopt::Long::HelpMessage();
-} else {
-    my $sub = $COMMANDS{$command} || die "No command '",$command,"' known. See --help for assistance.\n";
-
-    my $jmx_args = &_get_args_for_jmx4perl($url,\%opts);
-    my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
-    &{$sub}($jmx4perl,@args);
-}
+my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
+my $jmx_args = &_get_args_for_jmx4perl($url,\%opts);
+my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
+&{$sub}($jmx4perl,@args);
 
 =head1 SYNOPSIS
 
-  jmx4perl
-
-  jmx4perl .... --shell http://server:8080/j4p
-
-  jmx4perl .... <agent-url> ["info"] 
+  jmx4perl .... http://server:8080/j4p ["info"] 
 
   jmx4perl .... <agent-url> read <mbean-name> <attribute-name> [path] 
 
@@ -133,29 +121,24 @@ agent application. In the following C<agent-url> is the URL for accessing this
 agent. If you use a configuration file, you can use also a symbolic name as
 stored in the configuration file. See L<JMX::Jmx4Perl::Manual> for details.
 
-You can use B<jmx4perl> in two modes: Directly by providing an C<agent-url> or
-enter an interactive mode if you ommit the agent-url or provide the the
-command line options C<--shell> (I<to be done>).
-
-B<jmx4perl> servers also an example of how to use the L<JMX::Jmx4Perl>
-package. See its documentation for more details on how to embed JMX access
-into your programs.
+B<jmx4perl> serves also an example of how to use the L<JMX::Jmx4Perl> package.
+See its documentation for more details on how to embed JMX access into your
+programs. 
 
 =cut
 
 # =================================================================================================== 
-# Non-interactive commands:
+# Commands:
 
-=head1 NON-INTERACTIVE COMMANDS
+=head1 COMMANDS
 
 =head2 info
 
-If you use the non-interactive mode without any command or with C<info> as
-command, you get a description about the server, including the application
-server's product name and version. This works by autodetection and only for
-the supported application servers (see L<JMX::Jmx4Perl::Manual> for a list of
-supported products). The only argument required is the url which points to the
-deployed jmx4perl agent.
+If you use jmx4perl without any command or with C<info> as command, you get a
+description about the server, including the application server's product name
+and version. This works by autodetection and only for the supported application
+servers (see L<JMX::Jmx4Perl::Manual> for a list of supported products). The
+only argument required is the url which points to the deployed jmx4perl agent.
 
 With C<--verbose> C<info> prints the system properties and runtime arguments as
 well. 
@@ -639,34 +622,6 @@ sub _verify_url {
         die $text;
     }
 }
-
-=head1 SHELL MODE
-
-I<Some ideas for the interactive mode, which needs still to be implemented: >
-
-=over 
-
-=item * 
-
-Readline support 
-
-=item *
-
-TAB completion of MBean names, attributes and operations
-
-=item * 
-
-Autodetection of various application servers
-
-=item * 
-
-Reading and writing of attributes
-
-=item * 
-
-Excecution of MBean operations
-
-=back
 
 =head1 SEE ALSO
 

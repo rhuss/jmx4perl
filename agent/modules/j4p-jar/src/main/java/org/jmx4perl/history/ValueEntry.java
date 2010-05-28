@@ -48,4 +48,14 @@ class ValueEntry implements Serializable {
     public long getTimestamp() {
         return timestamp;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("ValueEntry");
+        sb.append("{value=").append(value);
+        sb.append(", timestamp=").append(timestamp);
+        sb.append('}');
+        return sb.toString();
+    }
 }

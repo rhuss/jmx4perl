@@ -58,7 +58,6 @@
             <Embed-Dependency>j4p;inline=true</Embed-Dependency>
             <!-- Needed because we export an embedded package only -->
             <Import-Package>
-              !org.jmx4perl,
               !org.json.simple.*,
               org.osgi.framework;version="[1.0.0,2.0.0)",
               *

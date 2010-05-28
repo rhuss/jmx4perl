@@ -374,7 +374,8 @@ sub get_attribute {
         #print Dumper($response);
     }
     if ($response->is_error) {
-        my $o = "(".$object.",".$attribute.($path ? "," . $path : "").")";
+        my $a = ref($attribute) eq "ARRAY" ? "[" . join(",",@$attribute) . "]" : $attribute;
+        my $o = "(".$object.",".$a.($path ? "," . $path : "").")";
         croak "The attribute $o is not registered on the server side"
           if $response->status == 404;
         croak "Error requesting $o: ",$response->error_text;
@@ -433,7 +434,7 @@ sub set_attribute {
         $response =  $self->delegate_to_handler($object,$value);        
     } else {
         croak "No attribute provided for object $object" unless $attribute;
-        croak "No value to set provided for object $object and attribute $attribute" unless $value;
+        croak "No value to set provided for object $object and attribute $attribute" unless defined($value);
         
         my $request = JMX::Jmx4Perl::Request->new(WRITE,$object,$attribute,$value,$path);
         $response = $self->request($request);
@@ -766,8 +767,8 @@ sub parse_name {
         my $key = $1;
         my $value = undef;
         if ($rest =~ /^"/) {
-            $rest =~ s/("(\\"|[^"]+)")(\s*,\s*|$)//;
-            $value = $2;
+            $rest =~ s/("((\\"|[^"])+)")(\s*,\s*|$)//;
+            $value = $1;
             # Unescape escaped chars
             $value =~ s/\\([:",=*?])/$1/g;
         } else {
@@ -775,7 +776,7 @@ sub parse_name {
                 $value = $1;
             } 
         }
-        return undef unless $value;
+        return undef unless defined($value);
         $attrs->{$key} = $value;
         #print "K: $key V: $value\n";
     }
@@ -996,12 +997,14 @@ sub _format_map {
             } elsif ($level == 1) {
                 $prefix = $CURRENT_DOMAIN . ":";
             } 
-            $ret .= &_get_space($level).$prefix.$d.$sep."\n" unless ($d eq "attr" || $d eq "op" || $d eq "error");
+            $ret .= &_get_space($level).$prefix.$d.$sep."\n" unless ($d eq "attr" || $d eq "op" || $d eq "error" || $d eq "desc");
             my @args = ($ret,$map->{$d},$path);
             if ($d eq "attr") {
                 $ret = &_format_attr_or_op(@args,$level,"attr","Attributes",\&_format_attribute);
             } elsif ($d eq "op") {
                 $ret = &_format_attr_or_op(@args,$level,"op","Operations",\&_format_operation);
+            } elsif ($d eq "desc") {
+                # TODO: Print out description of an MBean
             } elsif ($d eq "error") {
                 $ret = $ret . "\nError: ".$map->{error}->{message}."\n";
             } else {

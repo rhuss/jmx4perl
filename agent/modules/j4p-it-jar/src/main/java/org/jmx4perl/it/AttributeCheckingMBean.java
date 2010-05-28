@@ -42,4 +42,6 @@ public interface AttributeCheckingMBean {
     float getLongSeconds();
 
     double getSmallMinutes();
+
+    String[] getStringArray();
 }

@@ -12,3 +12,35 @@
 22 16 Bug: Overloaded method with string array arguments 
    gets parsed badly: 
    No operation installBundles([Ljava.lang.String found on MBean osgi.core:type=framework,version=1.5
+
+
+
+-----
+
+j4psh:
+
+* last_error handling in ServerHandler
+* Completion on MBeans with spaces
+* Formatting for overlength MBean lines
+  (complete MBean->_lign_aligned)
+* Wildcard for 'cd' in MBean/Domain listing
+* 'cat': Proper Error-Handling
+* Implement 'find/search' (attribute/operation names, content of attributes)
+* Implement 'version'
+* History Handling
+* Plugin architecture
+* Alias support
+* MBean Description for 'list' command
+* Glassfish, cat in servlet:
+[localhost:8080 com.sun.appserv:J2EEApplication=null, ...] : cat *
+Error: java.lang.ClassCastException: org.json.simple.JSONArray cannot be cast to java.lang.String at /opt/local/lib/perl5/site_perl/5.8.9/JMX/Jmx4Perl/J4psh/Command/MBean.pm line 155.
+
+* overloaded exec()
+
+check_jmx4perl:
+
+* Multi-Line output optimized in check_multi format (i.e. with a
+  summary line) so that it can be used for pnp as well
+* Sample configuration for Tomcat
+
+

@@ -15,3 +15,4 @@ for my $m (@$mbeans) {
     my $value = $jmx->get_attribute($m,"Ok");
     is($value,"OK",$m);
 }
+
