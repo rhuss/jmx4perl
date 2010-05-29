@@ -4,10 +4,8 @@ package org.jmx4perl.converter.json;
 import org.jmx4perl.Config;
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.jmx4perl.converter.json.simplifier.ClassHandler;
-import org.jmx4perl.converter.json.simplifier.DomElementHandler;
-import org.jmx4perl.converter.json.simplifier.FileHandler;
-import org.jmx4perl.converter.json.simplifier.UrlHandler;
+import org.jmx4perl.converter.json.simplifier.*;
+
 import static org.jmx4perl.Config.*;
 
 import org.json.simple.JSONObject;
@@ -82,6 +80,7 @@ public class ObjectToJsonConverter {
         handlers.add(new FileHandler());
         handlers.add(new DomElementHandler());
         handlers.add(new UrlHandler());
+        handlers.add(new ObjectNameHandler());
 
         handlers.add(new CompositeDataHandler());
         handlers.add(new TabularDataHandler());

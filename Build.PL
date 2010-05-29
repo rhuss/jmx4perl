@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use Module::Build 0.35;
+use Module::Build 0.34;
 
 my $class = Module::Build->subclass(
       class => "Module::Build::Custom",
@@ -185,7 +185,7 @@ my $build = $class->new
                    "Term::Clui" => 0
                   },
    build_requires => {
-                      "Module::Build" => "0.35",
+                      "Module::Build" => "0.34",
                       "Test::More" => "0",
                       "Test::Deep" => 0,
                       "Test" => "0"

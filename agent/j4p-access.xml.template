@@ -65,9 +65,12 @@
        be a pattern, too) an command be alloed. Note that an <allow> entry e.g. for reading
        an attribute of an certain MBean has no influence if reading is enabled globally anyway -->
   <allow>
+
     <!-- Allow for this MBean the attribute "HeapMemoryUsage" for reading and writing, the attribute
          "Verbose" for reading only and the operation "gc". "read", "write" and/or "exec" has to be omitted
-          in the <commands> section above -->
+          in the <commands> section above.
+
+         Example: ->
     <mbean>
       <name>java.lang:type=Memory</name>
       <attribute>HeapMemoryUsage</attribute>
@@ -78,6 +81,8 @@
       <name>java.lang:type=Threading</name>
       <attribute>ThreadCount</attribute>
     </mbean>
+    -->
+
     <!-- Allow access to the j4p configuration operations, which are needed for proper check_jmx4perl
          operation -->
     <mbean>
@@ -85,17 +90,16 @@
       <operation>*</operation>
       <attribute>*</attribute>
     </mbean>
-
-    <!-- TODO: Example with an MBean pattern -->
   </allow>
 
   <!-- MBean access can be restricted by a <deny> section for commands enabled in a <commands> section
        (or when the <commands> section is missing completely in which case all commands are allowed)
   -->
   <deny>
-    <!-- TODO: C3P0 password hiding -->
     <mbean>
-      <name>c3p0</name>
+      <!-- Exposes user/password of data source, so we forbid this one -->
+      <name>com.mchange.v2.c3p0:type=PooledDataSource*</name>
+      <attribute>properties</attribute>
     </mbean>
   </deny>
 </restrict>
