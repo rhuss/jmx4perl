@@ -160,6 +160,15 @@ sub default_theme {
                        host => YELLOW,
                        prompt_context => BLUE,
                        prompt_empty => RED,
+                       label => YELLOW,
+                       domain_name => BLUE,
+                       property_key => GREEN,
+                       property_value => undef,
+                       mbean_name => YELLOW,
+                       attribute_name => GREEN,
+                       operation_name => YELLOW,
+                       stat_val => RED,
+                       reset => RESET
                       };
     my $theme_dark = { 
                       host => YELLOW,

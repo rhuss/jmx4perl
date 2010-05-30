@@ -90,6 +90,10 @@
       <operation>*</operation>
       <attribute>*</attribute>
     </mbean>
+    <mbean>
+      <name>java.lang:type=Threading</name>
+      <operation>findDeadlockedThreads</operation>
+    </mbean>
   </allow>
 
   <!-- MBean access can be restricted by a <deny> section for commands enabled in a <commands> section

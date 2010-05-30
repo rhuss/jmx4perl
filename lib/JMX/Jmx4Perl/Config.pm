@@ -83,9 +83,11 @@ sub new {
         my $file = $file_or_hash ? $file_or_hash : $ENV{HOME} . "/.j4p";
         if (-e $file) {
             if ($HAS_CONFIG_GENERAL) {
+                local $SIG{__WARN__} = sub {};  # Keep Config::General silent
+                                                # when including things twice
                 $config = {
                            new Config::General(-ConfigFile => $file,-LowerCaseNames => 1,
-                                               -UseApacheInclude => 1,-IncludeRelative => 1, 
+                                               -UseApacheInclude => 1,-IncludeRelative => 1, -IncludeAgain => 0,
                                                -IncludeGlob => 1, -IncludeDirectories => 1,  -CComments => 0)->getall
                           };
             } else {

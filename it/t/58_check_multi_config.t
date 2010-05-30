@@ -26,7 +26,6 @@ ok($content =~ /Perm Gen/,"Perm Gen included");
 
 # Nested multichecks
 ($ret,$content) = &exec_check_perl4jmx("--config $config_file --check nested"); 
-
 is($ret,0,"Multicheck with value OK");
 ok($content =~ /\(base\)/,"First level inheritance");
 ok($content =~ /\(grandpa\)/,"Second level inheritance");

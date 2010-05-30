@@ -68,7 +68,6 @@
 
   <target name="war" depends="jar,copy_access_policy">
     <war destfile="modules/j4p-war/target/${war-name}" webxml="modules/j4p-war/src/main/webapp/WEB-INF/web.xml">
-      <classes dir="modules/j4p-war/target/classes"/>
       <lib dir="lib">
         <exclude name="servlet-api*"/>
         <exclude name="README"/>

@@ -59,6 +59,7 @@ agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/json/simplifier/DomEl
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/json/simplifier/FileHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/json/simplifier/SimplifierHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/json/simplifier/UrlHandler.java
+agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/json/simplifier/ObjectNameHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/json/TabularDataHandler.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/converter/StringToObjectConverter.java
 agent/modules/j4p-jar/src/main/java/org/jmx4perl/handler/ExecHandler.java
@@ -125,6 +126,7 @@ config/jboss.cfg
 config/memory.cfg
 config/threads.cfg
 config/tomcat.cfg
+config/jetty.cfg
 examples/jsr77.pl
 examples/threadDump.pl
 it/check_jmx4perl/base.cfg

@@ -1,7 +1,8 @@
 0.70
-  - Extended configuration syntax for check_jmx4perl as alternative to
+  - Extended configuration syntax for check_jmx4perl as an alternative to
     command line options
     + Parameterized checks
+    + Default values for parameters
     + Multichecks (one HTTP request, many JMX requests)
     + Check-Inheritance
     + Predefined checks for certain environments (as sample configuration files)

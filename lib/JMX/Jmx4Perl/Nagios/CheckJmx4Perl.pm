@@ -205,7 +205,15 @@ sub _extract_checks {
 
         # Resolve parent values
         for my $c (@{$check_configs}) {
+            #print "[A] ",Dumper($c);
             $self->_resolve_check_config($c,$config,$self->{cmd_args});
+            
+            #print "[B] ",Dumper($c);
+            # Finally, resolve any left over place holders
+            for my $k (keys(%$c)) {
+                $c->{$k} = $self->_replace_placeholder($c->{$k},undef);
+            }
+            #print "[C] ",Dumper($c);
         }
         return $check_configs;
     } else {
@@ -290,11 +298,11 @@ sub _resolve_check_config {
         my $parent_merged = {};
         for my $p (@$parents) {
             my ($p_name,$p_args) = $self->_parse_check_ref($p);
-            # Clone it to avoid side effects when replacing checks inline
-            my $p_check = { %{$config->{check}->{$p_name}} };
             $np->nagios_die("Unknown parent check '" . $p_name . "' for check '" . 
                             ($check->{key} ? $check->{key} : $check->{name}) . "'") 
-              unless $p_check;
+              unless $config->{check}->{$p_name};
+            # Clone it to avoid side effects when replacing checks inline
+            my $p_check = { %{$config->{check}->{$p_name}} };
             $p_check->{key} = $p_name;
             $self->_resolve_check_config($p_check,$config,$p_args);
 
@@ -325,14 +333,71 @@ sub _replace_args {
     for my $k (keys(%$check)) {
         next if $k =~ /^(key|args)$/; # Internal keys
         my $val = $check->{$k};
-        if ($args) {
+        if ($args && @$args) {
             for my $i (0 ... $#$args) {
                 my $repl = $args->[$i];
-                $val =~ s/\$$i/$repl/g if defined($repl);
+                $val = $self->_replace_placeholder($val,$repl,$i);
             }
-            $check->{$k} = $val;
-        }
+        } 
+        $check->{$k} = $val;
     }
+}
+
+sub _replace_placeholder {
+    my $self = shift;
+    my $val = shift;
+    my $repl = shift;
+    my $index = shift;
+    my $force = 0;
+    if (!defined($index)) {
+        # We have to replace any left over placeholder either with its 
+        # default value or with an empty value
+        $index = "\\d+";
+        $force = 1;
+    }
+    my $regexp;
+    eval '$regexp = qr/^(.*?)\$(' . $index . '|\{\s*' . $index . '\s*:([^\}]+)\})(.*|$)/';
+    die "Cannot create placeholder regexp" if $@;
+    my $rest = $val;
+    my $ret = "";
+    while (defined($rest) && length($rest) && $rest =~ /$regexp/) {        
+        my $default = $3;
+        my $start = defined($1) ? $1 : "";
+        my $orig_val = '$' . $2;
+        my $end = defined($4) ? $4 : "";
+        #print Dumper({start => $start, orig => $orig_val,end => $end, default => $default, rest => $rest});
+        if (defined($repl)) {
+            if ($repl =~ /^\$(\d+)$/) {
+                my $new_index = $1;
+                #print "============== $val $new_index\n";
+                # Val is a placeholder itself
+                if (defined($default)) {
+                    $ret .= $start . '${' . $new_index . ':' . $default . '}';
+                } else {
+                    $ret .= $start . '$' . $new_index;
+                }
+            } else {   
+                $ret .= $start . $repl;
+            }
+        } elsif ($force) {
+            if (defined($default)) {
+                $ret .= $start . $default;
+            } elsif (length($start) || length($end)) {
+                $ret .= $start;
+            } else {
+                if (!length($ret)) {
+                    # No default value, nothing else for this value. We
+                    # consider at undefined
+                    return undef;
+                }
+            }
+        } else {
+            $ret .= $start . $orig_val;
+        }
+        $rest = $end;
+        #print "... $ret$rest\n";
+    }
+    return $ret . (defined($rest) ? $rest : "");
 }
 
 # Split up a 'Use' parent config reference, including possibly arguments
