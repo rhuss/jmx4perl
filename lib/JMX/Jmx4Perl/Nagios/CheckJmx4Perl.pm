@@ -88,17 +88,37 @@ sub execute {
         }
         my $responses = $self->_send_requests($jmx,@requests);
         my @extra_requests = ();
-        for my $check (@{$self->{checks}}) {
-            # A check can consume more than one response
-            my @r = $check->extract_responses($responses,\@requests,$target);
+        my $nr_checks = scalar(@{$self->{checks}});
+        if ($nr_checks == 1) {
+            my @r = $self->{checks}->[0]->extract_responses($responses,\@requests,{ target => $target });
             push @extra_requests,@r if @r;
+        } else {
+            my $i = 1;
+            for my $check (@{$self->{checks}}) {
+                # A check can consume more than one response
+                my @r = $check->extract_responses($responses,\@requests,
+                                                    { target => $target, 
+                                                      prefix => $self->_multi_check_prefix($check,$i++,$nr_checks)});
+                push @extra_requests,@r if @r;
+            }
         }
-        
-        # Send extra requests
+        # Send extra requests, e.g. for switching on the history
         if (@extra_requests) {
             $self->_send_requests($jmx,@extra_requests);
         }
-        $np->nagios_exit($np->check_messages(join => "\n", join_all => "\n"));
+        my ($code,$message) = $self->_exit_message($np);
+        my $summary;
+        if ($code eq OK) {
+            $summary = "All " . $nr_checks . " checks OK";            
+        } else {
+            my $nr_warnings = scalar(@{$np->messages->{warning} || []});
+            my $nr_errors = scalar(@{$np->messages->{critical} || []});
+            my @parts;
+            push @parts,"$nr_errors error" . ($nr_errors > 1 ? "s" : "") if $nr_errors;
+            push @parts,"$nr_warnings warning" . ($nr_warnings > 1 ? "s" : "") if $nr_warnings;
+            $summary = $nr_warnings + $nr_errors . " of " . $nr_checks . " failed (" . join(" and ",@parts) . ")";
+        }
+        $np->nagios_exit($code, $summary . "\n" . $message);
     };
     if ($@) {
         # p1.pl, the executing script of the embedded nagios perl interpreter
@@ -112,12 +132,30 @@ sub execute {
     }
 }
 
+# Create a formatted prefix for multicheck output
+sub _multi_check_prefix {
+    my $self = shift;
+    my $check = shift;
+    my $idx = shift;
+    my $max = shift;
+    my $label = $check->{config}->{key} || $check->{config}->{name} || "";
+    my $l = length($max);
+    return sprintf("[%$l.${l}s] %%c %s: ",$idx,$label);
+}
+
+# Create exit message 
+sub _exit_message {
+    my $self = shift;
+    my $np = shift;
+    return $np->check_messages(join => "\n", join_all => "\n");
+}
+
 # Send the requests via the build up agent
 sub _send_requests {
     my ($self,$jmx,@requests) = @_;
     my $o = $self->{opts};
 
-    my $start_time;    
+    my $start_time;
     if ($o->verbose) {
         # TODO: Print summary of request (GET vs POST)
         # print "Request URL: ",$jmx->request_url($request),"\n";
@@ -128,7 +166,6 @@ sub _send_requests {
     }
 
     my @responses = $jmx->request(@requests);
-
     if ($o->verbose) {
         print "Result fetched in ",tv_interval($start_time) * 1000," ms:\n";
         print Dumper(\@responses);
@@ -211,7 +248,7 @@ sub _extract_checks {
             #print "[B] ",Dumper($c);
             # Finally, resolve any left over place holders
             for my $k (keys(%$c)) {
-                $c->{$k} = $self->_replace_placeholder($c->{$k},undef);
+                $c->{$k} = $self->_replace_placeholder($c->{$k},undef) unless ref($c->{$k});
             }
             #print "[C] ",Dumper($c);
         }
@@ -336,7 +373,7 @@ sub _replace_args {
         if ($args && @$args) {
             for my $i (0 ... $#$args) {
                 my $repl = $args->[$i];
-                $val = $self->_replace_placeholder($val,$repl,$i);
+                $val = $self->_replace_placeholder($val,$repl,$i) unless ref($val);
             }
         } 
         $check->{$k} = $val;

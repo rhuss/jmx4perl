@@ -172,19 +172,16 @@ sub request {
         $json_resp = from_json($http_resp->content());
     };
     my $json_error = $@;
-
     if ($http_resp->is_error) {
-        if (scalar(@jmx_requests) == 1) {
-            return JMX::Jmx4Perl::Response->new
-              ( 
-               status => $http_resp->code,
-               value => $json_error ? $http_resp->content : $json_resp,
-               error => $json_error ? $self->_prepare_http_error_text($http_resp) : 
-               ref($json_resp) eq "ARRAY" ? join "\n",  map { $_->{error} } grep { $_->{error} } @$json_resp : $json_resp->{error},
-               stacktrace => ref($json_resp) eq "ARRAY" ? $self->_extract_stacktraces($json_resp) : $json_resp->{stacktrace},
-               request => $jmx_requests[0]
-              );        
-        }
+        return JMX::Jmx4Perl::Response->new
+          ( 
+           status => $http_resp->code,
+           value => $json_error ? $http_resp->content : $json_resp,
+           error => $json_error ? $self->_prepare_http_error_text($http_resp) : 
+           ref($json_resp) eq "ARRAY" ? join "\n",  map { $_->{error} } grep { $_->{error} } @$json_resp : $json_resp->{error},
+           stacktrace => ref($json_resp) eq "ARRAY" ? $self->_extract_stacktraces($json_resp) : $json_resp->{stacktrace},
+           request => @jmx_requests == 1 ? $jmx_requests[0] : \@jmx_requests
+          );        
     } elsif ($json_error) {
         # If is not an HTTP-Error and deserialization fails, then we
         # probably got a wrong URL and get delivered some server side

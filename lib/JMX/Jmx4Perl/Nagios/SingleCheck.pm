@@ -120,7 +120,7 @@ sub extract_responses {
     my $self = shift;    
     my $responses = shift;
     my $requests = shift;
-    my $target = shift;
+    my $opts = shift || {};
     my $np = $self->{np};
 
     # Get response/request pair
@@ -136,7 +136,7 @@ sub extract_responses {
     if (defined($delta)) {
         $value = $self->_delta_value($request,$resp,$delta);
         unless (defined($value)) {
-            push @extra_requests,$self->_switch_on_history($request,$target);
+            push @extra_requests,$self->_switch_on_history($request,$opts->{target});
             $value = 0;
         }
     }
@@ -156,22 +156,22 @@ sub extract_responses {
                           critical => $critical,warning => $warning,
                           min => 0,max => $base_value,
                           $self->unit ? (uom => $self->unit) : ());
-        
         # Do the real check.
         my ($code,$mode) = $self->_check_threshhold($rel_value);
         my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
                                                     value => $value_conv, unit => $unit,base => $base_conv, 
-                                                    base_unit => $base_unit));            
+                                                    base_unit => $base_unit, prefix => $opts->{prefix}));            
     } else {
         # Performance data
         $np->add_perfdata(label => $label,
-                          critical => $self->critical, warning => $self->warning,
+                          critical => $self->critical, warning => $self->warning, 
                           value => $value,$self->unit ? (uom => $self->unit) : ());
         
         # Do the real check.
         my ($code,$mode) = $self->_check_threshhold($value);
-        $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit));                    
+        $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit,
+                                                    prefix => $opts->{prefix}));                    
     }
     return @extra_requests;
 }
@@ -235,6 +235,11 @@ sub _delta_value {
             $hist_val = $self->_extract_value_from_pattern_request($history);
         } else {
             $hist_val = $history;
+        }
+        if (!@$hist_val) {
+            # Can happen in some scenarios when requesting the first history entry,
+            # we are return 0 here
+            return 0;
         }
         my $old_value = $hist_val->[0]->{value};
         my $old_time = $hist_val->[0]->{timestamp};
@@ -336,13 +341,11 @@ sub _normalize_value {
     die "Unknown unit '$unit' for value $value";
 }
 
-
-
 sub _verify_response {
     my ($self,$req,$resp) = @_;
     my $np = $self->{np};
     if ($resp->is_error) {
-        $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
+        $np->nagios_die("Error: ".$resp->status." ".$resp->error_text.($resp->stacktrace ? "\nStacktrace:\n".$resp->stacktrace : ""));
     }
     
     if (!$req->is_mbean_pattern && (ref($resp->value) && !$self->string)) { 
@@ -564,7 +567,13 @@ sub _format_label {
             $ret .= $p;
         }
     }
-    return $ret;
+    if ($args->{prefix}) {
+        my $prefix = $args->{prefix};
+        $prefix =~ s/\%c/$STATUS_TEXT{$args->{code}}/g;
+        return  $prefix . $ret;
+    } else {
+        return $ret;
+    }
 }
 
 sub _format_char {
