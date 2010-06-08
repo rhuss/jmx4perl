@@ -154,6 +154,7 @@ public class BackendManager {
 
         boolean debug = isDebug() && !"debugInfo".equals(pJmxReq.getOperation());
         Object retValue = null;
+        boolean useValueWithPath = false;
         boolean found = false;
         for (RequestDispatcher dispatcher : requestDispatchers) {
             if (dispatcher.canHandle(pJmxReq)) {
@@ -162,6 +163,7 @@ public class BackendManager {
                     time = System.currentTimeMillis();
                 }
                 retValue = dispatcher.dispatchRequest(pJmxReq);
+                useValueWithPath = dispatcher.useReturnValueWithPath(pJmxReq);
                 if (debug) {
                     debug("Execution time: " + (System.currentTimeMillis() - time) + " ms");
                 }
@@ -172,7 +174,7 @@ public class BackendManager {
         if (!found) {
             throw new IllegalStateException("Internal error: No dispatcher found for handling " + pJmxReq);
         }
-        JSONObject json = objectToJsonConverter.convertToJson(retValue,pJmxReq);
+        JSONObject json = objectToJsonConverter.convertToJson(retValue,pJmxReq,useValueWithPath);
 
         // Update global history store
         historyStore.updateAndAdd(pJmxReq,json);

@@ -34,18 +34,33 @@ public class J4pClient extends J4pRequestManager {
     }
 
     /**
-     * Execute a single J4pRequest returning the appropriate result.
+     * Execute a single J4pRequest returning a single response.
      * The HTTP Method used is determined automatically.
      *
      * @param pRequest request to execute
-     * @return the response as returned by the server
      * @param <R> response type
      * @param <T> request type
+     * @return the response as returned by the server
      * @throws java.io.IOException when the execution fails
      * @throws org.json.simple.parser.ParseException if parsing of the JSON answer fails
      */
     public <R extends J4pResponse<T>,T extends J4pRequest> R execute(T pRequest) throws IOException, ParseException {
-        HttpResponse response = httpClient.execute(getHttpRequest(pRequest,null));
+        return this.<R,T>execute(pRequest,null);
+    }
+
+    /**
+     * Execute a single J4pRequest which returns a single response.
+     *
+     * @param pRequest request to execute
+     * @param pMethod method to use which should be either "GET" or "POST"
+     * @param <R> response type
+     * @param <T> request type
+     * @return response object
+     * @throws java.io.IOException when the execution fails
+     * @throws org.json.simple.parser.ParseException if parsing of the JSON answer fails
+     */
+    public <R extends J4pResponse<T>,T extends J4pRequest> R execute(T pRequest,String pMethod) throws IOException, ParseException {
+        HttpResponse response = httpClient.execute(getHttpRequest(pRequest,pMethod));
         return this.<R,T>extractResponse(pRequest,response);
     }
 
@@ -61,6 +76,7 @@ public class J4pClient extends J4pRequestManager {
      * @throws org.json.simple.parser.ParseException if parsing of the JSON answer fails
      */
     public <R extends J4pResponse<T>,T extends J4pRequest> List<R> execute(List<T> pRequests) throws IOException,ParseException {
+        // TODO
         return null;
     }
 

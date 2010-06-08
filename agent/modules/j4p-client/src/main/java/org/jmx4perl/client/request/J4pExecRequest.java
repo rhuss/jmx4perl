@@ -30,7 +30,7 @@ public class J4pExecRequest extends J4pMBeanRequest {
         arguments = Arrays.asList(pArgs);
     }
 
-    protected J4pExecRequest(String pMBeanName, String pOperation,Object ... pArgs)
+    public J4pExecRequest(String pMBeanName, String pOperation,Object ... pArgs)
             throws MalformedObjectNameException {
         this(new ObjectName(pMBeanName),pOperation,pArgs);
     }
@@ -53,7 +53,6 @@ public class J4pExecRequest extends J4pMBeanRequest {
         List<String> ret = super.getRequestParts();
         ret.add(operation);
         if (arguments.size() > 0) {
-            StringBuilder argBuf = new StringBuilder();
             for (int i = 0; i < arguments.size(); i++) {
                 Object arg = arguments.get(i);
                 if (arg instanceof Collection) {
@@ -95,7 +94,7 @@ public class J4pExecRequest extends J4pMBeanRequest {
                 if (arg instanceof Collection) {
                     JSONArray innerArray = new JSONArray();
                     for (Object inner : (Collection) arg) {
-                        innerArray.add(arg.toString());
+                        innerArray.add(inner.toString());
                     }
                     args.add(innerArray);
                 }

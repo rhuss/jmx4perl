@@ -37,7 +37,6 @@ public class J4pRequestManager {
     private Pattern slashPattern = Pattern.compile("/+");
     private Pattern escapedSlashPattern = Pattern.compile("%2F");
 
-
     public J4pRequestManager(String pJ4pServerUrl) {
         j4pServerUrl = pJ4pServerUrl;
     }

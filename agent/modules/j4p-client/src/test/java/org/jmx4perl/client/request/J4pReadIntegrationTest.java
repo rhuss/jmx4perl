@@ -16,6 +16,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * Integration test for reading attributes
+ *
  * @author roland
  * @since Apr 27, 2010
  */

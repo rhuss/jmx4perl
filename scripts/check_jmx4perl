@@ -69,19 +69,39 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
 
 =head1 DESCRIPTION
 
-Nagios plugin for monitoring Java applications which expose JMX data via a
-jmx4perl agent.
+C<check_jmx4perl> is a Nagios plugin for monitoring Java applications. It uses
+an agent based approach for accessing JMX exposed informations remotely. See
+L<JMX::Jmx4Perl> for more background information about the technical details. 
 
-This plugin can be used in two ways: First, all required parameters for
+Before start using C<check_jmx4perl> an agent must be installed on the target
+platform. For JEE application server this is a simple webapplication packaged
+as a C<war> archive. For othter platforms, other agents are available as
+well. Please refer to the C<README> for the installation instructions and the
+supported platforms. 
+
+Regardless which agent are in use, it can be reached by a simple URL. This URL
+needs to be used in the C<check_jmx4perl> configuration.
+
+This plugin can be used in two modes: First, all required parameters for
 identifying the JMX information can be given via the command line. Second, a
 configuration file can be used to define one or more nagios checks. This is the
-recommend mode, since it allows for more advanced features not available when
+recommended mode, since it allows for more advanced features not available when
 using the command line alone. Each command line argument has an equivalent
-configuration option.
+option in the configuration files. 
 
-Before we describe the w
+=head1 TUTORIAL
 
-=head1 BASICS
+Before we dive into the more nifty details, first a 5 minute tutorial to get a
+first impression:
+
+
+
+
+
+=head1 BACKGROUND
+
+This section explains the basics necessary to better understand the operations
+of C<check_jmx4perl>.
 
 =head1 MBeans
 
@@ -94,8 +114,19 @@ E.g.
 
   java.lang:type=Memory
 
-Before you start monitoring, you need to know the MBean name. There are various
-ways to identify the MBean:
+point to the MBean which let you access the memory information of the target
+server. 
+
+Before you start monitoring, you need to know the MBean name. Unfortunately,
+except for so called I<MXBeans>
+(L<http://java.sun.com/j2se/1.5.0/docs/api/java/lang/management/package-summary.html>)
+there is no standard naming scheme for MBeans. Each platform uses its own, so
+the first task is to identify the object name of the MBean to monitor. (There
+used to be a Java naming standard defined in B<JSR77>
+(L<http://jcp.org/en/jsr/detail?id=77>), unfortunately is whas never widely
+adopted.
+
+There are various ways to identify MBeans on a server:
 
 =over 
 
@@ -129,7 +160,6 @@ As your Java application development team for application specific MBean names.
 
 =back.
 
-
 =head2 Operational Modes
 
 C<check_jmx4perl> can obtain the information to monitor from two sources:
@@ -142,23 +172,34 @@ following data types can be used directly
 
 =over
 
-=item Integer
+=item * 
 
-=item Long
+Integer
 
-=item Float
+=item * 
 
-=item Double
+Long
 
-=item Boolean
+=item * 
 
-=item String
+Float
+
+=item * 
+
+Double
+
+=item * 
+
+Boolean
+
+=item * 
+
+String
 
 =back
 
 C<String> and C<Boolean> can be used in I<string> checks only, whereas the others
-can be used in both, I<numeric> and I<string> checks.
-
+can be used in both, I<numeric> and I<string> checks (see below).
 
 =head3 Pathes
 
@@ -180,7 +221,7 @@ multiple entries. Looking with C<jmx4perl> at this attribute
            'init' => '0'
          };
 
-one sees, that there are 4 values coming with the reponse. With a path C<used>
+one can see, that there are 4 values coming with the reponse. With a path C<used>
 one can directly pick the used heap memory usage (8135440 bytes in this case)
 which can be used in a threshold check. This path can be used with
 C<check_jmx4perl> like 
@@ -191,7 +232,7 @@ C<check_jmx4perl> like
                   --path used \
                   --critical 100000000
  OK - [java.lang:type=Memory,HeapMemoryUsage,used] : Value 10136056 in range | ...
-1
+
 =head3 Attributes
 
 Attribute are values which can be obtained from MBeans. They can be of a simple
@@ -364,7 +405,7 @@ use Nagios::Plugin::Functions;
 use JMX::Jmx4Perl::Nagios::CheckJmx4Perl;
 
 # Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
-# to the usual Nagios conventions and to use redundancy in the UI display.
+# to the usual Nagios conventions and to avoid redundancy in the UI display.
 BEGIN {
     no warnings 'redefine';
     *Nagios::Plugin::Functions::get_shortname = sub {
@@ -375,7 +416,7 @@ BEGIN {
 # Create new object and use this for the check
 # Hopefully it gets cleaned up aftewards if running
 # within the embedded Nagios perl interpreter. At least, 
-# we don't keep any references
+# we don't keep any references.
 JMX::Jmx4Perl::Nagios::CheckJmx4Perl->new(@ARGV)->execute();
 
 =head1 LICENSE

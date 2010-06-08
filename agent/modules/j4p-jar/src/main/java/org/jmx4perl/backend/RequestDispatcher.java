@@ -1,12 +1,10 @@
 package org.jmx4perl.backend;
 
-import org.jmx4perl.JmxRequest;
-
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
-import javax.management.ReflectionException;
 import java.io.IOException;
+
+import javax.management.*;
+
+import org.jmx4perl.JmxRequest;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -59,4 +57,15 @@ public interface RequestDispatcher {
      * @return true if this dispatcher can handle the request
      */
     boolean canHandle(JmxRequest pJmxRequest);
+
+    /**
+     * Whether a return value should be returned directly, ignoring any path.
+     * E.g for the WriteHandler this is important to return the original value,
+     * (using the path would return the new value)
+     *
+     * @param pJmxRequest request for getting the handler
+     * @return true if the value should be directly returned, false if the path within
+     *         the request should be respected.
+     */
+    boolean useReturnValueWithPath(JmxRequest pJmxRequest);
 }

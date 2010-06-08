@@ -35,7 +35,7 @@ public class J4pReadRequest extends J4pMBeanRequest {
      *                    ignored.
      * @param pAttribute one or more attributes to request.
      */
-    protected J4pReadRequest(ObjectName pObjectName,String ... pAttribute) {
+    public J4pReadRequest(ObjectName pObjectName,String ... pAttribute) {
         super(J4pType.READ, pObjectName);
         attributes = Arrays.asList(pAttribute);
     }
@@ -49,7 +49,7 @@ public class J4pReadRequest extends J4pMBeanRequest {
      * @param pAttribute one or more attributes to request.
      * @throws javax.management.MalformedObjectNameException when argument is not a valid object name
      */
-    protected J4pReadRequest(String pObjectName,String ... pAttribute) throws MalformedObjectNameException {
+    public J4pReadRequest(String pObjectName,String ... pAttribute) throws MalformedObjectNameException {
         this(new ObjectName(pObjectName),pAttribute);
     }
 

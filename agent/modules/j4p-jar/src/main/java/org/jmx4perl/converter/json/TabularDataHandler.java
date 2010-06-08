@@ -72,6 +72,10 @@ public class TabularDataHandler implements ObjectToJsonConverter.Handler {
         throw new IllegalArgumentException("TabularData cannot be written to");
     }
 
+    public boolean canSetValue() {
+        return false;
+    }
+
     private static CompositeData getRow(int idx, Iterator it) {
         try {
             for (int i = 0; i < idx; i++) {

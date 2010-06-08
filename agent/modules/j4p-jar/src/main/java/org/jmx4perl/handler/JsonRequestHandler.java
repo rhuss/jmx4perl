@@ -131,4 +131,13 @@ public abstract class JsonRequestHandler {
                 throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
         return null;
     }
+
+    /**
+     * Use the path for the return value by default
+     *
+     * @return true
+     */
+    public boolean useReturnValueWithPath() {
+        return true;
+    }
 }

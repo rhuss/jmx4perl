@@ -70,25 +70,35 @@ abstract class SimplifierHandler<T> implements ObjectToJsonConverter.Handler {
                 throw new IllegalArgumentException("Illegal path element " + element + " for object " + pValue,e);
             }
         } else {
-            JSONObject ret = new JSONObject();
-            for (Map.Entry<String, Extractor<T>> entry : extractorMap.entrySet()) {
-                Object value = null;
-                try {
-                    value = entry.getValue().extract((T) pValue);
-                } catch (SkipAttributeException e) {
-                    // Skip this one ...
-                    continue;
+            if (jsonify) {
+                JSONObject ret = new JSONObject();
+                for (Map.Entry<String, Extractor<T>> entry : extractorMap.entrySet()) {
+                    Object value = null;
+                    try {
+                        value = entry.getValue().extract((T) pValue);
+                    } catch (SkipAttributeException e) {
+                        // Skip this one ...
+                        continue;
+                    }
+                    ret.put(entry.getKey(),
+                            pConverter.extractObject(value,pExtraArgs,jsonify));
                 }
-                ret.put(entry.getKey(),
-                        pConverter.extractObject(value,pExtraArgs,jsonify));
+                return ret;
+            } else {
+                return pValue;
             }
-            return ret;
         }
+    }
+
+    // No setting for simplifying handlers
+    public boolean canSetValue() {
+        return false;
     }
 
     public Object setObjectValue(StringToObjectConverter pConverter, Object pInner,
                                  String pAttribute, String pValue) throws IllegalAccessException, InvocationTargetException {
-        return null;
+        // never called
+        throw new IllegalArgumentException("A simplify handler can't set a value");
     }
 
     @SuppressWarnings("unchecked")

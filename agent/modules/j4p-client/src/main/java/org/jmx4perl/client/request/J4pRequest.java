@@ -13,18 +13,24 @@ import org.json.simple.JSONObject;
  */
 abstract public class J4pRequest {
 
+    // request type
     J4pType type;
 
+    // "GET" or "POST"
     private String preferredHttpMethod;
 
     protected J4pRequest(J4pType pType) {
         type = pType;
     }
 
+    /**
+     * Get the type of the request
+     *
+     * @return request's type
+     */
     public J4pType getType() {
         return type;
     }
-
 
     // ==================================================================================================
     // Methods used for building up HTTP Requests and setting up the reponse
