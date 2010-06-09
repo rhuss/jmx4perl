@@ -4,8 +4,6 @@ import org.jmx4perl.osgi.J4pActivator;
 import org.ops4j.pax.web.service.jetty.internal.CompositeActivator;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
-import org.osgi.util.tracker.ServiceTracker;
 
 /*
  * osgish - An OSGi Shell

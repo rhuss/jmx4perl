@@ -47,7 +47,7 @@ public class ObjectNameHandler extends SimplifierHandler<ObjectName> {
         addExtractors(new Object[][] {{ "objectName", new ObjectNameExtractor() }});
     }
 
-    private class ObjectNameExtractor implements Extractor<ObjectName> {
+    private static class ObjectNameExtractor implements Extractor<ObjectName> {
         public Object extract(ObjectName value) throws SkipAttributeException {
             return value.toString();
         }

@@ -1,9 +1,6 @@
 package org.jmx4perl.it;
 
-import javax.management.MBeanRegistration;
-import javax.management.ObjectName;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
+import javax.management.*;
 
 /**
  * @author roland

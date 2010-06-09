@@ -178,7 +178,7 @@ public class ExecHandler extends JsonRequestHandler {
 
     // ==================================================================================
     // Used for parsing
-    private static class OperationAndParamType {
+    final private static class OperationAndParamType {
         private OperationAndParamType(String pOperationName, String[] pParamClazzes) {
             operationName = pOperationName;
             paramClasses = pParamClazzes;

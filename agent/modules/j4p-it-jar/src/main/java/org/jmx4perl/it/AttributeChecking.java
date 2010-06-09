@@ -43,10 +43,10 @@ public class AttributeChecking implements AttributeCheckingMBean,MBeanRegistrati
             "Stopped"
     };
 
-    int intValue = 0;
+    private int intValue = 0;
 
-    File file;
-    File origFile;
+    private File file;
+    private File origFile;
     private ObjectName objectName;
     private List list;
     private Map complexMap;
@@ -57,7 +57,7 @@ public class AttributeChecking implements AttributeCheckingMBean,MBeanRegistrati
         reset();
     }
 
-    public void reset() {
+    final public void reset() {
         try {
             state = false;
             idx = 0;
@@ -80,9 +80,9 @@ public class AttributeChecking implements AttributeCheckingMBean,MBeanRegistrati
             complexMap.put("Blub",inner);
             bean = new TestBean(13,"roland");
         } catch (IOException e) {
-            throw new RuntimeException("Couldnot create temporary file name");
+            throw new RuntimeException("Couldnot create temporary file name",e);
         } catch (MalformedObjectNameException e) {
-            throw new RuntimeException("Couldnot objectname");
+            throw new RuntimeException("Couldnot objectname",e);
         }
     }
 
@@ -192,7 +192,7 @@ public class AttributeChecking implements AttributeCheckingMBean,MBeanRegistrati
     public void postDeregister() {
     }
 
-    private class TestBean {
+    final private class TestBean {
         private int value;
         private String name;
 

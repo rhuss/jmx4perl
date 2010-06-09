@@ -84,7 +84,7 @@ public class FileHandler extends SimplifierHandler<File> {
         public Object extract(File file) { return file.exists(); }
     }
 
-    private class LastModifiedExtractor implements Extractor<File> {
+    private static class LastModifiedExtractor implements Extractor<File> {
         public Object extract(File value) { return value.lastModified(); }
     }
 }

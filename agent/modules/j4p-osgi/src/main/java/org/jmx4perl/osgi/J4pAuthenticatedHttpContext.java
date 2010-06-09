@@ -119,7 +119,7 @@ class J4pAuthenticatedHttpContext extends J4pHttpContext {
             else {
                 // There's a bad input character in the Base64 stream.
                 throw new IllegalArgumentException(String.format(
-                "Bad Base64 input character '%c' in array position %d", bytes[i], i ) );
+                "Bad Base64 input character '%b' in array position %d", bytes[i], i ) );
             }
         }
 

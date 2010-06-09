@@ -13,7 +13,7 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since Apr 24, 2010
  */
-abstract public class J4pResponse<T extends J4pRequest> {
+public abstract class J4pResponse<T extends J4pRequest> {
 
     // JSON representation of the returned response
     private JSONObject jsonResponse;
@@ -54,7 +54,7 @@ abstract public class J4pResponse<T extends J4pRequest> {
      * @return request date
      */
     public Date getRequestDate() {
-        return requestDate;
+        return (Date) requestDate.clone();
     }
 
     /**
