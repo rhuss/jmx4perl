@@ -181,6 +181,7 @@ my $build = $class->new
                    "Nagios::Plugin" => "0.27",
                    "Text::ParseWords" => 0,
                    "Config::General" => 0,
+                   "Term::ShellUI" => 0,
                    "Term::Size" => "0.207",
                    "Term::Clui" => 0
                   },

@@ -16,7 +16,7 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since Jun 5, 2010
  */
-public class J4pWriteRequest extends J4pMBeanRequest {
+public class J4pWriteRequest extends AbtractJ4pMBeanRequest {
 
     // Name of attribute to set
     private String attribute;

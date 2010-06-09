@@ -6,7 +6,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.jmx4perl.client.response.J4pReadResponse;
-import org.jmx4perl.client.response.J4pResponse;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -17,7 +16,7 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since Apr 24, 2010
  */
-public class J4pReadRequest extends J4pMBeanRequest {
+public class J4pReadRequest extends AbtractJ4pMBeanRequest {
 
     // Name of attribute to request
     private List<String> attributes;

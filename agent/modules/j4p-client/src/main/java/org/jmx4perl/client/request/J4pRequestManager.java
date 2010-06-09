@@ -9,15 +9,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import org.apache.http.*;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+import org.jmx4perl.client.J4pException;
 import org.jmx4perl.client.response.J4pResponse;
-import org.json.simple.JSONObject;
+import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -42,13 +41,13 @@ public class J4pRequestManager {
     }
 
     /**
-     * Get the HttpRequest for executing the given request
+     * Get the HttpRequest for executing the given single request
      *
      * @param pRequest request to convert
      * @param pPreferredMethod HTTP method preferred
      * @return the request used with HttpClient to obtain the result.
      */
-    protected HttpUriRequest getHttpRequest(J4pRequest pRequest,String pPreferredMethod) {
+    protected HttpUriRequest getHttpRequest(J4pRequest pRequest,String pPreferredMethod) throws J4pException {
         String method = pPreferredMethod;
         if (method == null) {
             method = pRequest.getPreferredHttpMethod();
@@ -79,13 +78,75 @@ public class J4pRequestManager {
             return postReq;
         } catch (UnsupportedEncodingException e) {
             // UTF-8 should be supported for sure
-            throw new IllegalStateException("Unsupported encoding utf-8: " + e,e);
+            throw new J4pException("Unsupported encoding utf-8: " + e,e);
+        }
+    }
+
+    /**
+     * Get an HTTP Request for requesting multips requests at once
+     *
+     * @param pRequests requests to put into a HTTP request
+     * @return HTTP request to send to the server
+     */
+    protected <T extends J4pRequest> HttpUriRequest getHttpRequest(List<T> pRequests) throws J4pException {
+        JSONArray bulkRequest = new JSONArray();
+        HttpPost postReq = new HttpPost(j4pServerUrl);
+        for (T request : pRequests) {
+            JSONObject requestContent = request.toJson();
+            bulkRequest.add(requestContent);
+        }
+        try {
+            postReq.setEntity(new StringEntity(bulkRequest.toJSONString(),"utf-8"));
+            return postReq;
+        } catch (UnsupportedEncodingException e) {
+            // UTF-8 should be supported for sure
+            throw new J4pException("Unsupported encoding utf-8: " + e,e);
         }
     }
 
 
+    /**
+     * Extract the complete JSON response out of a HTTP response
+     *
+     * @param pRequest the original J4p request
+     * @param pHttpResponse the resulting http response
+     * @param <T> J4p Request
+     * @return JSON content of the answer
+     * @throws J4pException when parsing of the answer fails
+     */
+    protected JSONAware extractJsonResponse(HttpResponse pHttpResponse) throws J4pException {
+        try {
+            StatusLine status = pHttpResponse.getStatusLine();
+            HttpEntity entity = pHttpResponse.getEntity();
+            JSONParser parser = new JSONParser();
+            Header contentEncoding = entity.getContentEncoding();
+            if (contentEncoding != null) {
+                return (JSONAware) parser.parse(new InputStreamReader(entity.getContent(), Charset.forName(contentEncoding.getValue())));
+            } else {
+                return (JSONAware) parser.parse(new InputStreamReader(entity.getContent()));
+            }
+        } catch (IOException e) {
+            throw new J4pException("IO-Error while reading the response: " + e,e);
+        } catch (ParseException e) {
+            throw new J4pException("Could not parse answer: " + e,e);
+        }
+    }
+
+    /**
+     * Extract a {@link J4pResponse} out of a JSON object
+     *
+     * @param pRequest request which lead to the response
+     * @param pJsonResponse JSON response
+     * @param <T> request type.
+     * @param <R> response type
+     * @return the J4p response
+     */
+    protected <R extends J4pResponse<T>,T extends J4pRequest> R extractResponse(T pRequest,JSONObject pJsonResponse) {
+        return pRequest.<R>createResponse(pJsonResponse);
+    }
+
     // Escape a part for usage as part of URI path
-    private String escape(String pPart) {
+    private String escape(String pPart) throws J4pException {
         Matcher matcher = slashPattern.matcher(pPart);
         int index = 0;
         StringBuilder ret = new StringBuilder();
@@ -117,31 +178,8 @@ public class J4pRequestManager {
             // Translate all "/" back...
             return escapedSlashPattern.matcher(encodedRet).replaceAll("/");
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Platform doesn't support UTF-8 encoding");
+            throw new J4pException("Platform doesn't support UTF-8 encoding");
         }
     }
 
-    /**
-     * Extract a response out of a resulting HttpResponse and a given request
-     *
-     * @param pRequest request which lead to the response
-     * @param pHttpResponse HttpResponse as received from the agen
-     * @param <T> request type.
-     * @return the J4p response
-     * @throws java.io.IOException when extracting of the answer fails
-     * @throws org.json.simple.parser.ParseException when parsing of the JSON answer fails
-     */
-    protected <R extends J4pResponse<T>,T extends J4pRequest> R extractResponse(T pRequest, HttpResponse pHttpResponse)
-            throws IOException, ParseException {
-        HttpEntity entity = pHttpResponse.getEntity();
-        JSONParser parser = new JSONParser();
-        Header contentEncoding = entity.getContentEncoding();
-        JSONObject responseJSON;
-        if (contentEncoding != null) {
-            responseJSON = (JSONObject) parser.parse(new InputStreamReader(entity.getContent(), Charset.forName(contentEncoding.getValue())));
-        } else {
-            responseJSON = (JSONObject) parser.parse(new InputStreamReader(entity.getContent()));
-        }
-        return pRequest.<R>createResponse(responseJSON);
-    }
 }

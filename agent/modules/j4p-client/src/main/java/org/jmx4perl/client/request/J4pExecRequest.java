@@ -6,7 +6,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.jmx4perl.client.response.J4pExecResponse;
-import org.jmx4perl.client.response.J4pResponse;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -16,7 +15,7 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since May 18, 2010
  */
-public class J4pExecRequest extends J4pMBeanRequest {
+public class J4pExecRequest extends AbtractJ4pMBeanRequest {
 
     // Operation to execute
     private String operation;

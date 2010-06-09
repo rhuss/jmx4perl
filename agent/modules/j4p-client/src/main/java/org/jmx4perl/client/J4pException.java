@@ -25,4 +25,5 @@ public class J4pException extends Exception {
     public J4pException(String message, Throwable cause) {
         super(message, cause);
     }
+
 }

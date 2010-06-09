@@ -6,6 +6,7 @@ import java.util.Date;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.jmx4perl.client.J4pException;
 import org.jmx4perl.client.response.J4pReadResponse;
 import org.jmx4perl.client.response.J4pWriteResponse;
 import org.json.simple.parser.ParseException;
@@ -23,27 +24,27 @@ import static org.junit.Assert.assertEquals;
 public class J4pWriteIntegrationTest extends AbstractJ4pIntegrationTest {
 
     @Test
-    public void simple() throws IOException, ParseException, MalformedObjectNameException {
+    public void simple() throws MalformedObjectNameException, J4pException {
         checkWrite("IntValue",null,42);
     }
 
     @Test
-    public void withPath() throws MalformedObjectNameException, IOException, ParseException {
+    public void withPath() throws MalformedObjectNameException, J4pException {
         checkWrite("ComplexNestedValue","Blub/1/numbers/0","13");
     }
 
     @Test
-    public void withBeanPath() throws IOException, ParseException, MalformedObjectNameException {
+    public void withBeanPath() throws MalformedObjectNameException, J4pException {
         checkWrite("Bean","value","41");
     }
 
     @Test
-    public void nullValue() throws MalformedObjectNameException, IOException, ParseException {
+    public void nullValue() throws MalformedObjectNameException, J4pException {
         checkWrite("Bean","name",null);
     }
 
     @Test
-    public void emptyString() throws MalformedObjectNameException, IOException, ParseException {
+    public void emptyString() throws MalformedObjectNameException, J4pException {
         checkWrite("Bean","name","");
     }
 
@@ -58,7 +59,7 @@ public class J4pWriteIntegrationTest extends AbstractJ4pIntegrationTest {
         assertEquals(req.getType(),J4pType.WRITE);
     }
 
-    private void checkWrite(String pAttribute,String pPath,Object pValue) throws MalformedObjectNameException, IOException, ParseException {
+    private void checkWrite(String pAttribute,String pPath,Object pValue) throws MalformedObjectNameException, J4pException {
         for (String method : new String[] { "GET", "POST" }) {
             reset();
             J4pReadRequest readReq = new J4pReadRequest("jmx4perl.it:type=attribute",pAttribute);
@@ -79,7 +80,7 @@ public class J4pWriteIntegrationTest extends AbstractJ4pIntegrationTest {
     }
 
 
-    private void reset() throws MalformedObjectNameException, IOException, ParseException {
+    private void reset() throws MalformedObjectNameException, J4pException {
         j4pClient.execute(new J4pExecRequest("jmx4perl.it:type=attribute","reset"));
     }
 
