@@ -303,11 +303,11 @@ public class PolicyBasedRestrictor implements Restrictor {
     // ====================================================================================================
 
     // Class combining various maps for attributes, operations and name patterns
-    private class MBeanPolicyConfig {
-        Set<ObjectName> patterns = new HashSet<ObjectName>();
-        Map<ObjectName,Set<String>> readAttributes = new HashMap<ObjectName, Set<String>>();
-        Map<ObjectName,Set<String>> writeAttributes = new HashMap<ObjectName, Set<String>>();
-        Map<ObjectName,Set<String>> operations = new HashMap<ObjectName, Set<String>>();
+    private static class MBeanPolicyConfig {
+        private Set<ObjectName> patterns = new HashSet<ObjectName>();
+        private Map<ObjectName,Set<String>> readAttributes = new HashMap<ObjectName, Set<String>>();
+        private Map<ObjectName,Set<String>> writeAttributes = new HashMap<ObjectName, Set<String>>();
+        private Map<ObjectName,Set<String>> operations = new HashMap<ObjectName, Set<String>>();
 
         public void addPattern(ObjectName pObjectName) {
             patterns.add(pObjectName);

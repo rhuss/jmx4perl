@@ -116,6 +116,7 @@ public class AgentServlet extends HttpServlet {
         handle(httpPostHandler,req,resp);
     }
 
+    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     private void handle(ServletRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
         JSONAware json = null;
         int code = 200;

@@ -167,8 +167,8 @@ public class JmxRequest {
 
         Map<String,?> config = (Map<String,?>) pMap.get("config");
         if (config != null) {
-            for (String key : config.keySet()) {
-                setProcessingConfig(key,config.get(key));
+            for (Map.Entry<String,?> entry : config.entrySet()) {
+                setProcessingConfig(entry.getKey(),entry.getValue());
             }
         }
 
