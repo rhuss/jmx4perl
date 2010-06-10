@@ -280,9 +280,9 @@ public class JmxRequest {
      * @return integer value of configuration or null if not set.
      */
     public Integer getProcessingConfigAsInt(Config pConfig) {
-        String value = processingConfig.get(pConfig);
-        if (value != null) {
-            return Integer.parseInt(value);
+        String intValueS = processingConfig.get(pConfig);
+        if (intValueS != null) {
+            return Integer.parseInt(intValueS);
         } else {
             return null;
         }
