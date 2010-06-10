@@ -153,20 +153,34 @@ public class BackendManager {
             ReflectionException, MBeanException, IOException {
 
         boolean debug = isDebug() && !"debugInfo".equals(pJmxReq.getOperation());
+
+        long time = 0;
+        if (debug) {
+            time = System.currentTimeMillis();
+        }
+        JSONObject json = callRequestDispatcher(pJmxReq);
+
+        // Update global history store
+        historyStore.updateAndAdd(pJmxReq,json);
+        if (debug) {
+            debug("Execution time: " + (System.currentTimeMillis() - time) + " ms");
+            debug("Response: " + json);
+        }
+        // Ok, we did it ...
+        json.put("status",200 /* success */);
+        return json;
+    }
+
+    // call the an appropriate request dispatcher
+    private JSONObject callRequestDispatcher(JmxRequest pJmxReq)
+            throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
         Object retValue = null;
         boolean useValueWithPath = false;
         boolean found = false;
         for (RequestDispatcher dispatcher : requestDispatchers) {
             if (dispatcher.canHandle(pJmxReq)) {
-                long time = 0;
-                if (debug) {
-                    time = System.currentTimeMillis();
-                }
                 retValue = dispatcher.dispatchRequest(pJmxReq);
                 useValueWithPath = dispatcher.useReturnValueWithPath(pJmxReq);
-                if (debug) {
-                    debug("Execution time: " + (System.currentTimeMillis() - time) + " ms");
-                }
                 found = true;
                 break;
             }
@@ -174,21 +188,10 @@ public class BackendManager {
         if (!found) {
             throw new IllegalStateException("Internal error: No dispatcher found for handling " + pJmxReq);
         }
-        JSONObject json = objectToJsonConverter.convertToJson(retValue,pJmxReq,useValueWithPath);
-
-        // Update global history store
-        historyStore.updateAndAdd(pJmxReq,json);
-        if (debug) {
-            debug("Response: " + json);
-        }
-        // Ok, we did it ...
-        json.put("status",200 /* success */);
-        if (debug) {
-            debug("Success");
-        }
-        return json;
+        return objectToJsonConverter.convertToJson(retValue,pJmxReq,useValueWithPath);
     }
 
+    // init various application wide stores for handling history and debug output.
     private void initStores(Map<Config, String> pConfig) {
         int maxEntries;
         try {

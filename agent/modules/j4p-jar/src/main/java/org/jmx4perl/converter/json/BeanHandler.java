@@ -68,37 +68,56 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
             throws AttributeNotFoundException {
         JmxRequest.ValueFaultHandler faultHandler = pConverter.getValueFaultHandler();
         if (!pExtraArgs.isEmpty()) {
+            // Still some path elements available, so dive deeper
             String attribute = pExtraArgs.pop();
-            Object attributeValue = extractBeanAttribute(pValue,attribute,faultHandler);
+            Object attributeValue = extractBeanPropertyValue(pValue,attribute,faultHandler);
             return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);
         } else {
-            if (!jsonify) {
+            if (jsonify) {
+                // We need the jsonfied value from here on.
+                return exctractJsonifiedValue(pValue, pExtraArgs, pConverter, faultHandler);
+            } else {
+                // No jsonification requested, hence we are returning the object itself
                 return pValue;
             }
-            if (pValue.getClass().isPrimitive() || FINAL_CLASSES.contains(pValue.getClass())) {
-                return pValue.toString();
-            } else {
-                List<String> attributes = extractBeanAttributes(pValue);
-                if (attributes != null && attributes.size() > 0) {
-                    Map ret = new JSONObject();
-                    for (String attribute : attributes) {
-                        Object value = extractBeanAttribute(pValue,attribute,faultHandler);
-                        if (value == null) {
-                            ret.put(attribute,null);
-                        } else if (value == pValue) {
-                            // Break Cycle
-                            ret.put(attribute,"[this]");
-                        } else {
-                            ret.put(attribute,
-                                    pConverter.extractObject(value,pExtraArgs,jsonify));
-                        }
-                    }
-                    return ret;
-                } else {
-                    // No further attributes, return string representation
-                    return pValue.toString();
+        }
+    }
+
+    private Object exctractJsonifiedValue(Object pValue, Stack<String> pExtraArgs,
+                                          ObjectToJsonConverter pConverter, JmxRequest.ValueFaultHandler pFaultHandler)
+            throws AttributeNotFoundException {
+        if (pValue.getClass().isPrimitive() || FINAL_CLASSES.contains(pValue.getClass())) {
+            // No further diving, use these directly
+            return pValue.toString();
+        } else {
+            // For the rest we build up a JSON map with the attributes as keys and the value are
+            List<String> attributes = extractBeanAttributes(pValue);
+            if (attributes != null && attributes.size() > 0) {
+                Map ret = new JSONObject();
+                for (String attribute : attributes) {
+                    ret.put(attribute, extractJsonifiedPropertyValue(pValue, attribute, pExtraArgs, pConverter, pFaultHandler));
                 }
+                return ret;
+            } else {
+                // No further attributes, return string representation
+                return pValue.toString();
             }
+        }
+    }
+
+
+    private Object extractJsonifiedPropertyValue(Object pValue, String pAttribute, Stack<String> pExtraArgs,
+                                                  ObjectToJsonConverter pConverter, JmxRequest.ValueFaultHandler pFaultHandler)
+            throws AttributeNotFoundException {
+        Object value = extractBeanPropertyValue(pValue, pAttribute, pFaultHandler);
+        if (value == null) {
+            return null;
+        } else if (value == pValue) {
+            // Break Cycle
+            return "[this]";
+        } else {
+            // Call into the converted recursively for any object known.
+            return pConverter.extractObject(value,pExtraArgs,true /* jsonify */);
         }
     }
 
@@ -127,7 +146,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         return attrs;
     }
 
-    private Object extractBeanAttribute(Object pValue, String pAttribute, JmxRequest.ValueFaultHandler pFaultHandler)
+    private Object extractBeanPropertyValue(Object pValue, String pAttribute, JmxRequest.ValueFaultHandler pFaultHandler)
             throws AttributeNotFoundException {
         Class clazz = pValue.getClass();
 
