@@ -121,6 +121,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         }
     }
 
+    @SuppressWarnings("PMD.UnnecessaryCaseChange")
     private List<String> extractBeanAttributes(Object pValue) {
         List<String> attrs = new ArrayList<String>();
         for (Method method : pValue.getClass().getMethods()) {

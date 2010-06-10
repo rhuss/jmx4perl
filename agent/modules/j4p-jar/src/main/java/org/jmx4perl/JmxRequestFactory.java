@@ -38,7 +38,7 @@ import org.jmx4perl.JmxRequest.Type;
  * @author roland
  * @since Oct 29, 2009
  */
-final public class JmxRequestFactory {
+public final class JmxRequestFactory {
 
     // Pattern for detecting escaped slashes in URL encoded requests
     private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^\\^?-*\\+?$");

@@ -497,14 +497,14 @@ public class JmxRequest {
         <T extends Throwable> Object handleException(T exception) throws T;
     }
 
-    private final static ValueFaultHandler NOOP_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
+    private static final ValueFaultHandler NOOP_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
         public <T extends Throwable> Object handleException(T exception) throws T {
             // Dont handle exception on our own, we rethrow it
             throw exception;
         }
     };
 
-    private final static ValueFaultHandler IGNORE_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
+    private static final  ValueFaultHandler IGNORE_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
         public <T extends Throwable> Object handleException(T exception) throws T {
             return "ERROR: " + exception.getMessage() + " (" + exception.getClass() + ")";
         }
