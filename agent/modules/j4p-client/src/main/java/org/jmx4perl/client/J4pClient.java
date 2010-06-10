@@ -86,6 +86,7 @@ public class J4pClient extends J4pRequestManager {
      * @return list of responses, one response for each request
      * @throws J4pException when an communication error occurs
      */
+    @SuppressWarnings("PMD.PreserveStackTrace")
     public <R extends J4pResponse<T>,T extends J4pRequest> List<R> execute(List<T> pRequests) throws J4pException {
         try {
             HttpResponse response = httpClient.execute(getHttpRequest(pRequests));

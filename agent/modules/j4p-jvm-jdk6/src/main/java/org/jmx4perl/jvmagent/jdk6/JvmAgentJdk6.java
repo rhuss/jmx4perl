@@ -154,6 +154,7 @@ public final class JvmAgentJdk6 {
         return context;
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")
     private static Map<String, String> parseArgs(String pAgentArgs) {
         Map<String,String> ret = new HashMap<String, String>();
         if (pAgentArgs != null && pAgentArgs.length() > 0) {
@@ -212,6 +213,7 @@ public final class JvmAgentJdk6 {
         return ret;
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")    
     private static Executor getExecutor(Map<String,String> pConfig) {
         String executor = pConfig.get("executor");
         if ("fixed".equalsIgnoreCase(executor)) {

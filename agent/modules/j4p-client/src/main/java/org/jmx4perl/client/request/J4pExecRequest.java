@@ -100,7 +100,7 @@ public class J4pExecRequest extends AbtractJ4pMBeanRequest {
                     args.add(innerArray);
                 }
                 else {
-                    args.add(arg.toString());
+                    args.add(arg != null ? arg.toString() : "[null]");
                 }
             }
             ret.put("arguments",args);

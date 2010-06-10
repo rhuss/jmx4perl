@@ -52,13 +52,13 @@ public class Activator implements BundleActivator {
         paxWebActivator = new CompositeActivator();
     }
 
-    @SuppressWarnings("PMD.AvoidCatchingThrowable")
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     public void start(BundleContext pContext) throws Exception {
         paxWebActivator.start(pContext);
         j4pActivator.start(pContext);
     }
 
-    @SuppressWarnings("PMD.AvoidCatchingThrowable")
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     public void stop(BundleContext pContext) throws Exception {
         j4pActivator.stop(pContext);
         paxWebActivator.stop(pContext);

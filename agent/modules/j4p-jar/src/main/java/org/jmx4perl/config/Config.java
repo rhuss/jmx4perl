@@ -166,7 +166,7 @@ public class Config implements ConfigMBean,MBeanRegistration {
     public void postRegister(Boolean registrationDone) {
     }
 
-    public void preDeregister() throws Exception {
+    public void preDeregister() {
     }
 
     public void postDeregister() {
