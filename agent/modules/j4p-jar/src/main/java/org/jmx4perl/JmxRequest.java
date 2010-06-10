@@ -148,7 +148,19 @@ public class JmxRequest {
         if (l != null && l.size() > 0) {
             extraArgs = new ArrayList<String>();
             for (Object val : l) {
-                extraArgs.add(val != null ? val.toString() : null);
+                if (val instanceof List) {
+                    List valList = (List) val;
+                    StringBuilder arrayArg = new StringBuilder();
+                    for (int i = 0; i < valList.size(); i++) {
+                        arrayArg.append(valList.get(i) != null ? valList.get(i).toString() : "[null]");
+                        if (i < valList.size() - 1) {
+                            arrayArg.append(",");
+                        }
+                    }
+                    extraArgs.add(arrayArg.toString());
+                } else {
+                    extraArgs.add(val != null ? val.toString() : null);
+                }
             }
         }
         s = (String) pMap.get("value");

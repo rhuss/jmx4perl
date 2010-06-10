@@ -1,6 +1,8 @@
 package org.jmx4perl.client.request;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.management.MalformedObjectNameException;
 
@@ -52,5 +54,22 @@ public class J4pExecIntegrationTest extends AbstractJ4pIntegrationTest {
         J4pExecRequest request = new J4pExecRequest(itSetup.getOperationMBean(),"emptyStringArgumentCheck","");
         J4pExecResponse resp = j4pClient.execute(request);
         assertEquals("true",resp.getValue());
+    }
+
+    @Test
+    public void collectionArg() throws MalformedObjectNameException, J4pException {
+        String args[] = new String[] { "roland","tanja","forever" };
+        J4pExecRequest request = new J4pExecRequest(itSetup.getOperationMBean(),"arrayArguments",args,"myExtra");
+        J4pExecResponse resp = j4pClient.execute(request);
+        assertEquals("roland",resp.getValue());
+
+        // Same for post
+        request = new J4pExecRequest(itSetup.getOperationMBean(),"arrayArguments",args,"myExtra");
+        resp = j4pClient.execute(request,"POST");
+        assertEquals("roland",resp.getValue());
+
+        // Check request params
+        assertEquals("arrayArguments",request.getOperation());
+        assertEquals(2,request.getArguments().size());
     }
 }

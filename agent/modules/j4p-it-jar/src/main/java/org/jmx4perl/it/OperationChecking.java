@@ -1,5 +1,7 @@
 package org.jmx4perl.it;
 
+import java.util.List;
+
 import javax.management.*;
 
 /**
@@ -28,6 +30,10 @@ public class OperationChecking implements OperationCheckingMBean,MBeanRegistrati
 
     public boolean emptyStringArgumentCheck(String arg1) {
         return arg1 != null && arg1.length() == 0;
+    }
+
+    public String arrayArguments(String args[], String extra) {
+        return args[0];
     }
 
     public int overloadedMethod(String arg) {

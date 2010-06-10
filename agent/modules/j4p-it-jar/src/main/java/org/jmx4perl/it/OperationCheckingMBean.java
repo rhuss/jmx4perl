@@ -1,5 +1,7 @@
 package org.jmx4perl.it;
 
+import java.util.List;
+
 /**
  * @author roland
  * @since Jun 30, 2009
@@ -19,4 +21,6 @@ public interface OperationCheckingMBean {
     boolean nullArgumentCheck(String arg1,Object arg2);
 
     boolean emptyStringArgumentCheck(String arg1);
+
+    String arrayArguments(String args[], String extra);
 }

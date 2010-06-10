@@ -54,23 +54,25 @@ public class J4pExecRequest extends AbtractJ4pMBeanRequest {
         if (arguments.size() > 0) {
             for (int i = 0; i < arguments.size(); i++) {
                 Object arg = arguments.get(i);
-                if (arg instanceof Collection) {
-                    Collection innerArgs = (Collection) arg;
-                    StringBuilder inner = new StringBuilder();
-                    Iterator it = innerArgs.iterator();
-                    while (it.hasNext()) {
-                        inner.append(it.next().toString());
-                        if (it.hasNext()) {
-                            inner.append(",");
-                        }
-                    }
-                    ret.add(nullEscape(inner.toString()));
-                } else {
+                if (arg != null && arg.getClass().isArray()) {
+                    ret.add(getArrayForArgument((Object[]) arg));
+                } else  {
                     ret.add(nullEscape(arg));
                 }
             }
         }
         return ret;
+    }
+
+    private String getArrayForArgument(Object[] pArg) {
+        StringBuilder inner = new StringBuilder();
+        for (int i = 0; i< pArg.length; i++) {
+            inner.append(pArg[i].toString());
+            if (i < pArg.length - 1) {
+                inner.append(",");
+            }
+        }
+        return nullEscape(inner.toString());
     }
 
     private String nullEscape(Object pArg) {
@@ -90,14 +92,13 @@ public class J4pExecRequest extends AbtractJ4pMBeanRequest {
         if (arguments.size() > 0) {
             JSONArray args = new JSONArray();
             for (Object arg : arguments) {
-                if (arg instanceof Collection) {
+                if (arg != null && arg.getClass().isArray()) {
                     JSONArray innerArray = new JSONArray();
-                    for (Object inner : (Collection) arg) {
-                        innerArray.add(inner.toString());
+                    for (Object inner : (Object []) arg) {
+                        innerArray.add(inner != null ? inner.toString() : "[null]");
                     }
                     args.add(innerArray);
                 }
-                // TODO: Check for arrays;
                 else {
                     args.add(arg.toString());
                 }

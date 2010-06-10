@@ -122,7 +122,7 @@ public class StringToObjectConverter {
     private String[] split(String pValue) {
         // For now, split simply on ','. This is very simplistic
         // and will fail on complex strings containing commas as content.
-        // Use a full blown CSV parsert then (but only for string)
+        // Use a full blown CSV parser then (but only for string)
         return pValue.split("\\s*,\\s*");
     }
 
