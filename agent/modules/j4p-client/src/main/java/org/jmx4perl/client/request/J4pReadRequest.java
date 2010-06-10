@@ -99,7 +99,7 @@ public class J4pReadRequest extends AbtractJ4pMBeanRequest {
             ret.put("attribute",attributes.get(0));
         } else {
             JSONArray attrs = new JSONArray();
-            attrs.addAll(Arrays.asList(attributes));
+            attrs.addAll(attributes);
             ret.put("attribute",attrs);
         }
         if (path != null) {

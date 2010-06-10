@@ -124,7 +124,7 @@ public class ItSetup {
         }
     }
 
-    private String getAttributeMBean() {
+    public String getAttributeMBean() {
         return domain + ":type=attribute";
     }
 

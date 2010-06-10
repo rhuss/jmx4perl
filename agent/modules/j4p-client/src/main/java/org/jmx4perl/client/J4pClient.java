@@ -93,11 +93,19 @@ public class J4pClient extends J4pRequestManager {
             HttpResponse response = httpClient.execute(getHttpRequest(pRequests));
             JSONAware jsonResponse = extractJsonResponse(response);
             if (!(jsonResponse instanceof JSONArray)) {
+                if (jsonResponse instanceof JSONObject) {
+                    JSONObject errorObject = (JSONObject) jsonResponse;
+                    J4pRemoteException exp = validate(null,errorObject);
+                    if (exp != null) {
+                        throw exp;
+                    }
+                }
                 throw new J4pException("Invalid JSON answer for a bulk request (expected an array but got a " + jsonResponse.getClass() + ")");
             }
             JSONArray responseArray = (JSONArray) jsonResponse;
             List<R> ret = new ArrayList<R>(responseArray.size());
-            List<J4pRemoteException> remoteExceptions = new ArrayList<J4pRemoteException>();
+            J4pRemoteException remoteExceptions[] = new J4pRemoteException[responseArray.size()];
+            boolean exceptionFound = false;
             for (int i = 0; i < pRequests.size(); i++) {
                 T request = pRequests.get(i);
                 Object jsonResp = responseArray.get(i);
@@ -107,16 +115,17 @@ public class J4pClient extends J4pRequestManager {
                 JSONObject jsonRespObject = (JSONObject) jsonResp;
                 J4pRemoteException exp = validate(request,jsonRespObject);
                 if (exp != null) {
-                    remoteExceptions.add(i,exp);
+                    remoteExceptions[i] = exp;
+                    exceptionFound = true;
                 } else {
                     ret.add(i,this.<R,T>extractResponse(request, (JSONObject) jsonResp));
                 }
             }
-            if (remoteExceptions.size() != 0) {
+            if (exceptionFound) {
                 List partialResults = new ArrayList();
                 // Merge partial results and exceptions in a single list
                 for (int i = 0;i<pRequests.size();i++) {
-                    J4pRemoteException exp = remoteExceptions.get(i);
+                    J4pRemoteException exp = remoteExceptions[i];
                     if (exp != null) {
                         partialResults.add(exp);
                     } else {
@@ -135,7 +144,7 @@ public class J4pClient extends J4pRequestManager {
     private <T extends J4pRequest> J4pRemoteException validate(T pRequest, JSONObject pJsonRespObject) {
         Long status = (Long) pJsonRespObject.get("status");
         if (status != 200) {
-            return new J4pRemoteException((String) pJsonRespObject.get("error"),status.intValue(),(String) pJsonRespObject.get("stacktrace"));
+            return new J4pRemoteException(pRequest,(String) pJsonRespObject.get("error"),status.intValue(),(String) pJsonRespObject.get("stacktrace"));
         } else {
             return null;
         }

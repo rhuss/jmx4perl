@@ -74,3 +74,4 @@ agent/modules/j4p-osgi/runner/*
 osgi.txt
 MYMETA.yml
 blog_ideas.txt
+agent/.sonar-ide.properties

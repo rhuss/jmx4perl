@@ -1,5 +1,7 @@
 package org.jmx4perl.client;
 
+import org.jmx4perl.client.request.J4pRequest;
+
 /**
  * Exception occured on the remote side (i.e the server).
  *
@@ -14,6 +16,9 @@ public class J4pRemoteException extends J4pException {
     // Stacktrace of a remote exception (optional)
     String remoteStacktrace;
 
+    // Request leading to this error
+    private J4pRequest request;
+
     /**
      * Constructor for a remote exception
      *
@@ -21,27 +26,29 @@ public class J4pRemoteException extends J4pException {
      * @param pStatus status code
      * @param pStacktrace stacktrace of the remote exception
      */
-    public J4pRemoteException(String pMessage,int pStatus,String pStacktrace) {
+    public J4pRemoteException(J4pRequest pJ4pRequest,String pMessage,int pStatus,String pStacktrace) {
         super(pMessage);
         status = pStatus;
         remoteStacktrace = pStacktrace;
+        request = pJ4pRequest;
     }
 
     /**
-     * The status code of the exception (similar to HTTP error code)
+     * Get status of this response (similar in meaning of HTTP stati)
      *
-     * @return status code
+     * @return status
      */
     public int getStatus() {
         return status;
     }
 
     /**
-     * Remote stackrace of the error occured
+     * Get the server side stacktrace as string when {@link #isError()} is true. Return <code>null</code>
+     * if no error has occured.
      *
-     * @return stacktrace
+     * @return server side stacktrace as string
      */
     public String getRemoteStackTrace() {
         return remoteStacktrace;
-    }
+    }            
 }

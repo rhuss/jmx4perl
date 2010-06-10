@@ -1,10 +1,11 @@
 package org.jmx4perl.client.request;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.management.MalformedObjectNameException;
 
-import org.jmx4perl.client.J4pException;
+import org.jmx4perl.client.*;
 import org.jmx4perl.client.response.*;
 import org.junit.Test;
 
@@ -27,6 +28,31 @@ public class BulkRequestIntegrationTest extends AbstractJ4pIntegrationTest {
         List<J4pResponse<J4pRequest>> typeSaveResp = j4pClient.execute(req1,req2);
         for (J4pResponse<?> r : typeSaveResp) {
             assertTrue(r instanceof J4pExecResponse || r instanceof J4pVersionResponse);
+        }
+    }
+
+    @Test
+    public void bulkRequestWithErrors() throws MalformedObjectNameException, J4pException {
+        J4pReadRequest req1 = new J4pReadRequest(itSetup.getAttributeMBean(),"ComplexNestedValue");
+        req1.setPath("Blub/0");
+        J4pReadRequest req2 = new J4pReadRequest("bla:type=blue","Sucks");
+        try {
+            List<J4pReadResponse> resp = j4pClient.execute(Arrays.asList(req1,req2));
+            fail();
+        } catch (J4pBulkRemoteException e) {
+            List results = e.getResults();
+            assertEquals(2,results.size());
+            results = e.getResponses();
+            assertEquals(1,results.size());
+            assertTrue(results.get(0) instanceof J4pReadResponse);
+            assertEquals("Bla",((J4pReadResponse) results.get(0)).<String>getValue());
+            results = e.getRemoteExceptions();
+            assertEquals(1,results.size());
+            assertTrue(results.get(0) instanceof J4pRemoteException);
+            J4pRemoteException exp = (J4pRemoteException) results.get(0);
+            assertEquals(404,exp.getStatus());
+            assertTrue(exp.getMessage().contains("InstanceNotFoundException"));
+            assertTrue(exp.getRemoteStackTrace().contains("InstanceNotFoundException"));
         }
     }
 }

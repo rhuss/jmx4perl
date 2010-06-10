@@ -70,7 +70,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
             JSONObject attributes = getAttributesForObjectNameWithPatternRequest(pObjectName);
             return attributes.keySet();
         } else {
-            if (pObjectName != null && pObjectName.equals(requestMBean)) {
+            if (pObjectName != null && !pObjectName.equals(requestMBean)) {
                 throw new IllegalArgumentException("Given ObjectName " + pObjectName + " doesn't match with" +
                         " the single ObjectName " + requestMBean + " given in the request");
             }
@@ -87,7 +87,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      *         a single valued list. For more than one attribute, the attribute names
      *         a returned from the returned list.
      */
-    private Collection<String> getAttributes() {
+    public Collection<String> getAttributes() {
         ObjectName requestBean = request.getObjectName();
         if (requestBean.isPattern()) {
             throw new IllegalArgumentException(

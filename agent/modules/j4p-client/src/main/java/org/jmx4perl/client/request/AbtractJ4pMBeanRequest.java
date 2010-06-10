@@ -23,13 +23,7 @@ abstract public class AbtractJ4pMBeanRequest extends J4pRequest {
         super(pType);
         objectName = pMBeanName;
     }
-
-
-    protected AbtractJ4pMBeanRequest(J4pType pType,String pMBeanName) throws MalformedObjectNameException {
-        super(pType);
-        objectName = new ObjectName(pMBeanName);
-    }
-
+    
     /**
      * Get the object name for the MBean on which this request
      * operates
