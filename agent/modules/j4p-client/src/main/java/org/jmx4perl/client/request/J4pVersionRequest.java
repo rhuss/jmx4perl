@@ -22,11 +22,6 @@ public class J4pVersionRequest extends J4pRequest {
     }
 
     @Override
-    JSONObject toJson() {
-        return super.toJson();
-    }
-
-    @Override
     J4pVersionResponse createResponse(JSONObject pResponse) {
         return new J4pVersionResponse(this,pResponse);
     }

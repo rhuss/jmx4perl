@@ -1,17 +1,13 @@
 package org.jmx4perl;
 
-import org.jmx4perl.JmxRequest.Type;
-import org.json.simple.JSONAware;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import javax.management.MalformedObjectNameException;
-import java.io.IOException;
-import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.management.MalformedObjectNameException;
+
+import org.jmx4perl.JmxRequest.Type;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -95,7 +91,7 @@ final public class JmxRequestFactory {
      * @param pParameterMap HTTP Query parameters
      * @return a newly created {@link org.jmx4perl.JmxRequest}
      */
-    static public JmxRequest createRequestFromUrl(String pPathInfo, Map<String,String[]> pParameterMap) {
+    public static JmxRequest createRequestFromUrl(String pPathInfo, Map<String,String[]> pParameterMap) {
         JmxRequest request = null;
         try {
             String pathInfo = pPathInfo;

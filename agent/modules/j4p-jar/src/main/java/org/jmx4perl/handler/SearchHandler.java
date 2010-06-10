@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 public class SearchHandler extends JsonRequestHandler {
 
     // Pattern for value in which case the value needs to be escaped
-    private final static Pattern INVALID_CHARS_PATTERN = Pattern.compile(":\",=\\*?");
+    private static final Pattern INVALID_CHARS_PATTERN = Pattern.compile(":\",=\\*?");
 
     public SearchHandler(Restrictor pRestrictor) {
         super(pRestrictor);

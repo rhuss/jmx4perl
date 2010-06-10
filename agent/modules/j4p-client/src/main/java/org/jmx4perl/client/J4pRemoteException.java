@@ -14,7 +14,7 @@ public class J4pRemoteException extends J4pException {
     private int status;
 
     // Stacktrace of a remote exception (optional)
-    String remoteStacktrace;
+    private String remoteStacktrace;
 
     // Request leading to this error
     private J4pRequest request;
@@ -50,5 +50,5 @@ public class J4pRemoteException extends J4pException {
      */
     public String getRemoteStackTrace() {
         return remoteStacktrace;
-    }            
+    }
 }

@@ -159,7 +159,7 @@ public class Config implements ConfigMBean,MBeanRegistration {
     // ========================================================================
 
     // Provide our own name on registration
-    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+    public ObjectName preRegister(MBeanServer server, ObjectName name) throws MalformedObjectNameException {
         return new ObjectName(OBJECT_NAME);
     }
 

@@ -11,10 +11,10 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since Apr 24, 2010
  */
-abstract public class J4pRequest {
+public abstract class J4pRequest {
 
     // request type
-    J4pType type;
+    private J4pType type;
 
     // "GET" or "POST"
     private String preferredHttpMethod;

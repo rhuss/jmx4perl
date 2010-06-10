@@ -178,7 +178,7 @@ public class ExecHandler extends JsonRequestHandler {
 
     // ==================================================================================
     // Used for parsing
-    private final static class OperationAndParamType {
+    private static final class OperationAndParamType {
         @SuppressWarnings("PMD.ArrayIsStoredDirectly")
         private OperationAndParamType(String pOperationName, String[] pParamClazzes) {
             operationName = pOperationName;

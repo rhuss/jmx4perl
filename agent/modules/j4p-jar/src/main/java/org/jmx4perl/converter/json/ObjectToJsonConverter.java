@@ -57,9 +57,6 @@ public class ObjectToJsonConverter {
     // Thread-Local set in order to prevent infinite recursions
     private ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>();
 
-    // Thread-Local for the fault handler when extracting value
-    private ThreadLocal<JmxRequest.ValueFaultHandler> faultHandlerLocal = new ThreadLocal<JmxRequest.ValueFaultHandler>();
-
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
 

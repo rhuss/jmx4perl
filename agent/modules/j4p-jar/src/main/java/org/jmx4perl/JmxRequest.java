@@ -83,7 +83,7 @@ public class JmxRequest {
     private Map<Config, String> processingConfig = new HashMap<Config, String>();
 
     // A value fault handler for dealing with exception when extracting values
-    ValueFaultHandler valueFaultHandler = NOOP_VALUE_FAULT_HANDLER;
+    private ValueFaultHandler valueFaultHandler = NOOP_VALUE_FAULT_HANDLER;
 
     /**
      * Create a request with the given type (with no MBean name)
@@ -268,7 +268,7 @@ public class JmxRequest {
      * @param pConfig configuration key to fetch
      * @return string value or <code>null</code> if not set
      */
-    public String getProcessingConfig(Config pConfig) {
+    public final String getProcessingConfig(Config pConfig) {
         return processingConfig.get(pConfig);
     }
 
@@ -288,7 +288,7 @@ public class JmxRequest {
         }
     }
 
-    void setProcessingConfig(String pKey, Object pValue) {
+    final void setProcessingConfig(String pKey, Object pValue) {
         Config cKey = Config.getByKey(pKey);
         if (cKey != null) {
             processingConfig.put(cKey,pValue != null ? pValue.toString() : null);
@@ -497,14 +497,14 @@ public class JmxRequest {
         <T extends Throwable> Object handleException(T exception) throws T;
     }
 
-    final private static ValueFaultHandler NOOP_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
+    private final static ValueFaultHandler NOOP_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
         public <T extends Throwable> Object handleException(T exception) throws T {
             // Dont handle exception on our own, we rethrow it
             throw exception;
         }
     };
 
-    final private static ValueFaultHandler IGNORE_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
+    private final static ValueFaultHandler IGNORE_VALUE_FAULT_HANDLER = new ValueFaultHandler() {
         public <T extends Throwable> Object handleException(T exception) throws T {
             return "ERROR: " + exception.getMessage() + " (" + exception.getClass() + ")";
         }

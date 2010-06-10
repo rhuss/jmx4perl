@@ -116,7 +116,6 @@ public class J4pRequestManager {
      */
     protected JSONAware extractJsonResponse(HttpResponse pHttpResponse) throws J4pException {
         try {
-            StatusLine status = pHttpResponse.getStatusLine();
             HttpEntity entity = pHttpResponse.getEntity();
             JSONParser parser = new JSONParser();
             Header contentEncoding = entity.getContentEncoding();
@@ -178,7 +177,7 @@ public class J4pRequestManager {
             // Translate all "/" back...
             return escapedSlashPattern.matcher(encodedRet).replaceAll("/");
         } catch (UnsupportedEncodingException e) {
-            throw new J4pException("Platform doesn't support UTF-8 encoding");
+            throw new J4pException("Platform doesn't support UTF-8 encoding",e);
         }
     }
 

@@ -3,7 +3,6 @@ package org.jmx4perl.client.request;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.json.simple.JSONObject;
@@ -14,7 +13,7 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since Apr 24, 2010
  */
-abstract public class AbtractJ4pMBeanRequest extends J4pRequest {
+public abstract class AbtractJ4pMBeanRequest extends J4pRequest {
 
     // name of MBean to execute a request on
     private ObjectName objectName;
@@ -23,7 +22,7 @@ abstract public class AbtractJ4pMBeanRequest extends J4pRequest {
         super(pType);
         objectName = pMBeanName;
     }
-    
+
     /**
      * Get the object name for the MBean on which this request
      * operates
