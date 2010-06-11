@@ -6,6 +6,9 @@ import static org.jmx4perl.JmxRequest.Type.*;
 
 import java.io.Serializable;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -38,7 +41,7 @@ public class HistoryKey implements Serializable {
     private static final long serialVersionUID = 42L;
 
     private String type;
-    private String mBean;
+    private ObjectName mBean;
     private String secondary;
     private String path;
     private String target;
@@ -49,7 +52,7 @@ public class HistoryKey implements Serializable {
         if (pJmxReq.getTargetConfig() != null) {
             target = pJmxReq.getTargetConfig().getUrl();
         }
-        mBean = pJmxReq.getObjectNameAsString();
+        mBean = pJmxReq.getObjectName();
         if (rType == EXEC) {
             type = "operation";
             secondary = pJmxReq.getOperation();
@@ -74,30 +77,49 @@ public class HistoryKey implements Serializable {
                     "History supports only READ/WRITE/EXEC commands (and not " + rType + ")");
         }
         if (pJmxRequest.getObjectNameAsString() == null) {
-            throw new IllegalArgumentException("Mbean name must not be null");
+            throw new IllegalArgumentException("MBean name must not be null");
         }
         if (pJmxRequest.getObjectName().isPattern()) {
-            throw new IllegalArgumentException("Mbean name must not be a pattern");
+            throw new IllegalArgumentException("MBean name must not be a pattern");
         }
         if (pJmxRequest.getAttributeNames() != null && pJmxRequest.getAttributeNames().size() > 1) {
             throw new IllegalArgumentException("A key cannot contain more than one attribute");
         }
     }
 
-    public HistoryKey(String pMBean, String pOperation, String pTarget) {
+    public HistoryKey(String pMBean, String pOperation, String pTarget) throws MalformedObjectNameException {
         type = "operation";
-        mBean = pMBean;
+        mBean = new ObjectName(pMBean);
         secondary = pOperation;
         path = null;
         target = pTarget;
     }
 
-    public HistoryKey(String pMBean, String pAttribute, String pPath,String pTarget) {
+    public HistoryKey(String pMBean, String pAttribute, String pPath,String pTarget) throws MalformedObjectNameException {
         type = "attribute";
-        mBean = pMBean;
+        mBean = new ObjectName(pMBean);
         secondary = pAttribute;
         path = pPath;
         target = pTarget;
+    }
+
+    /**
+     * Whether this key embraces a MBean pattern
+     *
+     * @return true if the the included MBean is a pattern
+     */
+    public boolean isMBeanPattern() {
+        return mBean.isPattern();
+    }
+
+    /**
+     * Whether the key matches the given MBean name
+     *
+     * @param pKey to match
+     * @return true if the given mbean matches the Mbean encapsulated by this key
+     */
+    public boolean matches(HistoryKey pKey) {
+        return mBean.apply(pKey.mBean);
     }
 
     @Override
@@ -125,5 +147,18 @@ public class HistoryKey implements Serializable {
         result = 31 * result + (path != null ? path.hashCode() : 0);
         result = 31 * result + (target != null ? target.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("HistoryKey");
+        sb.append("{type='").append(type).append('\'');
+        sb.append(", mBean=").append(mBean);
+        sb.append(", secondary='").append(secondary).append('\'');
+        sb.append(", path='").append(path).append('\'');
+        sb.append(", target='").append(target).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

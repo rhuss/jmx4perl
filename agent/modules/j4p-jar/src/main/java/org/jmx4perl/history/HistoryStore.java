@@ -1,17 +1,15 @@
 package org.jmx4perl.history;
 
-import org.json.simple.JSONObject;
+import java.io.Serializable;
+import java.util.*;
 
-import org.jmx4perl.JmxRequest;
-
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import static org.jmx4perl.JmxRequest.Type.*;
+import org.jmx4perl.JmxRequest;
+import org.json.simple.JSONObject;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.io.Serializable;
+import static org.jmx4perl.JmxRequest.Type.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -50,17 +48,24 @@ public class HistoryStore implements Serializable {
     private int globalMaxEntries;
 
     private Map<HistoryKey, HistoryEntry> historyStore;
+    private Map<HistoryKey, Integer /* max entries */> patterns;
+
+    // Keys used in JSON representation
+    private static final String KEY_HISTORY = "history";
+    private static final String KEY_VALUE = "value";
+    private static final String KEY_TIMESTAMP = "timestamp";
 
     public HistoryStore(int pTotalMaxEntries) {
         globalMaxEntries = pTotalMaxEntries;
         historyStore = new HashMap<HistoryKey, HistoryEntry>();
+        patterns = new HashMap<HistoryKey, Integer>();
     }
 
     public int getGlobalMaxEntries() {
         return globalMaxEntries;
     }
 
-    synchronized public void setGlobalMaxEntries(int pGlobalMaxEntries) {
+    public synchronized void setGlobalMaxEntries(int pGlobalMaxEntries) {
         globalMaxEntries = pGlobalMaxEntries;
         // Refresh all entries
         for (HistoryEntry entry : historyStore.values()) {
@@ -78,23 +83,54 @@ public class HistoryStore implements Serializable {
      * then globalMaxEntries is used instead.
      */
     public void configure(HistoryKey pKey,int pMaxEntries) {
-        HistoryEntry entry = historyStore.get(pKey);
+        int maxEntries = pMaxEntries > globalMaxEntries ? globalMaxEntries : pMaxEntries;
 
+        // Remove entries if set to 0
         if (pMaxEntries == 0) {
+            removeEntries(pKey);
+            return;
+        }
+        if (pKey.isMBeanPattern()) {
+            patterns.put(pKey,maxEntries);
+            // Trim all already stored keys
+            for (HistoryKey key : historyStore.keySet()) {
+                if (pKey.matches(key)) {
+                    HistoryEntry entry = historyStore.get(key);
+                    entry.setMaxEntries(maxEntries);
+                    entry.trim();
+                }
+            }
+        } else {
+            HistoryEntry entry = historyStore.get(pKey);
+            if (entry != null) {
+                entry.setMaxEntries(maxEntries);
+                entry.trim();
+            } else {
+                entry = new HistoryEntry(maxEntries);
+                historyStore.put(pKey,entry);
+            }
+        }
+    }
+
+    // Remove entries
+    private void removeEntries(HistoryKey pKey) {
+        if (pKey.isMBeanPattern()) {
+            patterns.remove(pKey);
+            List<HistoryKey> toRemove = new ArrayList<HistoryKey>();
+            for (HistoryKey key : historyStore.keySet()) {
+                if (pKey.matches(key)) {
+                    toRemove.add(key);
+                }
+            }
+            // Avoid concurrent modification exceptions
+            for (HistoryKey key : toRemove) {
+                historyStore.remove(key);
+            }
+        } else {
+            HistoryEntry entry = historyStore.get(pKey);
             if (entry != null) {
                 historyStore.remove(pKey);
             }
-            return;
-        }
-
-        int maxEntries = pMaxEntries > globalMaxEntries ? globalMaxEntries : pMaxEntries;
-
-        if (entry != null) {
-            entry.setMaxEntries(maxEntries);
-            entry.trim();
-        } else {
-            entry = new HistoryEntry(maxEntries);
-            historyStore.put(pKey,entry);
         }
     }
 
@@ -103,11 +139,12 @@ public class HistoryStore implements Serializable {
      */
     public synchronized void reset() {
         historyStore = new HashMap<HistoryKey, HistoryEntry>();
+        patterns = new HashMap<HistoryKey, Integer>();
     }
 
     public synchronized void updateAndAdd(JmxRequest pJmxReq, JSONObject pJson) {
         long timestamp = System.currentTimeMillis() / 1000;
-        pJson.put("timestamp",timestamp);
+        pJson.put(KEY_TIMESTAMP,timestamp);
 
         JmxRequest.Type type  = pJmxReq.getType();
         if (type == EXEC || type == WRITE) {
@@ -115,11 +152,11 @@ public class HistoryStore implements Serializable {
             if (entry != null) {
                 synchronized(entry) {
                     // A history data to json object for the response
-                    pJson.put("history",entry.jsonifyValues());
+                    pJson.put(KEY_HISTORY,entry.jsonifyValues());
 
                     // Update history for next time
                     if (type == EXEC) {
-                        entry.add(pJson.get("value"),timestamp);
+                        entry.add(pJson.get(KEY_VALUE),timestamp);
                     } else if (type == WRITE) {
                         // The new value to set as string representation
                         entry.add(pJmxReq.getValue(),timestamp);
@@ -133,14 +170,13 @@ public class HistoryStore implements Serializable {
 
     // Update potentially multiple history entries for a READ request which could
     // return multiple values with a single request
-    private void updateReadHistory(JmxRequest pJmxReq, JSONObject pJson, long pTimestamp) {
+    private void updateReadHistory(JmxRequest pJmxReq, JSONObject pJson, long pTimestamp)  {
         ObjectName name = pJmxReq.getObjectName();
-        List<String> attributeNames = pJmxReq.getAttributeNames();
         if (name.isPattern()) {
             // We have a pattern and hence a value structure
             // of bean -> attribute_key -> attribute_value
             JSONObject history = new JSONObject();
-            for (Map.Entry<String,Object> beanEntry : ((Map<String,Object>) pJson.get("value")).entrySet()) {
+            for (Map.Entry<String,Object> beanEntry : ((Map<String,Object>) pJson.get(KEY_VALUE)).entrySet()) {
                 String beanName = beanEntry.getKey();
                 JSONObject beanHistory =
                         addAttributesFromComplexValue(
@@ -153,40 +189,46 @@ public class HistoryStore implements Serializable {
                 }
             }
             if (history.size() > 0) {
-                pJson.put("history",history);
+                pJson.put(KEY_HISTORY,history);
             }
-        } else if (attributeNames != null && attributeNames.size() > 1) {
+        } else if (!pJmxReq.isSingleAttribute() || pJmxReq.getAttributeName() == null) {
             // Multiple attributes, but a single bean.
             // Value has the following structure:
             // attribute_key -> attribute_value
             JSONObject history = addAttributesFromComplexValue(
                     pJmxReq,
-                    ((Map<String,Object>) pJson.get("value")),
+                    ((Map<String,Object>) pJson.get(KEY_VALUE)),
                     pJmxReq.getObjectNameAsString(),
                     pTimestamp);
             if (history.size() > 0) {
-                pJson.put("history",history);
+                pJson.put(KEY_HISTORY,history);
             }
-        } else if (pJmxReq.getAttributeName() != null) {
+        } else {
             // Single attribute, single bean. Value is the attribute_value
             // itself.
             addAttributeFromSingleValue(pJson,
-                                        "history",
+                                        KEY_HISTORY,
                                         new HistoryKey(pJmxReq),
-                                        pJson.get("value"),
+                                        pJson.get(KEY_VALUE),
                                         pTimestamp);
         }
     }
 
     private JSONObject addAttributesFromComplexValue(JmxRequest pJmxReq,Map<String,Object> pAttributesMap,
-                                                           String pBeanName,long pTimestamp) {
+                                                     String pBeanName,long pTimestamp) {
         JSONObject ret = new JSONObject();
         for (Map.Entry<String,Object> attrEntry : pAttributesMap.entrySet()) {
             String attrName = attrEntry.getKey();
             Object value = attrEntry.getValue();
-            HistoryKey key =
-                    new HistoryKey(pBeanName,attrName,null /* No path support for complex read handling */,
-                                   pJmxReq.getTargetConfigUrl());
+            HistoryKey key;
+            try {
+                key = new HistoryKey(pBeanName,attrName,null /* No path support for complex read handling */,
+                                     pJmxReq.getTargetConfigUrl());
+            } catch (MalformedObjectNameException e) {
+                // Shouldnt occur since we get the MBeanName from a JMX operation's result. However,
+                // we will rethrow it
+                throw new IllegalArgumentException("Cannot pars MBean name " + pBeanName,e);
+            }
             addAttributeFromSingleValue(ret,
                                         attrName,
                                         key,
@@ -198,13 +240,30 @@ public class HistoryStore implements Serializable {
 
     private void addAttributeFromSingleValue(JSONObject pHistMap, String pAttrName, HistoryKey pKey,
                                              Object pValue, long pTimestamp) {
-        HistoryEntry entry = historyStore.get(pKey);
+        HistoryEntry entry = getEntry(pKey,pValue,pTimestamp);
         if (entry != null) {
             synchronized (entry) {
                 pHistMap.put(pAttrName,entry.jsonifyValues());
                 entry.add(pValue,pTimestamp);
             }
         }
+    }
+
+    private HistoryEntry getEntry(HistoryKey pKey,Object pValue,long pTimestamp) {
+        HistoryEntry entry = historyStore.get(pKey);
+        if (entry != null) {
+            return entry;
+        }
+        // Now try all known patterns and add lazily the key
+        for (HistoryKey key : patterns.keySet()) {
+            if (key.matches(pKey)) {
+                entry = new HistoryEntry(patterns.get(key));
+                entry.add(pValue,pTimestamp);
+                historyStore.put(pKey,entry);
+                return entry;
+            }
+        }
+        return null;
     }
 
 }

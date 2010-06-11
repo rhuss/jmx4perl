@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 public class SearchHandler extends JsonRequestHandler {
 
     // Pattern for value in which case the value needs to be escaped
-    private final static Pattern INVALID_CHARS_PATTERN = Pattern.compile(":\",=\\*?");
+    private static final Pattern INVALID_CHARS_PATTERN = Pattern.compile(":\",=\\*?");
 
     public SearchHandler(Restrictor pRestrictor) {
         super(pRestrictor);
@@ -51,6 +51,7 @@ public class SearchHandler extends JsonRequestHandler {
     }
 
     @Override
+    @SuppressWarnings("PMD.ReplaceHashtableWithMap")
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, MBeanException, IOException {
         Set<ObjectName> names = server.queryNames(request.getObjectName(),null);
@@ -62,6 +63,7 @@ public class SearchHandler extends JsonRequestHandler {
 
             // Check whether the property-list values needs to be escaped:
             Map<String,String> props = name.getKeyPropertyList();
+            // We need a hashtable since ObjectName requires one.
             Hashtable<String,String> escapedProps = new Hashtable<String, String>();
             boolean needsEscape = false;
             for (Map.Entry<String,String> entry : props.entrySet()) {

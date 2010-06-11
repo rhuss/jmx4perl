@@ -65,7 +65,7 @@ import java.util.concurrent.Executors;
  * @author roland
  * @since Mar 3, 2010
  */
-public class JvmAgentJdk6 {
+public final class JvmAgentJdk6 {
 
     private static final int DEFAULT_PORT = 8778;
     private static final int DEFAULT_BACKLOG = 10;
@@ -78,6 +78,7 @@ public class JvmAgentJdk6 {
      *
      * @param agentArgs arguments as given on the command line
      */
+    @SuppressWarnings("PMD.SystemPrintln")
     public static void premain(String agentArgs) {
         try {
             Map<String,String> agentConfig = parseArgs(agentArgs);
@@ -121,6 +122,7 @@ public class JvmAgentJdk6 {
         return HttpServer.create(socketAddress,backLog);
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")
     private static void startServer(final HttpServer pServer, final String pContextPath) {
         ThreadGroup threadGroup = new ThreadGroup("j4p");
         threadGroup.setDaemon(false);
@@ -152,6 +154,7 @@ public class JvmAgentJdk6 {
         return context;
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")
     private static Map<String, String> parseArgs(String pAgentArgs) {
         Map<String,String> ret = new HashMap<String, String>();
         if (pAgentArgs != null && pAgentArgs.length() > 0) {
@@ -176,6 +179,7 @@ public class JvmAgentJdk6 {
         }
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")
     private static Map<String, String> readConfig(String pFilename) {
         File file = new File(pFilename);
         try {
@@ -193,6 +197,7 @@ public class JvmAgentJdk6 {
         return readPropertiesFromInputStream(is,"j4p-agent.properties");
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")
     private static Map<String, String> readPropertiesFromInputStream(InputStream pIs,String pLabel) {
         Map ret = new HashMap<String, String>();
         if (pIs == null) {
@@ -208,6 +213,7 @@ public class JvmAgentJdk6 {
         return ret;
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")    
     private static Executor getExecutor(Map<String,String> pConfig) {
         String executor = pConfig.get("executor");
         if ("fixed".equalsIgnoreCase(executor)) {

@@ -1,22 +1,16 @@
 package org.jmx4perl.osgi;
 
-import org.jmx4perl.AgentServlet;
-import org.jmx4perl.Config;
-import org.jmx4perl.LogHandler;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.http.HttpContext;
-import org.osgi.service.http.HttpService;
-import org.osgi.service.http.NamespaceException;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import javax.servlet.ServletException;
+
+import org.jmx4perl.*;
+import org.osgi.framework.*;
+import org.osgi.service.http.*;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import javax.servlet.ServletException;
-import java.util.Dictionary;
-import java.util.Hashtable;
 
 import static org.jmx4perl.Config.*;
 
@@ -52,9 +46,6 @@ public class J4pActivator implements BundleActivator {
     // Context associated with this activator
     private BundleContext bundleContext;
 
-    // Listener used for monitoring HttpService
-    private ServiceListener httpServiceListener;
-
     // Tracker to be used for the LogService
     private ServiceTracker logTracker;
 
@@ -64,7 +55,7 @@ public class J4pActivator implements BundleActivator {
     // Prefix used for configuration values
     private static final String CONFIG_PREFIX = "org.jmx4perl";
 
-    public void start(BundleContext pBundleContext) throws Exception {
+    public void start(BundleContext pBundleContext) {
         bundleContext = pBundleContext;
 
         // Track logging service
@@ -77,7 +68,7 @@ public class J4pActivator implements BundleActivator {
     }
 
 
-    public void stop(BundleContext pBundleContext) throws Exception {
+    public void stop(BundleContext pBundleContext) {
         assert pBundleContext.equals(bundleContext);
 
         logTracker.close();

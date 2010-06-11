@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use Module::Build 0.35;
+use Module::Build 0.34;
 
 my $class = Module::Build->subclass(
       class => "Module::Build::Custom",
@@ -179,10 +179,14 @@ my $build = $class->new
                },
    recommends => {
                    "Nagios::Plugin" => "0.27",
-                   "Config::General" => "0"
+                   "Text::ParseWords" => 0,
+                   "Config::General" => 0,
+                   "Term::ShellUI" => 0,
+                   "Term::Size" => "0.207",
+                   "Term::Clui" => 0
                   },
    build_requires => {
-                      "Module::Build" => "0.35",
+                      "Module::Build" => "0.34",
                       "Test::More" => "0",
                       "Test::Deep" => 0,
                       "Test" => "0"

@@ -70,6 +70,7 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
     }
 
     @Override
+    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     public void handle(HttpExchange pExchange) throws IOException {
         JSONAware json = null;
         int code = 200;
@@ -142,16 +143,19 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
     }
 
     @Override
+    @SuppressWarnings("PMD.SystemPrintln")
     public void debug(String message) {
         System.err.println("DEBUG: " + message);
     }
 
     @Override
+    @SuppressWarnings("PMD.SystemPrintln")
     public void info(String message) {
         System.err.println("INFO: " + message);
     }
 
     @Override
+    @SuppressWarnings("PMD.SystemPrintln")
     public void error(String message, Throwable t) {
         System.err.println("ERROR: " + message);
     }

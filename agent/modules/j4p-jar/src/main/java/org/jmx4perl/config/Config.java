@@ -1,15 +1,14 @@
 package org.jmx4perl.config;
 
+import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.util.Set;
+
+import javax.management.*;
+
 import org.jmx4perl.backend.MBeanServerHandler;
 import org.jmx4perl.history.HistoryKey;
 import org.jmx4perl.history.HistoryStore;
-
-import javax.management.*;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.lang.management.ManagementFactory;
-import java.util.Set;
 
 
 /*
@@ -54,12 +53,13 @@ public class Config implements ConfigMBean,MBeanRegistration {
         mBeanServerHandler = pMBeanServerHandler;
     }
 
-    public void setHistoryEntriesForAttribute(String pMBean, String pAttribute, String pPath, String pTarget, int pMaxEntries) {
+    public void setHistoryEntriesForAttribute(String pMBean, String pAttribute, String pPath, String pTarget, int pMaxEntries)
+            throws MalformedObjectNameException {
         HistoryKey key = new HistoryKey(pMBean,pAttribute,pPath,pTarget);
         historyStore.configure(key,pMaxEntries);
     }
 
-    public void setHistoryEntriesForOperation(String pMBean, String pOperation, String pTarget, int pMaxEntries) {
+    public void setHistoryEntriesForOperation(String pMBean, String pOperation, String pTarget, int pMaxEntries) throws MalformedObjectNameException {
         HistoryKey key = new HistoryKey(pMBean,pOperation,pTarget);
         historyStore.configure(key,pMaxEntries);
     }
@@ -159,14 +159,14 @@ public class Config implements ConfigMBean,MBeanRegistration {
     // ========================================================================
 
     // Provide our own name on registration
-    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+    public ObjectName preRegister(MBeanServer server, ObjectName name) throws MalformedObjectNameException {
         return new ObjectName(OBJECT_NAME);
     }
 
     public void postRegister(Boolean registrationDone) {
     }
 
-    public void preDeregister() throws Exception {
+    public void preDeregister() {
     }
 
     public void postDeregister() {

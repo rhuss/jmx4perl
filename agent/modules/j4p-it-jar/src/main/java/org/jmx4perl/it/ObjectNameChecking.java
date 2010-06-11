@@ -23,11 +23,6 @@
 
 package org.jmx4perl.it;
 
-import javax.management.MBeanRegistration;
-import javax.management.ObjectName;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-
 /**
  * We need to use MBeanRegisration because Websphere wont let us set our name
  * directly while registering (it always add some boilerplate to the name). Using this

@@ -62,15 +62,13 @@ public class ReadHandler extends JsonRequestHandler {
             List<String> attributeNames = request.getAttributeNames();
             boolean fetchAll =  attributeNames == null || (attributeNames.contains(null));
             for (ObjectName name : names) {
-                List<String> filteredAttributeNames;
                 if (fetchAll) {
-                    filteredAttributeNames = null;
-                    Map values = (Map) fetchAttributes(server,name,filteredAttributeNames,faultHandler,true /* always as map */);
+                    Map values = (Map) fetchAttributes(server,name, null,faultHandler,true /* always as map */);
                     if (values != null && values.size() > 0) {
                         ret.put(name.getCanonicalName(),values);
                     }
                 } else {
-                    filteredAttributeNames = filterAttributeNames(server,name,attributeNames);
+                    List<String> filteredAttributeNames = filterAttributeNames(server,name,attributeNames);
                     if (filteredAttributeNames.size() == 0) {
                         continue;
                     }
@@ -84,7 +82,7 @@ public class ReadHandler extends JsonRequestHandler {
             }
             return ret;
         } else {
-            return fetchAttributes(server,oName,request.getAttributeNames(),faultHandler,false);
+            return fetchAttributes(server,oName,request.getAttributeNames(),faultHandler,!request.isSingleAttribute());
         }
     }
 
@@ -178,5 +176,12 @@ public class ReadHandler extends JsonRequestHandler {
             throw new SecurityException("Reading attribute " + attribute +
                     " is forbidden for MBean " + mBeanName.getCanonicalName());
         }
+    }
+
+    @Override
+    // We override it here with a noop since we do a more fine grained
+    // check during processin of the request.
+    protected void checkForType(JmxRequest pRequest) {
+
     }
 }

@@ -32,6 +32,8 @@ import java.lang.reflect.InvocationTargetException;
  */
 
 /**
+ * Handler for dealing with write request.
+ *
  * @author roland
  * @since Jun 12, 2009
  */
@@ -50,13 +52,16 @@ public class WriteHandler extends JsonRequestHandler {
     }
 
     @Override
+    protected void checkForType(JmxRequest pRequest) {
+        if (!restrictor.isAttributeWriteAllowed(pRequest.getObjectName(),pRequest.getAttributeName())) {
+            throw new SecurityException("Writing attribute " + pRequest.getAttributeName() +
+                    " forbidden for MBean " + pRequest.getObjectNameAsString());
+        }
+    }
+
+    @Override
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
-
-        if (!restrictor.isAttributeWriteAllowed(request.getObjectName(),request.getAttributeName())) {
-            throw new SecurityException("Writing attribute " + request.getAttributeName() +
-                    " forbidden for MBean " + request.getObjectNameAsString());
-        }
 
         try {
             return setAttribute(request, server);
@@ -97,6 +102,17 @@ public class WriteHandler extends JsonRequestHandler {
         Attribute attribute = new Attribute(request.getAttributeName(),values[0]);
         server.setAttribute(request.getObjectName(),attribute);
         return values[1];
+    }
+
+    /**
+     * The old value is returned directly, hence we do not want any path conversion
+     * on this value
+     *
+     * @return false;
+     */
+    @Override
+    public boolean useReturnValueWithPath() {
+        return false;
     }
 }
 

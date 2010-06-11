@@ -43,7 +43,7 @@ public class ItSetup {
 
     private String domain = "jmx4perl.it";
 
-    private String[] strangeNames = {
+    private String[] strangeNamesShort = {
             "simple",
             "/slash-simple/",
             "/--/",
@@ -53,8 +53,9 @@ public class ItSetup {
 //            "äöüßÄÖÜ"
 
     };
+    private List<String> strangeNames = new ArrayList<String>();
 
-    private String[] escapedNames = {
+    private String[] escapedNamesShort = {
 //            "name*with?strange=\"chars"
               "name*withstrange=chars",
               "name?withstrange=chars",
@@ -67,6 +68,8 @@ public class ItSetup {
               ":::",
               "???"
     };
+    private List<String> escapedNames = new ArrayList<String>();
+
 
     private List<ObjectName> testBeans = new ArrayList<ObjectName>();
 
@@ -91,11 +94,15 @@ public class ItSetup {
     private void registerMBeans() {
         try {
             // Register my test mbeans
-            for (String name : strangeNames) {
-                registerMBean(new ObjectNameChecking(),domain + ":type=naming,name=" + name);
+            for (String name : strangeNamesShort) {
+                String strangeName = domain + ":type=naming,name=" + name;
+                strangeNames.add(strangeName);
+                registerMBean(new ObjectNameChecking(),strangeName);
             }
-            for (String name : escapedNames) {
-                registerMBean(new ObjectNameChecking(),domain + ":type=escape,name=" + ObjectName.quote(name));
+            for (String name : escapedNamesShort) {
+                String escapedName = domain + ":type=escape,name=" + ObjectName.quote(name);
+                escapedNames.add(escapedName);
+                registerMBean(new ObjectNameChecking(),escapedName);
             }
 
             // Other MBeans
@@ -107,14 +114,22 @@ public class ItSetup {
             } catch (ClassNotFoundException exp) {
                 isWebsphere = false;
             }
-            registerMBean(new OperationChecking(),isWebsphere ? null : domain + ":type=operation");
-            registerMBean(new AttributeChecking(),isWebsphere ? null : domain + ":type=attribute");
+            registerMBean(new OperationChecking(),isWebsphere ? null : getOperationMBean());
+            registerMBean(new AttributeChecking(),isWebsphere ? null : getAttributeMBean());
 
         } catch (RuntimeException e) {
             throw new RuntimeException("Error",e);
         } catch (Exception exp) {
             throw new RuntimeException("Error",exp);
         }
+    }
+
+    public String getAttributeMBean() {
+        return domain + ":type=attribute";
+    }
+
+    public String getOperationMBean() {
+        return domain + ":type=operation";
     }
 
     @SuppressWarnings("PMD.SystemPrintln")
@@ -140,5 +155,13 @@ public class ItSetup {
                 System.out.println("Exception while unregistering " + name + e);
             }
         }
+    }
+
+    public List<String> getStrangeNames() {
+        return strangeNames;
+    }
+
+    public List<String> getEscapedNames() {
+        return escapedNames;
     }
 }

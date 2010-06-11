@@ -9,7 +9,7 @@
   attributes and operations in detail.
 -->
 
-<j4p-restrict>
+<restrict>
 
   <!-- Hosts allowed -->
   <remote>
@@ -19,23 +19,22 @@
     <host>192.168.15.3/255.255.255.0</host>
   </remote>
 
-  <!-- List of allowed commands. Remove the commands you dont want to
-       be called. If the section <commands> is missing completely, all
-       commands are allowed -->
+  Text is ignored
+
   <commands>
-    <command>read</command>
-    <command>write</command>
-    <command>exec</command>
     <command>list</command>
     <command>version</command>
     <command>search</command>
   </commands>
 
-  <!-- Access to the following MBeans with their attributes/operations is allowed. If the
-       <mbeans> sections is present, access to any MBean not mentioned there will be
-       rejected. If the <mbeans> section is missing, access to all MBeans is allowed -->
-  <mbeans>
+  <allow>
+
+    Text is ignored
+
     <mbean>
+
+      Text is ignored
+
       <name>java.lang:type=Memory</name>
       <attribute>HeapMemoryUsage</attribute>
       <attribute mode="read"> Verbose </attribute>
@@ -45,5 +44,5 @@
       <name>java.lang:type=Threading</name>
       <attribute>ThreadCount</attribute>
     </mbean>
-  </mbeans>
-</j4p-restrict>
+  </allow>
+</restrict>

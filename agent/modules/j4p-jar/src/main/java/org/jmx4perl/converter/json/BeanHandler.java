@@ -55,7 +55,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
     private static final Set<String> IGNORE_METHODS = new HashSet<String>(Arrays.asList(
             "getClass"
     ));
-    private static final String[] GETTER_PREFIX = new String[] { "get", "is"};
+    private static final String[] GETTER_PREFIX = new String[] { "get", "is", "has"};
 
 
     public Class getType() {
@@ -68,40 +68,60 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
             throws AttributeNotFoundException {
         JmxRequest.ValueFaultHandler faultHandler = pConverter.getValueFaultHandler();
         if (!pExtraArgs.isEmpty()) {
+            // Still some path elements available, so dive deeper
             String attribute = pExtraArgs.pop();
-            Object attributeValue = extractBeanAttribute(pValue,attribute,faultHandler);
+            Object attributeValue = extractBeanPropertyValue(pValue,attribute,faultHandler);
             return pConverter.extractObject(attributeValue,pExtraArgs,jsonify);
         } else {
-            if (!jsonify) {
-                return pValue;
-            }
-            if (pValue.getClass().isPrimitive() || FINAL_CLASSES.contains(pValue.getClass())) {
-                return pValue.toString();
+            if (jsonify) {
+                // We need the jsonfied value from here on.
+                return exctractJsonifiedValue(pValue, pExtraArgs, pConverter, faultHandler);
             } else {
-                List<String> attributes = extractBeanAttributes(pValue);
-                if (attributes != null && attributes.size() > 0) {
-                    Map ret = new JSONObject();
-                    for (String attribute : attributes) {
-                        Object value = extractBeanAttribute(pValue,attribute,faultHandler);
-                        if (value == null) {
-                            ret.put(attribute,null);
-                        } else if (value == pValue) {
-                            // Break Cycle
-                            ret.put(attribute,"[this]");
-                        } else {
-                            ret.put(attribute,
-                                    pConverter.extractObject(value,pExtraArgs,jsonify));
-                        }
-                    }
-                    return ret;
-                } else {
-                    // No further attributes, return string representation
-                    return pValue.toString();
-                }
+                // No jsonification requested, hence we are returning the object itself
+                return pValue;
             }
         }
     }
 
+    private Object exctractJsonifiedValue(Object pValue, Stack<String> pExtraArgs,
+                                          ObjectToJsonConverter pConverter, JmxRequest.ValueFaultHandler pFaultHandler)
+            throws AttributeNotFoundException {
+        if (pValue.getClass().isPrimitive() || FINAL_CLASSES.contains(pValue.getClass())) {
+            // No further diving, use these directly
+            return pValue.toString();
+        } else {
+            // For the rest we build up a JSON map with the attributes as keys and the value are
+            List<String> attributes = extractBeanAttributes(pValue);
+            if (attributes != null && attributes.size() > 0) {
+                Map ret = new JSONObject();
+                for (String attribute : attributes) {
+                    ret.put(attribute, extractJsonifiedPropertyValue(pValue, attribute, pExtraArgs, pConverter, pFaultHandler));
+                }
+                return ret;
+            } else {
+                // No further attributes, return string representation
+                return pValue.toString();
+            }
+        }
+    }
+
+
+    private Object extractJsonifiedPropertyValue(Object pValue, String pAttribute, Stack<String> pExtraArgs,
+                                                  ObjectToJsonConverter pConverter, JmxRequest.ValueFaultHandler pFaultHandler)
+            throws AttributeNotFoundException {
+        Object value = extractBeanPropertyValue(pValue, pAttribute, pFaultHandler);
+        if (value == null) {
+            return null;
+        } else if (value == pValue) {
+            // Break Cycle
+            return "[this]";
+        } else {
+            // Call into the converted recursively for any object known.
+            return pConverter.extractObject(value,pExtraArgs,true /* jsonify */);
+        }
+    }
+
+    @SuppressWarnings("PMD.UnnecessaryCaseChange")
     private List<String> extractBeanAttributes(Object pValue) {
         List<String> attrs = new ArrayList<String>();
         for (Method method : pValue.getClass().getMethods()) {
@@ -113,28 +133,30 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
                 if (name.startsWith(pref) && name.length() > pref.length()
                         && method.getParameterTypes().length == 0) {
                     int len = pref.length();
-                    String attribute =
-                            new StringBuffer(name.substring(len,len+1).toLowerCase()).
-                                    append(name.substring(len+1)).toString();
-                    attrs.add(attribute);
+                    String firstLetter = name.substring(len,len+1);
+                    // Only for getter compliant to the beans conventions (first letter after prefix is upper case)
+                    if (firstLetter.toUpperCase().equals(firstLetter)) {
+                        String attribute =
+                                new StringBuffer(firstLetter.toLowerCase()).
+                                        append(name.substring(len+1)).toString();
+                        attrs.add(attribute);
+                    }
                 }
             }
         }
         return attrs;
     }
 
-    private Object extractBeanAttribute(Object pValue, String pAttribute, JmxRequest.ValueFaultHandler pFaultHandler)
+    private Object extractBeanPropertyValue(Object pValue, String pAttribute, JmxRequest.ValueFaultHandler pFaultHandler)
             throws AttributeNotFoundException {
         Class clazz = pValue.getClass();
 
         Method method = null;
 
+        String suffix = new StringBuilder(pAttribute.substring(0,1).toUpperCase()).append(pAttribute.substring(1)).toString();
         for (String pref : GETTER_PREFIX) {
-            String methodName =
-                    new StringBuffer(pref)
-                            .append(pAttribute.substring(0,1).toUpperCase())
-                            .append(pAttribute.substring(1)).toString();
             try {
+                String methodName = new StringBuilder(pref).append(suffix).toString();
                 method = clazz.getMethod(methodName);
             } catch (NoSuchMethodException e) {
                 // Try next one
@@ -142,6 +164,15 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
             }
             // We found a valid method
             break;
+        }
+        // Finally, try the attribute name directly
+        if (method == null) {
+            try {
+                method = clazz.getMethod(new StringBuilder(pAttribute.substring(0,1).toLowerCase())
+                        .append(pAttribute.substring(1)).toString());
+            } catch (NoSuchMethodException exp) {
+                method = null;
+            }
         }
         if (method == null) {
             return pFaultHandler.handleException(new AttributeNotFoundException(
@@ -189,12 +220,18 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         Object oldValue;
         try {
             Method getMethod = clazz.getMethod(getter);
+            getMethod.setAccessible(true);
             oldValue = getMethod.invoke(pInner);
         } catch (NoSuchMethodException exp) {
             // Ignored, we simply dont return an old value
             oldValue = null;
         }
+        found.setAccessible(true);
         found.invoke(pInner,pConverter.convertFromString(params[0].getName(),pValue));
         return oldValue;
+    }
+
+    public boolean canSetValue() {
+        return true;
     }
 }

@@ -2,27 +2,28 @@ package JMX::Jmx4Perl::Nagios::CheckJmx4Perl;
 
 use strict;
 use warnings;
+use JMX::Jmx4Perl::Nagios::SingleCheck;
 use JMX::Jmx4Perl;
 use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Response;
-use JMX::Jmx4Perl::Alias;
 use Data::Dumper;
 use Nagios::Plugin;
 use Nagios::Plugin::Functions qw(:codes %STATUS_TEXT);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Carp;
-use Scalar::Util qw(looks_like_number);
-use URI::Escape;
+use Text::ParseWords;
+
+our $AUTOLOAD;
 
 =head1 NAME
 
-JMX::Jmx4Perl::CheckJmx4Perl - Module for encapsulating the functionality of
+JMX::Jmx4Perl::Nagios::CheckJmx4Perl - Module for encapsulating the functionality of
 L<check_jmx4perl> 
 
 =head1 SYNOPSIS
 
   # One line in check_jmx4perl to rule them all
-  JMX::Jmx4Perl::CheckJmx4Perl->new()->execute();
+  JMX::Jmx4Perl::Nagios::CheckJmx4Perl->new()->execute();
 
 =head1 DESCRIPTION
 
@@ -30,8 +31,20 @@ The purpose of this module is to encapsulate a single run of L<check_jmx4perl>
 in a perl object. This allows for C<check_jmx4perl> to run within the embedded
 Nagios perl interpreter (ePN) wihout interfering with other, potential
 concurrent, runs of this check. Please refer to L<check_jmx4perl> for
-documentation on how to use this check. This module is probbaly I<not> of 
+documentation on how to use this check. This module is probably I<not> of 
 general interest and serves only the purpose described above.
+
+Its main task is to set up one ore more L<JMX::Jmx4Perl::Nagios::SingleCheck>
+objects from command line arguments and optionally from a configuration file. 
+
+=head1 METHODS
+
+=over
+
+=item $check = new $JMX::Jmx4Perl::Nagios::CheckJmx4Perl()
+
+Set up a object used for a single check. It will parse the command line
+arguments and any configuation file given.
 
 =cut
 
@@ -39,90 +52,76 @@ sub new {
     my $class = shift;
     my $self = { 
                 np => &_create_nagios_plugin(),
+                cmd_args => [ @ARGV ]
                };
-    $self->{opts} = $self->{np}->opts;
     bless $self,(ref($class) || $class);
     $self->_verify_and_initialize();
     return $self;
 }
 
+=head1 $check->execute()
+
+Send the JMX request to the server monitored and print out a nagios output. 
+
+=cut
 
 sub execute {
     my $self = shift;
     my $np = $self->{np};
     eval {
-        my $o = $self->{opts};
 
         # Request
         my @optional = ();
-        if ($o->target) {
-            push @optional,target => { 
-                                      url => $o->target,
-                                      $o->{'target-user'} ? (user => $o->{'target-user'}) : (),
-                                      $o->{'target-password'} ? (password => $o->{'target-password'}) : (),
-                                     }
+        my $target = $self->target ? {
+                                      url => $self->target,
+                                      $self->target_user ? (user => $self->target_user) : (),
+                                      $self->target_password ? (password => $self->target_password) : (),                      
+                                     } : {};
+        my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $self->url, user => $self->user, 
+                                     password => $self->password,
+                                     product => $self->product, proxy => $self->proxy,
+                                     $self->target ? (target => $target) : ());
+
+        my @requests;
+        for my $check (@{$self->{checks}}) {
+            push @requests,@{$check->get_requests($jmx,\@ARGV)};            
         }
-        my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $o->url, user => $o->user, 
-                                     password => $o->password,
-                                     product => $o->product, proxy => $o->proxy,
-                                     @optional);
-        my $request;
-        my $do_read = $o->get("attribute");
-        if ($o->get("alias")) {
-            my $alias = JMX::Jmx4Perl::Alias->by_name($o->get("alias"));
-            die "No alias '",$o->get("alias")," known" unless $alias;
-            $do_read = $alias->type eq "attribute";
-        }
-        if ($do_read) {
-            $request = JMX::Jmx4Perl::Request->new(READ,$self->_prepare_read_args($jmx));
+        my $responses = $self->_send_requests($jmx,@requests);
+        my @extra_requests = ();
+        my $nr_checks = scalar(@{$self->{checks}});
+        if ($nr_checks == 1) {
+            my @r = $self->{checks}->[0]->extract_responses($responses,\@requests,{ target => $target });
+            push @extra_requests,@r if @r;
         } else {
-            $request = JMX::Jmx4Perl::Request->new(EXEC,$self->_prepare_exec_args($jmx,@ARGV));
+            my $i = 1;
+            for my $check (@{$self->{checks}}) {
+                # A check can consume more than one response
+                my @r = $check->extract_responses($responses,\@requests,
+                                                    { target => $target, 
+                                                      prefix => $self->_multi_check_prefix($check,$i++,$nr_checks)});
+                push @extra_requests,@r if @r;
+            }
         }
-        
-        my $resp = $self->_send_request($jmx,$request);
-        my $value = $resp->value;
-        # Delta handling
-        my $delta = $o->get("delta");
-        if (defined($delta)) {
-            $value = $self->_delta_value($jmx,$request,$resp,$delta);
+        # Send extra requests, e.g. for switching on the history
+        if (@extra_requests) {
+            $self->_send_requests($jmx,@extra_requests);
         }
-
-        # Normalize value 
-        my ($value_conv,$unit) = $self->_normalize_value($value);
-        
-        # Common args
-        my $label = "'".$self->_get_name(cleanup => 1)."'";
-        if ($o->get("base")) {
-            # Calc relative value 
-            my $base_value = $self->_base_value($jmx,$o->get("base"));
-            my $rel_value = sprintf "%2.2f",(int((($value / $base_value) * 10000) + 0.5) / 100) ;
-
-
-            # Performance data. Convert to absolute values before
-            my ($critical,$warning) = $self->_convert_relative_to_absolute($base_value,$o->critical,$o->warning);
-            $np->add_perfdata(label => $label,value => $value,
-                              critical => $critical,warning => $warning,
-                              min => 0,max => $base_value,
-                              $o->{unit} ? (uom => $o->{unit}) : ());
-
-            # Do the real check.
-            my ($code,$mode) = $self->_check_threshhold($rel_value);
-            my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
-            return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
-                                                               value => $value_conv, unit => $unit,base => $base_conv, 
-                                                               base_unit => $base_unit));            
+        my ($code,$message) = $self->_exit_message($np);
+        my $summary;
+        if ($code eq OK) {
+            $summary = "All " . $nr_checks . " checks OK";            
         } else {
-            # Performance data
-            $np->add_perfdata(label => $label,
-                              critical => $o->critical, warning => $o->warning,
-                              value => $value,$o->{unit} ? (uom => $o->{unit}) : ());
-
-            # Do the real check.
-            my ($code,$mode) = $self->_check_threshhold($value);
-            return $np->nagios_exit($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit));                    }
+            my $nr_warnings = scalar(@{$np->messages->{warning} || []});
+            my $nr_errors = scalar(@{$np->messages->{critical} || []});
+            my @parts;
+            push @parts,"$nr_errors error" . ($nr_errors > 1 ? "s" : "") if $nr_errors;
+            push @parts,"$nr_warnings warning" . ($nr_warnings > 1 ? "s" : "") if $nr_warnings;
+            $summary = $nr_warnings + $nr_errors . " of " . $nr_checks . " failed (" . join(" and ",@parts) . ")";
+        }
+        $np->nagios_exit($code, $summary . "\n" . $message);
     };
     if ($@) {
-        # p1.pl, the executing script of the embedded nagios perl interpreted
+        # p1.pl, the executing script of the embedded nagios perl interpreter
         # uses this tag to catch an exit code of a plugin. We rethrow this
         # exception if we detect this pattern.
         if ($@ !~ /^ExitTrap:/) {
@@ -133,430 +132,365 @@ sub execute {
     }
 }
 
-sub _get_name { 
+# Create a formatted prefix for multicheck output
+sub _multi_check_prefix {
     my $self = shift;
-    my $args = { @_ };
-    my $o = $self->{opts};
-    my $name = $args->{name};
-    if (!$name) {
-        if ($o->name) {
-            $name = $o->name;
-        } else {
-            # Default name
-            $name = $o->alias ? 
-          "[".$o->alias.($o->path ? "," . $o->path : "") ."]" : 
-            "[".$o->mbean.",".$o->attribute.($o->path ? "," . $o->path : "")."]";
-        }
-    }
-    if ($args->{cleanup}) {
-        # Enable this when '=' gets forbidden
-        #$name =~ s/=/#/g;
-    }
-    return $name;
+    my $check = shift;
+    my $idx = shift;
+    my $max = shift;
+    my $label = $check->{config}->{key} || $check->{config}->{name} || "";
+    my $l = length($max);
+    return sprintf("[%$l.${l}s] %%c %s: ",$idx,$label);
 }
 
-sub _send_request {
-    my ($self,$jmx,$request) = @_;
+# Create exit message 
+sub _exit_message {
+    my $self = shift;
+    my $np = shift;
+    return $np->check_messages(join => "\n", join_all => "\n");
+}
+
+# Send the requests via the build up agent
+sub _send_requests {
+    my ($self,$jmx,@requests) = @_;
     my $o = $self->{opts};
 
-    my $start_time;    
+    my $start_time;
     if ($o->verbose) {
-        print "Request URL: ",$jmx->request_url($request),"\n";
-        if ($o->user) {
+        # TODO: Print summary of request (GET vs POST)
+        # print "Request URL: ",$jmx->request_url($request),"\n";
+        if ($self->user) {
             print "Remote User: ",$o->user,"\n";
         }
         $start_time = [gettimeofday];
     }
 
-    my $resp = $jmx->request($request);
-    $self->_verify_response($resp);
-
+    my @responses = $jmx->request(@requests);
     if ($o->verbose) {
         print "Result fetched in ",tv_interval($start_time) * 1000," ms:\n";
-        print Dumper($resp);
+        print Dumper(\@responses);
     }
-
-    return $resp;
+    #print Dumper(\@responses);
+    return \@responses;
 }
 
-sub _switch_on_history {
-    my ($self,$jmx,$orig_request) = @_;
-    my ($mbean,$operation) = $jmx->resolve_alias(JMX4PERL_HISTORY_MAX_ATTRIBUTE);
-    # Set history to 1 (we need only the last)
-    my $target = $jmx->cfg("target");
-    my $switch_request = new JMX::Jmx4Perl::Request
-      (EXEC,$mbean,$operation,
-       $orig_request->get("mbean"),$orig_request->get("attribute"),$orig_request->get("path"),
-       $target ? $target->{url} : undef,1,{target => undef});
-    my $resp = $jmx->request($switch_request);
-    if ($resp->is_error) {
-        $self->{np}->nagios_die("Error: ".$resp->status." ".$resp->error_text.
-                                "\nStacktrace:\n".$resp->stacktrace);
-    }
-
-    # Refetch value to initialize the history
-    $resp = $jmx->request($orig_request);
-    $self->_verify_response($resp);
-}
-
-sub _prepare_read_args {
-    my $self = shift;
-    my $np = $self->{np};
-    my $jmx = shift;
-    my $o = $np->opts;
-
-    if ($o->alias) {
-        my @req_args = $jmx->resolve_alias($o->alias);
-        $np->nagios_die("Cannot resolve attribute alias ",$o->alias()) unless @req_args > 0;
-        if ($o->path) {
-            @req_args == 2 ? $req_args[2] = $o->path : $req_args[2] .= "/" . $o->path;
-        }
-        return @req_args;
-    } else {
-        return ($o->mbean,$o->attribute,$o->path);
-    }
-}
-
-sub _prepare_exec_args {
-    my $self = shift;
-    my $np = $self->{np};
-    my $jmx = shift;
-    my @args = @_;
-    my $o = $np->opts;
-
-    if ($o->alias) {
-        my @req_args = $jmx->resolve_alias($o->alias);
-        $np->nagios_die("Cannot resolve operation alias ",$o->alias()) unless @req_args >= 2;
-        return (@req_args,@args);
-    } else {
-        return ($o->mbean,$o->operation,@args);
-    }
-}
-
-sub _verify_response {
-    my ($self,$resp) = @_;
-    my $np = $self->{np};
-    if ($resp->is_error) {
-        $np->nagios_die("Error: ".$resp->status." ".$resp->error_text."\nStacktrace:\n".$resp->stacktrace);
-    }
-    if (!defined($resp->value)) {
-        $np->nagios_die("JMX Request " . $self->_get_name() . 
-                        " returned a null value which can't be used yet. " . 
-                        "Please let me know, whether you need such check for a null value");
-    }
-    if (ref($resp->value)) { 
-        $np->nagios_die("Response value is a ".ref($resp->value).
-                        ", not a plain value. Did you forget a --path parameter ?","Value: " . 
-                        Dumper($resp->value));
-    }
-}
-
+# Initialize this object and validate the mandatory parameters (obtained from
+# the command line or a configuration file). It will also build up 
+# one or more SingleCheck which are later on sent as a bulk request to 
+# the server.
 sub _verify_and_initialize { 
     my $self = shift;
     my $np = $self->{np};
     my $o = $np->opts;
+    
+    $self->{opts} = $self->{np}->opts;
 
-    $np->nagios_die("An MBean name and a attribute must be provided")
-      if ((!$o->mbean || (!$o->attribute && !$o->operation)) && !$o->alias);
+    # Fetch configuration
+    my $config = $self->_get_config($o->config);
     
-    $np->nagios_die("At least a critical or warning threshold must be given") 
-      if ((!defined($o->critical) && !defined($o->warning)));
-    
-}
-
-sub _delta_value {
-    my ($self,$jmx,$request,$resp,$delta) = @_;
-    
-    my $history = $resp->history;
-    if (!$history) {
-        $self->_switch_on_history($jmx,$request);           
-        # No delta on the first run
-        return 0;
-    } else {
-        my $old_value = $history->[0]->{value};
-        my $old_time = $history->[0]->{timestamp};
-        if ($delta) {
-            return (($resp->value - $old_value) / ($resp->timestamp - $old_time)) * $delta;
-        } else {
-            return $resp->value - $old_value;
+    # Now, if a specific check is given, extract it, too.
+    my $check_configs;
+    $check_configs = $self->_extract_checks($config,$o->check);
+    if ($check_configs) {
+        for my $c (@$check_configs) {
+            my $s_c = new JMX::Jmx4Perl::Nagios::SingleCheck($np,$c);
+            push @{$self->{checks}},$s_c;
         }
-    }    
-}
-
-sub _convert_relative_to_absolute { 
-    my $self = shift;
-    my ($base_value,@to_convert) = @_;
-    my @ret = ();
-    for my $v (@to_convert) {
-        $v =~ s|([\d\.]+)|($1 / 100) * $base_value|eg if $v;
-        push @ret,$v;
-    }
-    return @ret;
-}
-
-sub _base_value {
-    my $self = shift;
-    my $np = $self->{np};
-    my $jmx = shift;
-    my $name = shift;
-
-    if (looks_like_number($name)) {
-        # It looks like a number, so we suppose its  the base value itself
-        return $name;
-    }
-
-    my $alias = JMX::Jmx4Perl::Alias->by_name($name);
-    my $request;
-    if ($alias) {
-        $request = new JMX::Jmx4Perl::Request(READ,$jmx->resolve_alias($name));
     } else {
-        my ($mbean,$attr,$path) = split m|/|,$name;
-        die "No MBean given in base name ",$name unless $mbean;
-        die "No Attribute given in base name ",$name unless $attr;
+        $self->{checks} = [ new JMX::Jmx4Perl::Nagios::SingleCheck($np) ];
+    }
+    # If a server name is given, we use that for the connection parameters
+    if ($o->server) {
+        $self->{server_config} = $config->get_server_config($o->server)
+          || $np->nagios_die("No server configuration for " . $o->server . " found");
+    } 
+
+    # Sanity checks
+    $np->nagios_die("No Server URL given") unless $self->url;
+
+    for my $check (@{$self->{checks}}) {
+        my $name = $check->name ? " [Check: " . $check->name . "]" : "";
+        $np->nagios_die("An MBean name and a attribute/operation must be provided" . $name)
+          if ((!$check->mbean || (!$check->attribute && !$check->operation)) && !$check->alias && !$check->value);
         
-        $mbean = URI::Escape::uri_unescape($mbean);
-        $attr = URI::Escape::uri_unescape($attr);
-        $path = URI::Escape::uri_unescape($path) if $path;
-        $request = new JMX::Jmx4Perl::Request(READ,$mbean,$attr,$path);
+        $np->nagios_die("At least a critical or warning threshold must be given" . $name) 
+          if ((!defined($check->critical) && !defined($check->warning)));    
     }
-
-    my $resp = $self->_send_request($jmx,$request);
-    die "Base value is not a plain value but ",Dumper($resp->value) if ref($resp->value);
-    return $resp->value;
 }
 
-sub _check_threshhold {
+# Extract one or more check configurations which can be 
+# simle <Check>s or <MultiCheck>s
+sub _extract_checks {
     my $self = shift;
-    my $value = shift;
+    my $config = shift;
+    my $check = shift;
+    
     my $np = $self->{np};
-    my $o = $self->{opts};
-    my $numeric_check;
-    if ($o->numeric || $o->string) {
-        $numeric_check = $o->numeric ? 1 : 0;
-    } else {
-        $numeric_check = looks_like_number($value);
-    }
-    if ($numeric_check) {
-        # Verify numeric thresholds
-        my @ths = 
-          (
-           $o->critical ? (critical => $o->critical) : (),
-           $o->warning ? (warning => $o->warning) : ()
-          );            
-        return ($np->check_threshold(check => $value,@ths),"numeric");    
-    } else {
-        return
-          ($self->_check_string_threshold($value,CRITICAL,$o->critical) ||
-            $self->_check_string_threshold($value,WARNING,$o->warning) ||
-              OK,
-           $value =~ /^true|false$/i ? "boolean" : "string");
-    }
-}
+    if ($check) {
+        $np->nagios_die("No configuration given") unless $config;
+        $np->nagios_die("No checks defined in configuration") unless $config->{check};
+        
+        my $check_configs;
+        unless ($config->{check}->{$check}) {
+            $check_configs = $self->_resolve_multicheck($config,$check,$self->{cmd_args});
+        } else {
+            my $check_config = $config->{check}->{$check};
+            $check_configs = ref($check_config) eq "ARRAY" ? $check_config : [ $check_config ];
+            $check_configs->[0]->{key} = $check;
+        }
+        $np->nagios_die("No check configuration with name " . $check . " found") unless (@{$check_configs});
 
-sub _check_string_threshold {
-    my $self = shift;
-    my ($value,$level,$check_value) = @_;
-    return undef unless $check_value;
-    if ($check_value =~ m|^\s*qr(.)(.*)\1\s*$|) {
-        return $value =~ m/$2/ ? $level : undef;
-    }
-    if ($check_value =~ s/^\!//) {
-        return $value ne $check_value ? $level : undef; 
+        # Resolve parent values
+        for my $c (@{$check_configs}) {
+            #print "[A] ",Dumper($c);
+            $self->_resolve_check_config($c,$config,$self->{cmd_args});
+            
+            #print "[B] ",Dumper($c);
+            # Finally, resolve any left over place holders
+            for my $k (keys(%$c)) {
+                $c->{$k} = $self->_replace_placeholder($c->{$k},undef) unless ref($c->{$k});
+            }
+            #print "[C] ",Dumper($c);
+        }
+        return $check_configs;
     } else {
-        return $value eq $check_value ? $level : undef;
+        return undef;
     }    
 }
 
-
-# =========================================================================================== 
-  
-# Prepare an exit message depending on the result of
-# the check itself. Quite evolved, you can overwrite this always via '--label'.
-sub _exit_message {
+# Resolve a multicheck configuration (<MultiCheck>)
+sub _resolve_multicheck {
     my $self = shift;
-    my $args = { @_ };       
-    my $o = $self->{opts};
-    # Custom label has precedence
-    return $self->_format_label($o->{label},$args) if $o->{label};
-
-    my $code = $args->{code};
-    my $mode = $args->{mode};
-    if ($code == CRITICAL || $code == WARNING) {
-        if ($o->{base}) {
-            return $self->_format_label
-              ('%n : Threshold \'%t\' failed for value %.2r% ('. &_placeholder($args,"v") .' %u / '.
-               &_placeholder($args,"b") . ' %u)',$args);
-        } else {
-            if ($mode ne "numeric") {
-                return $self->_format_label('%n : \'%v\' matches threshold \'%t\'',$args);
-            } else {
-                return $self->_format_label
-                  ('%n : Threshold \'%t\' failed for value '.&_placeholder($args,"v").' %u',$args);
-            }
-        }
-    } else {
-        if ($o->{base}) {
-            return $self->_format_label('%n : In range %.2r% ('. &_placeholder($args,"v") .' %u / '.
-                                        &_placeholder($args,"b") . ' %w)',$args);
-        } else {
-            if ($mode ne "numeric") {
-                return $self->_format_label('%n : \'%v\' as expected',$args);
-            } else {
-                return $self->_format_label('%n : Value '.&_placeholder($args,"v").' %u in range',$args);
-            }
-        }
-
-    }
-}
-
-sub _placeholder {
-    my ($args,$c) = @_;
-    my $val;
-    if ($c eq "v") {
-        $val = $args->{value};
-    } else {
-        $val = $args->{base};
-    }
-    return ($val =~ /\./ ? "%.2" : "%") . $c;
-}
-
-sub _format_label {
-    my $self = shift;
-    my $label = shift;
+    my $config = shift;
+    my $check = shift;
     my $args = shift;
-    my $o = $self->{opts};
-    # %r : relative value
-    # %v : value
-    # %u : unit
-    # %b : base value
-    # %t : threshold failed ("" for OK or UNKNOWN)
-    # %c : code ("OK", "WARNING", "CRITICAL", "UNKNOWN")
-
-    my @parts = split /(\%[\w\.\-]*\w)/,$label;
-    my $ret = "";
-    foreach my $p (@parts) {
-        if ($p =~ /^(\%[\w\.\-]*)(\w)$/) {
-            my ($format,$what) = ($1,$2);
-            if ($what eq "r") {
-                $ret .= sprintf $format . "f",($args->{rel_value} || 0);
-            } elsif ($what eq "b") {
-                $ret .= sprintf $format . &_format_char($args->{base}),($args->{base} || 0);
-            } elsif ($what eq "u" || $what eq "w") {
-                $ret .= sprintf $format . "s",($what eq "u" ? $args->{unit} : $args->{base_unit}) || "";
-                $ret =~ s/\s$//;
-            } elsif ($what eq "v") {
-                if ($args->{mode} ne "numeric") {
-                    $ret .= sprintf $format . "s",$args->{value};
-                } else {
-                    $ret .= sprintf $format . &_format_char($args->{value}),$args->{value};
+    my $np = $self->{np};
+    my $multi_checks = $config->{multicheck};    
+    my $check_config = [];
+    if ($multi_checks)  {
+        my $m_check = $multi_checks->{$check};
+        if ($m_check) {
+            if ($m_check->{check}) {
+                # Resolve all checks
+                my $c_names = ref($m_check->{check}) eq "ARRAY" ? $m_check->{check} : [ $m_check->{check} ];
+                for my $name (@$c_names) {
+                    my ($c_name,$c_args) = $self->_parse_check_ref($name);
+                    my $args_merged = $self->_merge_multicheck_args($c_args,$args);
+                    my $check = $config->{check}->{$c_name} ||
+                      $np->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check);
+                    $check->{key} = $c_name;
+                    $check->{args} = $args_merged;
+                    push @{$check_config},$check;
                 }
-            } elsif ($what eq "t") {
-                my $code = $args->{code};
-                $ret .= sprintf $format . "s",$code == CRITICAL ? $o->critical : ($code == WARNING ? $o->warning : "");
-            } elsif ($what eq "c") {
-                $ret .= sprintf $format . "s",$STATUS_TEXT{$args->{code}};
-            } elsif ($what eq "n") {
-                $ret .= sprintf $format . "s",$self->_get_name();
             }
-        } else {
-            $ret .= $p;
+            if ($m_check->{multicheck}) {
+                my $mc_names = ref($m_check->{multicheck}) eq "ARRAY" ? $m_check->{multicheck} : [ $m_check->{multicheck} ];
+                for my $name (@$mc_names) {                    
+                    my ($mc_name,$mc_args) = $self->_parse_check_ref($name);
+                    my $args_merged = $self->_merge_multicheck_args($mc_args,$args);
+                    $np->nagios_die("Unknown multi check '" . $mc_name . "'")
+                      unless $multi_checks->{$mc_name};
+                    push @{$check_config},@{$self->_resolve_multicheck($config,$mc_name,$args_merged)};
+                }
+            }
+        }
+    }
+    return $check_config;
+}
+
+sub _merge_multicheck_args {
+    my $self = shift;
+    my $check_params = shift;
+    my $args = shift;
+    if (!$args || !$check_params) {
+        return $check_params;
+    }
+    my $ret = [ @$check_params ]; # Copy it over
+    for my $i (0 .. $#$check_params) {
+        if ($check_params->[$i] =~ /^\$(\d+)$/) {
+            my $j = $1;
+            if ($j <= $#$args) {
+                $ret->[$i] = $args->[$j];
+                next;
+            }
+            # Nothing to replace
+            $ret->[$i] = $check_params->[$i];
         }
     }
     return $ret;
 }
 
-sub _format_char {
-    my $val = shift;
-    $val =~ /\./ ? "f" : "d";
-}
-
-
-# =========================================================================================== 
-
-# Units and how to convert from one level to the next
-my @UNITS = ([ qw(us ms s m h d) ],[qw(B KB MB GB TB)]);
-my %UNITS = 
-  (
-   us => 10**3,
-   ms => 10**3,
-   s => 1,
-   m => 60,
-   h => 60,
-   d => 24,
-
-   B => 1,
-   KB => 2**10,
-   MB => 2**10,
-   GB => 2**10,
-   TB => 2**10   
-  );
-
-# Normalize value if a unit-of-measurement is given.
-sub _normalize_value {
+# Resolve a singe <Check> configuration
+sub _resolve_check_config {
     my $self = shift;
-    my $value = shift;
-    my $o = $self->{opts};
-    my $unit = shift || $o->{unit} || return ($value,undef);
-    
-    for my $units (@UNITS) {
-        for my $i (0 .. $#{$units}) {
-            next unless $units->[$i] eq $unit;
-            my $ret = $value;
-            my $u = $unit;
-            if ($ret > 1) {
-                # Go up the scale ...
-                return ($value,$unit) if $i == $#{$units};
-                for my $j ($i+1 .. $#{$units}) {
-                    if ($ret / $UNITS{$units->[$j]} >= 1) {                    
-                        $ret /= $UNITS{$units->[$j]};
-                        $u = $units->[$j];
-                    } else {
-                        return ($ret,$u);
-                    }
-                }             
+    my $check = shift;
+    my $config = shift;
+    # Args can come from the outside, but also as part of a multicheck (stored
+    # in $self->{args})
+    my $args = $check->{args} && @{$check->{args}} ? $check->{args} : shift;
+    my $np = $self->{np};
+    if ($check->{use}) {
+        # Resolve parents
+        my $parents = ref($check->{use}) eq "ARRAY" ? $check->{use} : [ $check->{use} ];
+        my $parent_merged = {};
+        for my $p (@$parents) {
+            my ($p_name,$p_args) = $self->_parse_check_ref($p);
+            $np->nagios_die("Unknown parent check '" . $p_name . "' for check '" . 
+                            ($check->{key} ? $check->{key} : $check->{name}) . "'") 
+              unless $config->{check}->{$p_name};
+            # Clone it to avoid side effects when replacing checks inline
+            my $p_check = { %{$config->{check}->{$p_name}} };
+            $p_check->{key} = $p_name;
+            $self->_resolve_check_config($p_check,$config,$p_args);
+
+            #$self->_replace_args($p_check,$config,$p_args);
+            $parent_merged->{$_} = $p_check->{$_} for keys %$p_check;
+        }
+        # Replace inherited values
+        for my $k (keys %$parent_merged) {
+            my $parent_val = $parent_merged->{$k} || "";
+            if (defined($check->{$k})) {
+                $check->{$k} =~ s/\$BASE/$parent_val/g;
             } else {
-                # Go down the scale ...
-                return ($value,$unit) if $i == 0;
-                for my $j (reverse(0 .. $i-1)) {
-                    if ($ret <= 1) {     
-                        $ret *= $UNITS{$units->[$j+1]};
-                        $u = $units->[$j];
-                    } else {
-                        return ($ret,$u);
-                    }
-                }
-                
+                $check->{$k} = $parent_val;
             }
-            return ($ret,$u);
         }
     }
-    die "Unknown unit '$unit' for value $value";
+    $self->_replace_args($check,$config,$args);
+    return $check;
 }
 
-# =========================================================================================== 
+# Replace argument placeholders with a given list of arguments
+sub _replace_args {
+    my $self = shift;
+    my $check = shift;
+    my $config = shift;
+    my $args = shift;
 
+    for my $k (keys(%$check)) {
+        next if $k =~ /^(key|args)$/; # Internal keys
+        my $val = $check->{$k};
+        if ($args && @$args) {
+            for my $i (0 ... $#$args) {
+                my $repl = $args->[$i];
+                $val = $self->_replace_placeholder($val,$repl,$i) unless ref($val);
+            }
+        } 
+        $check->{$k} = $val;
+    }
+}
+
+sub _replace_placeholder {
+    my $self = shift;
+    my $val = shift;
+    my $repl = shift;
+    my $index = shift;
+    my $force = 0;
+    if (!defined($index)) {
+        # We have to replace any left over placeholder either with its 
+        # default value or with an empty value
+        $index = "\\d+";
+        $force = 1;
+    }
+    my $regexp;
+    eval '$regexp = qr/^(.*?)\$(' . $index . '|\{\s*' . $index . '\s*:([^\}]+)\})(.*|$)/';
+    die "Cannot create placeholder regexp" if $@;
+    my $rest = $val;
+    my $ret = "";
+    while (defined($rest) && length($rest) && $rest =~ /$regexp/) {        
+        my $default = $3;
+        my $start = defined($1) ? $1 : "";
+        my $orig_val = '$' . $2;
+        my $end = defined($4) ? $4 : "";
+        #print Dumper({start => $start, orig => $orig_val,end => $end, default => $default, rest => $rest});
+        if (defined($repl)) {
+            if ($repl =~ /^\$(\d+)$/) {
+                my $new_index = $1;
+                #print "============== $val $new_index\n";
+                # Val is a placeholder itself
+                if (defined($default)) {
+                    $ret .= $start . '${' . $new_index . ':' . $default . '}';
+                } else {
+                    $ret .= $start . '$' . $new_index;
+                }
+            } else {   
+                $ret .= $start . $repl;
+            }
+        } elsif ($force) {
+            if (defined($default)) {
+                $ret .= $start . $default;
+            } elsif (length($start) || length($end)) {
+                $ret .= $start;
+            } else {
+                if (!length($ret)) {
+                    # No default value, nothing else for this value. We
+                    # consider at undefined
+                    return undef;
+                }
+            }
+        } else {
+            $ret .= $start . $orig_val;
+        }
+        $rest = $end;
+        #print "... $ret$rest\n";
+    }
+    return $ret . (defined($rest) ? $rest : "");
+}
+
+# Split up a 'Use' parent config reference, including possibly arguments
+sub _parse_check_ref {
+    my $self = shift;
+    my $check_ref = shift;
+    if ($check_ref =~/^\s*([^(]+)\(([^)]*)\)\s*$/) {
+        my $name = $1;
+        my $args_s = $2;
+        my $args = [ &parse_line('\s*,\s*',0,$args_s) ];
+        return ($name,$args);
+    } else {
+        return $check_ref;
+    }
+}
+
+# Get the configuration as a hash
+sub _get_config {
+    my $self = shift;
+    my $path = shift;
+    my $np = $self->{np};
+    $np->nagios_die("No configuration file " . $path . " found")
+      if ($path && ! -e $path);
+    return new JMX::Jmx4Perl::Config($path);
+}
+
+# The global server config part
+sub _server_config {
+    return shift->{server_config};
+}
+
+# Create the nagios plugin used for preparing the nagious output
 sub _create_nagios_plugin {
     my $args = shift;
     my $np = Nagios::Plugin->
       new(
           usage => 
-          "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning> -n <label>\n" . 
-          "                      [--alias <alias>] [--base <alias/number/mbean>] [--delta <time-base>] [--product <product>]\n".
+          "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning>\n" . 
+          "                      [--alias <alias>] [--value <shortcut>] [--base <alias/number/mbean>] [--delta <time-base>]\n" .
+          "                      [--name <perf-data label>] [--label <output-label>] [--product <product>]\n".
           "                      [--user <user>] [--password <password>] [--proxy <proxy>]\n" .
           "                      [--target <target-url>] [--target-user <user>] [--target-password <password>]\n" .
-          "                      [-v] [--help]",
+          "                      [--config <config-file>] [--check <check-name>] [--server <server-alias>] [-v] [--help]\n" .
+          "                      arg1 arg2 ....",
           version => $JMX::Jmx4Perl::VERSION,
           url => "http://www.consol.com/opensource/nagios/",
           plugin => "check_jmx4perl",
           blurb => "This plugin checks for JMX attribute values on a remote Java application server",
           extra => "\n\nYou need to deploy j4p.war on the target application server or as an intermediate proxy.\n" .
-          "Please refer to the documentation for JMX::Jmx4Perl for further details"
+          "Please refer to the documentation for JMX::Jmx4Perl for further details.\n\n" .
+          "For a comprehensive documentation please consult the man page of check_jmx4perl"
          );
     $np->shortname(undef);
     $np->add_arg(
                  spec => "url|u=s",
                  help => "URL to agent web application (e.g. http://server:8080/j4p/)",
-                 required => 1
                 );
     $np->add_arg(
                  spec => "product=s",
@@ -579,16 +513,24 @@ sub _create_nagios_plugin {
                  help => "Operation to execute",
                 );
     $np->add_arg(
+                 spec => "value=s",
+                 help => "Shortcut for specifying mbean/attribute/path. Slashes within names must be escaped with \\",
+                );
+    $np->add_arg(
                  spec => "base|base-alias|b=s",
                  help => "Base alias name, which when given, interprets critical and warning values as relative in the range 0 .. 100%",
                 );
     $np->add_arg(
                  spec => "delta|d:s",
-                 help => "Switches on incremental mode. Optional argument are seconds used for normalizing. ",
+                 help => "Switches on incremental mode. Optional argument are seconds used for normalizing.",
                 );
     $np->add_arg(
                  spec => "path|p=s",
                  help => "Inner path for extracting a single value from a complex attribute or return value (e.g. \"used\")",
+                );
+    $np->add_arg(
+                 spec => "null=s",
+                 help => "Value which should be used in case of a null return value of an operation or attribute. Is \"null\" by default"
                 );
     $np->add_arg(
                  spec => "string",
@@ -645,9 +587,74 @@ sub _create_nagios_plugin {
                  spec => "label|l=s",
                  help => "Label to be used for printing out the result of the check. Placeholders can be used."
                 );
+    $np->add_arg(
+                 spec => "config=s",
+                 help => "Path to configuration file. Default: ~/.j4p"
+                );
+    $np->add_arg(
+                 spec => "server=s",
+                 help => "Symbolic name of server url to use, which needs to be configured in the configuration file"                 
+                );
+    $np->add_arg(
+                 spec => "check=s",
+                 help => "Name of a check configuration as defined in the configuration file"
+                );
     $np->getopts();
     return $np;
 }
+
+# Access to configuration informations
+# Known config options (key: cmd line arguments, values: keys in config);
+my $SERVER_CONFIG_KEYS = {
+                          "url" => "url",
+                          "target" => "target",
+                          "user" => "user",
+                          "password" => "password",
+                          "product" => "product",
+                          "target_user" => "target/user",
+                          "target_password" => "target/password",
+                          "target_url" => "target/url",
+                          "proxy" => "proxy",
+                          "proxy_url" => "proxy/url",
+                          "proxy_user" => "proxy/user",
+                          "proxy_password" => "proxy/password"
+                         };
+
+# Autoloading is used to fetch the proper connection parameters
+sub AUTOLOAD {
+    my $self = shift;
+    my $np = $self->{np};
+    my $name = $AUTOLOAD;
+    $name =~ s/.*://;   # strip fully-qualified portion
+    $name =~ s/-/_/g;
+
+    if ($SERVER_CONFIG_KEYS->{$name}) {        
+        return $np->opts->{$name} if $np->opts->{$name};
+        my $c = $SERVER_CONFIG_KEYS->{$name};
+        if ($c) {
+            my @parts = split "/",$c;
+            my $h = $self->_server_config ||
+              return undef;
+            while (@parts) {
+                my $p = shift @parts;
+                return undef unless $h->{$p};
+                $h = $h->{$p};
+                return $h unless @parts;
+            }
+        } else {
+            return undef;
+        }
+    } else {
+        $np->nagios_die("No config attribute \"" . $name . "\" known");
+    }
+}
+
+# Declared here to avoid AUTOLOAD confusions
+sub DESTROY {
+
+}
+
+=back 
 
 =head1 LICENSE
 

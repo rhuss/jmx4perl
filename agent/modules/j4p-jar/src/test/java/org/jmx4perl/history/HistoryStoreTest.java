@@ -102,7 +102,7 @@ public class HistoryStoreTest {
                         .build();
         store.configure(new HistoryKey(req),3);
         /** 3 fresh updates yield 2 history entries returned (and 3 stored) */
-        assertEquals("2 history entries",2,updateNTimesAsList(req,3).size());
+        assertEquals("2 history entries",2,updateNTimesAsList(req,3,"42").size());
 
     }
 
@@ -115,6 +115,32 @@ public class HistoryStoreTest {
                         .build();
         store.configure(new HistoryKey(req),5);
         assertEquals("4 history entries",3,updateNTimesAsList(req,4).size());
+    }
+    @Test
+    public void singleAttributeAsListRead() throws Exception {
+        JmxRequest req =
+                new JmxRequestBuilder(READ,"test:type=read")
+                        .attributes("attr")
+                        .build();
+        store.configure(new HistoryKey(req),5);
+        JSONArray res = updateNTimesAsList(req,4,"42");
+        assertEquals("4 history entries",3,res.size());
+    }
+
+    @Test
+    public void noAttributesRead() throws Exception {
+        String mbean = "test:type=read";
+        JmxRequest req =
+                new JmxRequestBuilder(READ,mbean)
+                        .build();
+        store.configure(new HistoryKey(mbean,"attr1",null,null),4);
+        store.configure(new HistoryKey(mbean,"attr2",null,null),5);
+        Map value = new HashMap();
+        value.put("attr1","val1");
+        value.put("attr2","val2");
+        JSONObject history = updateNTimesAsMap(req,5,value);
+        assertEquals("Attr1 has 3 entries",4,((List) history.get("attr1")).size());
+        assertEquals("Attr2 has 4 entries",4,((List) history.get("attr2")).size());
     }
 
     @Test

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<j4p-restrict>
-  <mbeans>
+<restrict>
+  <commands></commands>
+  <allow>
     <mbean>
       <name>java.lang:*</name>
       <attribute>HeapMemoryUsage</attribute>
@@ -10,5 +11,5 @@
       <name>jmx4perl:type=Config,*</name>
       <attribute>Debug</attribute>
     </mbean>
-  </mbeans>
-</j4p-restrict>
+  </allow>
+</restrict>

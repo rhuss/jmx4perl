@@ -49,7 +49,6 @@ public class PolicyBasedRestrictorTest {
         assertFalse(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"NonHeapMemoryUsage"));
         assertTrue(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Memory"),"gc"));
         assertFalse(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Threading"),"gc"));
-        assertTrue(restrictor.isTypeAllowed(JmxRequest.Type.READ));
     }
 
     @Test
@@ -85,7 +84,10 @@ public class PolicyBasedRestrictorTest {
         assertFalse(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"NonHeapMemoryUsage"));
         assertTrue(restrictor.isAttributeReadAllowed(new ObjectName("jmx4perl:type=Config,name=Bla"),"Debug"));
         assertFalse(restrictor.isOperationAllowed(new ObjectName("jmx4perl:type=Threading"),"gc"));
-        assertTrue(restrictor.isTypeAllowed(JmxRequest.Type.READ));
+
+        // No hosts set.
+        assertTrue(restrictor.isRemoteAccessAllowed("10.0.1.125"));
+
     }
 
     @Test
@@ -97,5 +99,92 @@ public class PolicyBasedRestrictorTest {
         assertTrue(restrictor.isAttributeReadAllowed(new ObjectName("jmx4perl:type=Config,name=Bla"),"Debug"));
         assertTrue(restrictor.isOperationAllowed(new ObjectName("jmx4perl:type=Threading"),"gc"));
         assertTrue(restrictor.isTypeAllowed(JmxRequest.Type.READ));
+    }
+
+    @Test
+    public void deny() throws MalformedObjectNameException {
+        InputStream is = getClass().getResourceAsStream("/access-sample4.xml");
+        PolicyBasedRestrictor restrictor = new PolicyBasedRestrictor(is);
+        assertFalse(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"HeapMemoryUsage"));
+        assertFalse(restrictor.isAttributeWriteAllowed(new ObjectName("java.lang:type=Memory"),"HeapMemoryUsage"));
+        assertFalse(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"NonHeapMemoryUsage"));
+        assertTrue(restrictor.isAttributeWriteAllowed(new ObjectName("java.lang:type=Memory"),"NonHeapMemoryUsage"));
+        assertTrue(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"BlaUsage"));
+
+        assertFalse(restrictor.isAttributeReadAllowed(new ObjectName("jmx4perl:type=Config"),"Debug"));
+
+        assertFalse(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Blubber,name=x"),"gc"));
+        assertTrue(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Blubber,name=x"),"xavier"));
+    }
+
+    @Test
+    public void allow() throws MalformedObjectNameException {
+        InputStream is = getClass().getResourceAsStream("/access-sample5.xml");
+        PolicyBasedRestrictor restrictor = new PolicyBasedRestrictor(is);
+        assertTrue(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"HeapMemoryUsage"));
+        assertTrue(restrictor.isAttributeWriteAllowed(new ObjectName("java.lang:type=Memory"),"HeapMemoryUsage"));
+        assertTrue(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"NonHeapMemoryUsage"));
+        assertFalse(restrictor.isAttributeWriteAllowed(new ObjectName("java.lang:type=Memory"),"NonHeapMemoryUsage"));
+        assertFalse(restrictor.isAttributeReadAllowed(new ObjectName("java.lang:type=Memory"),"BlaUsage"));
+
+        assertTrue(restrictor.isAttributeReadAllowed(new ObjectName("jmx4perl:type=Config"),"Debug"));
+
+        assertTrue(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Blubber,name=x"),"gc"));
+        assertFalse(restrictor.isOperationAllowed(new ObjectName("java.lang:type=Blubber,name=x"),"xavier"));
+    }
+
+    @Test
+    public void illegalXml() {
+        InputStream is = getClass().getResourceAsStream("/illegal1.xml");
+        try {
+            PolicyBasedRestrictor restrictor = new PolicyBasedRestrictor(is);
+            fail("Could parse illegal file");
+        } catch (SecurityException exp) {
+            //ok
+        }
+
+        try {
+            new PolicyBasedRestrictor(null);
+            fail("No file given");
+        } catch (SecurityException exp) {
+            // ok
+        }
+    }
+
+    @Test
+    public void noName() {
+        InputStream is = getClass().getResourceAsStream("/illegal2.xml");
+        try {
+            PolicyBasedRestrictor restrictor = new PolicyBasedRestrictor(is);
+            fail("Could parse illegal file");
+        } catch (SecurityException exp) {
+            assertTrue(exp.getMessage().contains("name"));
+        }
+    }
+
+    @Test
+    public void invalidTag() {
+        InputStream is = getClass().getResourceAsStream("/illegal3.xml");
+        try {
+            PolicyBasedRestrictor restrictor = new PolicyBasedRestrictor(is);
+            fail("Could parse illegal file");
+        } catch (SecurityException exp) {
+            assertTrue(exp.getMessage().contains("name"));
+            assertTrue(exp.getMessage().contains("attribute"));
+            assertTrue(exp.getMessage().contains("operation"));
+            assertTrue(exp.getMessage().contains("bla"));
+        }
+    }
+
+    @Test
+    public void doubleName() {
+        InputStream is = getClass().getResourceAsStream("/illegal4.xml");
+        try {
+            PolicyBasedRestrictor restrictor = new PolicyBasedRestrictor(is);
+            fail("Could parse illegal file");
+        } catch (SecurityException exp) {
+            assertTrue(exp.getMessage().contains("name"));
+        }
+
     }
 }

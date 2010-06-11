@@ -87,4 +87,8 @@ public class ListHandler implements ObjectToJsonConverter.Handler {
         return oldValue;
     }
 
+    public boolean canSetValue() {
+        return true;
+    }
+
 }

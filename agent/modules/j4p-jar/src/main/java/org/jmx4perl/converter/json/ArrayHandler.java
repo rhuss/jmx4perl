@@ -82,4 +82,8 @@ public class ArrayHandler implements ObjectToJsonConverter.Handler {
         Array.set(pInner, idx, value);
         return oldValue;
     }
+
+    public boolean canSetValue() {
+        return true;
+    }
 }

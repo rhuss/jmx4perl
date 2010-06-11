@@ -50,7 +50,8 @@ public class FileHandler extends SimplifierHandler<File> {
                 { "length", new LengthExtractor() },
                 { "directory", new IsDirectoryExtractor() },
                 { "canonicalPath", new PathExtractor() },
-                { "exists", new ExistsExtractor() }
+                { "exists", new ExistsExtractor() },
+                { "lastModified", new LastModifiedExtractor()}
         };
 
         addExtractors(attrExtractors);
@@ -83,4 +84,7 @@ public class FileHandler extends SimplifierHandler<File> {
         public Object extract(File file) { return file.exists(); }
     }
 
+    private static class LastModifiedExtractor implements Extractor<File> {
+        public Object extract(File value) { return value.lastModified(); }
+    }
 }

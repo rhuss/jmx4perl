@@ -75,4 +75,14 @@ class HistoryEntry implements Serializable {
             values.removeLast();
         }
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("HistoryEntry");
+        sb.append("{values=").append(values);
+        sb.append(", maxEntries=").append(maxEntries);
+        sb.append('}');
+        return sb.toString();
+    }
 }

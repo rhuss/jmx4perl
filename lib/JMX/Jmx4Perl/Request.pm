@@ -364,7 +364,7 @@ sub _validate {
         die $self->{type} . ": No attribute name but path is given\n" if (!$self->{attribute} && $self->{path});
     }
     if ($self->{type} eq WRITE) {
-        die $self->{type} . ": No value given\n" unless $self->{value};
+        die $self->{type} . ": No value given\n" unless defined($self->{value});
     }
     if ($self->{type} eq EXEC) {
         die $self->{type} . ": No mbean name given\n" unless $self->{mbean};

@@ -2,6 +2,8 @@ package org.jmx4perl.config;
 
 import java.io.InputStream;
 
+import org.jmx4perl.LogHandler;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -39,15 +41,18 @@ public final class RestrictorFactory {
      * Get the installed restrictor or the {@link org.jmx4perl.config.AllowAllRestrictor}
      * is no restrictions are in effect.
      *
+     * @param pLogHandler log handler for printing out whether access restrictions are used or not
      * @return the restrictor
      */
-    public static Restrictor buildRestrictor() {
+    public static Restrictor buildRestrictor(LogHandler pLogHandler) {
 
         InputStream is =
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("/j4p-access.xml");
         if (is != null) {
+            pLogHandler.info("j4p: Using security policy from 'j4p-access.xml'");
             return new PolicyBasedRestrictor(is);
         } else {
+            pLogHandler.info("j4p: No security policy installed. Access to any MBean attribute and operation is permitted.");
             return new AllowAllRestrictor();
         }
     }

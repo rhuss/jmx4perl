@@ -1,4 +1,33 @@
-0.65 
+0.70
+  - Extended configuration syntax for check_jmx4perl as an alternative to
+    command line options
+    + Parameterized checks
+    + Default values for parameters
+    + Multichecks (one HTTP request, many JMX requests)
+    + Check-Inheritance
+    + Predefined checks for certain environments (as sample configuration files)
+    + Added null value check, can be tuned with --null
+  - Added '--value' as a shortcut for --mbean/--attribute/--value  
+  - Better documentation for check_jmx4perl                                                                                 
+  - <Server> sections are now named blocks, taking the server name as block 
+    name (similar to <Check>). The old syntax with an "Name" argument is 
+    still support but must not mixed with the new syntax.
+  - Path elements containing '/' can now be escaped with '\/'
+  - j4p-osgi-bundle including pax-web-bundle so only a single bundle
+    is needed for deploying (when no OSGi HttpService is installed)
+  - Relaxed version requirements on core and compendium OSGi classes
+    for j4p-osgi bundle.
+  - Changed access restrictions (j4p-access.xml):
+    + <allow> and <deny>
+    + Wildcards (*) for attribute and operation names
+    + WARNING: Semantics of MBean specification has changed. Please
+      read the comments in j4p-access.xml.template
+    + Add logging (level info) for printing out which security policy
+      is used
+  - Started to add a java client library
+  - j4psh beta version added
+   
+0.65 (2010-3-30)
   - A JDK 6 java agent added for exporting the j4p protocol via
     HTTP/JSON.
   - Extended READ operation to support MBean patternames and multiple
@@ -8,8 +37,7 @@
     'maxObjects' respectively for consistencies sake.
   - Bug fix: POST request respect these parameters as well now 
   - Added 'ignoreErrors' request option in order to allow a bulk read
-    to succeed even if single read fails. In this case, the valu will
-    be set to an appropriate error message.
+    to succeed even if single read fails. In this case, the valu will 
   - 'search' returns properly escaped MBean Names if unsafe characters
     are used. 
   - For GET request, instead of pathinfo a query with parameter 'p'

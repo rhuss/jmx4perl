@@ -116,6 +116,7 @@ public class AgentServlet extends HttpServlet {
         handle(httpPostHandler,req,resp);
     }
 
+    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     private void handle(ServletRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
         JSONAware json = null;
         int code = 200;
@@ -126,7 +127,9 @@ public class AgentServlet extends HttpServlet {
             // Dispatch for the proper HTTP request method
             json = pReqHandler.handleRequest(pReq,pResp);
             code = requestHandler.extractResultCode(json);
-            if (backendManager.isDebug()) backendManager.info("Response: " + json);
+            if (backendManager.isDebug()) {
+                backendManager.info("Response: " + json);
+            }
         } catch (Throwable exp) {
             JSONObject error = requestHandler.handleThrowable(exp);
             code = (Integer) error.get("status");

@@ -56,10 +56,9 @@ public class ParsedUri {
         uri = pUri;
         pathInfo = pUri.getPath();
 
-        if (pContext != null && pContext.length > 0) {
-            if (pathInfo.startsWith(pContext[0])) {
-                pathInfo = pathInfo.substring(pContext[0].length());
-            }
+        if (pContext != null && pContext.length > 0 &&
+                pathInfo.startsWith(pContext[0])) {
+            pathInfo = pathInfo.substring(pContext[0].length());
         }
 
         while (pathInfo.startsWith("/") && pathInfo.length() > 1) {
@@ -136,16 +135,14 @@ public class ParsedUri {
                     // but it is expected that there will be only a handful of array parameters
                     // in an URL anyway. So, let us be dirty here ...
                     String[] newValues = new String[values.length + 1];
-                    for (int i = 0; i < value.length(); i++) {
-                        newValues[i] = values[i];
-                    }
+                    System.arraycopy(values,0,newValues,0,values.length);
                     newValues[values.length] = value;
                     ret.put(name, newValues);
                 }
             }
             return ret;
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Cannot decode to UTF-8. Should not happen, though.");
+            throw new IllegalArgumentException("Cannot decode to UTF-8. Should not happen, though.",e);
         }
     }
 }

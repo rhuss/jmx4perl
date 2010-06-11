@@ -24,7 +24,7 @@ public class RequestHandlerManager {
         registerRequestHandlers(pObjectToJsonConverter,pStringToObjectConverter,pRestrictor);
     }
 
-    protected void registerRequestHandlers(ObjectToJsonConverter objectToJsonConverter,
+    protected final void registerRequestHandlers(ObjectToJsonConverter objectToJsonConverter,
                                            StringToObjectConverter stringToObjectConverter,
                                            Restrictor restrictor) {
         JsonRequestHandler handlers[] = {

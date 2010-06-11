@@ -114,7 +114,7 @@ public class StringToObjectConverter {
         Object ret = Array.newInstance(valueType,values.length);
         int i = 0;
         for (String value : values) {
-            Array.set(ret,i++,convertFromString(valueType.getCanonicalName(),value));
+            Array.set(ret,i++,value.equals("[null]") ? null : convertFromString(valueType.getCanonicalName(),value));
         }
         return ret;
     }
@@ -122,7 +122,7 @@ public class StringToObjectConverter {
     private String[] split(String pValue) {
         // For now, split simply on ','. This is very simplistic
         // and will fail on complex strings containing commas as content.
-        // Use a full blown CSV parsert then (but only for string)
+        // Use a full blown CSV parser then (but only for string)
         return pValue.split("\\s*,\\s*");
     }
 

@@ -1,16 +1,13 @@
 package org.jmx4perl;
 
-import org.jmx4perl.JmxRequest.Type;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import javax.management.MalformedObjectNameException;
-import java.io.IOException;
-import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.management.MalformedObjectNameException;
+
+import org.jmx4perl.JmxRequest.Type;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -41,7 +38,7 @@ import java.util.regex.Pattern;
  * @author roland
  * @since Oct 29, 2009
  */
-final public class JmxRequestFactory {
+public final class JmxRequestFactory {
 
     // Pattern for detecting escaped slashes in URL encoded requests
     private static final Pattern SLASH_ESCAPE_PATTERN = Pattern.compile("^\\^?-*\\+?$");
@@ -78,7 +75,7 @@ final public class JmxRequestFactory {
      *   <li>Type: <b>write</b> ({@link Type#WRITE}<br/>
      *       Parameters: <code>param1</code> = MBean name, <code>param2</code> = Attribute name,
      *       <code>param3</code> = value, <code>param4 ... paramN</code> = Inner Path.
-     *       The value must be URL encoded (with UTF-8 as charset), and must be convertable into
+     *       The value must be URL encoded (with UTF-8 as charset), and must be convertible into
      *       a data structure</li>
      *   <li>Type: <b>exec</b> ({@link Type#EXEC}<br/>
      *       Parameters: <code>param1</code> = MBean name, <code>param2</code> = operation name,
@@ -94,7 +91,7 @@ final public class JmxRequestFactory {
      * @param pParameterMap HTTP Query parameters
      * @return a newly created {@link org.jmx4perl.JmxRequest}
      */
-    static public JmxRequest createRequestFromUrl(String pPathInfo, Map<String,String[]> pParameterMap) {
+    public static JmxRequest createRequestFromUrl(String pPathInfo, Map<String,String[]> pParameterMap) {
         JmxRequest request = null;
         try {
             String pathInfo = pPathInfo;
@@ -102,7 +99,7 @@ final public class JmxRequestFactory {
             // If no pathinfo is given directly, we look for a query parameter named 'p'.
             // This variant is helpful, if there are problems with the server mangling
             // up the pathinfo (e.g. for security concerns, often '/','\',';' and other are not
-            // allowed in econded form within the pathinfo)
+            // allowed in encoded form within the pathinfo)
             if (pPathInfo == null || pPathInfo.length() == 0 || pathInfo.matches("^/+$")) {
                 String[] vals = pParameterMap.get("p");
                 if (vals != null && vals.length > 0) {
@@ -124,7 +121,7 @@ final public class JmxRequestFactory {
                 request = processor.process(elements);
 
                 // Extract all additional args from the remaining path info
-                request.setExtraArgs(toList(elements));
+                request.setExtraArgs(prepareExtraArgs(elements));
 
                 // Setup JSON representation
                 extractParameters(request,pParameterMap);
@@ -145,32 +142,33 @@ final public class JmxRequestFactory {
 
 
     /**
-     * Create a list of {@link JmxRequest}s from the (POST) JSON content of an agent.
+     * Create a list of {@link JmxRequest}s from a JSON list representing jmx requests
      *
-     * @param content JSON representation of a {@link org.jmx4perl.JmxRequest}
-     * @return list with one or more requests
+     * @param pJsonRequests JSON representation of a list of {@link org.jmx4perl.JmxRequest}
+     * @return list with one or more {@link org.jmx4perl.JmxRequest}
+     * @throws javax.management.MalformedObjectNameException if the MBean name within the request is invalid
      */
-    static List<JmxRequest> createRequestsFromInputReader(Reader content) throws MalformedObjectNameException, IOException {
-        try {
-            JSONParser parser = new JSONParser();
-            Object json = parser.parse(content);
-            List<JmxRequest> ret = new ArrayList<JmxRequest>();
-            if (json instanceof List) {
-                for (Object o : (List) json) {
-                    if (!(o instanceof Map)) {
-                        throw new IllegalArgumentException("Not a request within the list for the " + content + ". Expected map, but found: " + o);
-                    }
-                    ret.add(new JmxRequest((Map) o));
-                }
-            } else if (json instanceof Map) {
-                ret.add(new JmxRequest((Map) json));
-            } else {
-                throw new IllegalArgumentException("Invalid JSON Request " + content);
+    public static List<JmxRequest> createRequestsFromJson(List pJsonRequests) throws MalformedObjectNameException {
+        List<JmxRequest> ret = new ArrayList<JmxRequest>();
+        for (Object o : pJsonRequests) {
+            if (!(o instanceof Map)) {
+                throw new IllegalArgumentException("Not a request within the list of requests " + pJsonRequests +
+                        ". Expected map, but found: " + o);
             }
-            return ret;
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Invalid JSON request " + content,e);
+            ret.add(new JmxRequest((Map) o));
         }
+        return ret;
+    }
+
+    /**
+     * Create a single {@link JmxRequest}s from a JSON map representation of a request
+     *
+     * @param pJsonRequest JSON representation of a {@link org.jmx4perl.JmxRequest}
+     * @return the created {@link org.jmx4perl.JmxRequest}
+     * @throws javax.management.MalformedObjectNameException if the MBean name within the request is invalid
+     */
+    public static JmxRequest createSingleRequestFromJson(Map<String,?> pJsonRequest) throws MalformedObjectNameException {
+        return new JmxRequest(pJsonRequest);
     }
 
     /*
@@ -219,7 +217,7 @@ final public class JmxRequestFactory {
             }
             StringBuffer val;
 
-            // Special escape at the beginning indicates that the this element belongs
+            // Special escape at the beginning indicates that this element belongs
             // to the next one
             if (element.substring(0,1).equals("^")) {
                 val = new StringBuffer();
@@ -228,7 +226,7 @@ final public class JmxRequestFactory {
             } else {
                 val = previousBuffer;
             }
-            // Append approp. nr of slashes
+            // Append appropriate nr of slashes
             for (int j=0;j<element.length();j++) {
                 val.append("/");
             }
@@ -267,12 +265,17 @@ final public class JmxRequestFactory {
         throw new IllegalArgumentException("Invalid request type '" + pTypeS + "'");
     }
 
-    private static List<String>toList(Stack<String> pElements) {
-        List<String> p = new ArrayList<String>();
+    private static List<String> prepareExtraArgs(Stack<String> pElements) {
+        List<String> ret = new ArrayList<String>();
         while (!pElements.isEmpty()) {
-            p.add(pElements.pop());
+            String element = pElements.pop();
+            // Check for escapes
+            while (element.endsWith("\\") && !pElements.isEmpty()) {
+                element = element.substring(0,element.length() - 1) + "/" + pElements.pop();
+            }
+            ret.add(element);
         }
-        return p;
+        return ret;
     }
 
     private static void extractParameters(JmxRequest pRequest,Map<String,String[]> pParameterMap) {
@@ -325,7 +328,6 @@ final public class JmxRequestFactory {
                 return req;
             }
         });
-
         PROCESSOR_MAP.put(Type.LIST,new Processor() {
             public JmxRequest process(Stack<String> e) throws MalformedObjectNameException {
                 return new JmxRequest(Type.LIST);

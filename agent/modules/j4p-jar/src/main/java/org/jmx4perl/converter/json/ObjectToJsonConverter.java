@@ -4,10 +4,8 @@ package org.jmx4perl.converter.json;
 import org.jmx4perl.Config;
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.jmx4perl.converter.json.simplifier.ClassHandler;
-import org.jmx4perl.converter.json.simplifier.DomElementHandler;
-import org.jmx4perl.converter.json.simplifier.FileHandler;
-import org.jmx4perl.converter.json.simplifier.UrlHandler;
+import org.jmx4perl.converter.json.simplifier.*;
+
 import static org.jmx4perl.Config.*;
 
 import org.json.simple.JSONObject;
@@ -59,9 +57,6 @@ public class ObjectToJsonConverter {
     // Thread-Local set in order to prevent infinite recursions
     private ThreadLocal<StackContext> stackContextLocal = new ThreadLocal<StackContext>();
 
-    // Thread-Local for the fault handler when extracting value
-    private ThreadLocal<JmxRequest.ValueFaultHandler> faultHandlerLocal = new ThreadLocal<JmxRequest.ValueFaultHandler>();
-
     // Used for converting string to objects when setting attributes
     private StringToObjectConverter stringToObjectConverter;
 
@@ -82,6 +77,7 @@ public class ObjectToJsonConverter {
         handlers.add(new FileHandler());
         handlers.add(new DomElementHandler());
         handlers.add(new UrlHandler());
+        handlers.add(new ObjectNameHandler());
 
         handlers.add(new CompositeDataHandler());
         handlers.add(new TabularDataHandler());
@@ -94,9 +90,19 @@ public class ObjectToJsonConverter {
         stringToObjectConverter = pStringToObjectConverter;
     }
 
-    public JSONObject convertToJson(Object pValue, JmxRequest pRequest)
+    /**
+     * Convert the return value to a JSON object.
+     *
+     * @param pValue the value to convert
+     * @param pRequest the original request
+     * @param pUseValueWithPath if set, use the path given within the request to extract the inner value.
+     *        Otherwise, use the path directly
+     * @return the converted value
+     * @throws AttributeNotFoundException if within an path an attribute could not be found
+     */
+    public JSONObject convertToJson(Object pValue, JmxRequest pRequest, boolean pUseValueWithPath)
             throws AttributeNotFoundException {
-        Stack<String> extraStack = reverseArgs(pRequest);
+        Stack<String> extraStack = pUseValueWithPath ? reverseArgs(pRequest) : new Stack<String>();
 
         setupContext(pRequest);
 
@@ -114,15 +120,16 @@ public class ObjectToJsonConverter {
     /**
      * Get values for a write request. This method returns an array with two objects.
      * If no path is given (<code>pRequest.getExtraArgs() == null</code>), the returned values
-     *  are the new value
-     * and the old value. However, if a path is set, the returned new value is the outer value (which
-     * can be set by an corresponding JMX set operation) and the old value is the value
-     * of the object specified by the given path.
+     * are the new value and the old value. However, if a path is set, the returned new value
+     * is the outer value (which can be set by an corresponding JMX set operation) where the
+     * new value is set via the path expression. The old value is the value of the object specified
+     * by the given path.
      *
      * @param pType type of the outermost object to set as returned by an MBeanInfo structure.
      * @param pCurrentValue the object of the outermost object which can be null
      * @param pRequest the initial request
-     * @return object array with two elements (see above)
+     * @return object array with two elements, element 0 is the value to set (see above), element 1
+     *         is the old value.
      *
      * @throws AttributeNotFoundException if no such attribute exists (as specified in the request)
      * @throws IllegalAccessException if access to MBean fails
@@ -141,16 +148,24 @@ public class ObjectToJsonConverter {
             String lastPathElement = extraArgs.remove(extraArgs.size()-1);
             Stack<String> extraStack = reverseArgs(pRequest);
             // Get the object pointed to do with path-1
-            Object inner = extractObject(pCurrentValue,extraStack,false);
-            // Set the attribute pointed to by the path elements
-            // (depending of the parent object's type)
-            Object oldValue = setObjectValue(inner,lastPathElement,pRequest.getValue());
 
-            // We set an inner value, hence we have to return provided value itself.
-            return new Object[] {
-                    pCurrentValue,
-                    oldValue
-            };
+            try {
+                setupContext(pRequest);
+
+                Object inner = extractObject(pCurrentValue,extraStack,false);
+                // Set the attribute pointed to by the path elements
+                // (depending of the parent object's type)
+                Object oldValue = setObjectValue(inner,lastPathElement,pRequest.getValue());
+
+                // We set an inner value, hence we have to return provided value itself.
+                return new Object[] {
+                        pCurrentValue,
+                        oldValue
+                };
+            } finally {
+                clearContext();
+            }
+
         } else {
             // Return the objectified value
             return new Object[] {
@@ -198,7 +213,7 @@ public class ObjectToJsonConverter {
     }
 
 
-    public Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean jsonify)
+    public Object extractObject(Object pValue,Stack<String> pExtraArgs,boolean pJsonify)
             throws AttributeNotFoundException {
         StackContext stackContext = stackContextLocal.get();
         String limitReached = checkForLimits(pValue,stackContext);
@@ -215,9 +230,9 @@ public class ObjectToJsonConverter {
 
             if (pValue.getClass().isArray()) {
                 // Special handling for arrays
-                return arrayHandler.extractObject(this,pValue,pExtraArgs,jsonify);
+                return arrayHandler.extractObject(this,pValue,pExtraArgs,pJsonify);
             }
-            return callHandler(pValue, pExtraArgs, jsonify);
+            return callHandler(pValue, pExtraArgs, pJsonify);
         } finally {
             stackContext.pop();
         }
@@ -238,12 +253,12 @@ public class ObjectToJsonConverter {
         return null;
     }
 
-    private Object callHandler(Object pValue, Stack<String> pExtraArgs, boolean jsonify)
+    private Object callHandler(Object pValue, Stack<String> pExtraArgs, boolean pJsonify)
             throws AttributeNotFoundException {
         Class pClazz = pValue.getClass();
         for (Handler handler : handlers) {
             if (handler.getType() != null && handler.getType().isAssignableFrom(pClazz)) {
-                return handler.extractObject(this,pValue,pExtraArgs,jsonify);
+                return handler.extractObject(this,pValue,pExtraArgs,pJsonify);
             }
         }
         throw new IllegalStateException(
@@ -262,7 +277,7 @@ public class ObjectToJsonConverter {
             return arrayHandler.setObjectValue(stringToObjectConverter,pInner,pAttribute,pValue);
         }
         for (Handler handler : handlers) {
-            if (handler.getType() != null && handler.getType().isAssignableFrom(clazz)) {
+            if (handler.getType() != null && handler.getType().isAssignableFrom(clazz) && handler.canSetValue()) {
                 return handler.setObjectValue(stringToObjectConverter,pInner,pAttribute,pValue);
             }
         }
@@ -313,6 +328,9 @@ public class ObjectToJsonConverter {
         // Set an object value on a certrain attribute.
         Object setObjectValue(StringToObjectConverter pConverter,Object pInner, String pAttribute, String pValue)
                 throws IllegalAccessException, InvocationTargetException;
+
+        // Whether an handler is able to set a value
+        boolean canSetValue();
     }
 
 

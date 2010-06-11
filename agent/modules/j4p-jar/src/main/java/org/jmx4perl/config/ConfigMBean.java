@@ -2,6 +2,8 @@ package org.jmx4perl.config;
 
 import java.io.IOException;
 
+import javax.management.MalformedObjectNameException;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -43,7 +45,7 @@ public interface ConfigMBean {
      * @param pTarget remote target or null for a loal mbean
      * @param pMaxEntries max last entries to remember, if 0 history tracking is switched off.
      */
-    void setHistoryEntriesForAttribute(String pMBean,String pAttribute,String pPath,String pTarget,int pMaxEntries);
+    void setHistoryEntriesForAttribute(String pMBean,String pAttribute,String pPath,String pTarget,int pMaxEntries) throws MalformedObjectNameException;
 
     /**
      * Switch on history tracking for an operation. If <code>pMaxEntries</code> is null
@@ -53,7 +55,7 @@ public interface ConfigMBean {
      * @param pTarget remote target or null for a loal mbean
      * @param pMaxEntries max last entries to remember, if 0 history tracking is switched off.
      */
-    void setHistoryEntriesForOperation(String pMBean,String pOperation,String pTarget,int pMaxEntries);
+    void setHistoryEntriesForOperation(String pMBean,String pOperation,String pTarget,int pMaxEntries) throws MalformedObjectNameException;
 
     /**
      * Remove all history entries and switch off history tracking globally.
@@ -91,7 +93,7 @@ public interface ConfigMBean {
 
     /**
      * Number of global limit for history entries. No attribute historization can exceed this
-     * limit (i.e if in {@link #setHistoryEntriesForAttribute(String, String, String, int)
+     * limit (i.e if in {@link #setHistoryEntriesForAttribute(String, String, String, String, int)} 
      * the <code>pMaxEntries</code> is set larger than this limit, the global limit will be taken}
      *
      * @return the global history limit

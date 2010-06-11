@@ -51,5 +51,4 @@ ok($value->{"jmx4perl.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeco
 ok($value->{"jmx4perl.it:type=attribute"}->{State} eq "true","State");
 $jmx->execute("jmx4perl.it:type=attribute","reset");
 
-
 #print Dumper(\@resps);

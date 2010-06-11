@@ -99,4 +99,9 @@ public class Jsr160RequestDispatcher implements RequestDispatcher {
     public boolean canHandle(JmxRequest pJmxRequest) {
         return pJmxRequest.getTargetConfig() != null;
     }
+
+    public boolean useReturnValueWithPath(JmxRequest pJmxRequest) {
+        JsonRequestHandler handler = requestHandlerManager.getRequestHandler(pJmxRequest.getType());
+        return handler.useReturnValueWithPath();
+    }
 }

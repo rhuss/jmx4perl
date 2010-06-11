@@ -40,6 +40,11 @@ public class LocalRequestDispatcher implements RequestDispatcher {
         return true;
     }
 
+    public boolean useReturnValueWithPath(JmxRequest pJmxRequest) {
+        JsonRequestHandler handler = requestHandlerManager.getRequestHandler(pJmxRequest.getType());
+        return handler.useReturnValueWithPath();
+    }
+
     public Object dispatchRequest(JmxRequest pJmxReq)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException {
         JsonRequestHandler handler = requestHandlerManager.getRequestHandler(pJmxReq.getType());

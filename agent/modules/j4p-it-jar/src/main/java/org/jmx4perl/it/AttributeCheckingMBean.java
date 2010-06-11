@@ -1,5 +1,11 @@
 package org.jmx4perl.it;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
+import javax.management.ObjectName;
+
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
  *
@@ -42,4 +48,38 @@ public interface AttributeCheckingMBean {
     float getLongSeconds();
 
     double getSmallMinutes();
+
+    String[] getStringArray();
+
+    void setStringArray(String[] array);
+
+    int getIntValue();
+
+    void setIntValue(int pValue);
+
+    File getFile();
+
+    void setFile(File pFile);
+
+    ObjectName getObjectName();
+
+    void setObjectName(ObjectName objectName);
+
+    List getList();
+
+    void setList(List list);
+
+    Map getMap();
+
+    void setMap(Map map);
+
+    Map getComplexNestedValue();
+
+    void setComplexNestedValue(Map map);
+
+    Object getBean();
+
+    void setBean(Object object);
+
+    
 }
