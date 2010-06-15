@@ -101,6 +101,7 @@ public class J4pClient extends J4pRequestManager {
     }
 
     // Extract J4pResponses from a returned bulk JSON answer
+    @SuppressWarnings("PMD.PreserveStackTrace")
     private <R extends J4pResponse<T>, T extends J4pRequest> List<R> extractResponses(JSONAware pJsonResponse, List<T> pRequests) throws J4pException {
         JSONArray responseArray = (JSONArray) pJsonResponse;
         List<R> ret = new ArrayList<R>(responseArray.size());

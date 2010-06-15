@@ -59,15 +59,12 @@ class CleanUpThread extends Thread {
         }
         // Trim array
         Thread ret[] = new Thread[nrThreads];
-        for (int i = 0; i< nrThreads; i++) {
-            ret[i] = threads[i];
-        }
+        System.arraycopy(threads,0,ret,0,nrThreads);
         return ret;
     }
 
     // Join threads, return false if only our own threads are left.
     private boolean joinThreads(Thread pThreads[]) {
-        boolean retry = false;
         for (int i=0;i< pThreads.length;i++) {
             final Thread t = pThreads[i];
             if (t.isDaemon() ||
