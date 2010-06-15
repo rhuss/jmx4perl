@@ -1,6 +1,32 @@
 #!/usr/bin/perl 
 # nagios: +epn
 
+=cut
+
+use FindBin qw ($Bin);
+# Used for running directly out of the distrib dir,
+# but we put the lib at last to avoid security issues
+# on a proper installed system
+#BEGIN { push(@INC, qq($Bin/../lib)); }
+use lib qq($Bin/../lib);
+use Nagios::Plugin::Functions;
+use JMX::Jmx4Perl::Nagios::CheckJmx4Perl;
+
+# Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
+# to the usual Nagios conventions and to avoid redundancy in the UI display.
+BEGIN {
+    no warnings 'redefine';
+    *Nagios::Plugin::Functions::get_shortname = sub {
+        return undef;
+    };
+}
+
+# Create new object and use this for the check
+# Hopefully it gets cleaned up aftewards if running
+# within the embedded Nagios perl interpreter. At least, 
+# we don't keep any references.
+JMX::Jmx4Perl::Nagios::CheckJmx4Perl->new(@ARGV)->execute();
+
 =head1 NAME 
 
 check_jmx4perl - Nagios check using jmx4perl for accessing JMX information 
@@ -87,21 +113,196 @@ identifying the JMX information can be given via the command line. Second, a
 configuration file can be used to define one or more nagios checks. This is the
 recommended mode, since it allows for more advanced features not available when
 using the command line alone. Each command line argument has an equivalent
-option in the configuration files. 
+option in the configuration files, though.
 
 =head1 TUTORIAL
 
 Before we dive into the more nifty details, first a 5 minute tutorial to get a
 first impression:
 
+=over 
+
+=item * 
+
+This tutorial uses I<tomcat> as application server. Download it from
+L<http://tomcat.apache.org> (either version 5 or 6) and extract it:
+
+  $ tar zxvf apache-tomcat-*.tar.gz
+  $ # We need this variable later on:
+  $ TC=`pwd`/apache-tomcat*
+
+=item *
+
+Download I<jmx4perl> from L<http://search.cpan.org/roland/jmx4perl> and install
+it as usual:
+
+  $ tar zcvf jmx4perl-*.tar.gz
+  $ cd jmx4perl*
+  $ # Store current directory for later reference:
+  $ J4P=`pwd`      
+  $ perl Build.PL
+  $ sudo ./Build install
+
+Beside the Perl modules C<JMX::Jmx4Perl> which can be used for programmatic JMX
+access, this nagios plugin C<check_jmx4perl> is installed in a standard
+location (F</usr/bin>, F</usr/local/bin> or whatever your Perl installation
+thinks is appropriate)
+
+=item * 
+
+Install the jmx4perl agent in tomcat:
+
+  $ cd $J4P
+  $ cp agent/j4p.war $TC/webapps 
+
+=item * 
+
+Start the Tomcat server:
+
+  $ $TC/bin/startup.sh
+
+=item * 
+
+Check your setup:
+  
+  $ jmx4perl http://localhost:8080/j4p
+
+This will print out a summary information about your
+setup. L<http://localhost:8080/j4p> is the URL under which the agent is
+reachable. Tomcat itself listens on port 8080 by default, and any autodeployed
+war archive can be reached under its filename without suffix (j4p in this case). 
+
+=item *
+
+A first nagios check for checking the amount of available heap memory in
+relation to the maximal available heap:
+
+  $ check_jmx4perl --url http://localhost:8080/j4p  \
+                   --mbean java.lang:type=Memory    \
+                   --attribute HeapMemoryUsage      \
+                   --path used                      \
+                   --base java.lang:type=Memory/HeapMemoryUsage/max \
+                   --warning 80                     \
+                   --critical 90        
+
+  OK - [java.lang:type=Memory,HeapMemoryUsage,used] : In range 9.83% (12778136 / 129957888) | '[java.lang:type#Memory,HeapMemoryUsage,used]'=12778136;103966310.4;116962099.2;0;129957888            
+
+where 
+
+=over 
+
+=item --url http://localhost:8080/j4p
+
+is the agent URL
+
+=item --mbean java.lang:type=Memory
+
+is the MBean name
+
+=item --attribute HeapMemoryUsage
+
+is the attribute to monitor
+
+=item --path used
+
+is an inner path (see below), which specifies an inner value within a more
+complex structure. The value of this specified attribute is a composed value
+(CompositeData) which combines multiple memory related data together. The
+complete value of this attribute can be viewed with I<jmx4perl>:
+
+   $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
+
+   $VAR1 = {
+          'committed' => '85000192',
+          'used' => '15106608',
+          'max' => '129957888',
+          'init' => '0'
+        };
+
+=item --base java.lang:type=Memory/HeapMemoryUsage/max
+
+is the base value for which a relative threshold should be applied. This is a
+short cut notation in the format I<mbean>C</>I<attribute>C</>I<path>. Slashes
+with values must be escaped with a C<\>. A shortcut is also available for
+specifing the value to monitor with the B<--value> option
+
+=item --warning 80
+
+is the warning threshold in percent. I.e. a C<WARNING> will be raised by this
+plugin when the heap memory usage is larger than 80% of the maximal available
+heap memory for the application server (which is I<smaller> than the available
+memory of the operating system)
+
+=item --critical 90
+
+is the critical threshold in percent. If the available heap memory reaches 90%
+of the available heap, a C<CRITICAL> will be returned.
+
+=back
+
+=item *
+
+For more complex checks the usage of a configuration file is recommended. This
+also allows you to keep you Nagios service definitions small and tidy. E.g. for
+monitoring the number of request per minute for a certain web application, a
+predefined check is available:
+
+ $ check_jmx4perl --url http://localhost:8080/j4p \
+                  --config $J4P/config/tomcat.cfg \
+                  --check tc_servlet_requests \
+                  --critical 100 \
+                  j4p-agent
+ 
+ OK - 15.00 requests/minute | ''Requests j4p-agent''=15;5000;100
+
+where 
+
+=over 
+
+=item --config $J4P/config/tomcat.cfg 
+
+is the path to configuration file. There a several predefined checks coming
+with this distribution, they are fairly well documented. Look there for some
+inspiration for what to check.
+
+=item --check
+
+is the name of the check to perform which must be defined in the configuration
+file 
+
+=item j4p-agent
+
+is an extra argument used by the predefined check. It is the name of the
+servlet for which the number of requests should be monitored. To get the name
+of all registered servlets use C<jmx4perl list>:
+
+  $ jmx4perl http://localhost:8080/j4p list | grep j2eeType=Servlet
+
+The servlet name is the value of the C<name> property of the listed MBeans.
+
+=back
+
+Check configuration files are very powerful and are the recommended way for
+configuring C<check_jmx4perl> for any larger installation. Features like multi
+checks are even only available when using a configuration file.
+
+=item *
+
+Next, a Nagios service definition needs to be added. For our memory example
+above, this looks like:
 
 
 
+Add this to the place where you normally add service definitions (depending on
+you Nagios installation).
+
+=cut 
 
 =head1 BACKGROUND
 
-This section explains the basics necessary to better understand the operations
-of C<check_jmx4perl>.
+This section explains the JMX basics necessary to better understand the usage
+of C<check_jmx4perl>. It tries to be as brief as possible, but some theory is
+required to get the link to the Java world.
 
 =head1 MBeans
 
@@ -393,32 +594,6 @@ mode and its limitations.
 
 
 
-=cut
-
-use FindBin qw ($Bin);
-# Used for running directly out of the distrib dir,
-# but we put the lib at last to avoid security issues
-# on a proper installed system
-#BEGIN { push(@INC, qq($Bin/../lib)); }
-use lib qq($Bin/../lib);
-use Nagios::Plugin::Functions;
-use JMX::Jmx4Perl::Nagios::CheckJmx4Perl;
-
-# Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
-# to the usual Nagios conventions and to avoid redundancy in the UI display.
-BEGIN {
-    no warnings 'redefine';
-    *Nagios::Plugin::Functions::get_shortname = sub {
-        return undef;
-    };
-}
-
-# Create new object and use this for the check
-# Hopefully it gets cleaned up aftewards if running
-# within the embedded Nagios perl interpreter. At least, 
-# we don't keep any references.
-JMX::Jmx4Perl::Nagios::CheckJmx4Perl->new(@ARGV)->execute();
-
 =head1 LICENSE
 
 This file is part of jmx4perl.
@@ -441,3 +616,5 @@ along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
 roland@cpan.org
 
 =cut
+
+1;

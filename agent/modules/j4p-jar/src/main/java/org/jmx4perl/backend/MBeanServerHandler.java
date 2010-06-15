@@ -116,7 +116,7 @@ public class MBeanServerHandler {
      * @return the name under which the MBean is registered.
      */
     public ObjectName registerMBean(Object pMBean,String ... pName)
-            throws MalformedObjectNameException, NotCompliantMBeanException, MBeanRegistrationException, InstanceAlreadyExistsException {
+            throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException {
         if (mBeanServers.size() > 0) {
             Exception lastExp = null;
             for (MBeanServer server : mBeanServers) {
@@ -128,7 +128,9 @@ public class MBeanServerHandler {
                         // Needs to implement MBeanRegistration interface
                         return server.registerMBean(pMBean,null).getObjectName();
                     }
-                } catch (Exception exp) {
+                } catch (RuntimeException exp) {
+                    lastExp = exp;
+                } catch (MBeanRegistrationException exp) {
                     lastExp = exp;
                 }
             }

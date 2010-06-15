@@ -102,6 +102,8 @@ public class BackendManager {
         registerOwnMBeans();
     }
 
+    // Construct configured dispatchers by reflection. Returns always
+    // a list, an empty one if no request dispatcher should be created
     private List<RequestDispatcher> createRequestDispatchers(String pClasses,
                                                              ObjectToJsonConverter pObjectToJsonConverter,
                                                              StringToObjectConverter pStringToObjectConverter,

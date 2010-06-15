@@ -62,8 +62,8 @@ public class LocalRequestDispatcher implements RequestDispatcher {
             MalformedObjectNameException, InstanceAlreadyExistsException {
         // Websphere adds extra parts to the object name if registered explicitely, but
         // we need a defined name on the client side. So we register it with 'null' in websphere
-        // and let the bean define its namen. On the others side, Resin throws an exception
-        // if registering with a null name.
+        // and let the bean define its name. On the other side, Resin throws an exception
+        // if registering with a null name, so we have to do this explicite check.
         return mBeanServerHandler.registerMBean(
                 new Config(pHistoryStore,pDebugStore,mBeanServerHandler),
                 mBeanServerHandler.checkForClass("com.ibm.websphere.management.AdminServiceFactory") ?

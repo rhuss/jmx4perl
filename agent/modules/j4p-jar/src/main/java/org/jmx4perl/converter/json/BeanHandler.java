@@ -105,7 +105,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         }
     }
 
-
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     private Object extractJsonifiedPropertyValue(Object pValue, String pAttribute, Stack<String> pExtraArgs,
                                                   ObjectToJsonConverter pConverter, JmxRequest.ValueFaultHandler pFaultHandler)
             throws AttributeNotFoundException {
