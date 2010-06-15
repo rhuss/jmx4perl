@@ -91,51 +91,63 @@ public class J4pClient extends J4pRequestManager {
         try {
             HttpResponse response = httpClient.execute(getHttpRequest(pRequests));
             JSONAware jsonResponse = extractJsonResponse(response);
-            if (!(jsonResponse instanceof JSONArray)) {
-                if (jsonResponse instanceof JSONObject) {
-                    JSONObject errorObject = (JSONObject) jsonResponse;
-                    J4pRemoteException exp = validate(null,errorObject);
-                    if (exp != null) {
-                        throw exp;
-                    }
-                }
-                throw new J4pException("Invalid JSON answer for a bulk request (expected an array but got a " + jsonResponse.getClass() + ")");
-            }
-            JSONArray responseArray = (JSONArray) jsonResponse;
-            List<R> ret = new ArrayList<R>(responseArray.size());
-            J4pRemoteException remoteExceptions[] = new J4pRemoteException[responseArray.size()];
-            boolean exceptionFound = false;
-            for (int i = 0; i < pRequests.size(); i++) {
-                T request = pRequests.get(i);
-                Object jsonResp = responseArray.get(i);
-                if (!(jsonResp instanceof JSONObject)) {
-                    throw new J4pException("Response for request Nr. " + i + " is invalid (expected a map but got " + jsonResp.getClass() + ")");
-                }
-                JSONObject jsonRespObject = (JSONObject) jsonResp;
-                J4pRemoteException exp = validate(request,jsonRespObject);
-                if (exp != null) {
-                    remoteExceptions[i] = exp;
-                    exceptionFound = true;
-                } else {
-                    ret.add(i,this.<R,T>extractResponse(request, (JSONObject) jsonResp));
-                }
-            }
-            if (exceptionFound) {
-                List partialResults = new ArrayList();
-                // Merge partial results and exceptions in a single list
-                for (int i = 0;i<pRequests.size();i++) {
-                    J4pRemoteException exp = remoteExceptions[i];
-                    if (exp != null) {
-                        partialResults.add(exp);
-                    } else {
-                        partialResults.add(ret.get(i));
-                    }
-                }
-                throw new J4pBulkRemoteException(partialResults);
-            }
-            return ret;
+
+            verifyJsonResponse(jsonResponse);
+
+            return extractResponses(jsonResponse, pRequests);
         } catch (IOException e) {
             throw new J4pException("IO-Error while contacting the server: " + e,e);
+        }
+    }
+
+    // Extract J4pResponses from a returned bulk JSON answer
+    private <R extends J4pResponse<T>, T extends J4pRequest> List<R> extractResponses(JSONAware pJsonResponse, List<T> pRequests) throws J4pException {
+        JSONArray responseArray = (JSONArray) pJsonResponse;
+        List<R> ret = new ArrayList<R>(responseArray.size());
+        J4pRemoteException remoteExceptions[] = new J4pRemoteException[responseArray.size()];
+        boolean exceptionFound = false;
+        for (int i = 0; i < pRequests.size(); i++) {
+            T request = pRequests.get(i);
+            Object jsonResp = responseArray.get(i);
+            if (!(jsonResp instanceof JSONObject)) {
+                throw new J4pException("Response for request Nr. " + i + " is invalid (expected a map but got " + jsonResp.getClass() + ")");
+            }
+            JSONObject jsonRespObject = (JSONObject) jsonResp;
+            J4pRemoteException exp = validate(request,jsonRespObject);
+            if (exp != null) {
+                remoteExceptions[i] = exp;
+                exceptionFound = true;
+            } else {
+                ret.add(i,this.<R,T>extractResponse(request, (JSONObject) jsonResp));
+            }
+        }
+        if (exceptionFound) {
+            List partialResults = new ArrayList();
+            // Merge partial results and exceptions in a single list
+            for (int i = 0;i<pRequests.size();i++) {
+                J4pRemoteException exp = remoteExceptions[i];
+                if (exp != null) {
+                    partialResults.add(exp);
+                } else {
+                    partialResults.add(ret.get(i));
+                }
+            }
+            throw new J4pBulkRemoteException(partialResults);
+        }
+        return ret;
+    }
+
+    // Verify the returned JSON answer.
+    private void verifyJsonResponse(JSONAware pJsonResponse) throws J4pException {
+        if (!(pJsonResponse instanceof JSONArray)) {
+            if (pJsonResponse instanceof JSONObject) {
+                JSONObject errorObject = (JSONObject) pJsonResponse;
+                J4pRemoteException exp = validate(null,errorObject);
+                if (exp != null) {
+                    throw exp;
+                }
+            }
+            throw new J4pException("Invalid JSON answer for a bulk request (expected an array but got a " + pJsonResponse.getClass() + ")");
         }
     }
 

@@ -67,24 +67,29 @@ class J4pAuthenticatedHttpContext extends J4pHttpContext {
             throw new IllegalArgumentException("Input string was null.");
         }
 
-        byte[] bytes;
+        byte[] inBytes;
         try {
-            bytes = s.getBytes("US-ASCII");
+            inBytes = s.getBytes("US-ASCII");
         }
         catch( java.io.UnsupportedEncodingException uee ) {
-            bytes = s.getBytes();
+            inBytes = s.getBytes();
         }
 
-        if( bytes.length == 0 ){
+        if( inBytes.length == 0 ) {
             return new byte[0];
-        }else if( bytes.length < 4 ){
+        } else if( inBytes.length < 4 ){
             throw new IllegalArgumentException(
-            "Base64-encoded string must have at least four characters, but length specified was " + bytes.length);
+            "Base64-encoded string must have at least four characters, but length specified was " + inBytes.length);
         }   // end if
 
+        return decodeBytes(inBytes);
+    }
+
+    // Do the conversion to bytes
+    private byte[] decodeBytes(byte[] pInBytes) {
         byte[] decodabet = J4pAuthenticatedHttpContext.DECODABET;
 
-        int    len34   = bytes.length * 3 / 4;       // Estimate on array size
+        int    len34   = pInBytes.length * 3 / 4;       // Estimate on array size
         byte[] outBuff = new byte[ len34 ]; // Upper limit on size of output
         int    outBuffPosn = 0;             // Keep track of where we're writing
 
@@ -94,9 +99,9 @@ class J4pAuthenticatedHttpContext extends J4pHttpContext {
         byte   sbiCrop   = 0;               // Low seven bits (ASCII) of input
         byte   sbiDecode = 0;               // Special value from DECODABET
 
-        for( i = 0; i < 0 + bytes.length; i++ ) {  // Loop through source
+        for( i = 0; i < 0 + pInBytes.length; i++ ) {  // Loop through source
 
-            sbiCrop = (byte)(bytes[i] & 0x7f); // Only the low seven bits
+            sbiCrop = (byte)(pInBytes[i] & 0x7f); // Only the low seven bits
             sbiDecode = decodabet[ sbiCrop ];   // Special value
 
             // White space, Equals sign, or legit Base64 character
@@ -119,7 +124,7 @@ class J4pAuthenticatedHttpContext extends J4pHttpContext {
             else {
                 // There's a bad input character in the Base64 stream.
                 throw new IllegalArgumentException(String.format(
-                "Bad Base64 input character '%d' in array position %d", bytes[i], i ) );
+                "Bad Base64 input character '%d' in array position %d", pInBytes[i], i ) );
             }
         }
 
@@ -132,21 +137,8 @@ class J4pAuthenticatedHttpContext extends J4pHttpContext {
             byte[] source, int srcOffset,
             byte[] destination, int destOffset) {
 
-        // Lots of error checking and exception throwing
-        if( source == null ){
-            throw new IllegalArgumentException( "Source array was null." );
-        }   // end if
-        if( destination == null ){
-            throw new IllegalArgumentException( "Destination array was null." );
-        }   // end if
-        if( srcOffset < 0 || srcOffset + 3 >= source.length ){
-            throw new IllegalArgumentException( String.format(
-            "Source array with length %d cannot have offset of %d and still process four bytes.", source.length, srcOffset ) );
-        }   // end if
-        if( destOffset < 0 || destOffset +2 >= destination.length ){
-            throw new IllegalArgumentException( String.format(
-            "Destination array with length %d cannot have offset of %d and still store three bytes.", destination.length, destOffset ) );
-        }   // end if
+        verifyArguments(source, srcOffset, destination, destOffset);
+
 
         if( source[ srcOffset + 2] == EQUALS_SIGN ) {
             int outBuff =   ( ( DECODABET[ source[ srcOffset    ] ] & 0xFF ) << 18 )
@@ -176,6 +168,25 @@ class J4pAuthenticatedHttpContext extends J4pHttpContext {
 
             return 3;
         }
+    }
+
+    // Check for argument validity
+    private static void verifyArguments(byte[] source, int srcOffset, byte[] destination, int destOffset) {
+        // Lots of error checking and exception throwing
+        if( source == null ){
+            throw new IllegalArgumentException( "Source array was null." );
+        }   // end if
+        if( destination == null ){
+            throw new IllegalArgumentException( "Destination array was null." );
+        }   // end if
+        if( srcOffset < 0 || srcOffset + 3 >= source.length ){
+            throw new IllegalArgumentException( String.format(
+            "Source array with length %d cannot have offset of %d and still process four bytes.", source.length, srcOffset ) );
+        }   // end if
+        if( destOffset < 0 || destOffset +2 >= destination.length ){
+            throw new IllegalArgumentException( String.format(
+            "Destination array with length %d cannot have offset of %d and still store three bytes.", destination.length, destOffset ) );
+        }   // end if
     }
 
     // =================================================================================================
