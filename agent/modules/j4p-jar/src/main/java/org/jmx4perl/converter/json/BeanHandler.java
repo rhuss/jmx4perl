@@ -8,6 +8,8 @@ import javax.management.AttributeNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.*;
 
 /*
@@ -121,30 +123,35 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         }
     }
 
-    @SuppressWarnings("PMD.UnnecessaryCaseChange")
+    // Extract all attributes from a given bean
     private List<String> extractBeanAttributes(Object pValue) {
         List<String> attrs = new ArrayList<String>();
         for (Method method : pValue.getClass().getMethods()) {
-            if (Modifier.isStatic(method.getModifiers()) || IGNORE_METHODS.contains(method.getName())) {
-                continue;
-            }
-            String name = method.getName();
-            for (String pref : GETTER_PREFIX) {
-                if (name.startsWith(pref) && name.length() > pref.length()
-                        && method.getParameterTypes().length == 0) {
-                    int len = pref.length();
-                    String firstLetter = name.substring(len,len+1);
-                    // Only for getter compliant to the beans conventions (first letter after prefix is upper case)
-                    if (firstLetter.toUpperCase().equals(firstLetter)) {
-                        String attribute =
-                                new StringBuffer(firstLetter.toLowerCase()).
-                                        append(name.substring(len+1)).toString();
-                        attrs.add(attribute);
-                    }
-                }
+            if (!Modifier.isStatic(method.getModifiers()) && !IGNORE_METHODS.contains(method.getName())) {
+                addAttributes(attrs, method);
             }
         }
         return attrs;
+    }
+
+    // Add attributes, which are taken from get methods to the given list
+    @SuppressWarnings("PMD.UnnecessaryCaseChange")
+    private void addAttributes(List<String> pAttrs, Method pMethod) {
+        String name = pMethod.getName();
+        for (String pref : GETTER_PREFIX) {
+            if (name.startsWith(pref) && name.length() > pref.length()
+                    && pMethod.getParameterTypes().length == 0) {
+                int len = pref.length();
+                String firstLetter = name.substring(len,len+1);
+                // Only for getter compliant to the beans conventions (first letter after prefix is upper case)
+                if (firstLetter.toUpperCase().equals(firstLetter)) {
+                    String attribute =
+                            new StringBuffer(firstLetter.toLowerCase()).
+                                    append(name.substring(len+1)).toString();
+                    pAttrs.add(attribute);
+                }
+            }
+        }
     }
 
     private Object extractBeanPropertyValue(Object pValue, String pAttribute, JmxRequest.ValueFaultHandler pFaultHandler)
@@ -219,8 +226,13 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         }
         Object oldValue;
         try {
-            Method getMethod = clazz.getMethod(getter);
-            getMethod.setAccessible(true);
+            final Method getMethod = clazz.getMethod(getter);
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                public Void run() {
+                    getMethod.setAccessible(true);
+                    return null;
+                }
+            });
             oldValue = getMethod.invoke(pInner);
         } catch (NoSuchMethodException exp) {
             // Ignored, we simply dont return an old value

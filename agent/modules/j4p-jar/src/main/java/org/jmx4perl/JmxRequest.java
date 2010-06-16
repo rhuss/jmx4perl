@@ -122,7 +122,8 @@ public class JmxRequest {
         }
         String s = (String) pMap.get("mbean");
         if (s != null) {
-            objectName = new ObjectName(objectNameS = s);
+            objectNameS = s;
+            objectName = new ObjectName(objectNameS);
         }
         Object attrVal = pMap.get("attribute");
         if (attrVal != null) {

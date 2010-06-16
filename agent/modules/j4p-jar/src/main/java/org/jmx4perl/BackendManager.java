@@ -109,32 +109,31 @@ public class BackendManager {
                                                              StringToObjectConverter pStringToObjectConverter,
                                                              Restrictor pRestrictor) {
         List<RequestDispatcher> ret = new ArrayList<RequestDispatcher>();
-        if (pClasses == null || pClasses.length() == 0) {
-            return ret;
-        }
-        String[] names = pClasses.split("\\s*,\\s*");
-        for (String name : names) {
-            try {
-                Class clazz = this.getClass().getClassLoader().loadClass(name);
-                Constructor constructor = clazz.getConstructor(ObjectToJsonConverter.class,
-                                                               StringToObjectConverter.class,
-                                                               Restrictor.class);
-                RequestDispatcher dispatcher =
-                        (RequestDispatcher)
-                                constructor.newInstance(pObjectToJsonConverter,
-                                                        pStringToObjectConverter,
-                                                        pRestrictor);
-                ret.add(dispatcher);
-            } catch (ClassNotFoundException e) {
-                throw new IllegalArgumentException("Couldn't load class " + name + ": " + e,e);
-            } catch (NoSuchMethodException e) {
-                throw new IllegalArgumentException("Class " + name + " has invalid constructor: " + e,e);
-            } catch (IllegalAccessException e) {
+        if (pClasses != null && pClasses.length() > 0) {
+            String[] names = pClasses.split("\\s*,\\s*");
+            for (String name : names) {
+                try {
+                    Class clazz = this.getClass().getClassLoader().loadClass(name);
+                    Constructor constructor = clazz.getConstructor(ObjectToJsonConverter.class,
+                                                                   StringToObjectConverter.class,
+                                                                   Restrictor.class);
+                    RequestDispatcher dispatcher =
+                            (RequestDispatcher)
+                                    constructor.newInstance(pObjectToJsonConverter,
+                                                            pStringToObjectConverter,
+                                                            pRestrictor);
+                    ret.add(dispatcher);
+                } catch (ClassNotFoundException e) {
+                    throw new IllegalArgumentException("Couldn't load class " + name + ": " + e,e);
+                } catch (NoSuchMethodException e) {
+                    throw new IllegalArgumentException("Class " + name + " has invalid constructor: " + e,e);
+                } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException("Constructor of " + name + " couldn't be accessed: " + e,e);
-            } catch (InvocationTargetException e) {
-                throw new IllegalArgumentException(e);
-            } catch (InstantiationException e) {
-                throw new IllegalArgumentException(name + " couldn't be instantiated: " + e,e);
+                } catch (InvocationTargetException e) {
+                    throw new IllegalArgumentException(e);
+                } catch (InstantiationException e) {
+                    throw new IllegalArgumentException(name + " couldn't be instantiated: " + e,e);
+                }
             }
         }
         return ret;
