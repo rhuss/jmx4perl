@@ -48,42 +48,54 @@ public class ReadHandler extends JsonRequestHandler {
     }
 
     @Override
-    public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
+    public Object doHandleRequest(MBeanServerConnection pServer, JmxRequest pRequest)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
-        ObjectName oName = request.getObjectName();
-        JmxRequest.ValueFaultHandler faultHandler = request.getValueFaultHandler();
+        ObjectName oName = pRequest.getObjectName();
+        JmxRequest.ValueFaultHandler faultHandler = pRequest.getValueFaultHandler();
         if (oName.isPattern()) {
-            Set<ObjectName> names = server.queryNames(oName,null);
-            if (names == null || names.size() == 0) {
-                throw new InstanceNotFoundException("No MBean with pattern " + request.getObjectNameAsString() +
-                        " found for reading attributes");
-            }
-            Map<String,Object> ret = new HashMap<String, Object>();
-            List<String> attributeNames = request.getAttributeNames();
-            boolean fetchAll =  attributeNames == null || (attributeNames.contains(null));
-            for (ObjectName name : names) {
-                if (fetchAll) {
-                    Map values = (Map) fetchAttributes(server,name, null,faultHandler,true /* always as map */);
-                    if (values != null && values.size() > 0) {
-                        ret.put(name.getCanonicalName(),values);
-                    }
-                } else {
-                    List<String> filteredAttributeNames = filterAttributeNames(server,name,attributeNames);
-                    if (filteredAttributeNames.size() == 0) {
-                        continue;
-                    }
-                    ret.put(name.getCanonicalName(),
-                            fetchAttributes(server,name,filteredAttributeNames,faultHandler,true /* always as map */));
-                }
-            }
-            if (ret.size() == 0) {
-                throw new IllegalArgumentException("No matching attributes " +
-                        request.getAttributeNames() + " found on MBeans " + names);
-            }
-            return ret;
+            return fetchAttributesForMBeanPattern(pServer, pRequest);
         } else {
-            return fetchAttributes(server,oName,request.getAttributeNames(),faultHandler,!request.isSingleAttribute());
+            return fetchAttributes(pServer,oName,pRequest.getAttributeNames(),faultHandler,!pRequest.isSingleAttribute());
         }
+    }
+
+    private Object fetchAttributesForMBeanPattern(MBeanServerConnection pServer, JmxRequest pRequest)
+            throws IOException, InstanceNotFoundException, ReflectionException, AttributeNotFoundException, MBeanException {
+        ObjectName objectName = pRequest.getObjectName();
+        JmxRequest.ValueFaultHandler faultHandler = pRequest.getValueFaultHandler();
+        Set<ObjectName> names = searchMBeans(pServer, objectName);
+        Map<String,Object> ret = new HashMap<String, Object>();
+        List<String> attributeNames = pRequest.getAttributeNames();
+        boolean fetchAll =  attributeNames == null || (attributeNames.contains(null));
+        for (ObjectName name : names) {
+            if (fetchAll) {
+                Map values = (Map) fetchAttributes(pServer,name, null, faultHandler,true /* always as map */);
+                if (values != null && values.size() > 0) {
+                    ret.put(name.getCanonicalName(),values);
+                }
+            } else {
+                List<String> filteredAttributeNames = filterAttributeNames(pServer,name,attributeNames);
+                if (filteredAttributeNames.size() == 0) {
+                    continue;
+                }
+                ret.put(name.getCanonicalName(),
+                        fetchAttributes(pServer,name,filteredAttributeNames, faultHandler,true /* always as map */));
+            }
+        }
+        if (ret.size() == 0) {
+            throw new IllegalArgumentException("No matching attributes " +
+                    pRequest.getAttributeNames() + " found on MBeans " + names);
+        }
+        return ret;
+    }
+
+    private Set<ObjectName> searchMBeans(MBeanServerConnection pServer, ObjectName pObjectName) throws IOException, InstanceNotFoundException {
+        Set<ObjectName> names = pServer.queryNames(pObjectName,null);
+        if (names == null || names.size() == 0) {
+            throw new InstanceNotFoundException("No MBean with pattern " + pObjectName +
+                    " found for reading attributes");
+        }
+        return names;
     }
 
     // Return only those attributes of an mbean which has one of the given names

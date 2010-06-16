@@ -124,6 +124,7 @@ public class HistoryKey implements Serializable {
 
     @Override
     public boolean equals(Object o) {
+        //CHECKSTYLE:OFF
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -137,6 +138,7 @@ public class HistoryKey implements Serializable {
         if (!type.equals(that.type)) return false;
 
         return true;
+        //CHECKSTYLE:ON
     }
 
     @Override

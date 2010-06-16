@@ -168,9 +168,9 @@ public class J4pActivator implements BundleActivator {
         }
     }
 
-    private static class ActivatorLogHandler implements LogHandler {
+    private static final class ActivatorLogHandler implements LogHandler {
 
-        ServiceTracker logTracker;
+        private ServiceTracker logTracker;
 
         private ActivatorLogHandler(ServiceTracker pLogTracker) {
             logTracker = pLogTracker;
