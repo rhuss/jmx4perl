@@ -76,58 +76,51 @@ public class MBeanServerHandler {
                 throw new IllegalStateException("Internal: IOException " + e + ". Shouldn't happen.",e);
             }
         } else {
+            wokaroundJBossBug(pJmxReq);
+            return handleRequest(pRequestHandler, pJmxReq);
+        }
+    }
+
+    private Object handleRequest(JsonRequestHandler pRequestHandler, JmxRequest pJmxReq)
+            throws ReflectionException, MBeanException, AttributeNotFoundException, InstanceNotFoundException {
+        AttributeNotFoundException attrException = null;
+        InstanceNotFoundException objNotFoundException = null;
+        for (MBeanServer s : mBeanServers) {
             try {
-                wokaroundJBossBug(pJmxReq);
-                AttributeNotFoundException attrException = null;
-                InstanceNotFoundException objNotFoundException = null;
-                for (MBeanServer s : mBeanServers) {
-                    try {
-                        return pRequestHandler.handleRequest(s, pJmxReq);
-                    } catch (InstanceNotFoundException exp) {
-                        // Remember exceptions for later use
-                        objNotFoundException = exp;
-                    } catch (AttributeNotFoundException exp) {
-                        attrException = exp;
-                    } catch (IOException exp) {
-                        throw new IllegalStateException("I/O Error while dispatching",exp);
-                    }
-                }
-                if (attrException != null) {
-                    throw attrException;
-                }
-                // Must be there, otherwise we would nave have left the loop
-                throw objNotFoundException;
-            } catch (ReflectionException e) {
-                throw new IllegalStateException("Internal error while process " + pJmxReq + ": " + e,e);
-            } catch (MBeanException e) {
-                throw new IllegalStateException("Exception while processing request " + pJmxReq + ": " + e,e);
+                return pRequestHandler.handleRequest(s, pJmxReq);
+            } catch (InstanceNotFoundException exp) {
+                // Remember exceptions for later use
+                objNotFoundException = exp;
+            } catch (AttributeNotFoundException exp) {
+                attrException = exp;
+            } catch (IOException exp) {
+                throw new IllegalStateException("I/O Error while dispatching",exp);
             }
         }
+        if (attrException != null) {
+            throw attrException;
+        }
+        // Must be there, otherwise we would not have left the loop
+        throw objNotFoundException;
     }
 
     /**
      * Register a MBean under a certain name to the first availabel MBeans server
      *
      * @param pMBean MBean to register
-     * @param pName optional name under which the bean should be registered. If not provided,
+     * @param pOptionalName optional name under which the bean should be registered. If not provided,
      * it depends on whether the MBean to register implements {@link javax.management.MBeanRegistration} or
      * not.
      *
      * @return the name under which the MBean is registered.
      */
-    public ObjectName registerMBean(Object pMBean,String ... pName)
+    public ObjectName registerMBean(Object pMBean,String ... pOptionalName)
             throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException {
         if (mBeanServers.size() > 0) {
             Exception lastExp = null;
             for (MBeanServer server : mBeanServers) {
                 try {
-                    if (pName != null && pName.length > 0 && pName[0] != null) {
-                        ObjectName oName = new ObjectName(pName[0]);
-                        return server.registerMBean(pMBean,oName).getObjectName();
-                    } else {
-                        // Needs to implement MBeanRegistration interface
-                        return server.registerMBean(pMBean,null).getObjectName();
-                    }
+                    return registerMBeanAtServer(server, pMBean, pOptionalName);
                 } catch (RuntimeException exp) {
                     lastExp = exp;
                 } catch (MBeanRegistrationException exp) {
@@ -139,6 +132,17 @@ public class MBeanServerHandler {
             }
         }
         throw new IllegalStateException("No MBeanServer initialized yet");
+    }
+
+    private ObjectName registerMBeanAtServer(MBeanServer pServer, Object pMBean, String[] pName)
+            throws MalformedObjectNameException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException {
+        if (pName != null && pName.length > 0 && pName[0] != null) {
+            ObjectName oName = new ObjectName(pName[0]);
+            return pServer.registerMBean(pMBean,oName).getObjectName();
+        } else {
+            // Needs to implement MBeanRegistration interface
+            return pServer.registerMBean(pMBean,null).getObjectName();
+        }
     }
 
     /**

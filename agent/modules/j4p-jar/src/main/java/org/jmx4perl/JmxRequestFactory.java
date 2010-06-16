@@ -232,27 +232,31 @@ public final class JmxRequestFactory {
                 val = previousBuffer;
             }
             // Append appropriate nr of slashes
-            for (int j=0;j<element.length();j++) {
-                val.append("/");
-            }
+            expandSlashes(val, element);
+
             // Special escape at the end indicates that this is the last element in the path
             if (!element.substring(element.length()-1,element.length()).equals("+")) {
                 if (!pElementStack.isEmpty()) {
                     val.append(decode(pElementStack.pop()));
                 }
                 extractElements(ret,pElementStack,val);
-                return;
             } else {
                 ret.push(decode(val.toString()));
                 extractElements(ret,pElementStack,null);
-                return;
             }
+            return;
         }
         if (previousBuffer != null) {
             ret.push(decode(previousBuffer.toString()));
         }
         ret.push(decode(element));
         extractElements(ret,pElementStack,null);
+    }
+
+    private static void expandSlashes(StringBuffer pVal, String pElement) {
+        for (int j=0;j< pElement.length();j++) {
+            pVal.append("/");
+        }
     }
 
     private static String decode(String s) {

@@ -239,23 +239,25 @@ public class PolicyBasedRestrictor implements Restrictor {
                     name = param.getTextContent().trim();
                 }
             } else if (tag.equals("attribute")) {
-                Node mode = param.getAttributes().getNamedItem("mode");
-                readAttributes.add(param.getTextContent().trim());
-                if (mode == null || !mode.getNodeValue().equalsIgnoreCase("read")) {
-                    writeAttributes.add(param.getTextContent().trim());
-                }
-            } else {
+                extractAttribute(readAttributes, writeAttributes, param);
+            } else if (tag.equals("operation")) {
                 operations.add(param.getTextContent().trim());
+            } else {
+                throw new SecurityException("Tag <" + tag + "> invalid");
             }
         }
         if (name == null) {
             throw new SecurityException("No <name> given for <mbean>");
         }
-        ObjectName oName = new ObjectName(name);
-        if (oName.isPattern()) {
-            pConfig.addPattern(oName);
+        pConfig.addValues(new ObjectName(name),readAttributes,writeAttributes,operations);
+    }
+
+    private void extractAttribute(Set<String> pReadAttributes, Set<String> pWriteAttributes, Node pParam) {
+        Node mode = pParam.getAttributes().getNamedItem("mode");
+        pReadAttributes.add(pParam.getTextContent().trim());
+        if (mode == null || !mode.getNodeValue().equalsIgnoreCase("read")) {
+            pWriteAttributes.add(pParam.getTextContent().trim());
         }
-        pConfig.addValues(oName,readAttributes,writeAttributes,operations);
     }
 
     private void initAllowedHosts(Document pDoc) {
@@ -324,6 +326,9 @@ public class PolicyBasedRestrictor implements Restrictor {
             readAttributes.put(pOName,pReadAttributes);
             writeAttributes.put(pOName,pWriteAttributes);
             operations.put(pOName,pOperations);
+            if (pOName.isPattern()) {
+                addPattern(pOName);
+            }
         }
 
         Set<String> getValues(JmxRequest.Type pType, ObjectName pName) {
