@@ -148,19 +148,22 @@ class J4pAuthenticatedHttpContext extends J4pHttpContext {
             return 1;
         }
         else if( source[ srcOffset + 3 ] == EQUALS_SIGN ) {
+            //CHECKSTYLE:OFF
             int outBuff =   ( ( DECODABET[ source[ srcOffset     ] ] & 0xFF ) << 18 )
                           | ( ( DECODABET[ source[ srcOffset + 1 ] ] & 0xFF ) << 12 )
                           | ( ( DECODABET[ source[ srcOffset + 2 ] ] & 0xFF ) <<  6 );
+            //CHECKSTYLE:ON
 
             destination[ destOffset     ] = (byte)( outBuff >>> 16 );
             destination[ destOffset + 1 ] = (byte)( outBuff >>>  8 );
             return 2;
         } else {
+            //CHECKSTYLE:OFF
             int outBuff =   ( ( DECODABET[ source[ srcOffset     ] ] & 0xFF ) << 18 )
                           | ( ( DECODABET[ source[ srcOffset + 1 ] ] & 0xFF ) << 12 )
                           | ( ( DECODABET[ source[ srcOffset + 2 ] ] & 0xFF ) <<  6)
                           | ( ( DECODABET[ source[ srcOffset + 3 ] ] & 0xFF )      );
-
+            //CHECKSTYLE:ON
 
             destination[ destOffset     ] = (byte)( outBuff >> 16 );
             destination[ destOffset + 1 ] = (byte)( outBuff >>  8 );
