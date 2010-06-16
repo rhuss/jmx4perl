@@ -71,6 +71,14 @@ public enum Config {
     private String defaultValue;
     private static Map<String, Config> keyByName;
 
+    // Build up internal reverse map
+    static {
+        keyByName = new HashMap<String, Config>();
+        for (Config ck : Config.values()) {
+            keyByName.put(ck.getKeyValue(),ck);
+        }
+    }
+
     Config(String pValue) {
         this(pValue,null);
     }
@@ -86,14 +94,6 @@ public enum Config {
     }
 
     public static Config getByKey(String pKeyS) {
-        if (keyByName == null) {
-            synchronized (Config.class) {
-                keyByName = new HashMap<String, Config>();
-                for (Config ck : Config.values()) {
-                    keyByName.put(ck.getKeyValue(),ck);
-                }
-            }
-        }
         return keyByName.get(pKeyS);
     }
 

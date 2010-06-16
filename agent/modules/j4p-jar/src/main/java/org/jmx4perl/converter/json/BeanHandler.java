@@ -227,23 +227,32 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         Object oldValue;
         try {
             final Method getMethod = clazz.getMethod(getter);
-            AccessController.doPrivileged(new PrivilegedAction<Void>() {
-                public Void run() {
-                    getMethod.setAccessible(true);
-                    return null;
-                }
-            });
+            AccessController.doPrivileged(new SetMethodAccessibleAction(getMethod));
             oldValue = getMethod.invoke(pInner);
         } catch (NoSuchMethodException exp) {
             // Ignored, we simply dont return an old value
             oldValue = null;
         }
-        found.setAccessible(true);
+        AccessController.doPrivileged(new SetMethodAccessibleAction(found));
         found.invoke(pInner,pConverter.convertFromString(params[0].getName(),pValue));
         return oldValue;
     }
 
     public boolean canSetValue() {
         return true;
+    }
+
+    // Privileged action for setting the accesibility mode for a method to true
+    private static class SetMethodAccessibleAction implements PrivilegedAction<Void> {
+        private final Method getMethod;
+
+        public SetMethodAccessibleAction(Method pGetMethod) {
+            getMethod = pGetMethod;
+        }
+
+        public Void run() {
+            getMethod.setAccessible(true);
+            return null;
+        }
     }
 }

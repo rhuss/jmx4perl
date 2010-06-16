@@ -60,6 +60,17 @@ public class ExecHandler extends JsonRequestHandler {
         }
     }
 
+    /**
+     * Execute an JMX operation. The operation name is taken from the request, as well as the
+     * arguments to use. If the operation is given in the format "op(type1,type2,...)"
+     * (e.g "getText(java.lang.String,int)" then the argument types are taken into account
+     * as well. This way, overloaded JMX operation can be used. If an overloaded JMX operation
+     * is called without specifying the argument types, then an exception is raised.
+     *
+     * @param server server to try
+     * @param request request to process from where the operation and its arguments are extracted.
+     * @return the return value of the operation call
+     */
     @Override
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
@@ -178,6 +189,7 @@ public class ExecHandler extends JsonRequestHandler {
         return false;
     }
 
+    // Extract operation and optional type parameters
     private List<String> splitOperation(String pOperation) {
         List<String> ret = new ArrayList<String>();
         Pattern p = Pattern.compile("^(.*)\\((.*)\\)$");
@@ -225,7 +237,7 @@ public class ExecHandler extends JsonRequestHandler {
             paramClasses = new ArrayList<String>(pParamClazzes).toArray(new String[pParamClazzes.size()]);
         }
 
-        public OperationAndParamType(String pOperationName, MBeanParameterInfo[] pParameterInfos) {
+        private OperationAndParamType(String pOperationName, MBeanParameterInfo[] pParameterInfos) {
             operationName = pOperationName;
             paramClasses = new String[pParameterInfos.length];
             int i=0;
