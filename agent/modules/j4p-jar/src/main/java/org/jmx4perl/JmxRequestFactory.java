@@ -94,41 +94,26 @@ public final class JmxRequestFactory {
     public static JmxRequest createRequestFromUrl(String pPathInfo, Map<String,String[]> pParameterMap) {
         JmxRequest request = null;
         try {
-            String pathInfo = pPathInfo;
+            String pathInfo = extractPathInfo(pPathInfo, pParameterMap);
 
-            // If no pathinfo is given directly, we look for a query parameter named 'p'.
-            // This variant is helpful, if there are problems with the server mangling
-            // up the pathinfo (e.g. for security concerns, often '/','\',';' and other are not
-            // allowed in encoded form within the pathinfo)
-            if (pPathInfo == null || pPathInfo.length() == 0 || pathInfo.matches("^/+$")) {
-                String[] vals = pParameterMap.get("p");
-                if (vals != null && vals.length > 0) {
-                    pathInfo = vals[0];
-                }
+            // Get all path elements as a reverse stack
+            Stack<String> elements = extractElementsFromPath(pathInfo);
+            Type type = extractType(elements.pop());
+
+            Processor processor = PROCESSOR_MAP.get(type);
+            if (processor == null) {
+                throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
             }
 
-            if (pathInfo != null && pathInfo.length() > 0) {
-                // Get all path elements as a reverse stack
-                Stack<String> elements = extractElementsFromPath(pathInfo);
-                Type type = extractType(elements.pop());
+            // Parse request
+            request = processor.process(elements);
 
-                Processor processor = PROCESSOR_MAP.get(type);
-                if (processor == null) {
-                    throw new UnsupportedOperationException("Type " + type + " is not supported (yet)");
-                }
+            // Extract all additional args from the remaining path info
+            request.setExtraArgs(prepareExtraArgs(elements));
 
-                // Parse request
-                request = processor.process(elements);
-
-                // Extract all additional args from the remaining path info
-                request.setExtraArgs(prepareExtraArgs(elements));
-
-                // Setup JSON representation
-                extractParameters(request,pParameterMap);
-                return request;
-            } else {
-                throw new IllegalArgumentException("No pathinfo given and no query parameter 'p'");
-            }
+            // Setup JSON representation
+            extractParameters(request,pParameterMap);
+            return request;
         } catch (NoSuchElementException exp) {
             throw new IllegalArgumentException("Invalid path info " + pPathInfo,exp);
         } catch (MalformedObjectNameException e) {
@@ -137,6 +122,27 @@ public final class JmxRequestFactory {
             throw new IllegalStateException("Internal: Illegal encoding for URL conversion: " + e,e);
         } catch (EmptyStackException exp) {
             throw new IllegalArgumentException("Invalid arguments in pathinfo " + pPathInfo + (request != null ? " for command " + request.getType() : ""),exp);
+        }
+    }
+
+    // Extract path info either from the 'real' URL path, or from an request parameter
+    private static String extractPathInfo(String pPathInfo, Map<String, String[]> pParameterMap) {
+        String pathInfo = pPathInfo;
+
+        // If no pathinfo is given directly, we look for a query parameter named 'p'.
+        // This variant is helpful, if there are problems with the server mangling
+        // up the pathinfo (e.g. for security concerns, often '/','\',';' and other are not
+        // allowed in encoded form within the pathinfo)
+        if (pPathInfo == null || pPathInfo.length() == 0 || pathInfo.matches("^/+$")) {
+            String[] vals = pParameterMap.get("p");
+            if (vals != null && vals.length > 0) {
+                pathInfo = vals[0];
+            }
+        }
+        if (pathInfo != null && pathInfo.length() > 0) {
+            return pathInfo;
+        } else {
+            throw new IllegalArgumentException("No pathinfo given and no query parameter 'p'");
         }
     }
 
@@ -199,7 +205,6 @@ public final class JmxRequestFactory {
 
         return ret;
     }
-
 
     private static void extractElements(Stack<String> ret, Stack<String> pElementStack,StringBuffer previousBuffer)
             throws UnsupportedEncodingException {

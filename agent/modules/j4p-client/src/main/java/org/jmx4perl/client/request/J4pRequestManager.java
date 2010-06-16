@@ -33,8 +33,8 @@ public class J4pRequestManager {
     protected String j4pServerUrl;
 
     // Escape patterns
-    private Pattern slashPattern = Pattern.compile("/+");
-    private Pattern escapedSlashPattern = Pattern.compile("%2F");
+    private static final Pattern SLASH_PATTERN = Pattern.compile("/+");
+    private static final Pattern ESCAPED_SLASH_PATTERN = Pattern.compile("%2F");
 
     public J4pRequestManager(String pJ4pServerUrl) {
         j4pServerUrl = pJ4pServerUrl;
@@ -146,36 +146,44 @@ public class J4pRequestManager {
 
     // Escape a part for usage as part of URI path
     private String escape(String pPart) throws J4pException {
-        Matcher matcher = slashPattern.matcher(pPart);
+        Matcher matcher = SLASH_PATTERN.matcher(pPart);
         int index = 0;
         StringBuilder ret = new StringBuilder();
         while (matcher.find()) {
             String part = pPart.subSequence(index, matcher.start()).toString();
-            ret.append(part);
-            String separator = pPart.substring(matcher.start(),matcher.end());
-            ret.append("/");
-            int len = separator.length();
-            for (int i = 0;i<len;i++) {
-                if (i == 0 && matcher.start() == 0) {
-                    ret.append("^");
-                } else if (i == len - 1 && matcher.end() == pPart.length()) {
-                    ret.append("+");
-                } else {
-                    ret.append("-");
-                }
-            }
+            ret.append(part).append("/");
+            ret.append(escapeSlash(pPart, matcher));
             ret.append("/");
             index = matcher.end();
         }
         if (index != pPart.length()) {
             ret.append(pPart.substring(index,pPart.length()));
         }
+        return uriEscape(ret);
+    }
 
+    private String escapeSlash(String pPart, Matcher pMatcher) {
+        StringBuilder ret = new StringBuilder();
+        String separator = pPart.substring(pMatcher.start(), pMatcher.end());
+        int len = separator.length();
+        for (int i = 0;i<len;i++) {
+            if (i == 0 && pMatcher.start() == 0) {
+                ret.append("^");
+            } else if (i == len - 1 && pMatcher.end() == pPart.length()) {
+                ret.append("+");
+            } else {
+                ret.append("-");
+            }
+        }
+        return ret.toString();
+    }
+
+    private String uriEscape(StringBuilder pRet) throws J4pException {
         // URI Escape unsafe chars
         try {
-            String encodedRet = URLEncoder.encode(ret.toString(),"utf-8");
+            String encodedRet = URLEncoder.encode(pRet.toString(),"utf-8");
             // Translate all "/" back...
-            return escapedSlashPattern.matcher(encodedRet).replaceAll("/");
+            return ESCAPED_SLASH_PATTERN.matcher(encodedRet).replaceAll("/");
         } catch (UnsupportedEncodingException e) {
             throw new J4pException("Platform doesn't support UTF-8 encoding",e);
         }
