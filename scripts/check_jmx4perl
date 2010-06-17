@@ -1,9 +1,8 @@
 #!/usr/bin/perl 
 # nagios: +epn
 
-=cut
-
 use FindBin qw ($Bin);
+
 # Used for running directly out of the distrib dir,
 # but we put the lib at last to avoid security issues
 # on a proper installed system
@@ -291,7 +290,7 @@ checks are even only available when using a configuration file.
 Next, a Nagios service definition needs to be added. For our memory example
 above, this looks like:
 
-
+ TODO
 
 Add this to the place where you normally add service definitions (depending on
 you Nagios installation).
@@ -436,45 +435,120 @@ C<check_jmx4perl> like
 
 =head3 Attributes
 
-Attribute are values which can be obtained from MBeans. They can be of a simple
+Attribute are values which can be obtained from MBeans. They can be a simple
 data type like a string or an integer, but they can be arbitrarly complex (e.g
-an arbitrary Java type). Simple data types can be used directly for threshold
-checking where the value is compared against a critical or warning threshold
-directly. 
-
-
-
-
--- Values
--- 
+any Java type). Simple data types can be used directly for threshold checking
+where the value is compared against a critical or warning threshold
+directly. Complex data types are translated into a JSON structure on the agent
+side, which works for the most types. To access a single value from a complex
+value, the path mechanism as described above can be used. Thresholds can always
+be used for simple data types.  
 
 =head3 Operations
 
+Beside attributes, the return values of operations can be used for comparing
+against thresholds. Since a JMX exposed operation can also take arguments,
+these can be provided as arguments or in the configuration, too. Note, that
+only simple typed arguments like strings, numbers and booleans (true/false) can
+be used. If an JMX operation requires more complex arguments it can not be used
+by this plugin. 
+
+With the option C<--operation> a JMX operation is triggered and the return
+value used for threshold calculations. Additionally, if use an operation
+alias with C<--alias>, you can ommit C<--operation> and C<--mbean>. Any
+arguments required for the operation need to be provided as additional
+arguments. 
+
+Example:
+
+  
 
 =head2 Aliases
 
+Aliases are shortcut for common MBean names and attributes. E.g. the alias
+C<MEMORY_HEAP_MAX> specify the MBean C<java.lang:type=Memory>, the attribute
+C<HeapMemoryUsage> and the path C<max>. Aliases can be specified with the
+C<--alias> option or with the configuration with the C<Alias> configuration
+directive. Aliases can be translated to differen MBean names on different
+application server. For this, C<check_jmx4perl> uses an autodetection mechanism
+to determine the target plattform. Currently, this mechanism uses one or more
+extra server round-trips. To avoid this overhead, the C<--product> option
+(configuration: C<Product>) can be used to specify the target platform
+explicitely. This is highly recommended in case you are using the aliasing
+feature. 
+
+Aliases are not extensible and can not take any parameters. All availables
+aliases can be viewed with 
+
+  jmx4perl aliases
+
+A much more flexible solution is to use parameterized checks, which are defined
+in a configuration file. See L</CONFIGURATION> for more details.
+
 =head2 Relative Checks
+
+Often relative values are more interesting than absolute ones. E.g. the
+knowledge that 140 MBytes heap memory is used is not so important than to know,
+that 56% of the available memory is used. Also, Nagios service definitions for
+relative checks are generic as they can be applied for target servers with
+different memory footprint.
+
+Relative checks calculate the ratio of a value to a base value. 
+
+The base value has to be provided with C<--base>. The argument provided here is
+first tried as an alias name or checked as an absolute, numeric
+value. Alternatively, you can use a full MBean/Attribute/Path specification by
+using a C</> as separator, e.g.
+
+  ... --base java.lang:type=Memory/HeapMemoryUsage/max ...
+
+If one of these parts (the path is optional) contains a slash within its name,
+the slash must be escaped with a backslash (\/). Backslashes in MBean names are
+escaped with a double backslash (\\). 
+
+Example: 
+
+   check_jmx4perl --url http://localhost:8080/j4p \ 
+                  --value java.lang:type=Memory/HeapMemoryUsage/used \ 
+                  --base java.lang:type=Memory/HeapMemoryUsage/max \ 
+                  --critical 90
+
+This check will trigger a state change to CRITICAL if the used heap memory will
+exceed 90% of the available heap memory. The value itself is specified with the
+C<--value> option, which, similar to C<--base> uses a shortcut notation for
+specifying the MBean, the attribute and an optional base.
 
 =head2 Incremental Checks
 
-=head2 Output Tuning
+For some values to monitor the absolute value is not interesting but the
+increase rate (velocity). E.g. for threads it can be important to know how fast
+threads are created.
 
-=head2 Proxy mode
- 
-=head1 COMMAND LINE 
+Incremental checks are switched on with the C<--delta> option (configuration:
+C<Delta>). This option takes an optional argument which is interpreted as
+seconds for normalization.
 
-The pure command line interface (without a configuration file) is mostly suited
-for simple checks where the predefined defaults are suitable. For all other use
-case, a configuration file fits better. 
+Example: 
 
-=head2 Command Line Options
+  check_jmx4perl --url http://localhost:8080/j4p \ 
+                 --mbean java.lang:type=Threading \ 
+                 --attribute TotalStartedThreadCount \ 
+                 --delta 60 \ 
+                 --critical 5
 
+This will fail as CRITICAL if more than 5 threads are created per minute (60
+seconds). Technically C<check_jmx4perl> uses the I<history> feature of the j4p
+agent deployed on the target server. This will always store the result and the
+timestamp of the last check on the server side and returns these historical
+values on the next check so that the velocity can be calculated. If no value is
+given for C<--delta>, then no normalization is used. In the example above,
+without a normalization value of 60, a CRITICAL is returned if the number of
+threads created increased more than 5 between two checks.
 
+C<--delta> doesn't work with C<--base> (e.g. no incremental mode for relative
+checks is available).
 
-
-Command for providing Nagios conmpliant output for JMX response fetched via
-L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
-C<--warning>) thresholds. 
+=head2 String checks
 
 You can also use direct string comparison. In this case C<--critical> and
 C<--warning> are not treated as numerical values but as string types. They are
@@ -491,30 +565,7 @@ Whether string comparison or a numerical check is used is determined
 automatically based on the value returned. You can enforce a particular mode by
 providing the option C<--numeric> or C<--string> respectively.
 
-Values obtained from the server can be interpreteted as relative values when
-C<--base> is given. The argument provided here is first tried as an alias name
-or checked as an absolute, numeric value. Alternatively, you can use a full
-MBean/Attribute/Path specification by using a C</> as separator, e.g. 
-
-  ... --base java.lang:type=Memory/HeapMemoryUsage/max ...
-
-If one of these parts (the path is optional) contains a slash within its name,
-the part must be URI encoded. I.e. all parts are URI decoded before usages as
-naming pattern. In any case, using an alias or direct MBean names, the base
-value is fetched first for calculating the relative value. For a numeric value
-given here this is of course not necessary.
-
-C<--delta> switches on incremental mode in which the difference between two
-following values is used. The optional argument are interpreted as seconds
-which are used for calculating the speed of growth. If not given, only the
-difference between the current and the latest value is taken. C<--delta>
-doesn't work with C<--base>.
-
-With the option C<--operation> a JMX operation is triggered and the return
-value used for threshold calculations. Additionally, if use an operation
-alias with C<--alias>, you can ommit C<--operation> and C<--mbean>. Any
-arguments required for the operation need to be provided as additional
-arguments. 
+=head2 Output Tuning
 
 The output of C<check_jmx4perl> can be highly customized. First of all, you can
 provide a unit-of-measurement with the option C<--unit>. This specifies how the
@@ -574,6 +625,8 @@ will result in an output like
 
  OK - Heap-Memory: 3.48% used (17.68 MB / 508.06 MB) | '[MEMORY_HEAP_USED]'=3.48%;;:80
 
+=head2 Proxy mode
+
 C<check_jmx4perl> can be used in a proxy mode as well. When the option
 C<--target> is given, the agent servlet use this url as a JMX Service URL and
 tries to connect via a JSR-160 to specified target to obtain the JMX
@@ -581,6 +634,19 @@ information from there. Additionally C<--target-user> and C<--target-password>
 can be used to provide credentials if the target server is secure with user-
 and password name. Please see the manual for more information about the proxy
 mode and its limitations.
+ 
+=head1 COMMAND LINE 
+
+The pure command line interface (without a configuration file) is mostly suited
+for simple checks where the predefined defaults are suitable. For all other use
+cases, a configuration file fits better. 
+
+=head2 Command Line Options
+
+Command for providing Nagios conmpliant output for JMX response fetched via
+L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
+C<--warning>) thresholds. 
+
 
 =head1 CONFIGURATION
 

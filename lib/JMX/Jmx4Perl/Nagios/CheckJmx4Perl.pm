@@ -480,12 +480,12 @@ sub _create_nagios_plugin {
           "                      [--config <config-file>] [--check <check-name>] [--server <server-alias>] [-v] [--help]\n" .
           "                      arg1 arg2 ....",
           version => $JMX::Jmx4Perl::VERSION,
-          url => "http://www.consol.com/opensource/nagios/",
+          url => "http://www.jmx4perl.org",
           plugin => "check_jmx4perl",
           blurb => "This plugin checks for JMX attribute values on a remote Java application server",
           extra => "\n\nYou need to deploy j4p.war on the target application server or as an intermediate proxy.\n" .
           "Please refer to the documentation for JMX::Jmx4Perl for further details.\n\n" .
-          "For a comprehensive documentation please consult the man page of check_jmx4perl or use the option --doc"
+          "For a complete documentation please consult the man page of check_jmx4perl or use the option --doc"
          );
     $np->shortname(undef);
     $np->add_arg(
@@ -600,9 +600,9 @@ sub _create_nagios_plugin {
                  help => "Name of a check configuration as defined in the configuration file"
                 );
     $np->add_arg(
-                 spec => "doc=s!",
+                 spec => "doc:s",
                  help => "Print the documentation of check_jmx4perl, optionally specifying the section (tutorial, args, config)"
-                )
+                );
     $np->getopts();
     return $np;
 }
