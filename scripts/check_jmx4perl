@@ -461,7 +461,7 @@ arguments.
 
 Example:
 
-  
+ TODO  
 
 =head2 Aliases
 
@@ -471,7 +471,7 @@ C<HeapMemoryUsage> and the path C<max>. Aliases can be specified with the
 C<--alias> option or with the configuration with the C<Alias> configuration
 directive. Aliases can be translated to differen MBean names on different
 application server. For this, C<check_jmx4perl> uses an autodetection mechanism
-to determine the target plattform. Currently, this mechanism uses one or more
+to determine the target platform. Currently, this mechanism uses one or more
 extra server round-trips. To avoid this overhead, the C<--product> option
 (configuration: C<Product>) can be used to specify the target platform
 explicitely. This is highly recommended in case you are using the aliasing
@@ -628,14 +628,14 @@ will result in an output like
 =head2 Proxy mode
 
 C<check_jmx4perl> can be used in a proxy mode as well. When the option
-C<--target> is given, the agent servlet use this url as a JMX Service URL and
-tries to connect via a JSR-160 to specified target to obtain the JMX
-information from there. Additionally C<--target-user> and C<--target-password>
-can be used to provide credentials if the target server is secure with user-
-and password name. Please see the manual for more information about the proxy
-mode and its limitations.
- 
-=head1 COMMAND LINE 
+C<--target> (configuration: <Target>) is given, the agent servlet use this url
+as a JMX Service URL and tries to connect via a JSR-160 to specified target to
+obtain the JMX information from there. Additionally C<--target-user> and
+C<--target-password> can be used to provide credentials if the target server is
+secured with user- and password name. Please see the manual for more
+information about the proxy mode and its limitations.  
+
+=head1 COMMAND LINE
 
 The pure command line interface (without a configuration file) is mostly suited
 for simple checks where the predefined defaults are suitable. For all other use
@@ -643,6 +643,7 @@ cases, a configuration file fits better.
 
 =head2 Command Line Options
 
+Most of 
 Command for providing Nagios conmpliant output for JMX response fetched via
 L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
 C<--warning>) thresholds. 
@@ -650,11 +651,408 @@ C<--warning>) thresholds.
 
 =head1 CONFIGURATION
 
-=head2 Multichecks
+Using C<check_jmx4perl> with a configuration file is the most powerful way for
+nagios checks. A simple configuration file looks like 
+
+   # Define server connection parameters
+   <Server tomcat>
+      Url = http://localhost:8080/j4p
+   </Server>
+
+   # A simple heap memory check with a critical threshold of 
+   # 90% of the maximal heap memory. 
+   <Check memory_heap>     
+     Value = java.lang:type=Memory/HeapMemoryUsage/used
+     Base = java.lang:type=Memory/HeapMemoryUsage/max
+     Unit = B
+     Label = Heap-Memory: %.2r% used (%.2v %u / %.2b %u)
+     Name = Heap
+     Critical = 90
+   </Check>
+
+A configuration file is provided on the command line with the option
+C<--config>. It can be divided in two parts: A section defining server
+connection parameters and a section defining the checks themselves. 
+
+=head2 <Server>
+
+With the C<E<lt>Server I<name> E<gt>> the connection parameters for a specific
+server is defined. In order to select a server the C<--server I<name>> command
+line option has to be used. Within a C<E<lt>ServerE<gt>> configuration elment,
+the following keys can be used:
+
+=over
+
+=item Url
+
+The URL under which the j4p agent can be reached.
+
+=item User, Password
+
+If authentication is switched on, the user and the credentials can be provided
+with the B<User> and B<Password> directive, respectively. The agent can be
+secured as any web application. Currently, only Basic Authentication is
+supported. 
+
+=item Product
+
+The type of application server to be monitored. This configuration can speed up
+checks significantly, but only when aliases are used. By default when using
+aliases, C<check_jmx4perl> uses autodetection for determine the target's
+platform. This results in at least one additional HTTP-Request. This
+configuration does not has any effect when MBeans are always used with their
+full name. 
+
+=item Proxy
+
+A HTTP Proxy URL and credentials can be given with the C<E<lt>ProxyE<gt>>
+sub-section. Example:
+
+  <Server>
+  ....
+    <Proxy>
+      Url = http://proxy.company.com:8001
+      User = woody
+      Password = buzz
+    </Proxy>
+  </Server>
+
+=over
+
+=item Url
+
+The proxy URL
+
+=item User, Password
+
+Optional user and credentials for accessing the proxy
+
+=back 
+
+=item Target
+
+With this directive, the JMX-Proxy mode can be switched on. As described in
+section L</"Proxy mode">, C<check_jmx4perl> can operate in an agentless mode,
+where the agent servlet is deployed only on an intermediated, so called
+JMX-Proxy server, whereas the target platform only needs to export JMX
+information in the traditional way (e.g. via JSR-160 export). This mode is
+especially useful if the agent is not allowed to be installed on the target
+platform. However, this approach has some drawbacks and some functionality is
+missing there, so the agent-mode is the recommended way. A sample JMX-Proxy
+configuration looks like:
+
+  <Target>
+     # TODO: "Real" URL
+     Url = http://target:8080/j4p
+     User = max
+     Password = frisch 
+  </Target>
+
+For a discussion about the advantages and disadvantages of the JMX-Proxy mode,
+please have a look at L<http://labs.consol.de/> which contains some evaluation
+of this mode for various application servers (e.g. JBoss and Weblogic). 
+
+=over 
+
+=item Url
+
+The JMX-RMI Url to access the target platform. 
+
+=item User, Password
+
+User and password for authenticating against the target server. 
+
+=back
+  
+=back 
+
+=head2 Single Check
+
+=over 
+
+=item Mbean
+
+The C<ObjectName> of the MBean to monitor.
+
+=item Attribute
+
+Attribute to monitor. 
+
+=item Operation
+
+Operation, whose return value should be monitored. Either C<Attribute> or
+C<Operation> should be given, but not both. If the operation takes arguments,
+these need to be given as additional arguments to the C<check_jmx4perl> command
+line call. In the rare case, you need to call an overloaded operation (i.e. an
+operation whose name exists multiple times on the same MBean but with different
+parameter types), the argument types can be given within parantheses:
+
+  <Check>
+     ....
+     Operation = checkUserCount(java.lang.String,java.lang.String)
+     ...
+  </Check>
+
+=item Alias
+
+Alias, which must be known to C<check_jmx4perl>. Use C<jmx4perl aliases> to get
+a list of all known aliases. If C<Alias> is given as configuration directive,
+C<Operation> and/or C<Attribute> is ignored. Please note, that using C<Alias>
+without C<Product> in the server section leads to at least one additional HTTP
+request. 
+
+=item Path
+
+Path to apply to the attribute or operation return value. See L</"Pathes"> for
+more information about pathes. 
+
+=item Value
+
+Value is a shortcut for specifying C<MBean>, C<Attribute> and C<Path> at
+once. Simply append all three parts via C</> (the C<Path> part is
+optional). Slashes within MBean names needs to be escaped with a C<\>
+(backslash). Example:
+
+  Value = java.lang:type=Memory/HeapMemoryUsage/used
+
+is equivalent to 
+
+  MBean = java.lang:type=Memory
+  Attribute = HeapMemoryUsage
+  Path = used
+
+=item Base
+
+Switches on relative checks. See L</"Relative Checks"> for more information
+about relative checks. The value specified with this directives defines the
+base value against which the relative value should be calculated. The format is
+the same as for C<Value>:
+
+  Base = java.lang:type=Memory/HeapMemoryUsage/max
+
+For relative checks, the C<Critical> and C<Warning> Threshold are interpreted
+as a value between 0% and 100%
+
+=item Delta
+
+Switches on incremental mode as described in section L</"Incremental
+Checks">. The value given is used for normalization the increase rate. E.g.
+
+  Delta 60 
+
+measures the growth rate per minute (60 seconds). If no value is given, the
+absolute increase between two checks is used. 
+
+=item Numeric
+
+This directive switches on numeric mode, i.e. the given threshold values are
+compared numerically against the returned JMX value. By default, the check mode
+is determined by an heuristic. 
+
+=item String
+
+String checks, which are switched on with this directive, are useful for
+non-numeric thresholds. See L</"String checks"> for more details. 
+
+=item Name
+
+The name to be used in the performance data. By default, a name is calculated
+based on the MBean and attribute/operation name.
+
+=item Label
+
+Format for setting the plugin output (not the performance data, use C<Name> for
+this). It takes a printf like format string which is described in detail in
+L</"Output Tuning">. 
+
+=item Unit
+
+This specifies how the return value should be interpreted. This value, if
+given, must conform to the unit returned by the JMX
+attribute/operation. E.g. for C<java.lang:type=Memory/HeapMemoryUsage/used>
+unit, if set, must be C<B> since this JMX call returns the used memory measured
+in bytes. The value given here is only used for shortening the plugin's output
+automatically. For more details and for what units are available refer to
+section L</"Output Tuning">
+
+=item Critical
+
+Specifies the critical threshold. If C<String> is set (or the heuristics
+determines a string check), this should be a string value as described in
+L</"String checks">. For relative checks, this should be a relative value in
+ther range [0,100]. Otherwise, it is a simple numeric value which is used as
+threshold. For numeric checks, the threshhold can be given in the format
+defined at ... TODO.
+
+=item Warning
+
+Defines the warning threshold the same way as described for the C<Critical>
+threshold. 
+
+=item Null
+
+Replacement value when an attribute is null or an operation returns a null
+value. This value then can be used in string checks in order to check against
+null values. By default, this value is "C<null>"
+
+=item Use
+
+In order to use parent checks, this directive specifies the parent along with
+any parameters passed through. For example,
+
+  Use = memory_relative_base(80,90),base_label
+
+uses a parent check named C<memory_relative_base>, which must be a check
+defined in the same configuration file (or an imported on). Additionally, the
+parameters C<80> and C<90> are passed to this check (which can be accessed
+there via the argument placeholders C<$0> and C<$1>). See L</"Parent checks">
+and L</"Parameterized checks"> for more information about check inheritance. 
+
+Multiple parents can be given by providing them in a comma separated list. 
+
+=back
+
+=head2 Includes
+
+Check can be organized in multiple configuration files. To include another
+configuration file, the C<include> directive can be used:11
+
+  include tomcat.cfg
+  include threads.cfg
+  include memory.cfg
+
+If given as relative path, the configuration files are looked up in the same
+directory as the current configuration file. Absolute pathes can be given, too. 
 
 =head2 Parent checks
 
+With C<check_jmx4perl> parent checks it is possible to define common base
+checks, which are usable in various sub-checks. Any C<E<lt>CheckE<gt>> can be a
+parent check as soon as it is referenced via a C<Use> directive from within
+another check's definition. When a check with a parent check is used, its
+configuration is merged with this from the parent check with the own directives
+having a higher priority. Parent checks can have parent checks as well (and so
+on). 
+
+For example, consider the following configuration:
+
+  <Check grand_parent>
+     Name grand_parent
+     Label GrandPa
+     Critical 10
+  </Check>
+
+  <Check parent_1>
+     Use grand_parent
+     Name parent_1
+     Critical 20
+  </Check>
+
+  <Check parent_2>
+     Name parent_2
+     Warning 20
+  </Check> 
+
+
+  <Check check>
+     Use parent_1,parent_2
+     Warning 40
+  </Check>
+
+
+In this scenario, when check C<check> is used, it has a C<Name> "C<parent_2>"
+(last parent check in C<Use>), a C<Label> "GrandPa" (inherited from
+C<grand_parent> via C<parent_1>), a C<Critical> 20 (inherited from C<parent_1>
+and a C<Warning> 40 (directly give in the check configuration). 
+
+A parent value of a configuration directive can be refered to with the
+placeholder C<$BASE>. For example:
+
+  <Check parent>
+    Name Parent
+  </Check>
+
+  <Check check>
+    Use parent
+    Name Child: $BASE
+  </Check>
+
+This will lead to a C<Name> "C<Child: Parent>" since C<$BASE> is resolved to
+the parent checks valus of C<Name>, C<"Parent"> in this case. The base value is
+searched upwards in the inheritance hierarchy (parent, grand parent, ...) until
+a value is found. If nonen is found, an empty string is used for C<$BASE>
+
 =head2 Parameterized checks
+
+Checks can be parameterized, i.e. they can take arguments which are replaced in
+the configuration during runtime. Arguments are used in check definition via
+the positional format C<$0>, C<$1>, .... (e.g. C<$0> is the first argument
+given). Arguments can either be given on the command line as extra arguments to
+C<check_jmx4perl> or within the C<Use> directive to provide arguments to parent
+checks. 
+
+Example:
+
+  <Check parent>
+    Name $0
+    Label $1
+  </Check>
+
+  <Check child_check>
+    Use parent($0,"Check-Label")   
+    ....
+  </Check>
+
+  $ check_jmx4perl --check child_check .... "Argument-Name"
+  OK - Check-Label | 'Argument-Name'= ....
+
+As it can be seen in this example, arguments can be propagated to a parent
+check. In this case, C<$0> from the command line (C<Argument-Name>) is passed
+through to the parent check which uses it in the C<Name> directive. C<$1> from
+the parent check is replaced with the value "C<Check-Label>" given in the
+C<Use> directive of the child check.
+
+=head2 Multichecks
+
+Multiple checks can be combined to a single I<MultiCheck>. The advantage of a
+multi check is, that multiple values can be retrieved from the server side with
+a single HTTP request. The output is conformant to Nagios 3 multiline
+format. It will lead to a C<CRITICAL> value as soon as one check is critical,
+same for C<WARNING>. If both, C<CRITICAL> and C<WARNING> is triggered by two or
+more checks, then a C<CRITICAL> is taken.
+
+A multi-check can be defined with the directive C<E<lt>MultiCheckE<gt>>, which
+contain various references to other C<E<lt>CheckE<gt>> definitions or other
+multi check definitions.
+
+Example:
+
+  <MultiCheck all>
+    MultiCheck memory
+    MultiCheck threads
+  </MultiCheck>
+
+  <MultiCheck memory>
+    Check memory_heap($0,80)
+    Check memory_pool_base("CMS Perm Gen",90,80)
+  </MultiCheck>
+
+  <MultiCheck threads>
+    Check thread_inc
+    Check thread_deadlock
+  </MultiCheck>
+
+Here a multi check group I<memory> has been defined with reference to two
+checks, which must exist somewhere else in the configuration file. As it can be
+seen, parameters can be given through to the check in the usual way (literally
+or with references to command line arguments). The group I<all> combines the
+two groups I<memory> and I<thread>, containing effectively four checks. 
+
+A multi-check is referenced from the command line like any other check:
+
+  $ check_jmx4perl .... --check all 90
+
+(90 is the argument which replaces C<$0> in the definition above). 
 
 =head2 Predefined checks
 

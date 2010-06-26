@@ -106,19 +106,24 @@ sub execute {
         if (@extra_requests) {
             $self->_send_requests($jmx,@extra_requests);
         }
+
+        # Different outpus for multi checks/single checks
         my ($code,$message) = $self->_exit_message($np);
-        my $summary;
-        if ($code eq OK) {
-            $summary = "All " . $nr_checks . " checks OK";            
-        } else {
-            my $nr_warnings = scalar(@{$np->messages->{warning} || []});
-            my $nr_errors = scalar(@{$np->messages->{critical} || []});
-            my @parts;
-            push @parts,"$nr_errors error" . ($nr_errors > 1 ? "s" : "") if $nr_errors;
-            push @parts,"$nr_warnings warning" . ($nr_warnings > 1 ? "s" : "") if $nr_warnings;
-            $summary = $nr_warnings + $nr_errors . " of " . $nr_checks . " failed (" . join(" and ",@parts) . ")";
+        if ($nr_checks >1) {
+            my $summary;
+            if ($code eq OK) {
+                $summary = "All " . $nr_checks . " checks OK";            
+            } else {
+                my $nr_warnings = scalar(@{$np->messages->{warning} || []});
+                my $nr_errors = scalar(@{$np->messages->{critical} || []});
+                my @parts;
+                push @parts,"$nr_errors error" . ($nr_errors > 1 ? "s" : "") if $nr_errors;
+                push @parts,"$nr_warnings warning" . ($nr_warnings > 1 ? "s" : "") if $nr_warnings;
+                $summary = $nr_warnings + $nr_errors . " of " . $nr_checks . " failed (" . join(" and ",@parts) . ")";
+            }
+            $message = $summary . "\n" . $message;
         }
-        $np->nagios_exit($code, $summary . "\n" . $message);
+        $np->nagios_exit($code, $message);
     };
     if ($@) {
         # p1.pl, the executing script of the embedded nagios perl interpreter

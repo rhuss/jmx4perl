@@ -118,6 +118,7 @@ public class J4pClient extends J4pRequestManager {
             if (exp != null) {
                 remoteExceptions[i] = exp;
                 exceptionFound = true;
+                ret.add(i,null);
             } else {
                 ret.add(i,this.<R,T>extractResponse(request, (JSONObject) jsonResp));
             }

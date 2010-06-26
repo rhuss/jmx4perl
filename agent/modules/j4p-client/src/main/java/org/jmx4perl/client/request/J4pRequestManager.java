@@ -127,6 +127,12 @@ public class J4pRequestManager {
         } catch (IOException e) {
             throw new J4pException("IO-Error while reading the response: " + e,e);
         } catch (ParseException e) {
+            // It's a parese exception. Now, check whether the HTTResponse is
+            // an error and prepare the proper J4pExcetpipon
+            StatusLine statusLine = pHttpResponse.getStatusLine();
+            if (HttpStatus.SC_OK != statusLine.getStatusCode()) {
+                throw new J4pException(statusLine.getStatusCode() + " " + statusLine.getReasonPhrase());
+            }
             throw new J4pException("Could not parse answer: " + e,e);
         }
     }
