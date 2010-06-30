@@ -161,6 +161,9 @@ sub _extract_servers {
         }
         return $ret;
     } elsif (ref($servers) eq "HASH") {
+        for my $name (keys %$servers) {
+            $servers->{$name}->{name} = $name;
+        }
         return $servers;
     } else {
         die "Invalid configuration type ",ref($servers),"\n";        

@@ -14,14 +14,13 @@ use Config::General;
 
 =head1 SYNOPSIS
 
-  j4psh [options] 
+  j4psh [options] <server>
 
   j4psh --help
 
   j4psh --version
 
  Options:
-   --server <server>       URL or symbolic name of OSGi server to connect to
    --user <user>           Credential used for authentication   
    --password <pwd>  
    --proxy <url>           URL to use as proxy proxy
@@ -29,6 +28,10 @@ use Config::General;
    --proxy-password <pwd>
    --config <cfg-file>     Path to an optional configuration file (default: ~/.j4p)
    --color [yes|no]        Color option (default: yes)
+
+An optional argument can be used to directly connect to an agent URL or
+symbolic name as defined in the configuration file. If not given, the shell
+does no initial connect.
 
 =head1 DESCRIPTION
 
@@ -65,7 +68,6 @@ Remote operation via HTTP(S)
 
 my %opts = ();
 my $result = GetOptions(\%opts,
-                        "server|s=s",
                         "user|u=s","password|p=s",
                         "proxy=s",
                         "proxy-user=s","proxy-password=s",
@@ -74,6 +76,8 @@ my $result = GetOptions(\%opts,
                         "color=s",
                         "help|h!" => sub { &Getopt::Long::HelpMessage() }
                        );
+
+my $server = shift;
 
 if ($opts{version}) {
     print "j4psh ",$JMX::Jmx4Perl::VERSION,"\n";
@@ -84,7 +88,7 @@ if ($opts{version}) {
 my $j4p_config = new JMX::Jmx4Perl::Config(&get_config($opts{config}));
 
 # Create global context object
-my $j4psh = new JMX::Jmx4Perl::J4psh(config => $j4p_config,args => \%opts);
+my $j4psh = new JMX::Jmx4Perl::J4psh(initial_server => $server,config => $j4p_config,args => \%opts);
 
 # Let the shell run
 $j4psh->run;
