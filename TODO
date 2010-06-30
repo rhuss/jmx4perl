@@ -14,6 +14,12 @@
    No operation installBundles([Ljava.lang.String found on MBean osgi.core:type=framework,version=1.5
 24 Register MBeans with servlet name in order allow multiple j4p agent in the same server machine.
 
+================
+0.70:
+
+- j4psh Bug with server connect
+- Missing operations for java client lib
+- check_jmx4perl: --doc option 
 
 j4psh:
 
