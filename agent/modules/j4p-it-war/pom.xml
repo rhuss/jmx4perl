@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-it-war</artifactId>
-  <version>0.70.0.M5</version>
+  <version>0.70.0.M6</version>
   <packaging>war</packaging>
   <name>j4p-it-war</name>
   <description>j4p - integration test servlet</description>

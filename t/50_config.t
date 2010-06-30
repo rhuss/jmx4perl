@@ -17,7 +17,7 @@ if ($HAS_CONFIG_GENERAL) {
     ok($config->server_config_exists("jboss"),"JBoss configuration exists");
     my $s = $config->get_server_config("weblogic");
     is($s->{product},"Weblogic","Proper product found");
-    is(scalar(keys(%$s)),4,"Correct number of config elements");
+    is(scalar(keys(%$s)),5,"Correct number of config elements");
 } else {
     ok(scalar(keys(%{$config->{config}})) == 0,"No config read in");
 }

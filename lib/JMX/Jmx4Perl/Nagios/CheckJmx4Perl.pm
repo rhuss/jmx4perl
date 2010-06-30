@@ -56,16 +56,18 @@ sub new {
                 cmd_args => [ @ARGV ]
                };
     bless $self,(ref($class) || $class);
-    if (exists $self->{np}->opts->{doc}) {
+    if (defined $self->{np}->opts->{doc}) {
         my $section = $self->{np}->opts->{doc};
-        my $real_section = { 
-                            tutorial => "TUTORIAL",
-                            reference => "BACKGROUND",
-                            options => "COMMAND LINE",
-                            config => "CONFIGURATION",
+        if ($section) {
+            my $real_section = { 
+                                tutorial => "TUTORIAL",
+                                reference => "BACKGROUND",
+                                options => "COMMAND LINE",
+                                config => "CONFIGURATION",
                            }->{lc $section};
-        if ($real_section) {
-            pod2usage(-verbose => 99, -sections =>  $real_section );
+            if ($real_section) {
+                pod2usage(-verbose => 99, -sections =>  $real_section );
+            }
         } else {
             pod2usage(-verbose => 99);
         }
