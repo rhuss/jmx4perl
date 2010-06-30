@@ -12,6 +12,7 @@ use Nagios::Plugin::Functions qw(:codes %STATUS_TEXT);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Carp;
 use Text::ParseWords;
+use Pod::Usage;
 
 our $AUTOLOAD;
 
@@ -55,6 +56,20 @@ sub new {
                 cmd_args => [ @ARGV ]
                };
     bless $self,(ref($class) || $class);
+    if (exists $self->{np}->opts->{doc}) {
+        my $section = $self->{np}->opts->{doc};
+        my $real_section = { 
+                            tutorial => "TUTORIAL",
+                            reference => "BACKGROUND",
+                            options => "COMMAND LINE",
+                            config => "CONFIGURATION",
+                           }->{lc $section};
+        if ($real_section) {
+            pod2usage(-verbose => 99, -sections =>  $real_section );
+        } else {
+            pod2usage(-verbose => 99);
+        }
+    }
     $self->_verify_and_initialize();
     return $self;
 }

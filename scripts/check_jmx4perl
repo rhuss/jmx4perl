@@ -353,7 +353,7 @@ This section explains the JMX basics necessary to better understand the usage
 of C<check_jmx4perl>. It tries to be as brief as possible, but some theory is
 required to get the link to the Java world.
 
-=head1 MBeans
+=head2 MBeans
 
 JMX's central entity is an C<MBean>. An MBean exposes management information in
 a well defined way. Each MBean has a unique name with the following structure:
@@ -726,7 +726,7 @@ Edit the policy according to your needs.
    
    $ vi WEB-INF/classes/j4p-access.xml
    
-=iem * 
+=item * 
 
 Repackage the war file
 
@@ -757,7 +757,7 @@ Example:
   </remote>
 
 Only the localhost or any host in the subnet 10.0 is allowed to access the
-agent.  If the C<E<lt>remoteE</gt>> section is missing, access from all hosts
+agent.  If the C<E<lt>remoteE<gt>> section is missing, access from all hosts
 is allowed. 
 
 =head3 Commands
@@ -858,6 +858,8 @@ Example:
 
 This will forbid the access to the specified attribute, even if C<read> is allowed globally. 
 If there is an overlap between <allow> and <deny>, <allow> takes precedence.
+
+=back 
 
 =head2 Proxy mode
 
@@ -1639,7 +1641,7 @@ C<Use> directive of the child check.
 Parameters can have default values. These default values are taken in case an
 argument is missing (either when declaring the parent check or missing from the
 command line). Default values are specified with
-C<${>I<arg-nr>C<:>I<default>C<}. For example,
+C<${>I<arg-nr>C<:>I<default>C<}>. For example,
 
  <Check relative_base>
    Label = %.2r% used (%.2v %u / %.2b %w)
