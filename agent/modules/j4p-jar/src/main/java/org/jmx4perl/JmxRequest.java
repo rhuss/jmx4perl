@@ -335,30 +335,39 @@ public class JmxRequest {
         if (objectName != null) {
             ret.put("mbean",objectName.getCanonicalName());
         }
-        if (attributeNames != null && attributeNames.size() > 0) {
-            if (attributeNames.size() > 1) {
-                ret.put("attribute",attributeNames);
-            } else {
-                ret.put("attribute",attributeNames.get(0));
-            }
-        }
-        if (extraArgs != null && extraArgs.size() > 0) {
-            if (type == Type.READ || type == Type.WRITE) {
-                ret.put("path",getExtraArgsAsPath());
-            } else if (type == Type.EXEC) {
-                ret.put("arguments",extraArgs);
-            }
-        }
+        addAttributesAsJson(ret);
+        addExtraArgsAsJson(ret);
         if (value != null) {
-            ret.put("value",value);
+            ret.put("value", value);
         }
         if (operation != null) {
-            ret.put("operation",operation);
+            ret.put("operation", operation);
         }
+
         if (targetConfig != null) {
             ret.put("target", targetConfig.toJSON());
         }
         return ret;
+    }
+
+    private void addAttributesAsJson(JSONObject pJsonObject) {
+        if (attributeNames != null && attributeNames.size() > 0) {
+            if (attributeNames.size() > 1) {
+                pJsonObject.put("attribute",attributeNames);
+            } else {
+                pJsonObject.put("attribute",attributeNames.get(0));
+            }
+        }
+    }
+
+    private void addExtraArgsAsJson(JSONObject pJsonObject) {
+        if (extraArgs != null && extraArgs.size() > 0) {
+            if (type == Type.READ || type == Type.WRITE) {
+                pJsonObject.put("path",getExtraArgsAsPath());
+            } else if (type == Type.EXEC) {
+                pJsonObject.put("arguments",extraArgs);
+            }
+        }
     }
 
     // =====================================================================================================
@@ -398,20 +407,23 @@ public class JmxRequest {
             extraArgs = new ArrayList<String>();
             for (Object val : pArguments) {
                 if (val instanceof List) {
-                    List valList = (List) val;
-                    StringBuilder arrayArg = new StringBuilder();
-                    for (int i = 0; i < valList.size(); i++) {
-                        arrayArg.append(valList.get(i) != null ? valList.get(i).toString() : "[null]");
-                        if (i < valList.size() - 1) {
-                            arrayArg.append(",");
-                        }
-                    }
-                    extraArgs.add(arrayArg.toString());
+                    extraArgs.add(listToString((List) val));
                 } else {
                     extraArgs.add(val != null ? val.toString() : null);
                 }
             }
         }
+    }
+
+    private String listToString(List pList) {
+        StringBuilder arrayArg = new StringBuilder();
+        for (int i = 0; i < pList.size(); i++) {
+            arrayArg.append(pList.get(i) != null ? pList.get(i).toString() : "[null]");
+            if (i < pList.size() - 1) {
+                arrayArg.append(",");
+            }
+        }
+        return arrayArg.toString();
     }
 
     private void initPath(String pPath) {
