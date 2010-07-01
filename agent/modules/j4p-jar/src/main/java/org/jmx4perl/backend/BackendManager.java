@@ -1,5 +1,6 @@
-package org.jmx4perl;
+package org.jmx4perl.backend;
 
+import org.jmx4perl.*;
 import org.jmx4perl.backend.LocalRequestDispatcher;
 import org.jmx4perl.backend.RequestDispatcher;
 import org.jmx4perl.config.DebugStore;

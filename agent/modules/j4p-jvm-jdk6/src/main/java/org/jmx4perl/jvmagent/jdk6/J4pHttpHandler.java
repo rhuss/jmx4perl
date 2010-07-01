@@ -15,6 +15,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.jmx4perl.*;
+import org.jmx4perl.backend.BackendManager;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 

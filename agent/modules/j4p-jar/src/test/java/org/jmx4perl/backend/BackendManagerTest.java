@@ -1,4 +1,4 @@
-package org.jmx4perl;
+package org.jmx4perl.backend;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -6,6 +6,8 @@ import java.util.Map;
 
 import javax.management.*;
 
+import org.jmx4perl.*;
+import org.jmx4perl.backend.BackendManager;
 import org.jmx4perl.backend.RequestDispatcher;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.converter.StringToObjectConverter;
