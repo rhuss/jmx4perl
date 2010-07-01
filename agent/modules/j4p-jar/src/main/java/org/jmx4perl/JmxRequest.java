@@ -105,10 +105,7 @@ public class JmxRequest {
      */
     JmxRequest(Type pType,String pObjectNameS) throws MalformedObjectNameException {
         type = pType;
-        if (pObjectNameS != null) {
-            objectNameS = pObjectNameS;
-            objectName = new ObjectName(objectNameS);
-        }
+        initObjectName(pObjectNameS);
     }
 
     /**
@@ -120,74 +117,19 @@ public class JmxRequest {
         if (type == null) {
             throw new IllegalArgumentException("Type is required");
         }
-        String s = (String) pMap.get("mbean");
-        if (s != null) {
-            objectNameS = s;
-            objectName = new ObjectName(objectNameS);
-        }
-        Object attrVal = pMap.get("attribute");
-        if (attrVal != null) {
-            attributeNames = new ArrayList<String>();
-            if (attrVal instanceof String) {
-                attributeNames.add((String) attrVal);
-                singleAttribute = true;
-            } else if (attrVal instanceof Collection) {
-                for (Object val : (Collection) attrVal) {
-                    attributeNames.add((String) val);
-                }
-                singleAttribute = false;
-            }
-        }
-        s = (String) pMap.get("path");
-        if (s != null) {
-            extraArgs = splitPath(s);
-        } else {
-            extraArgs = new ArrayList<String>();
-        }
-        List l = (List) pMap.get("arguments");
-        if (l != null && l.size() > 0) {
-            extraArgs = new ArrayList<String>();
-            for (Object val : l) {
-                if (val instanceof List) {
-                    List valList = (List) val;
-                    StringBuilder arrayArg = new StringBuilder();
-                    for (int i = 0; i < valList.size(); i++) {
-                        arrayArg.append(valList.get(i) != null ? valList.get(i).toString() : "[null]");
-                        if (i < valList.size() - 1) {
-                            arrayArg.append(",");
-                        }
-                    }
-                    extraArgs.add(arrayArg.toString());
-                } else {
-                    extraArgs.add(val != null ? val.toString() : null);
-                }
-            }
-        }
-        s = (String) pMap.get("value");
-        if (s != null) {
-             value = s;
-        }
-        s = (String) pMap.get("operation");
-        if (s != null) {
-            operation = s;
-        }
 
-        Map target = (Map) pMap.get("target");
-        if (target != null) {
-            targetConfig = new TargetConfig(target);
-        }
+        initObjectName((String) pMap.get("mbean"));
 
-        Map<String,?> config = (Map<String,?>) pMap.get("config");
-        if (config != null) {
-            for (Map.Entry<String,?> entry : config.entrySet()) {
-                setProcessingConfig(entry.getKey(),entry.getValue());
-            }
-        }
+        initAttribute(pMap.get("attribute"));
+        initPath((String) pMap.get("path"));
+        initArguments((List) pMap.get("arguments"));
+        value = (String) pMap.get("value");
+        operation = (String) pMap.get("operation");
+        initTargetConfig((Map) pMap.get("target"));
 
-        s = getProcessingConfig(Config.IGNORE_ERRORS);
-        if (s != null && s.matches("^(true|yes|on|1)$")) {
-            valueFaultHandler = IGNORE_VALUE_FAULT_HANDLER;
-        }
+        initProcessingConfig((Map<String,?>) pMap.get("config"));
+
+        initValueFaultHandler();
     }
 
     public String getObjectNameAsString() {
@@ -347,19 +289,7 @@ public class JmxRequest {
     public String toString() {
         StringBuffer ret = new StringBuffer("JmxRequest[");
         if (type == Type.READ) {
-            ret.append("READ mbean=").append(objectNameS);
-            if (attributeNames != null && attributeNames.size() > 1) {
-                ret.append(", attribute=[");
-                for (int i = 0;i<attributeNames.size();i++) {
-                    ret.append(attributeNames.get(i));
-                    if (i < attributeNames.size() - 1) {
-                        ret.append(",");
-                    }
-                }
-                ret.append("]");
-            } else {
-                ret.append(", attribute=").append(getAttributeName());
-            }
+            appendReadParameters(ret);
         } else if (type == Type.WRITE) {
             ret.append("WRITE mbean=").append(objectNameS).append(", attribute=").append(getAttributeName())
                     .append(", value=").append(value);
@@ -368,6 +298,7 @@ public class JmxRequest {
         } else {
             ret.append(type).append(" mbean=").append(objectNameS);
         }
+
         if (extraArgs != null && extraArgs.size() > 0) {
             ret.append(", extra=").append(extraArgs);
         }
@@ -376,6 +307,22 @@ public class JmxRequest {
         }
         ret.append("]");
         return ret.toString();
+    }
+
+    private void appendReadParameters(StringBuffer pRet) {
+        pRet.append("READ mbean=").append(objectNameS);
+        if (attributeNames != null && attributeNames.size() > 1) {
+            pRet.append(", attribute=[");
+            for (int i = 0;i<attributeNames.size();i++) {
+                pRet.append(attributeNames.get(i));
+                if (i < attributeNames.size() - 1) {
+                    pRet.append(",");
+                }
+            }
+            pRet.append("]");
+        } else {
+            pRet.append(", attribute=").append(getAttributeName());
+        }
     }
 
     /**
@@ -412,6 +359,82 @@ public class JmxRequest {
             ret.put("target", targetConfig.toJSON());
         }
         return ret;
+    }
+
+    // =====================================================================================================
+    // Initializations via a map
+
+    private void initObjectName(String pObjectName) throws MalformedObjectNameException {
+        if (pObjectName != null) {
+            objectNameS = pObjectName;
+            objectName = new ObjectName(objectNameS);
+        }
+    }
+
+    private void initValueFaultHandler() {
+        String s;
+        s = getProcessingConfig(Config.IGNORE_ERRORS);
+        if (s != null && s.matches("^(true|yes|on|1)$")) {
+            valueFaultHandler = IGNORE_VALUE_FAULT_HANDLER;
+        }
+    }
+
+    private void initProcessingConfig(Map<String, ?> pConfig) {
+        if (pConfig != null) {
+            for (Map.Entry<String,?> entry : pConfig.entrySet()) {
+                setProcessingConfig(entry.getKey(),entry.getValue());
+            }
+        }
+    }
+
+    private void initTargetConfig(Map pTarget) {
+        if (pTarget != null) {
+            targetConfig = new TargetConfig(pTarget);
+        }
+    }
+
+    private void initArguments(List pArguments) {
+        if (pArguments != null && pArguments.size() > 0) {
+            extraArgs = new ArrayList<String>();
+            for (Object val : pArguments) {
+                if (val instanceof List) {
+                    List valList = (List) val;
+                    StringBuilder arrayArg = new StringBuilder();
+                    for (int i = 0; i < valList.size(); i++) {
+                        arrayArg.append(valList.get(i) != null ? valList.get(i).toString() : "[null]");
+                        if (i < valList.size() - 1) {
+                            arrayArg.append(",");
+                        }
+                    }
+                    extraArgs.add(arrayArg.toString());
+                } else {
+                    extraArgs.add(val != null ? val.toString() : null);
+                }
+            }
+        }
+    }
+
+    private void initPath(String pPath) {
+        if (pPath != null) {
+            extraArgs = splitPath(pPath);
+        } else {
+            extraArgs = new ArrayList<String>();
+        }
+    }
+
+    private void initAttribute(Object pAttrval) {
+        if (pAttrval != null) {
+            attributeNames = new ArrayList<String>();
+            if (pAttrval instanceof String) {
+                attributeNames.add((String) pAttrval);
+                singleAttribute = true;
+            } else if (pAttrval instanceof Collection) {
+                for (Object val : (Collection) pAttrval) {
+                    attributeNames.add((String) val);
+                }
+                singleAttribute = false;
+            }
+        }
     }
 
     /**

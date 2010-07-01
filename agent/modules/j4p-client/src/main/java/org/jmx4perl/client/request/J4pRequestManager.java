@@ -114,6 +114,7 @@ public class J4pRequestManager {
      * @return JSON content of the answer
      * @throws J4pException when parsing of the answer fails
      */
+    @SuppressWarnings("PMD.PreserveStackTrace")
     protected JSONAware extractJsonResponse(HttpResponse pHttpResponse) throws J4pException {
         try {
             HttpEntity entity = pHttpResponse.getEntity();

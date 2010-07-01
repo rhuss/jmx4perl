@@ -206,51 +206,57 @@ public final class JmxRequestFactory {
         return ret;
     }
 
-    private static void extractElements(Stack<String> ret, Stack<String> pElementStack,StringBuffer previousBuffer)
+    private static void extractElements(Stack<String> pRet, Stack<String> pElementStack,StringBuffer pPreviousBuffer)
             throws UnsupportedEncodingException {
         if (pElementStack.isEmpty()) {
-            if (previousBuffer != null && previousBuffer.length() > 0) {
-                ret.push(decode(previousBuffer.toString()));
+            if (pPreviousBuffer != null && pPreviousBuffer.length() > 0) {
+                pRet.push(decode(pPreviousBuffer.toString()));
             }
             return;
         }
         String element = pElementStack.pop();
         Matcher matcher = SLASH_ESCAPE_PATTERN.matcher(element);
         if (matcher.matches()) {
-            if (ret.isEmpty()) {
-                return;
+            unescapeSlashes(element, pRet, pElementStack, pPreviousBuffer);
+        } else {
+            if (pPreviousBuffer != null) {
+                pRet.push(decode(pPreviousBuffer.toString()));
             }
-            StringBuffer val;
+            pRet.push(decode(element));
+            extractElements(pRet,pElementStack,null);
+        }
+    }
 
-            // Special escape at the beginning indicates that this element belongs
-            // to the next one
-            if (element.substring(0,1).equals("^")) {
-                val = new StringBuffer();
-            } else if (previousBuffer == null) {
-                val = new StringBuffer(ret.pop());
-            } else {
-                val = previousBuffer;
-            }
-            // Append appropriate nr of slashes
-            expandSlashes(val, element);
-
-            // Special escape at the end indicates that this is the last element in the path
-            if (!element.substring(element.length()-1,element.length()).equals("+")) {
-                if (!pElementStack.isEmpty()) {
-                    val.append(decode(pElementStack.pop()));
-                }
-                extractElements(ret,pElementStack,val);
-            } else {
-                ret.push(decode(val.toString()));
-                extractElements(ret,pElementStack,null);
-            }
+    private static void unescapeSlashes(String pCurrentElement, Stack<String> pRet,
+                                        Stack<String> pElementStack, StringBuffer pPreviousBuffer) throws UnsupportedEncodingException {
+        if (pRet.isEmpty()) {
             return;
         }
-        if (previousBuffer != null) {
-            ret.push(decode(previousBuffer.toString()));
+        StringBuffer val;
+
+        // Special escape at the beginning indicates that this element belongs
+        // to the next one
+        if (pCurrentElement.substring(0,1).equals("^")) {
+            val = new StringBuffer();
+        } else if (pPreviousBuffer == null) {
+            val = new StringBuffer(pRet.pop());
+        } else {
+            val = pPreviousBuffer;
         }
-        ret.push(decode(element));
-        extractElements(ret,pElementStack,null);
+        // Append appropriate nr of slashes
+        expandSlashes(val, pCurrentElement);
+
+        // Special escape at the end indicates that this is the last element in the path
+        if (!pCurrentElement.substring(pCurrentElement.length()-1, pCurrentElement.length()).equals("+")) {
+            if (!pElementStack.isEmpty()) {
+                val.append(decode(pElementStack.pop()));
+            }
+            extractElements(pRet,pElementStack,val);
+        } else {
+            pRet.push(decode(val.toString()));
+            extractElements(pRet,pElementStack,null);
+        }
+        return;
     }
 
     private static void expandSlashes(StringBuffer pVal, String pElement) {

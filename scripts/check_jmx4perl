@@ -191,7 +191,8 @@ relation to the maximal available heap:
                    --warning 80                     \
                    --critical 90        
 
-  OK - [java.lang:type=Memory,HeapMemoryUsage,used] : In range 9.83% (12778136 / 129957888) | '[java.lang:type#Memory,HeapMemoryUsage,used]'=12778136;103966310.4;116962099.2;0;129957888            
+  OK - [java.lang:type=Memory,HeapMemoryUsage,used] : In range 9.83% (12778136 / 129957888) | 
+      '[java.lang:type#Memory,HeapMemoryUsage,used]'=12778136;103966310.4;116962099.2;0;129957888            
 
 where 
 
@@ -1579,12 +1580,10 @@ For example, consider the following configuration:
      Warning 20
   </Check> 
 
-
   <Check check>
      Use parent_1,parent_2
      Warning 40
   </Check>
-
 
 In this scenario, when check C<check> is used, it has a C<Name> "C<parent_2>"
 (last parent check in C<Use>), a C<Label> "GrandPa" (inherited from
