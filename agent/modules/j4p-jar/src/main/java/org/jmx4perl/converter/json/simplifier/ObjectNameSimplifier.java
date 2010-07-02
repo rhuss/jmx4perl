@@ -1,7 +1,5 @@
 package org.jmx4perl.converter.json.simplifier;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 
 import javax.management.ObjectName;
@@ -35,19 +33,19 @@ import javax.management.ObjectName;
  * @author roland
  * @since Jul 27, 2009
  */
-public class ObjectNameHandler extends SimplifierHandler<ObjectName> {
+public class ObjectNameSimplifier extends SimplifierExtractor<ObjectName> {
 
-    public ObjectNameHandler() {
+    public ObjectNameSimplifier() {
         super(ObjectName.class);
     }
 
     // ==================================================================================
     @Override
-    void init(Map<String, Extractor<ObjectName>> pExtractorMap) {
-        addExtractors(new Object[][] {{ "objectName", new ObjectNameExtractor() }});
+    void init(Map<String, AttributeExtractor<ObjectName>> pExtractorMap) {
+        addExtractors(new Object[][] {{ "objectName", new ObjectNameAttributeExtractor() }});
     }
 
-    private static class ObjectNameExtractor implements Extractor<ObjectName> {
+    private static class ObjectNameAttributeExtractor implements AttributeExtractor<ObjectName> {
         public Object extract(ObjectName value) throws SkipAttributeException {
             return value.toString();
         }

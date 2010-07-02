@@ -1,14 +1,17 @@
 package org.jmx4perl.converter.json;
 
 import org.jmx4perl.JmxRequest;
+import org.jmx4perl.JmxRequestBuilder;
 import org.jmx4perl.converter.StringToObjectConverter;
+import org.json.simple.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.management.AttributeNotFoundException;
-import java.util.Map;
-import java.util.Stack;
+import javax.management.*;
+
+import java.io.File;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -53,7 +56,9 @@ public class ObjectToJsonConverterTest {
 
     @After
     public void tearDown() {
-        converter.clearContext();
+        if (converter != null) {
+            converter.clearContext();
+        }
     }
 
     @Test
@@ -81,6 +86,33 @@ public class ObjectToJsonConverterTest {
         assertTrue("Recurence detected",c.contains("bean1: toString"));
     }
 
+    @Test
+    public void customSimplifier() throws AttributeNotFoundException {
+        Date date = new Date();
+        Map result = (Map) converter.extractObject(date,new Stack<String>(),true);
+        assertEquals(Long.toString(date.getTime()),result.get("millis"));
+    }
+
+    @Test
+    public void customNegativeSimpifier() throws MalformedObjectNameException, AttributeNotFoundException {
+        ObjectName name = new ObjectName("java.lang:type=Memory");
+        Map result = (Map) converter.extractObject(name,new Stack<String>(),true);
+        // Since we removed the objectname simplifier from the list of simplifiers
+        // explicitely, the converter should return the full blown object;
+        assertEquals("false",result.get("propertyListPattern"));
+    }
+
+    @Test
+    public void convertToJsonTest() throws MalformedObjectNameException, AttributeNotFoundException {
+        JmxRequest req =
+                new JmxRequestBuilder(JmxRequest.Type.READ,"java.lang:type=Memory").
+                        extraArgs("name").build();
+        File file = new File("myFile");
+        JSONObject ret = converter.convertToJson(file,req,false);
+        assertEquals( ((Map) ret.get("value")).get("name"),"myFile");
+        ret = converter.convertToJson(file,req,true);
+        assertEquals(ret.get("value"),"myFile");
+    }
     // ============================================================================
     // TestBeans:
 

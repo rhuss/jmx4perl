@@ -1,0 +1,5 @@
+org.jmx4perl.converter.json.simplifier.ClassSimplifier
+org.jmx4perl.converter.json.simplifier.FileSimplifier
+org.jmx4perl.converter.json.simplifier.DomElementSimplifier
+org.jmx4perl.converter.json.simplifier.UrlSimplifier
+org.jmx4perl.converter.json.simplifier.ObjectNameSimplifier

@@ -18,7 +18,7 @@ import org.jmx4perl.*;
 import org.jmx4perl.backend.BackendManager;
 import org.jmx4perl.config.ConfigProperty;
 import org.jmx4perl.http.HttpRequestHandler;
-import org.jmx4perl.http.LogHandler;
+import org.jmx4perl.LogHandler;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 

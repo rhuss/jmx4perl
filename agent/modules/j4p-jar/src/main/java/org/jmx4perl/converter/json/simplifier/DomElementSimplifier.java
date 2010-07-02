@@ -33,32 +33,32 @@ import java.util.Map;
  * @author roland
  * @since Jul 27, 2009
  */
-public class DomElementHandler extends SimplifierHandler<Element> {
+public class DomElementSimplifier extends SimplifierExtractor<Element> {
 
 
-    public DomElementHandler() {
+    public DomElementSimplifier() {
         super(Element.class);
     }
 
     // ==================================================================================
     @Override
-    void init(Map<String, SimplifierHandler.Extractor<Element>> pExtractorMap) {
+    void init(Map<String, AttributeExtractor<Element>> pExtractorMap) {
         Object[][] pAttrs = {
-                { "name", new NameExtractor() },
-                { "value", new ValueExtractor() },
-                { "hasChildNodes", new ChildExtractor() }
+                { "name", new NameAttributeExtractor() },
+                { "value", new ValueAttributeExtractor() },
+                { "hasChildNodes", new ChildAttributeExtractor() }
         };
         addExtractors(pAttrs);
     }
 
     // ==================================================================================
-    private static class ValueExtractor implements Extractor<Element> {
+    private static class ValueAttributeExtractor implements AttributeExtractor<Element> {
         public Object extract(Element element) { return element.getNodeValue(); }
     }
-    private static class NameExtractor implements Extractor<Element> {
+    private static class NameAttributeExtractor implements AttributeExtractor<Element> {
         public Object extract(Element element) { return element.getNodeName(); }
     }
-    private static class ChildExtractor implements Extractor<Element> {
+    private static class ChildAttributeExtractor implements AttributeExtractor<Element> {
         public Object extract(Element element) { return element.hasChildNodes(); }
     }
 

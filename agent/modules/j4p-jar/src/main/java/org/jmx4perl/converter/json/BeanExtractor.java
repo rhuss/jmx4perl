@@ -39,7 +39,7 @@ import java.util.*;
  * @author roland
  * @since Apr 19, 2009
  */
-public class BeanHandler implements ObjectToJsonConverter.Handler {
+public class BeanExtractor implements Extractor {
 
     private static final Set<Class> FINAL_CLASSES = new HashSet<Class>(Arrays.asList(
             String.class,

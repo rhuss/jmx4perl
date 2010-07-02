@@ -1,15 +1,13 @@
 package org.jmx4perl.converter.json;
 
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.TabularData;
+import javax.management.openmbean.InvalidKeyException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.Stack;
 
 /*
@@ -39,53 +37,43 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class TabularDataHandler implements ObjectToJsonConverter.Handler {
+public class CompositeDataExtractor implements Extractor {
 
     public Class getType() {
-        return TabularData.class;
+        return CompositeData.class;
     }
 
+    @SuppressWarnings("PMD.PreserveStackTrace")
     public Object extractObject(ObjectToJsonConverter pConverter, Object pValue,
                          Stack<String> pExtraArgs,boolean jsonify) throws AttributeNotFoundException {
-        TabularData td = (TabularData) pValue;
+        CompositeData cd = (CompositeData) pValue;
 
         if (!pExtraArgs.isEmpty()) {
-            String index = pExtraArgs.pop();
-            int idx = Integer.valueOf(index).intValue();
-            CompositeData cd = getRow(idx, td.values().iterator());
-            return pConverter.extractObject(cd,pExtraArgs,jsonify);
+            String key = pExtraArgs.pop();
+            try {
+                return pConverter.extractObject(cd.get(key),pExtraArgs,jsonify);
+            }  catch (InvalidKeyException exp) {
+                throw new AttributeNotFoundException("Invalid path '" + key + "'");
+            }
         } else {
             if (jsonify) {
-                JSONArray ret = new JSONArray();
-                for (CompositeData cd : (Collection <CompositeData>) td.values()) {
-                    ret.add(pConverter.extractObject(cd,pExtraArgs,jsonify));
+                JSONObject ret = new JSONObject();
+                for (String key : (Set<String>) cd.getCompositeType().keySet()) {
+                    ret.put(key,pConverter.extractObject(cd.get(key),pExtraArgs,jsonify));
                 }
                 return ret;
             } else {
-                return td;
+                return cd;
             }
         }
     }
 
     public Object setObjectValue(StringToObjectConverter pConverter, Object pInner, String pAttribute, String pValue)
             throws IllegalAccessException, InvocationTargetException {
-        throw new IllegalArgumentException("TabularData cannot be written to");
+        throw new IllegalArgumentException("CompositeData cannot be written to");
     }
 
     public boolean canSetValue() {
         return false;
     }
-
-    private static CompositeData getRow(int idx, Iterator it) {
-        try {
-            for (int i = 0; i < idx; i++) {
-                it.next();
-            }
-        } catch (NoSuchElementException ex) {
-             throw new IllegalArgumentException(
-                     "Index " + idx + " out of range. Ex: " + ex.toString(),ex);
-        }
-        return (CompositeData) it.next();
-    }
-
 }

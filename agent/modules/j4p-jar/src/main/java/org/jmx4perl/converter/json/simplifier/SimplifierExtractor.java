@@ -1,6 +1,7 @@
 package org.jmx4perl.converter.json.simplifier;
 
 import org.jmx4perl.converter.StringToObjectConverter;
+import org.jmx4perl.converter.json.Extractor;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.json.simple.JSONObject;
 
@@ -37,14 +38,14 @@ import java.util.Stack;
  * @author roland
  * @since Jul 27, 2009
  */
-abstract class SimplifierHandler<T> implements ObjectToJsonConverter.Handler {
+abstract class SimplifierExtractor<T> implements Extractor {
 
-    private Map<String, Extractor<T>> extractorMap;
+    private Map<String, AttributeExtractor<T>> extractorMap;
 
     private Class<T> type;
 
-    SimplifierHandler(Class<T> pType) {
-        extractorMap = new HashMap<String, Extractor<T>>();
+    SimplifierExtractor(Class<T> pType) {
+        extractorMap = new HashMap<String, AttributeExtractor<T>>();
         type = pType;
         init(extractorMap);
     }
@@ -57,7 +58,7 @@ abstract class SimplifierHandler<T> implements ObjectToJsonConverter.Handler {
             throws AttributeNotFoundException {
         if (pExtraArgs.size() > 0) {
             String element = pExtraArgs.pop();
-            Extractor<T> extractor = extractorMap.get(element);
+            AttributeExtractor<T> extractor = extractorMap.get(element);
             if (extractor == null) {
                 throw new IllegalArgumentException("Illegal path element " + element + " for object " + pValue);
             }
@@ -72,7 +73,7 @@ abstract class SimplifierHandler<T> implements ObjectToJsonConverter.Handler {
         } else {
             if (jsonify) {
                 JSONObject ret = new JSONObject();
-                for (Map.Entry<String, Extractor<T>> entry : extractorMap.entrySet()) {
+                for (Map.Entry<String, AttributeExtractor<T>> entry : extractorMap.entrySet()) {
                     Object value = null;
                     try {
                         value = entry.getValue().extract((T) pValue);
@@ -105,18 +106,18 @@ abstract class SimplifierHandler<T> implements ObjectToJsonConverter.Handler {
     protected void addExtractors(Object[][] pAttrExtractors) {
         for (int i = 0;i< pAttrExtractors.length; i++) {
             extractorMap.put((String) pAttrExtractors[i][0],
-                             (Extractor<T>) pAttrExtractors[i][1]);
+                             (AttributeExtractor<T>) pAttrExtractors[i][1]);
         }
     }
 
 
     // ============================================================================
-    interface Extractor<T> {
+    interface AttributeExtractor<T> {
         Object extract(T value) throws SkipAttributeException;
     }
 
     static class SkipAttributeException extends Exception {}
 
     // Add extractors to map
-    abstract void init(Map<String, Extractor<T>> pExtractorMap);
+    abstract void init(Map<String, AttributeExtractor<T>> pExtractorMap);
 }

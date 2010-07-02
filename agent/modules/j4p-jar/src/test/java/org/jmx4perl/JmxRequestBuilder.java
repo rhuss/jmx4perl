@@ -5,6 +5,8 @@ import javax.management.ObjectName;
 import java.util.Arrays;
 import java.util.List;
 
+import com.sun.tools.internal.xjc.reader.xmlschema.WildcardNameClassBuilder;
+
 /**
  * Helper class for unit testing
  *
@@ -50,6 +52,16 @@ public class JmxRequestBuilder {
 
     public JmxRequestBuilder value(String pValue) {
         request.setValue(pValue);
+        return this;
+    }
+
+    public JmxRequestBuilder extraArgs(List<String> pExtraArgs) {
+        request.setExtraArgs(pExtraArgs);
+        return this;
+    }
+
+    public JmxRequestBuilder extraArgs(String ... pExtraArgs) {
+        request.setExtraArgs(Arrays.asList(pExtraArgs));
         return this;
     }
 }

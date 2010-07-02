@@ -7,7 +7,7 @@ import javax.servlet.ServletException;
 
 import org.jmx4perl.config.ConfigProperty;
 import org.jmx4perl.http.AgentServlet;
-import org.jmx4perl.http.LogHandler;
+import org.jmx4perl.LogHandler;
 import org.osgi.framework.*;
 import org.osgi.service.http.*;
 import org.osgi.service.log.LogService;

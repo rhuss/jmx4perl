@@ -11,7 +11,7 @@ import org.jmx4perl.config.ConfigProperty;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
-import org.jmx4perl.http.LogHandler;
+import org.jmx4perl.LogHandler;
 import org.json.simple.JSONObject;
 import org.junit.*;
 

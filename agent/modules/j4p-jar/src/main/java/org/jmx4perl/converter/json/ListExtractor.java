@@ -36,7 +36,7 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class ListHandler implements ObjectToJsonConverter.Handler {
+public class ListExtractor implements Extractor {
 
     public Class getType() {
         return List.class;

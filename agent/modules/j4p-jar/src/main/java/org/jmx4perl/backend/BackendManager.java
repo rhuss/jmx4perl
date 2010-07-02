@@ -5,7 +5,7 @@ import org.jmx4perl.config.*;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.history.HistoryStore;
-import org.jmx4perl.http.LogHandler;
+import org.jmx4perl.LogHandler;
 import org.json.simple.JSONObject;
 
 import javax.management.*;

@@ -1,4 +1,7 @@
-package org.jmx4perl.http;
+package org.jmx4perl.converter.json.simplifier;
+
+import java.util.Map;
+import java.net.URL;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -24,12 +27,20 @@ package org.jmx4perl.http;
  */
 
 /**
- * Simple log handler for dispatching logging to e.g. a {@link javax.servlet.http.HttpServlet}
  * @author roland
- * @since Nov 11, 2009
+ * @since Jul 27, 2009
  */
-public interface LogHandler {
-    void debug(String message);
-    void info(String message);
-    void error(String message, Throwable t);
+public class UrlSimplifier extends SimplifierExtractor<URL> {
+    public UrlSimplifier() {
+        super(URL.class);
+    }
+
+    @Override
+    void init(Map<String, AttributeExtractor<URL>> pStringExtractorMap) {
+        addExtractors(new Object[][] {{ "url", new UrlAttributeExtractor() }});
+    }
+
+    private static class UrlAttributeExtractor implements AttributeExtractor<URL> {
+        public Object extract(URL pUrl) { return pUrl.toExternalForm(); }
+    }
 }
