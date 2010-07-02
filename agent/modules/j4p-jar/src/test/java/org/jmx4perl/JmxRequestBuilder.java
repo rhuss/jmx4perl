@@ -5,8 +5,6 @@ import javax.management.ObjectName;
 import java.util.Arrays;
 import java.util.List;
 
-import com.sun.tools.internal.xjc.reader.xmlschema.WildcardNameClassBuilder;
-
 /**
  * Helper class for unit testing
  *
