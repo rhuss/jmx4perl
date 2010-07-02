@@ -3,10 +3,13 @@ package org.jmx4perl.converter.json.simplifier;
 import java.util.Date;
 import java.util.Map;
 
+import org.junit.Ignore;
+
 /**
  * @author roland
  * @since Jul 2, 2010
  */
+@Ignore
 public class TestSimplifier extends SimplifierExtractor<Date> {
     public TestSimplifier() {
         super(Date.class);
