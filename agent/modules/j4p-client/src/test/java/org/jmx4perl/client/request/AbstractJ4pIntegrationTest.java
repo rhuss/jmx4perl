@@ -1,6 +1,6 @@
 package org.jmx4perl.client.request;
 
-import org.jmx4perl.AgentServlet;
+import org.jmx4perl.http.AgentServlet;
 import org.jmx4perl.client.J4pClient;
 import org.jmx4perl.it.ItSetup;
 import org.junit.AfterClass;

@@ -2,7 +2,7 @@ package org.jmx4perl.config;
 
 import java.io.InputStream;
 
-import org.jmx4perl.LogHandler;
+import org.jmx4perl.http.LogHandler;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON

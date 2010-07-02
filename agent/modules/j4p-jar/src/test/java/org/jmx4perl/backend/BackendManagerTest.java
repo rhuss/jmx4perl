@@ -7,11 +7,11 @@ import java.util.Map;
 import javax.management.*;
 
 import org.jmx4perl.*;
-import org.jmx4perl.backend.BackendManager;
-import org.jmx4perl.backend.RequestDispatcher;
+import org.jmx4perl.config.ConfigProperty;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
+import org.jmx4perl.http.LogHandler;
 import org.json.simple.JSONObject;
 import org.junit.*;
 
@@ -50,8 +50,8 @@ public class BackendManagerTest implements LogHandler {
 
     @Test
     public void requestDispatcher() throws MalformedObjectNameException, InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
-        Map<Config,String> config = new HashMap<Config, String>();
-        config.put(Config.DISPATCHER_CLASSES,RequestDispatcherTest.class.getName());
+        Map<ConfigProperty,String> config = new HashMap<ConfigProperty, String>();
+        config.put(ConfigProperty.DISPATCHER_CLASSES,RequestDispatcherTest.class.getName());
         backendManager = new BackendManager(config,this);
         JmxRequest req = new JmxRequestBuilder(JmxRequest.Type.READ,"java.lang:type=Memory").build();
         JSONObject ret = backendManager.handleRequest(req);
@@ -61,8 +61,8 @@ public class BackendManagerTest implements LogHandler {
     @Test
     public void requestDispatcherWithWrongDispatcher() throws MalformedObjectNameException, InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
         try {
-            Map<Config,String> config = new HashMap<Config, String>();
-            config.put(Config.DISPATCHER_CLASSES,RequestDispatcherWrong.class.getName());
+            Map<ConfigProperty,String> config = new HashMap<ConfigProperty, String>();
+            config.put(ConfigProperty.DISPATCHER_CLASSES,RequestDispatcherWrong.class.getName());
             backendManager = new BackendManager(config,this);
             fail();
         } catch (IllegalArgumentException exp) {

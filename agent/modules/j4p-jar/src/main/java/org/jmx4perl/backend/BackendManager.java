@@ -1,14 +1,11 @@
 package org.jmx4perl.backend;
 
 import org.jmx4perl.*;
-import org.jmx4perl.backend.LocalRequestDispatcher;
-import org.jmx4perl.backend.RequestDispatcher;
-import org.jmx4perl.config.DebugStore;
-import org.jmx4perl.config.Restrictor;
-import org.jmx4perl.config.RestrictorFactory;
+import org.jmx4perl.config.*;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.history.HistoryStore;
+import org.jmx4perl.http.LogHandler;
 import org.json.simple.JSONObject;
 
 import javax.management.*;
@@ -19,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.jmx4perl.Config.*;
+import static org.jmx4perl.config.ConfigProperty.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -77,7 +74,7 @@ public class BackendManager {
     // List of RequestDispatchers to consult
     private List<RequestDispatcher> requestDispatchers;
 
-    public BackendManager(Map<Config,String> pConfig, LogHandler pLogHandler) {
+    public BackendManager(Map<ConfigProperty,String> pConfig, LogHandler pLogHandler) {
 
 
         // Central objects
@@ -197,7 +194,7 @@ public class BackendManager {
     }
 
     // init various application wide stores for handling history and debug output.
-    private void initStores(Map<Config, String> pConfig) {
+    private void initStores(Map<ConfigProperty, String> pConfig) {
         int maxEntries;
         try {
             maxEntries = Integer.parseInt(HISTORY_MAX_ENTRIES.getValue(pConfig));

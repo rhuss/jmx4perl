@@ -5,6 +5,7 @@ import java.util.*;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.jmx4perl.config.ConfigProperty;
 import org.json.simple.JSONObject;
 
 /*
@@ -80,7 +81,7 @@ public class JmxRequest {
     private TargetConfig targetConfig = null;
 
     // Processing configuration for tis request object
-    private Map<Config, String> processingConfig = new HashMap<Config, String>();
+    private Map<ConfigProperty, String> processingConfig = new HashMap<ConfigProperty, String>();
 
     // A value fault handler for dealing with exception when extracting values
     private ValueFaultHandler valueFaultHandler = NOOP_VALUE_FAULT_HANDLER;
@@ -207,22 +208,22 @@ public class JmxRequest {
 
     /**
      * Get a processing configuration or null if not set
-     * @param pConfig configuration key to fetch
+     * @param pConfigProperty configuration key to fetch
      * @return string value or <code>null</code> if not set
      */
-    public final String getProcessingConfig(Config pConfig) {
-        return processingConfig.get(pConfig);
+    public final String getProcessingConfig(ConfigProperty pConfigProperty) {
+        return processingConfig.get(pConfigProperty);
     }
 
     /**
      * Get a processing configuration as integer or null
      * if not set
      *
-     * @param pConfig configuration to lookup
+     * @param pConfigProperty configuration to lookup
      * @return integer value of configuration or null if not set.
      */
-    public Integer getProcessingConfigAsInt(Config pConfig) {
-        String intValueS = processingConfig.get(pConfig);
+    public Integer getProcessingConfigAsInt(ConfigProperty pConfigProperty) {
+        String intValueS = processingConfig.get(pConfigProperty);
         if (intValueS != null) {
             return Integer.parseInt(intValueS);
         } else {
@@ -231,7 +232,7 @@ public class JmxRequest {
     }
 
     final void setProcessingConfig(String pKey, Object pValue) {
-        Config cKey = Config.getByKey(pKey);
+        ConfigProperty cKey = ConfigProperty.getByKey(pKey);
         if (cKey != null) {
             processingConfig.put(cKey,pValue != null ? pValue.toString() : null);
         }
@@ -382,7 +383,7 @@ public class JmxRequest {
 
     private void initValueFaultHandler() {
         String s;
-        s = getProcessingConfig(Config.IGNORE_ERRORS);
+        s = getProcessingConfig(ConfigProperty.IGNORE_ERRORS);
         if (s != null && s.matches("^(true|yes|on|1)$")) {
             valueFaultHandler = IGNORE_VALUE_FAULT_HANDLER;
         }

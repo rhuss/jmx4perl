@@ -1,5 +1,6 @@
-package org.jmx4perl;
+package org.jmx4perl.http;
 
+import org.jmx4perl.*;
 import org.jmx4perl.backend.BackendManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;

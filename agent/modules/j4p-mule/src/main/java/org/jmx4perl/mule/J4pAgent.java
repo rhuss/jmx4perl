@@ -1,6 +1,6 @@
 package org.jmx4perl.mule;
 
-import org.jmx4perl.AgentServlet;
+import org.jmx4perl.http.AgentServlet;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.HandlerContainer;
 import org.mortbay.jetty.Server;

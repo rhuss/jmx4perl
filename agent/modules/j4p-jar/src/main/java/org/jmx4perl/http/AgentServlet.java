@@ -1,6 +1,8 @@
-package org.jmx4perl;
+package org.jmx4perl.http;
 
+import org.jmx4perl.*;
 import org.jmx4perl.backend.BackendManager;
+import org.jmx4perl.config.ConfigProperty;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
@@ -180,12 +182,12 @@ public class AgentServlet extends HttpServlet {
     }
     // =======================================================================
 
-    private Map<Config, String> servletConfigAsMap(ServletConfig pConfig) {
+    private Map<ConfigProperty, String> servletConfigAsMap(ServletConfig pConfig) {
         Enumeration e = pConfig.getInitParameterNames();
-        Map<Config,String> ret = new HashMap<Config, String>();
+        Map<ConfigProperty,String> ret = new HashMap<ConfigProperty, String>();
         while (e.hasMoreElements()) {
             String keyS = (String) e.nextElement();
-            Config key = Config.getByKey(keyS);
+            ConfigProperty key = ConfigProperty.getByKey(keyS);
             if (key != null) {
                 ret.put(key,pConfig.getInitParameter(keyS));
             }

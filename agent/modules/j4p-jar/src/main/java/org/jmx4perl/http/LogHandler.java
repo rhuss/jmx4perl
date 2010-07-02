@@ -1,4 +1,4 @@
-package org.jmx4perl;
+package org.jmx4perl.http;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON

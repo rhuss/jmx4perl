@@ -1,12 +1,12 @@
 package org.jmx4perl.converter.json;
 
 
-import org.jmx4perl.Config;
+import org.jmx4perl.config.ConfigProperty;
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.simplifier.*;
 
-import static org.jmx4perl.Config.*;
+import static org.jmx4perl.config.ConfigProperty.*;
 
 import org.json.simple.JSONObject;
 import javax.management.AttributeNotFoundException;
@@ -63,7 +63,7 @@ public class ObjectToJsonConverter {
     private Integer hardMaxDepth,hardMaxCollectionSize,hardMaxObjects;
 
     public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter,
-                                 Map<Config,String> pConfig) {
+                                 Map<ConfigProperty,String> pConfig) {
         initLimits(pConfig);
 
         handlers = new ArrayList<Handler>();
@@ -177,7 +177,7 @@ public class ObjectToJsonConverter {
 
     // =================================================================================
 
-    private void initLimits(Map<Config, String> pConfig) {
+    private void initLimits(Map<ConfigProperty, String> pConfig) {
         // Max traversal depth
         if (pConfig != null) {
             hardMaxDepth = getNullSaveIntLimit(MAX_DEPTH.getValue(pConfig));
@@ -367,9 +367,9 @@ public class ObjectToJsonConverter {
     }
 
     void setupContext(JmxRequest pRequest) {
-        Integer maxDepth = getLimit(pRequest.getProcessingConfigAsInt(Config.MAX_DEPTH),hardMaxDepth);
-        Integer maxCollectionSize = getLimit(pRequest.getProcessingConfigAsInt(Config.MAX_COLLECTION_SIZE),hardMaxCollectionSize);
-        Integer maxObjects = getLimit(pRequest.getProcessingConfigAsInt(Config.MAX_OBJECTS),hardMaxObjects);
+        Integer maxDepth = getLimit(pRequest.getProcessingConfigAsInt(ConfigProperty.MAX_DEPTH),hardMaxDepth);
+        Integer maxCollectionSize = getLimit(pRequest.getProcessingConfigAsInt(ConfigProperty.MAX_COLLECTION_SIZE),hardMaxCollectionSize);
+        Integer maxObjects = getLimit(pRequest.getProcessingConfigAsInt(ConfigProperty.MAX_OBJECTS),hardMaxObjects);
 
         setupContext(maxDepth, maxCollectionSize, maxObjects, pRequest.getValueFaultHandler());
     }
