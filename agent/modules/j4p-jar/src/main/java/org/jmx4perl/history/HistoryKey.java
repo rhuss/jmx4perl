@@ -124,7 +124,7 @@ public class HistoryKey implements Serializable {
 
     // CHECKSTYLE:OFF
     @Override
-    @SuppressWarnings("PMD. IfStmtsMustUseBraces")
+    @SuppressWarnings("PMD.IfStmtsMustUseBraces")
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
