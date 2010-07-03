@@ -7,7 +7,7 @@ import java.util.Map;
 import javax.management.*;
 
 import org.jmx4perl.*;
-import org.jmx4perl.config.ConfigProperty;
+import org.jmx4perl.ConfigKey;
 import org.jmx4perl.config.Restrictor;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
@@ -33,7 +33,7 @@ public class BackendManagerTest implements LogHandler {
     @After
     public void tearDown() {
         if (backendManager != null) {
-            backendManager.unregisterOwnMBeans();
+            backendManager.destroy();
         }
     }
 
@@ -50,8 +50,8 @@ public class BackendManagerTest implements LogHandler {
 
     @Test
     public void requestDispatcher() throws MalformedObjectNameException, InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
-        Map<ConfigProperty,String> config = new HashMap<ConfigProperty, String>();
-        config.put(ConfigProperty.DISPATCHER_CLASSES,RequestDispatcherTest.class.getName());
+        Map<ConfigKey,String> config = new HashMap<ConfigKey, String>();
+        config.put(ConfigKey.DISPATCHER_CLASSES,RequestDispatcherTest.class.getName());
         backendManager = new BackendManager(config,this);
         JmxRequest req = new JmxRequestBuilder(JmxRequest.Type.READ,"java.lang:type=Memory").build();
         JSONObject ret = backendManager.handleRequest(req);
@@ -61,8 +61,8 @@ public class BackendManagerTest implements LogHandler {
     @Test
     public void requestDispatcherWithWrongDispatcher() throws MalformedObjectNameException, InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
         try {
-            Map<ConfigProperty,String> config = new HashMap<ConfigProperty, String>();
-            config.put(ConfigProperty.DISPATCHER_CLASSES,RequestDispatcherWrong.class.getName());
+            Map<ConfigKey,String> config = new HashMap<ConfigKey, String>();
+            config.put(ConfigKey.DISPATCHER_CLASSES,RequestDispatcherWrong.class.getName());
             backendManager = new BackendManager(config,this);
             fail();
         } catch (IllegalArgumentException exp) {

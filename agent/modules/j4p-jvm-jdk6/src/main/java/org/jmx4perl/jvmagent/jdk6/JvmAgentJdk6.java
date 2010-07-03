@@ -4,7 +4,7 @@ import com.sun.net.httpserver.Authenticator;
 import com.sun.net.httpserver.BasicAuthenticator;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
-import org.jmx4perl.config.ConfigProperty;
+import org.jmx4perl.ConfigKey;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -41,7 +41,7 @@ import java.util.concurrent.Executors;
 /**
  * A JVM level agent using the JDK6 HTTP Server {@link com.sun.net.httpserver.HttpServer}
  *
- * Beside the configuration defined in {@link ConfigProperty}, this agent honors the following
+ * Beside the configuration defined in {@link ConfigKey}, this agent honors the following
  * additional configuration keys:
  *
  * <ul>
@@ -84,11 +84,11 @@ public final class JvmAgentJdk6 {
             Map<String,String> agentConfig = parseArgs(agentArgs);
             final HttpServer server = createServer(agentConfig);
 
-            final Map<ConfigProperty,String> j4pConfig = ConfigProperty.extractConfig(agentConfig);
+            final Map<ConfigKey,String> j4pConfig = ConfigKey.extractConfig(agentConfig);
             final String contextPath = getContextPath(j4pConfig);
 
             HttpContext context = server.createContext(contextPath,new J4pHttpHandler(j4pConfig));
-            if (j4pConfig.containsKey(ConfigProperty.USER)) {
+            if (j4pConfig.containsKey(ConfigKey.USER)) {
                 context.setAuthenticator(getAuthentiator(j4pConfig));
             }
             if (agentConfig.containsKey("executor")) {
@@ -115,8 +115,8 @@ public final class JvmAgentJdk6 {
         if (pConfig.get("backlog") != null) {
             backLog = Integer.parseInt(pConfig.get("backlog"));
         }
-        if (!pConfig.containsKey(ConfigProperty.AGENT_CONTEXT.getKeyValue())) {
-            pConfig.put(ConfigProperty.AGENT_CONTEXT.getKeyValue(),J4P_CONTEXT);
+        if (!pConfig.containsKey(ConfigKey.AGENT_CONTEXT.getKeyValue())) {
+            pConfig.put(ConfigKey.AGENT_CONTEXT.getKeyValue(),J4P_CONTEXT);
         }
         InetSocketAddress socketAddress = new InetSocketAddress(address,port);
         return HttpServer.create(socketAddress,backLog);
@@ -143,10 +143,10 @@ public final class JvmAgentJdk6 {
         cleaner.start();
     }
 
-    private static String getContextPath(Map<ConfigProperty, String> pJ4pConfig) {
-        String context = pJ4pConfig.get(ConfigProperty.AGENT_CONTEXT);
+    private static String getContextPath(Map<ConfigKey, String> pJ4pConfig) {
+        String context = pJ4pConfig.get(ConfigKey.AGENT_CONTEXT);
         if (context == null) {
-            context = ConfigProperty.AGENT_CONTEXT.getDefaultValue();
+            context = ConfigKey.AGENT_CONTEXT.getDefaultValue();
         }
         if (!context.endsWith("/")) {
             context += "/";
@@ -234,9 +234,9 @@ public final class JvmAgentJdk6 {
     }
 
 
-    private static Authenticator getAuthentiator(Map<ConfigProperty, String> pJ4pConfig) {
-        final String user = pJ4pConfig.get(ConfigProperty.USER);
-        final String password = pJ4pConfig.get(ConfigProperty.PASSWORD);
+    private static Authenticator getAuthentiator(Map<ConfigKey, String> pJ4pConfig) {
+        final String user = pJ4pConfig.get(ConfigKey.USER);
+        final String password = pJ4pConfig.get(ConfigKey.PASSWORD);
         if (user == null || password == null) {
             throw new SecurityException("No user and/or password given: user = " + user +
                     ", password = " + (password != null ? "(set)" : "null"));

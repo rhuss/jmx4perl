@@ -1,4 +1,4 @@
-package org.jmx4perl.config;
+package org.jmx4perl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ import java.util.Map;
  * @author roland
  * @since Jan 1, 2010
  */
-public enum ConfigProperty {
+public enum ConfigKey {
 
     // Maximum number of history entries to keep
     HISTORY_MAX_ENTRIES("historyMaxEntries","10"),
@@ -69,21 +69,21 @@ public enum ConfigProperty {
 
     private String key;
     private String defaultValue;
-    private static Map<String, ConfigProperty> keyByName;
+    private static Map<String, ConfigKey> keyByName;
 
     // Build up internal reverse map
     static {
-        keyByName = new HashMap<String, ConfigProperty>();
-        for (ConfigProperty ck : ConfigProperty.values()) {
+        keyByName = new HashMap<String, ConfigKey>();
+        for (ConfigKey ck : ConfigKey.values()) {
             keyByName.put(ck.getKeyValue(),ck);
         }
     }
 
-    ConfigProperty(String pValue) {
+    ConfigKey(String pValue) {
         this(pValue,null);
     }
 
-    ConfigProperty(String pValue, String pDefault) {
+    ConfigKey(String pValue, String pDefault) {
         key = pValue;
         defaultValue = pDefault;
     }
@@ -93,7 +93,7 @@ public enum ConfigProperty {
         return key;
     }
 
-    public static ConfigProperty getByKey(String pKeyS) {
+    public static ConfigKey getByKey(String pKeyS) {
         return keyByName.get(pKeyS);
     }
 
@@ -107,7 +107,7 @@ public enum ConfigProperty {
 
     // Extract value from map, including a default value if
     // value is not set
-    public String getValue(Map<ConfigProperty, String> pConfig) {
+    public String getValue(Map<ConfigKey, String> pConfig) {
         String value = pConfig.get(this);
         if (value == null) {
             value = this.getDefaultValue();
@@ -116,9 +116,9 @@ public enum ConfigProperty {
     }
 
     // Extract config options from a given map
-    public static Map<ConfigProperty,String> extractConfig(Map<String,String> pMap) {
-        Map<ConfigProperty,String> ret = new HashMap<ConfigProperty, String>();
-        for (ConfigProperty c : ConfigProperty.values()) {
+    public static Map<ConfigKey,String> extractConfig(Map<String,String> pMap) {
+        Map<ConfigKey,String> ret = new HashMap<ConfigKey, String>();
+        for (ConfigKey c : ConfigKey.values()) {
             String value = pMap.get(c.getKeyValue());
             if (value != null) {
                 ret.put(c,value);

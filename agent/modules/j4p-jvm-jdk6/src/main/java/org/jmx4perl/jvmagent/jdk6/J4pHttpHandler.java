@@ -16,7 +16,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.jmx4perl.*;
 import org.jmx4perl.backend.BackendManager;
-import org.jmx4perl.config.ConfigProperty;
+import org.jmx4perl.ConfigKey;
 import org.jmx4perl.http.HttpRequestHandler;
 import org.jmx4perl.LogHandler;
 import org.json.simple.JSONAware;
@@ -66,8 +66,8 @@ public class J4pHttpHandler implements HttpHandler, LogHandler {
     private Pattern contentTypePattern = Pattern.compile(".*;\\s*charset=([^;,]+)\\s*.*");
 
 
-    public J4pHttpHandler(Map<ConfigProperty,String> pConfig) {
-        context = pConfig.get(ConfigProperty.AGENT_CONTEXT);
+    public J4pHttpHandler(Map<ConfigKey,String> pConfig) {
+        context = pConfig.get(ConfigKey.AGENT_CONTEXT);
         if (!context.endsWith("/")) {
             context += "/";
         }

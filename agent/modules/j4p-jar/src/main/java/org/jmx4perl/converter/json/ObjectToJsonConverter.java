@@ -1,12 +1,11 @@
 package org.jmx4perl.converter.json;
 
 
-import org.jmx4perl.config.ConfigProperty;
+import org.jmx4perl.ConfigKey;
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.converter.StringToObjectConverter;
-import org.jmx4perl.converter.json.simplifier.*;
 
-import static org.jmx4perl.config.ConfigProperty.*;
+import static org.jmx4perl.ConfigKey.*;
 
 import org.json.simple.JSONObject;
 import javax.management.AttributeNotFoundException;
@@ -50,7 +49,7 @@ import java.util.*;
  * @author roland
  * @since Apr 19, 2009
  */
-public class ObjectToJsonConverter {
+public final class ObjectToJsonConverter {
 
     // List of dedicated handlers used for delegation in serialization/deserializatin
     private List<Extractor> handlers;
@@ -70,7 +69,7 @@ public class ObjectToJsonConverter {
     private static final String SIMPLIFIERS_DEF = "META-INF/simplifiers";
 
     public ObjectToJsonConverter(StringToObjectConverter pStringToObjectConverter,
-                                 Map<ConfigProperty,String> pConfig, Extractor... pSimplifyHandlers) {
+                                 Map<ConfigKey,String> pConfig, Extractor... pSimplifyHandlers) {
         initLimits(pConfig);
 
         handlers = new ArrayList<Extractor>();
@@ -181,7 +180,7 @@ public class ObjectToJsonConverter {
 
     // =================================================================================
 
-    private void initLimits(Map<ConfigProperty, String> pConfig) {
+    private void initLimits(Map<ConfigKey, String> pConfig) {
         // Max traversal depth
         if (pConfig != null) {
             hardMaxDepth = getNullSaveIntLimit(MAX_DEPTH.getValue(pConfig));
@@ -352,9 +351,9 @@ public class ObjectToJsonConverter {
     }
 
     void setupContext(JmxRequest pRequest) {
-        Integer maxDepth = getLimit(pRequest.getProcessingConfigAsInt(ConfigProperty.MAX_DEPTH),hardMaxDepth);
-        Integer maxCollectionSize = getLimit(pRequest.getProcessingConfigAsInt(ConfigProperty.MAX_COLLECTION_SIZE),hardMaxCollectionSize);
-        Integer maxObjects = getLimit(pRequest.getProcessingConfigAsInt(ConfigProperty.MAX_OBJECTS),hardMaxObjects);
+        Integer maxDepth = getLimit(pRequest.getProcessingConfigAsInt(ConfigKey.MAX_DEPTH),hardMaxDepth);
+        Integer maxCollectionSize = getLimit(pRequest.getProcessingConfigAsInt(ConfigKey.MAX_COLLECTION_SIZE),hardMaxCollectionSize);
+        Integer maxObjects = getLimit(pRequest.getProcessingConfigAsInt(ConfigKey.MAX_OBJECTS),hardMaxObjects);
 
         setupContext(maxDepth, maxCollectionSize, maxObjects, pRequest.getValueFaultHandler());
     }
@@ -404,8 +403,7 @@ public class ObjectToJsonConverter {
             if (!resUrls.hasMoreElements()) {
                 // Try to use this class classloader
                 URL res = getClass().getResource(pDefinition);
-                Vector vec = new Vector();
-                resUrls = res != null ? new Vector<URL>(Arrays.asList(res)).elements() : new Vector<URL>().elements();
+                resUrls = Collections.enumeration(res != null ? Arrays.asList(res) : Collections.<URL>emptyList());
             }
             while (resUrls.hasMoreElements()) {
                 readSimplifierDefinitionFromUrl(pExtractorMap, pExtractors, resUrls.nextElement());
@@ -418,8 +416,9 @@ public class ObjectToJsonConverter {
     private void readSimplifierDefinitionFromUrl(Map<String, Extractor> pExtractorMap, List<Extractor> pExtractors, URL pUrl) {
         String line = null;
         Exception error = null;
+        LineNumberReader reader = null;
         try {
-            LineNumberReader reader = new LineNumberReader(new InputStreamReader(pUrl.openStream()));
+            reader = new LineNumberReader(new InputStreamReader(pUrl.openStream()));
             line = reader.readLine();
             while (line != null) {
                 createOrRemoveSimplifier(pExtractorMap, pExtractors, line);
@@ -439,6 +438,13 @@ public class ObjectToJsonConverter {
             if (error != null) {
                 throw new IllegalStateException("Cannot load extractor " + line + " defined in " +
                         pUrl + " : " + error + ". Aborting",error);
+            }
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    // Best effort
+                }
             }
         }
     }

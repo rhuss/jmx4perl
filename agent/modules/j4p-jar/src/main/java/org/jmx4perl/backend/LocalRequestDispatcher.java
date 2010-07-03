@@ -19,12 +19,16 @@ import javax.management.*;
  */
 public class LocalRequestDispatcher implements RequestDispatcher {
 
-
-
     // Handler for finding and merging the various MBeanHandler
     private MBeanServerHandler mBeanServerHandler;
 
     private RequestHandlerManager requestHandlerManager;
+
+    // MBean of configuration MBean
+    private ObjectName configMBeanName;
+
+    // Name of the exposed MBeanServerHandler-MBean
+    private ObjectName mbeanServerHandlerMBeanName;
 
     public LocalRequestDispatcher(ObjectToJsonConverter objectToJsonConverter,
                                   StringToObjectConverter stringToObjectConverter,
@@ -51,13 +55,19 @@ public class LocalRequestDispatcher implements RequestDispatcher {
         return mBeanServerHandler.dispatchRequest(handler, pJmxReq);
     }
 
-    public void unregisterLocalMBean(ObjectName pMBeanName)
-            throws MBeanRegistrationException, InstanceNotFoundException,
-            MalformedObjectNameException {
-        mBeanServerHandler.unregisterMBean(pMBeanName);
+    public void init(HistoryStore pHistoryStore, DebugStore pDebugStore) throws MalformedObjectNameException, MBeanRegistrationException, InstanceAlreadyExistsException, NotCompliantMBeanException {
+        configMBeanName = registerMBean(new Config(pHistoryStore,pDebugStore),Config.OBJECT_NAME);
+        mbeanServerHandlerMBeanName = registerMBean(mBeanServerHandler,MBeanServerHandlerMBean.OBJECT_NAME);
     }
 
-    public ObjectName registerConfigMBean(HistoryStore pHistoryStore, DebugStore pDebugStore)
+    public void destroy() throws MalformedObjectNameException, InstanceNotFoundException, MBeanRegistrationException {
+        if (configMBeanName != null) {
+            unregisterMBean(configMBeanName);
+        }
+    }
+
+
+    public ObjectName registerMBean(Object pMbean,String pName)
             throws MBeanRegistrationException, NotCompliantMBeanException,
             MalformedObjectNameException, InstanceAlreadyExistsException {
         // Websphere adds extra parts to the object name if registered explicitely, but
@@ -65,9 +75,17 @@ public class LocalRequestDispatcher implements RequestDispatcher {
         // and let the bean define its name. On the other side, Resin throws an exception
         // if registering with a null name, so we have to do this explicite check.
         return mBeanServerHandler.registerMBean(
-                new Config(pHistoryStore,pDebugStore,mBeanServerHandler),
+                pMbean,
                 mBeanServerHandler.checkForClass("com.ibm.websphere.management.AdminServiceFactory") ?
                         null :
-                        Config.OBJECT_NAME);
+                        pName);
     }
+
+    public void unregisterMBean(ObjectName pMBeanName)
+            throws MBeanRegistrationException, InstanceNotFoundException,
+            MalformedObjectNameException {
+        mBeanServerHandler.unregisterMBean(pMBeanName);
+    }
+
+
 }

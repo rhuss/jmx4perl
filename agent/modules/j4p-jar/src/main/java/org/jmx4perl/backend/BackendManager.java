@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.jmx4perl.config.ConfigProperty.*;
+import static org.jmx4perl.ConfigKey.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -50,6 +50,7 @@ import static org.jmx4perl.config.ConfigProperty.*;
  */
 public class BackendManager {
 
+    // Dispatches request to local MBeanServer
     private LocalRequestDispatcher localDispatcher;
 
     // Converter for converting various attribute object types
@@ -74,7 +75,7 @@ public class BackendManager {
     // List of RequestDispatchers to consult
     private List<RequestDispatcher> requestDispatchers;
 
-    public BackendManager(Map<ConfigProperty,String> pConfig, LogHandler pLogHandler) {
+    public BackendManager(Map<ConfigKey,String> pConfig, LogHandler pLogHandler) {
 
 
         // Central objects
@@ -97,7 +98,7 @@ public class BackendManager {
 
         // Backendstore for remembering state
         initStores(pConfig);
-        registerOwnMBeans();
+        init();
     }
 
     // Construct configured dispatchers by reflection. Returns always
@@ -194,7 +195,7 @@ public class BackendManager {
     }
 
     // init various application wide stores for handling history and debug output.
-    private void initStores(Map<ConfigProperty, String> pConfig) {
+    private void initStores(Map<ConfigKey, String> pConfig) {
         int maxEntries;
         try {
             maxEntries = Integer.parseInt(HISTORY_MAX_ENTRIES.getValue(pConfig));
@@ -219,9 +220,9 @@ public class BackendManager {
         debugStore = new DebugStore(maxDebugEntries,debug);
     }
 
-    private void registerOwnMBeans() {
+    private void init() {
         try {
-            configMBeanName = localDispatcher.registerConfigMBean(historyStore,debugStore);
+            localDispatcher.init(historyStore,debugStore);
         } catch (NotCompliantMBeanException e) {
             error("Error registering config MBean: " + e,e);
         } catch (MBeanRegistrationException e) {
@@ -234,20 +235,16 @@ public class BackendManager {
     }
 
     // Remove MBeans again.
-    public void unregisterOwnMBeans() {
-        if (configMBeanName != null) {
-            try {
-                localDispatcher.unregisterLocalMBean(configMBeanName);
-            } catch (MalformedObjectNameException e) {
-                // wont happen
-                error("Invalid name for config MBean: " + e,e);
-            } catch (InstanceNotFoundException e) {
-                error("No Mbean registered with name " + configMBeanName + ": " + e,e);
-            } catch (MBeanRegistrationException e) {
-                error("Cannot unregister MBean: " + e,e);
-            }
-        } else {
-            error("Internal Problem: No ConfigMBean name !",null);
+    public void destroy() {
+        try {
+            localDispatcher.destroy();
+        } catch (MalformedObjectNameException e) {
+            // wont happen
+            error("Invalid name for config MBean: " + e,e);
+        } catch (InstanceNotFoundException e) {
+            error("No Mbean registered with name " + configMBeanName + ": " + e,e);
+        } catch (MBeanRegistrationException e) {
+            error("Cannot unregister MBean: " + e,e);
         }
     }
 

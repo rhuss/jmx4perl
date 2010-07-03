@@ -2,7 +2,7 @@ package org.jmx4perl.http;
 
 import org.jmx4perl.*;
 import org.jmx4perl.backend.BackendManager;
-import org.jmx4perl.config.ConfigProperty;
+import org.jmx4perl.ConfigKey;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
@@ -103,7 +103,7 @@ public class AgentServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        backendManager.unregisterOwnMBeans();
+        backendManager.destroy();
         super.destroy();
     }
 
@@ -182,12 +182,12 @@ public class AgentServlet extends HttpServlet {
     }
     // =======================================================================
 
-    private Map<ConfigProperty, String> servletConfigAsMap(ServletConfig pConfig) {
+    private Map<ConfigKey, String> servletConfigAsMap(ServletConfig pConfig) {
         Enumeration e = pConfig.getInitParameterNames();
-        Map<ConfigProperty,String> ret = new HashMap<ConfigProperty, String>();
+        Map<ConfigKey,String> ret = new HashMap<ConfigKey, String>();
         while (e.hasMoreElements()) {
             String keyS = (String) e.nextElement();
-            ConfigProperty key = ConfigProperty.getByKey(keyS);
+            ConfigKey key = ConfigKey.getByKey(keyS);
             if (key != null) {
                 ret.put(key,pConfig.getInitParameter(keyS));
             }

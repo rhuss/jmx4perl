@@ -1,6 +1,7 @@
 package org.jmx4perl.backend;
 
 import org.jmx4perl.JmxRequest;
+import org.jmx4perl.config.Config;
 import org.jmx4perl.handler.JsonRequestHandler;
 
 import javax.management.*;
@@ -45,7 +46,7 @@ import java.util.Set;
  * @author roland
  * @since Jun 15, 2009
  */
-public class MBeanServerHandler {
+public class MBeanServerHandler implements MBeanServerHandlerMBean {
 
     // The MBeanServers to use
     // TODO: Dont cache them here ! Important for OSGi usage ...
@@ -300,4 +301,52 @@ public class MBeanServerHandler {
     }
 
 
+    public String mBeanServersInfo() {
+        StringBuffer ret = new StringBuffer();
+        Set<MBeanServer> mBeanServers = getMBeanServers();
+
+        ret.append("Found ").append(mBeanServers.size()).append(" MBeanServers\n");
+        for (MBeanServer s : mBeanServers) {
+            ret.append("    ")
+                    .append("++ ")
+                    .append(s.toString())
+                    .append(": default domain = ")
+                    .append(s.getDefaultDomain())
+                    .append(", ")
+                    .append(s.getMBeanCount())
+                        .append(" MBeans\n");
+
+            ret.append("        Domains:\n");
+            boolean javaLangFound = false;
+            for (String d : s.getDomains()) {
+                if ("java.lang".equals(d)) {
+                    javaLangFound = true;
+                }
+                appendDomainInfo(ret, s, d);
+            }
+            if (!javaLangFound) {
+                // JBoss fails to list java.lang in its domain list
+                appendDomainInfo(ret,s,"java.lang");
+            }
+        }
+        ret.append("\n");
+        ret.append("Platform MBeanServer: ")
+                .append(ManagementFactory.getPlatformMBeanServer())
+                .append("\n");
+        return ret.toString();
+    }
+
+    private void appendDomainInfo(StringBuffer pRet, MBeanServer pServer, String pDomain) {
+        try {
+            pRet.append("         == ").append(pDomain).append("\n");
+            Set<ObjectInstance> beans = pServer.queryMBeans(new ObjectName(pDomain + ":*"),null);
+            for (ObjectInstance o : beans) {
+                String n = o.getObjectName().getCanonicalKeyPropertyListString();
+                pRet.append("              ").append(n).append("\n");
+            }
+        } catch (MalformedObjectNameException e) {
+            // Shouldnt happen
+            pRet.append("              INTERNAL ERROR: ").append(e).append("\n");
+        }
+    }
 }

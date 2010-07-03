@@ -5,7 +5,7 @@ import java.util.Hashtable;
 
 import javax.servlet.ServletException;
 
-import org.jmx4perl.config.ConfigProperty;
+import org.jmx4perl.ConfigKey;
 import org.jmx4perl.http.AgentServlet;
 import org.jmx4perl.LogHandler;
 import org.osgi.framework.*;
@@ -14,7 +14,7 @@ import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-import static org.jmx4perl.config.ConfigProperty.*;
+import static org.jmx4perl.ConfigKey.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -119,7 +119,7 @@ public class J4pActivator implements BundleActivator {
 
     private Dictionary<String,String> getConfig() {
         Dictionary<String,String> config = new Hashtable<String,String>();
-        for (ConfigProperty key : ConfigProperty.values()) {
+        for (ConfigKey key : ConfigKey.values()) {
             String value = getConfiguration(key);
             if (value != null) {
                 config.put(key.getKeyValue(),value);
@@ -128,7 +128,7 @@ public class J4pActivator implements BundleActivator {
         return config;
     }
 
-    private String getConfiguration(ConfigProperty pKey) {
+    private String getConfiguration(ConfigKey pKey) {
         // TODO: Use fragments and/or configuration service if available.
         String value = bundleContext.getProperty(CONFIG_PREFIX + "." + pKey);
         if (value == null) {
