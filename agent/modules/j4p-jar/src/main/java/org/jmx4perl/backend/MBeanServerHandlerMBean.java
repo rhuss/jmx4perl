@@ -8,7 +8,7 @@ package org.jmx4perl.backend;
  */
 public interface MBeanServerHandlerMBean {
 
-    final String OBJECT_NAME = "jmx4perl:type=ServerHandler";
+    String OBJECT_NAME = "jmx4perl:type=ServerHandler";
 
     String mBeanServersInfo();
 }

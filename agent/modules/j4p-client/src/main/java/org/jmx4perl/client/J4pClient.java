@@ -80,6 +80,7 @@ public class J4pClient  {
         }
     }
 
+    @SuppressWarnings("PMD.PreserveStackTrace")
     private JSONAware extractJsonResponse(HttpResponse pResponse) throws J4pException {
         try {
             return requestHandler.extractJsonResponse(pResponse);
@@ -87,7 +88,7 @@ public class J4pClient  {
             throw new J4pException("IO-Error while reading the response: " + e,e);
         } catch (ParseException e) {
             // It's a parese exception. Now, check whether the HTTResponse is
-            // an error and prepare the proper J4pExcetpipon
+            // an error and prepare the proper J4pException
             StatusLine statusLine = pResponse.getStatusLine();
             if (HttpStatus.SC_OK != statusLine.getStatusCode()) {
                 throw new J4pException(statusLine.getStatusCode() + " " + statusLine.getReasonPhrase());
