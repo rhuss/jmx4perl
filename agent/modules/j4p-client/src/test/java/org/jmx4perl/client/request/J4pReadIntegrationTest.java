@@ -1,6 +1,5 @@
 package org.jmx4perl.client.request;
 
-import java.io.IOException;
 import java.util.*;
 
 import javax.management.MalformedObjectNameException;
@@ -8,10 +7,8 @@ import javax.management.ObjectName;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.jmx4perl.client.J4pException;
-import org.jmx4perl.client.J4pRemoteException;
-import org.jmx4perl.client.response.J4pReadResponse;
-import org.json.simple.parser.ParseException;
+import org.jmx4perl.client.exception.J4pException;
+import org.jmx4perl.client.exception.J4pRemoteException;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

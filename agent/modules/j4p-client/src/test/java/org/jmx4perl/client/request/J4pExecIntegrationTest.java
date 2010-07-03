@@ -1,15 +1,9 @@
 package org.jmx4perl.client.request;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
 import javax.management.MalformedObjectNameException;
 
-import org.jmx4perl.client.J4pException;
-import org.jmx4perl.client.J4pRemoteException;
-import org.jmx4perl.client.response.J4pExecResponse;
-import org.json.simple.parser.ParseException;
+import org.jmx4perl.client.exception.J4pException;
+import org.jmx4perl.client.exception.J4pRemoteException;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

@@ -1,11 +1,10 @@
-package org.jmx4perl.client.response;
+package org.jmx4perl.client.request;
 
 import java.util.*;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.jmx4perl.client.request.J4pReadRequest;
 import org.json.simple.JSONObject;
 
 /**
@@ -17,7 +16,7 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since Apr 26, 2010
  */
-public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
+public final class J4pReadResponse extends J4pResponse<J4pReadRequest> {
 
     /**
      * Constructor, which should be used directly.
@@ -25,7 +24,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      * @param pRequest the request which lead to this response.
      * @param pJsonResponse the JSON response as obtained from the server agent.
      */
-    public J4pReadResponse(J4pReadRequest pRequest, JSONObject pJsonResponse) {
+    J4pReadResponse(J4pReadRequest pRequest, JSONObject pJsonResponse) {
         super(pRequest, pJsonResponse);
     }
 

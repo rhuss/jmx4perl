@@ -1,4 +1,4 @@
-package org.jmx4perl.client.response;
+package org.jmx4perl.client.request;
 
 import java.util.Date;
 

@@ -5,9 +5,9 @@ import java.util.*;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.jmx4perl.client.request.J4pRequest;
-import org.jmx4perl.client.request.J4pRequestManager;
-import org.jmx4perl.client.response.J4pResponse;
+import org.jmx4perl.client.exception.*;
+import org.jmx4perl.client.request.*;
+import org.jmx4perl.client.request.J4pResponse;
 import org.json.simple.*;
 
 

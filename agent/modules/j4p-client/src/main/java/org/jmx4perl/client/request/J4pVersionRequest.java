@@ -3,7 +3,6 @@ package org.jmx4perl.client.request;
 import java.util.Collections;
 import java.util.List;
 
-import org.jmx4perl.client.response.J4pVersionResponse;
 import org.json.simple.JSONObject;
 
 /**

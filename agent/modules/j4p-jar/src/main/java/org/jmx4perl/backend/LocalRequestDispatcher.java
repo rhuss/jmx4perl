@@ -64,6 +64,9 @@ public class LocalRequestDispatcher implements RequestDispatcher {
         if (configMBeanName != null) {
             unregisterMBean(configMBeanName);
         }
+        if (mbeanServerHandlerMBeanName != null) {
+            unregisterMBean(mbeanServerHandlerMBeanName);
+        }
     }
 
 

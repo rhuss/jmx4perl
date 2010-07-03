@@ -5,7 +5,6 @@ import java.util.*;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.jmx4perl.client.response.J4pExecResponse;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 

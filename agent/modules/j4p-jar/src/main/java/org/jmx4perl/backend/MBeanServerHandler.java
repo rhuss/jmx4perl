@@ -1,20 +1,17 @@
 package org.jmx4perl.backend;
 
-import org.jmx4perl.JmxRequest;
-import org.jmx4perl.config.Config;
-import org.jmx4perl.handler.JsonRequestHandler;
-
-import javax.management.*;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
+import javax.management.*;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+import org.jmx4perl.JmxRequest;
+import org.jmx4perl.handler.JsonRequestHandler;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -303,10 +300,10 @@ public class MBeanServerHandler implements MBeanServerHandlerMBean {
 
     public String mBeanServersInfo() {
         StringBuffer ret = new StringBuffer();
-        Set<MBeanServer> mBeanServers = getMBeanServers();
+        Set<MBeanServer> servers = getMBeanServers();
 
-        ret.append("Found ").append(mBeanServers.size()).append(" MBeanServers\n");
-        for (MBeanServer s : mBeanServers) {
+        ret.append("Found ").append(servers.size()).append(" MBeanServers\n");
+        for (MBeanServer s : servers) {
             ret.append("    ")
                     .append("++ ")
                     .append(s.toString())

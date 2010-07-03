@@ -5,8 +5,7 @@ import java.util.List;
 
 import javax.management.MalformedObjectNameException;
 
-import org.jmx4perl.client.*;
-import org.jmx4perl.client.response.*;
+import org.jmx4perl.client.exception.*;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

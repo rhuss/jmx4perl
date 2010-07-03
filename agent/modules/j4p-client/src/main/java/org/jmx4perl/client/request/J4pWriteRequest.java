@@ -6,7 +6,6 @@ import java.util.List;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.jmx4perl.client.response.J4pWriteResponse;
 import org.json.simple.JSONObject;
 
 /**

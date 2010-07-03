@@ -1,9 +1,9 @@
-package org.jmx4perl.client;
+package org.jmx4perl.client.exception;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jmx4perl.client.response.J4pResponse;
+import org.jmx4perl.client.request.J4pResponse;
 
 /**
  * Exception thrown when a bulk request fails on the remote side

@@ -293,7 +293,7 @@ public final class ObjectToJsonConverter {
        }
 
     // Used for testing only. Hence final and package local
-    final ThreadLocal<StackContext> getStackContextLocal() {
+    ThreadLocal<StackContext> getStackContextLocal() {
         return stackContextLocal;
     }
 
@@ -435,16 +435,20 @@ public final class ObjectToJsonConverter {
         } catch (IOException e) {
             error = e;
         } finally {
+            closeReader(reader);
             if (error != null) {
                 throw new IllegalStateException("Cannot load extractor " + line + " defined in " +
                         pUrl + " : " + error + ". Aborting",error);
             }
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // Best effort
-                }
+        }
+    }
+
+    private void closeReader(LineNumberReader pReader) {
+        if (pReader != null) {
+            try {
+                pReader.close();
+            } catch (IOException e) {
+                // Best effort
             }
         }
     }
