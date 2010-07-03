@@ -69,6 +69,7 @@ public class J4pAgent extends AbstractAgent {
 
     protected J4pAgent() {
         super("j4p-agent");
+        server = null;
     }
 
     public void stop() throws MuleException {
