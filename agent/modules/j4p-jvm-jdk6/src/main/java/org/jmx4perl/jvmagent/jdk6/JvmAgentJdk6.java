@@ -65,6 +65,7 @@ import java.util.concurrent.Executors;
  * @author roland
  * @since Mar 3, 2010
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public final class JvmAgentJdk6 {
 
     private static final int DEFAULT_PORT = 8778;

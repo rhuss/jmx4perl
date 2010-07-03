@@ -24,7 +24,7 @@ import org.json.simple.parser.ParseException;
 public class J4pRequestHandler {
 
     // j4p agent URL for the agent server
-    protected String j4pServerUrl;
+    private String j4pServerUrl;
 
     // Escape patterns
     private static final Pattern SLASH_PATTERN = Pattern.compile("/+");

@@ -90,7 +90,7 @@ public class AgentServlet extends HttpServlet {
     }
 
     @Override
-    public void init(ServletConfig pConfig) throws ServletException {
+    public final void init(ServletConfig pConfig) throws ServletException {
         super.init(pConfig);
 
         // Different HTTP request handlers
@@ -122,7 +122,7 @@ public class AgentServlet extends HttpServlet {
     @SuppressWarnings("PMD.AvoidCatchingThrowable")
     private void handle(ServletRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
         JSONAware json = null;
-        int code = 200;
+        int code = 200; // Success
         try {
             // Check access policy
             requestHandler.checkClientIPAccess(pReq.getRemoteHost(),pReq.getRemoteAddr());

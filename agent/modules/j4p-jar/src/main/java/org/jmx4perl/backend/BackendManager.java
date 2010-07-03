@@ -66,9 +66,6 @@ public class BackendManager {
     // Storage for storing debug information
     private DebugStore debugStore;
 
-    // MBean used for configuration
-    private ObjectName configMBeanName;
-
     // Loghandler for dispatching logs
     private LogHandler logHandler;
 
@@ -242,7 +239,7 @@ public class BackendManager {
             // wont happen
             error("Invalid name for config MBean: " + e,e);
         } catch (InstanceNotFoundException e) {
-            error("No Mbean registered with name " + configMBeanName + ": " + e,e);
+            error("MBean not found: " + e,e);
         } catch (MBeanRegistrationException e) {
             error("Cannot unregister MBean: " + e,e);
         }

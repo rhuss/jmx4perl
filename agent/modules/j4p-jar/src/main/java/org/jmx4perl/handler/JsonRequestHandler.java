@@ -37,7 +37,7 @@ import java.util.Set;
 public abstract class JsonRequestHandler {
 
     // Restrictor for restricting operations
-    protected final Restrictor restrictor;
+    private final Restrictor restrictor;
 
     protected JsonRequestHandler(Restrictor pRestrictor) {
         restrictor = pRestrictor;
