@@ -19,7 +19,7 @@ public abstract class J4pResponse<T extends J4pRequest> {
     private JSONObject jsonResponse;
 
     // request which lead to this response
-    private T request;
+    protected T request;
 
     // timestamp of this response
     private Date requestDate;

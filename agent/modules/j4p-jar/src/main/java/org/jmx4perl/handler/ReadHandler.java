@@ -184,7 +184,7 @@ public class ReadHandler extends JsonRequestHandler {
     }
 
     private void checkRestriction(ObjectName mBeanName, String attribute) {
-        if (!restrictor.isAttributeReadAllowed(mBeanName,attribute)) {
+        if (!getRestrictor().isAttributeReadAllowed(mBeanName,attribute)) {
             throw new SecurityException("Reading attribute " + attribute +
                     " is forbidden for MBean " + mBeanName.getCanonicalName());
         }

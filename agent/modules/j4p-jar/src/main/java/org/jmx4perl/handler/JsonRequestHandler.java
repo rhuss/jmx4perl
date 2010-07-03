@@ -37,6 +37,7 @@ import java.util.Set;
 public abstract class JsonRequestHandler {
 
     // Restrictor for restricting operations
+
     private final Restrictor restrictor;
 
     protected JsonRequestHandler(Restrictor pRestrictor) {
@@ -140,4 +141,14 @@ public abstract class JsonRequestHandler {
     public boolean useReturnValueWithPath() {
         return true;
     }
+
+    /**
+     * Get the restrictor which is currently active
+     *
+     * @return restrictor
+     */
+    protected Restrictor getRestrictor() {
+        return restrictor;
+    }
+
 }
