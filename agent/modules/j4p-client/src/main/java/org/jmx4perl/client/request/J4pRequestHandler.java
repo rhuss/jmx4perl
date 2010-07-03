@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import org.apache.http.*;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
-import org.jmx4perl.client.exception.J4pException;
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
