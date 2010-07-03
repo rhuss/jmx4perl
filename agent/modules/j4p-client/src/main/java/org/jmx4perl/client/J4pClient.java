@@ -3,12 +3,13 @@ package org.jmx4perl.client;
 import java.io.IOException;
 import java.util.*;
 
-import org.apache.http.HttpResponse;
+import org.apache.http.*;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.jmx4perl.client.exception.*;
 import org.jmx4perl.client.request.*;
 import org.jmx4perl.client.request.J4pResponse;
 import org.json.simple.*;
+import org.json.simple.parser.ParseException;
 
 
 /**
@@ -17,10 +18,13 @@ import org.json.simple.*;
  * @author roland
  * @since Apr 24, 2010
  */
-public class J4pClient extends J4pRequestManager {
+public class J4pClient  {
 
     // Http client used for connecting the j4p Agent
     private DefaultHttpClient httpClient = new DefaultHttpClient();
+
+    // Creating and parsing HTTP-Requests and Responses
+    private J4pRequestHandler requestHandler;
 
     /**
      * Construct a new client for a given server url
@@ -28,7 +32,7 @@ public class J4pClient extends J4pRequestManager {
      * @param pJ4pServerUrl the agent URL for how to contact the server.
      */
     public J4pClient(String pJ4pServerUrl) {
-        super(pJ4pServerUrl);
+        requestHandler = new J4pRequestHandler(pJ4pServerUrl);
     }
 
     /**
@@ -59,7 +63,7 @@ public class J4pClient extends J4pRequestManager {
      */
     public <R extends J4pResponse<T>,T extends J4pRequest> R execute(T pRequest,String pMethod) throws J4pException {
         try {
-            HttpResponse response = httpClient.execute(getHttpRequest(pRequest,pMethod));
+            HttpResponse response = httpClient.execute(requestHandler.getHttpRequest(pRequest,pMethod));
             JSONAware jsonResponse = extractJsonResponse(response);
             if (! (jsonResponse instanceof JSONObject)) {
                 throw new J4pException("Invalid JSON answer for a single request (expected a map but got a " + jsonResponse.getClass() + ")");
@@ -67,12 +71,28 @@ public class J4pClient extends J4pRequestManager {
             JSONObject jsonResponseObject = (JSONObject) jsonResponse;
             J4pRemoteException exp = validate(pRequest,jsonResponseObject);
             if (exp == null) {
-                return this.<R,T>extractResponse(pRequest, jsonResponseObject);
+                return requestHandler.<R,T>extractResponse(pRequest, jsonResponseObject);
             } else {
                 throw exp;
             }
         } catch (IOException e) {
             throw new J4pException("IO-Error while contacting the server: " + e,e);
+        }
+    }
+
+    private JSONAware extractJsonResponse(HttpResponse pResponse) throws J4pException {
+        try {
+            return requestHandler.extractJsonResponse(pResponse);
+        } catch (IOException e) {
+            throw new J4pException("IO-Error while reading the response: " + e,e);
+        } catch (ParseException e) {
+            // It's a parese exception. Now, check whether the HTTResponse is
+            // an error and prepare the proper J4pExcetpipon
+            StatusLine statusLine = pResponse.getStatusLine();
+            if (HttpStatus.SC_OK != statusLine.getStatusCode()) {
+                throw new J4pException(statusLine.getStatusCode() + " " + statusLine.getReasonPhrase());
+            }
+            throw new J4pException("Could not parse answer: " + e,e);
         }
     }
 
@@ -89,7 +109,7 @@ public class J4pClient extends J4pRequestManager {
     @SuppressWarnings("PMD.PreserveStackTrace")
     public <R extends J4pResponse<T>,T extends J4pRequest> List<R> execute(List<T> pRequests) throws J4pException {
         try {
-            HttpResponse response = httpClient.execute(getHttpRequest(pRequests));
+            HttpResponse response = httpClient.execute(requestHandler.getHttpRequest(pRequests));
             JSONAware jsonResponse = extractJsonResponse(response);
 
             verifyJsonResponse(jsonResponse);
@@ -120,7 +140,7 @@ public class J4pClient extends J4pRequestManager {
                 exceptionFound = true;
                 ret.add(i,null);
             } else {
-                ret.add(i,this.<R,T>extractResponse(request, (JSONObject) jsonResp));
+                ret.add(i,requestHandler.<R,T>extractResponse(request, (JSONObject) jsonResp));
             }
         }
         if (exceptionFound) {

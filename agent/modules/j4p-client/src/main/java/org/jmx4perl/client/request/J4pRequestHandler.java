@@ -26,7 +26,7 @@ import org.json.simple.parser.ParseException;
  * @author roland
  * @since Apr 25, 2010
  */
-public class J4pRequestManager {
+public class J4pRequestHandler {
 
     // j4p agent URL for the agent server
     protected String j4pServerUrl;
@@ -35,7 +35,7 @@ public class J4pRequestManager {
     private static final Pattern SLASH_PATTERN = Pattern.compile("/+");
     private static final Pattern ESCAPED_SLASH_PATTERN = Pattern.compile("%2F");
 
-    public J4pRequestManager(String pJ4pServerUrl) {
+    public J4pRequestHandler(String pJ4pServerUrl) {
         j4pServerUrl = pJ4pServerUrl;
     }
 
@@ -46,7 +46,7 @@ public class J4pRequestManager {
      * @param pPreferredMethod HTTP method preferred
      * @return the request used with HttpClient to obtain the result.
      */
-    protected HttpUriRequest getHttpRequest(J4pRequest pRequest,String pPreferredMethod) throws J4pException {
+    public HttpUriRequest getHttpRequest(J4pRequest pRequest,String pPreferredMethod) throws UnsupportedEncodingException {
         String method = pPreferredMethod;
         if (method == null) {
             method = pRequest.getPreferredHttpMethod();
@@ -68,17 +68,14 @@ public class J4pRequestManager {
                 return new HttpGet(j4pServerUrl + "/" + requestPath.toString());
             }
         }
-        try {
-            // We are using a post method as fallback
-            // TODO: Option handling
-            JSONObject requestContent = pRequest.toJson();
-            HttpPost postReq = new HttpPost(j4pServerUrl);
-            postReq.setEntity(new StringEntity(requestContent.toJSONString(),"utf-8"));
-            return postReq;
-        } catch (UnsupportedEncodingException e) {
-            // UTF-8 should be supported for sure
-            throw new J4pException("Unsupported encoding utf-8: " + e,e);
-        }
+
+
+        // We are using a post method as fallback
+        // TODO: Option handling
+        JSONObject requestContent = pRequest.toJson();
+        HttpPost postReq = new HttpPost(j4pServerUrl);
+        postReq.setEntity(new StringEntity(requestContent.toJSONString(),"utf-8"));
+        return postReq;
     }
 
     /**
@@ -87,20 +84,15 @@ public class J4pRequestManager {
      * @param pRequests requests to put into a HTTP request
      * @return HTTP request to send to the server
      */
-    protected <T extends J4pRequest> HttpUriRequest getHttpRequest(List<T> pRequests) throws J4pException {
+    public <T extends J4pRequest> HttpUriRequest getHttpRequest(List<T> pRequests) throws UnsupportedEncodingException {
         JSONArray bulkRequest = new JSONArray();
         HttpPost postReq = new HttpPost(j4pServerUrl);
         for (T request : pRequests) {
             JSONObject requestContent = request.toJson();
             bulkRequest.add(requestContent);
         }
-        try {
-            postReq.setEntity(new StringEntity(bulkRequest.toJSONString(),"utf-8"));
-            return postReq;
-        } catch (UnsupportedEncodingException e) {
-            // UTF-8 should be supported for sure
-            throw new J4pException("Unsupported encoding utf-8: " + e,e);
-        }
+        postReq.setEntity(new StringEntity(bulkRequest.toJSONString(),"utf-8"));
+        return postReq;
     }
 
 
@@ -114,26 +106,14 @@ public class J4pRequestManager {
      * @throws J4pException when parsing of the answer fails
      */
     @SuppressWarnings("PMD.PreserveStackTrace")
-    protected JSONAware extractJsonResponse(HttpResponse pHttpResponse) throws J4pException {
-        try {
-            HttpEntity entity = pHttpResponse.getEntity();
-            JSONParser parser = new JSONParser();
-            Header contentEncoding = entity.getContentEncoding();
-            if (contentEncoding != null) {
-                return (JSONAware) parser.parse(new InputStreamReader(entity.getContent(), Charset.forName(contentEncoding.getValue())));
-            } else {
-                return (JSONAware) parser.parse(new InputStreamReader(entity.getContent()));
-            }
-        } catch (IOException e) {
-            throw new J4pException("IO-Error while reading the response: " + e,e);
-        } catch (ParseException e) {
-            // It's a parese exception. Now, check whether the HTTResponse is
-            // an error and prepare the proper J4pExcetpipon
-            StatusLine statusLine = pHttpResponse.getStatusLine();
-            if (HttpStatus.SC_OK != statusLine.getStatusCode()) {
-                throw new J4pException(statusLine.getStatusCode() + " " + statusLine.getReasonPhrase());
-            }
-            throw new J4pException("Could not parse answer: " + e,e);
+    public JSONAware extractJsonResponse(HttpResponse pHttpResponse) throws IOException, ParseException {
+        HttpEntity entity = pHttpResponse.getEntity();
+        JSONParser parser = new JSONParser();
+        Header contentEncoding = entity.getContentEncoding();
+        if (contentEncoding != null) {
+            return (JSONAware) parser.parse(new InputStreamReader(entity.getContent(), Charset.forName(contentEncoding.getValue())));
+        } else {
+            return (JSONAware) parser.parse(new InputStreamReader(entity.getContent()));
         }
     }
 
@@ -146,12 +126,12 @@ public class J4pRequestManager {
      * @param <R> response type
      * @return the J4p response
      */
-    protected <R extends J4pResponse<T>,T extends J4pRequest> R extractResponse(T pRequest,JSONObject pJsonResponse) {
+    public <R extends J4pResponse<T>,T extends J4pRequest> R extractResponse(T pRequest,JSONObject pJsonResponse) {
         return pRequest.<R>createResponse(pJsonResponse);
     }
 
     // Escape a part for usage as part of URI path
-    private String escape(String pPart) throws J4pException {
+    private String escape(String pPart) throws UnsupportedEncodingException {
         Matcher matcher = SLASH_PATTERN.matcher(pPart);
         int index = 0;
         StringBuilder ret = new StringBuilder();
@@ -184,15 +164,11 @@ public class J4pRequestManager {
         return ret.toString();
     }
 
-    private String uriEscape(StringBuilder pRet) throws J4pException {
+    private String uriEscape(StringBuilder pRet) throws UnsupportedEncodingException {
         // URI Escape unsafe chars
-        try {
-            String encodedRet = URLEncoder.encode(pRet.toString(),"utf-8");
-            // Translate all "/" back...
-            return ESCAPED_SLASH_PATTERN.matcher(encodedRet).replaceAll("/");
-        } catch (UnsupportedEncodingException e) {
-            throw new J4pException("Platform doesn't support UTF-8 encoding",e);
-        }
+        String encodedRet = URLEncoder.encode(pRet.toString(),"utf-8");
+        // Translate all "/" back...
+        return ESCAPED_SLASH_PATTERN.matcher(encodedRet).replaceAll("/");
     }
 
 }
