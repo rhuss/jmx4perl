@@ -22,6 +22,11 @@
     <module>modules/j4p-client</module>
   </modules>
 
+  <ciManagement>
+    <system>hudson</system>
+    <url>http://labs.consol.de/hudson/job/jmx4perl</url>
+  </ciManagement>
+
   <build>
     <plugins>
       <plugin>
