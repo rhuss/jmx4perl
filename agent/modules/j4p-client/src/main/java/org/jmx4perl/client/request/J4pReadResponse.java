@@ -39,7 +39,7 @@ public final class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      *                                      {@link ObjectName}s. Shouldnt occur, though.
      */
     public Collection<ObjectName> getObjectNames() throws MalformedObjectNameException {
-        ObjectName mBean = request.getObjectName();
+        ObjectName mBean = getRequest().getObjectName();
         if (mBean.isPattern()) {
             // The result value contains the list of fetched object names
             JSONObject values = getValue();
@@ -63,7 +63,7 @@ public final class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      * @return a collection of attribute names
      */
     public Collection<String> getAttributes(ObjectName pObjectName) {
-        ObjectName requestMBean = request.getObjectName();
+        ObjectName requestMBean = getRequest().getObjectName();
         if (requestMBean.isPattern()) {
             // We need to got down one level in the returned values
             JSONObject attributes = getAttributesForObjectNameWithPatternRequest(pObjectName);
@@ -87,6 +87,7 @@ public final class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      *         a returned from the returned list.
      */
     public Collection<String> getAttributes() {
+        J4pReadRequest request = getRequest();
         ObjectName requestBean = request.getObjectName();
         if (requestBean.isPattern()) {
             throw new IllegalArgumentException(
@@ -121,7 +122,7 @@ public final class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      *         or attributes.
      */
     public <V> V getValue(ObjectName pObjectName,String pAttribute) {
-        ObjectName requestMBean = request.getObjectName();
+        ObjectName requestMBean = getRequest().getObjectName();
         if (requestMBean.isPattern()) {
             JSONObject mAttributes = getAttributesForObjectNameWithPatternRequest(pObjectName);
             if (!mAttributes.containsKey(pAttribute)) {
@@ -148,6 +149,7 @@ public final class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      * is called with a <code>null</code> argument, but the request leads to multiple attribute return values.
      */
     public <V> V getValue(String pAttribute) {
+        J4pReadRequest request = getRequest();
         ObjectName requestBean = request.getObjectName();
         if (requestBean.isPattern()) {
             throw new IllegalArgumentException(
@@ -177,7 +179,7 @@ public final class J4pReadResponse extends J4pResponse<J4pReadRequest> {
     // ============================================================================================================
 
     private JSONObject getAttributesForObjectNameWithPatternRequest(ObjectName pObjectName) {
-        ObjectName pMBeanFromRequest = request.getObjectName();
+        ObjectName pMBeanFromRequest = getRequest().getObjectName();
         ObjectName objectName = pObjectName == null ? pMBeanFromRequest : pObjectName;
         JSONObject values = getValue();
         JSONObject attributes = (JSONObject) values.get(objectName.getCanonicalName());
