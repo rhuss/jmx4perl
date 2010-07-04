@@ -61,7 +61,7 @@ sub new {
         if ($section) {
             my $real_section = { 
                                 tutorial => "TUTORIAL",
-                                reference => "BACKGROUND",
+                                reference => "REFERENCE",
                                 options => "COMMAND LINE",
                                 config => "CONFIGURATION",
                            }->{lc $section};
