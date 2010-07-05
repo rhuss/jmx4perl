@@ -9,9 +9,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.jmx4perl.client.exception.J4pException;
 import org.jmx4perl.client.exception.J4pRemoteException;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
-import static org.junit.Assert.*;
+import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * Integration test for reading attributes

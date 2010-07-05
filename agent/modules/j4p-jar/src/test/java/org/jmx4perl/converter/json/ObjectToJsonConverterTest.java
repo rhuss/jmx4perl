@@ -4,16 +4,15 @@ import org.jmx4perl.JmxRequest;
 import org.jmx4perl.JmxRequestBuilder;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.json.simple.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.annotations.*;
 
 import javax.management.*;
 
 import java.io.File;
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.testng.AssertJUnit.*;
+
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -48,13 +47,13 @@ public class ObjectToJsonConverterTest {
 
     private ObjectToJsonConverter converter;
 
-    @Before
+    @BeforeMethod
     public void setup() {
         converter = new ObjectToJsonConverter(new StringToObjectConverter(),null);
         converter.setupContext(null,null,null,null);
     }
 
-    @After
+    @AfterMethod
     public void tearDown() {
         if (converter != null) {
             converter.clearContext();
@@ -99,7 +98,7 @@ public class ObjectToJsonConverterTest {
         Map result = (Map) converter.extractObject(name,new Stack<String>(),true);
         // Since we removed the objectname simplifier from the list of simplifiers
         // explicitely, the converter should return the full blown object;
-        assertEquals("false",result.get("propertyListPattern"));
+        assertEquals("type=Memory",result.get("canonicalKeyPropertyListString"));
     }
 
     @Test

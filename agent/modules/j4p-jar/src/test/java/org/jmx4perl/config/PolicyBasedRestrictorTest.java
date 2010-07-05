@@ -1,15 +1,16 @@
 package org.jmx4perl.config;
 
-import org.junit.Test;
 import org.jmx4perl.config.PolicyBasedRestrictor;
 import org.jmx4perl.JmxRequest;
+import org.testng.annotations.Test;
 
 import java.io.InputStream;
 
-import static junit.framework.Assert.*;
-
 import javax.management.ObjectName;
 import javax.management.MalformedObjectNameException;
+
+import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON

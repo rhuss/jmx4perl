@@ -3,9 +3,10 @@ package org.jmx4perl.client.request;
 import org.apache.http.client.methods.HttpPost;
 import org.jmx4perl.Version;
 import org.jmx4perl.client.exception.J4pException;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
-import static org.junit.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * @author roland

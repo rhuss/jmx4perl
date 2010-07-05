@@ -4,8 +4,7 @@ import org.jmx4perl.JmxRequest;
 import org.jmx4perl.JmxRequestBuilder;
 import org.jmx4perl.config.AllowAllRestrictor;
 import org.jmx4perl.config.Restrictor;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.annotations.*;
 
 import javax.management.*;
 
@@ -16,8 +15,8 @@ import java.util.Map;
 
 import static org.easymock.classextension.EasyMock.*;
 import static org.jmx4perl.JmxRequest.Type.READ;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * @author roland
@@ -30,7 +29,7 @@ public class ReadHandlerTest {
 
     private ObjectName testBeanName;
 
-    @Before
+    @BeforeMethod
     public void createHandler() throws MalformedObjectNameException {
         handler = new ReadHandler(new AllowAllRestrictor());
         testBeanName = new ObjectName("jmx4perl:type=test");
@@ -94,7 +93,7 @@ public class ReadHandlerTest {
 
     // ======================================================================================================
 
-    @Test
+    @Test(groups = "java6")
     public void searchPatternNoMatch() throws Exception {
         ObjectName patternMBean = new ObjectName("bla:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
@@ -109,7 +108,7 @@ public class ReadHandlerTest {
         } catch (InstanceNotFoundException exp) {}
     }
 
-    @Test
+    @Test(groups = "java6")
     public void searchPatternSingleAttribute() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
@@ -130,7 +129,7 @@ public class ReadHandlerTest {
         assertEquals("memval1",((Map) res.get("java.lang:type=Memory")).get("mem1"));
     }
 
-    @Test
+    @Test(groups = "java6")
     public void searchPatternNoAttribute() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest[] requests = new JmxRequest[] {
@@ -172,7 +171,7 @@ public class ReadHandlerTest {
         }
     }
 
-    @Test
+    @Test(groups = "java6")
     public void searchPatternNoAttributesFound() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
@@ -198,7 +197,7 @@ public class ReadHandlerTest {
 
 
 
-    @Test
+    @Test(groups = "java6")
     public void searchPatternNoMatchingAttribute() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
@@ -219,7 +218,7 @@ public class ReadHandlerTest {
         verify(connection);
     }
 
-    @Test
+    @Test(groups = "java6")
     public void searchPatternMultiAttributes1() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
@@ -243,7 +242,7 @@ public class ReadHandlerTest {
     }
 
 
-    @Test
+    @Test(groups = "java6")
     public void searchPatternMultiAttributes3() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).
@@ -265,7 +264,7 @@ public class ReadHandlerTest {
         }
     }
 
-    @Test
+    @Test(groups = "java6")
     public void searchPatternMultiAttributes4() throws Exception {
         ObjectName patternMBean = new ObjectName("java.lang:type=*");
         JmxRequest request = new JmxRequestBuilder(READ, patternMBean).

@@ -1,21 +1,19 @@
 package org.jmx4perl.history;
 
+import java.util.*;
+
+import javax.management.MalformedObjectNameException;
+
 import org.jmx4perl.JmxRequest;
 import org.jmx4perl.JmxRequestBuilder;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import javax.management.MalformedObjectNameException;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.*;
 import static org.jmx4perl.JmxRequest.Type.*;
+import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
 
 
 /**
@@ -29,7 +27,7 @@ public class HistoryStoreTest {
     private HistoryStore store;
 
 
-    @Before
+    @BeforeMethod
     public void initStore() {
         store = new HistoryStore(10);
     }
@@ -53,20 +51,23 @@ public class HistoryStoreTest {
             fail("No operation name");
         } catch (IllegalArgumentException exp) {}
 
-        req = new JmxRequestBuilder(READ,"test:type=*")
-                .attribute("bla")
-                .build();
-        try {
-            new HistoryKey(req);
-            fail("No pattern allowed");
-        } catch (IllegalArgumentException exp) {}
-
         req = new JmxRequestBuilder(READ,"test:type=bla")
                 .attributes("bla","bla2")
                 .build();
         try {
             new HistoryKey(req);
             fail("No multiple attributes allowed");
+        } catch (IllegalArgumentException exp) {}
+    }
+
+    @Test(groups = "java6")
+    public void invalidHistoryKeyWithPattern() throws MalformedObjectNameException {
+        JmxRequest req = new JmxRequestBuilder(READ,"test:type=*")
+                .attribute("bla")
+                .build();
+        try {
+            new HistoryKey(req);
+            fail("No pattern allowed");
         } catch (IllegalArgumentException exp) {}
     }
 
@@ -162,7 +163,7 @@ public class HistoryStoreTest {
     }
 
 
-    @Test
+    @Test(groups = "java6")
     public void patternAttributeRead() throws Exception {
         JmxRequest req =
                 new JmxRequestBuilder(READ,"test:type=*")

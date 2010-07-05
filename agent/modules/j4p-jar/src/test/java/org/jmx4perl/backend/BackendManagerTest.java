@@ -13,10 +13,9 @@ import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.LogHandler;
 import org.json.simple.JSONObject;
-import org.junit.*;
+import org.testng.annotations.*;
 
-import static junit.framework.Assert.*;
-import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.*;
 
 /**
  * @author roland
@@ -25,18 +24,7 @@ import static org.junit.Assert.assertEquals;
 public class BackendManagerTest implements LogHandler {
 
     BackendManager backendManager;
-
-    @Before
-    public void setup() {
-    }
-
-    @After
-    public void tearDown() {
-        if (backendManager != null) {
-            backendManager.destroy();
-        }
-    }
-
+   
     @Test
     public void simplRead() throws MalformedObjectNameException, InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
         backendManager = new BackendManager(new HashMap(),this);
@@ -45,6 +33,7 @@ public class BackendManagerTest implements LogHandler {
                 .build();
         JSONObject ret = backendManager.handleRequest(req);
         assertTrue(Long.parseLong( (String) ((Map) ret.get("value")).get("used")) > 0);
+        backendManager.destroy();
     }
 
 
@@ -56,6 +45,7 @@ public class BackendManagerTest implements LogHandler {
         JmxRequest req = new JmxRequestBuilder(JmxRequest.Type.READ,"java.lang:type=Memory").build();
         JSONObject ret = backendManager.handleRequest(req);
         assertTrue(RequestDispatcherTest.called);
+        backendManager.destroy();
     }
 
     @Test

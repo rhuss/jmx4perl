@@ -4,9 +4,11 @@ import javax.management.MalformedObjectNameException;
 
 import org.jmx4perl.client.exception.J4pException;
 import org.jmx4perl.client.exception.J4pRemoteException;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
-import static org.junit.Assert.*;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * @author roland
@@ -30,7 +32,7 @@ public class J4pExecIntegrationTest extends AbstractJ4pIntegrationTest {
             J4pExecResponse resp = j4pClient.execute(request);
             fail();
         } catch (J4pRemoteException exp) {
-            assertEquals(500,exp.getStatus());
+            assertEquals(400,exp.getStatus());
             assertTrue(exp.getMessage().contains("IllegalArgumentException"));
             assertTrue(exp.getRemoteStackTrace().contains("IllegalArgumentException"));
         }

@@ -5,9 +5,10 @@ import java.util.List;
 
 import javax.management.MalformedObjectNameException;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.assertEquals;
+
 
 /**
  * @author roland
@@ -18,14 +19,14 @@ public class JmxRequestTest {
     @Test
     public void testPathSplitting() throws MalformedObjectNameException {
         List<String> paths = JmxRequest.splitPath("hello/world");
-        assertEquals(2,paths.size());
-        assertEquals("hello",paths.get(0));
-        assertEquals("world",paths.get(1));
+        assertEquals(paths.size(),2);
+        assertEquals(paths.get(0),"hello");
+        assertEquals(paths.get(1),"world");
 
         paths = JmxRequest.splitPath("hello\\/world/second");
-        assertEquals(2,paths.size());
-        assertEquals("hello/world",paths.get(0));
-        assertEquals("second",paths.get(1));
+        assertEquals(paths.size(),2);
+        assertEquals(paths.get(0),"hello/world");
+        assertEquals(paths.get(1),"second");
     }
 
     @Test
@@ -35,6 +36,6 @@ public class JmxRequestTest {
                         build();
         req.setExtraArgs(Arrays.asList("hello/world","second"));
         String combined = req.getExtraArgsAsPath();
-        assertEquals("hello\\/world/second",combined);
+        assertEquals(combined,"hello\\/world/second");
     }
 }

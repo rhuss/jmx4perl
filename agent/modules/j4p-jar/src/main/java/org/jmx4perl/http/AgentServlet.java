@@ -133,6 +133,10 @@ public class AgentServlet extends HttpServlet {
             if (backendManager.isDebug()) {
                 backendManager.info("Response: " + json);
             }
+        } catch (RuntimeMBeanException exp) {
+            JSONObject error = requestHandler.handleThrowable(exp.getTargetException());
+            code = (Integer) error.get("status");
+            json = error;
         } catch (Throwable exp) {
             JSONObject error = requestHandler.handleThrowable(exp);
             code = (Integer) error.get("status");

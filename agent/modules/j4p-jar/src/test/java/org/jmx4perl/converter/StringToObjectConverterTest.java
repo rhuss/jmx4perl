@@ -1,11 +1,15 @@
 package org.jmx4perl.converter;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import java.lang.reflect.Array;
 
-import static org.junit.Assert.*;
+import org.testng.Assert;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+
+import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
+
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -38,7 +42,7 @@ public class StringToObjectConverterTest {
 
     StringToObjectConverter converter;
 
-    @Before
+    @BeforeTest
     public void setup() {
        converter = new StringToObjectConverter();
     }
@@ -86,9 +90,14 @@ public class StringToObjectConverterTest {
     @Test
     public void arrayConversions() {
         Object obj = converter.convertFromString(new int[0].getClass().getName(),"10,20,30");
-        assertArrayEquals("Int[] conversion",new int[] { 10,20,30 }, (int[]) obj);
+        int expected[] = new int[] { 10,20,30};
+        for (int i = 0;i < expected.length;i++) {
+            assertEquals(expected[i],((int[]) obj)[i]);
+        }
         obj = converter.convertFromString(new Integer[0].getClass().getName(),"10,20,30");
-        assertArrayEquals("Integer[] conversion",new Integer[] { 10,20,30 }, (Integer[]) obj);
+        for (int i = 0;i < expected.length;i++) {
+            assertEquals(expected[i],(int) ((Integer[]) obj)[i]);
+        }
 
         try {
             obj = converter.convertFromString("[Lbla;","10,20,30");
