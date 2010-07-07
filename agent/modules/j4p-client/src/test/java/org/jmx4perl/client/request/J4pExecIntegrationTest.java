@@ -16,9 +16,12 @@ import static org.testng.AssertJUnit.assertEquals;
  */
 public class J4pExecIntegrationTest extends AbstractJ4pIntegrationTest {
 
+
     @Test
     public void simpleOperation() throws MalformedObjectNameException, J4pException {
-        J4pExecRequest request = new J4pExecRequest(itSetup.getOperationMBean(),"fetchNumber","inc");
+        J4pExecRequest request = new J4pExecRequest(itSetup.getOperationMBean(),"reset");
+        j4pClient.execute(request);
+        request = new J4pExecRequest(itSetup.getOperationMBean(),"fetchNumber","inc");
         J4pExecResponse resp = j4pClient.execute(request);
         assertEquals("0",resp.getValue());
         resp = j4pClient.execute(request);

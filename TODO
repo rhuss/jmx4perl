@@ -1,7 +1,6 @@
 04 Deployment instructions for various application servers
 06 WS-Management integration ?
 07 Path handling for operation return values
-10 Bean Path accessor.
 14 JSON Schema for protocol
 16 SSL Support for jvm-agent-6
 17 JVM agent with Jetty for Non Sun-JDK 6 environments
