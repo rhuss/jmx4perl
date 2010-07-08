@@ -367,7 +367,7 @@ public class MBeanServerHandler implements MBeanServerHandlerMBean,MBeanRegistra
 
     // ==============================================================================================
     // Needed for providing the name for our MBean
-    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+    public ObjectName preRegister(MBeanServer server, ObjectName name) throws MalformedObjectNameException {
         return new ObjectName(getObjectName());
     }
 
@@ -378,7 +378,7 @@ public class MBeanServerHandler implements MBeanServerHandlerMBean,MBeanRegistra
     public void postRegister(Boolean registrationDone) {
     }
 
-    public void preDeregister() throws Exception {
+    public void preDeregister() {
     }
 
     public void postDeregister() {
