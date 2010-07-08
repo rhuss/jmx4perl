@@ -35,6 +35,10 @@ import javax.management.MalformedObjectNameException;
  */
 public interface ConfigMBean {
 
+    // Name under which this bean gets registered
+    static final String OBJECT_NAME = "jmx4perl:type=Config";
+
+
     // Operations
     /**
      * Switch on history tracking for a specific attribute. If <code>pMaxEntries</code> is null

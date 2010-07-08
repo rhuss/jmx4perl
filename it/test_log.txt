@@ -1,6 +1,25 @@
-2010-07-06 - 0.70
+2010-07-07 - 0.70
     JEE-Server
-      JBoss 4.2.3 & 5.1.0 & 6.0.0.M2
+      JBoss 4.2.3 & 5.1.0 & 6.0.0.M3
+      Tomcat 5.5.29 & 6.0.26 & 7.0.0 Beta
+      Jetty 5.1.15 & 6.1.22 & 7.0.1 & 8.0.0.M0
+      Geronimo 2.2 (Jetty 7 & Tomcat 6)
+      Jonas 4.10.7 (Jetty 5 & Tomcat 5) & 5.1.1
+      Glassfish 2.1.1 & 3.0
+      Resin 3.1.9
+      Spring dm server 2.0.0.RELEASE
+
+TODO:
+    JVM-Agent:
+      ActiveMQ 5.3.1
+      Terracotta 3.2.1
+      Hadoop 0.20.2
+    Osgi-Agent:
+      Felix 2.0.4
+      Equinox 3.5.2
+    JEE-Server
+      Weblogic 9.2 & 10.0 
+      Websphere 7.0 
 
 2010-03-28 - 0.65
     JVM-Agent:

@@ -79,7 +79,7 @@ SUPPORTED APPLICATION SERVERS
   The following Java Application Servers has been confirmed to work
   with jmx4perl in agent mode deployed as war:
 
-  * JBoss 4.2.3 GA, 5.1.0 GA & 6.0.0 M2
+  * JBoss 4.2.3 GA, 5.1.0 GA & 6.0.0 M3
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
   * Jonas 4.10.7 (with Jetty 5.1.10 and Tomcat 5.5.28) and 5.1.1
   * Apache Geronimo 2.2 (Jetty 7 and Tomcat 6)

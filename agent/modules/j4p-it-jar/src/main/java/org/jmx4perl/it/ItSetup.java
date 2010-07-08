@@ -74,7 +74,7 @@ public class ItSetup {
     private List<ObjectName> testBeans = new ArrayList<ObjectName>();
 
     public ItSetup() {
-        mBeanHandler = new MBeanServerHandler();
+        mBeanHandler = new MBeanServerHandler("type=it");
     }
 
     public void start() {

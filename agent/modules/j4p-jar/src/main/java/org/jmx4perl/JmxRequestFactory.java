@@ -185,8 +185,10 @@ public final class JmxRequestFactory {
     For the rest of unsafe chars, we use uri decoding (as anybody should do). It could be of course the case,
     that the pathinfo has been already uri decoded (dont know by heart)
      */
-    private static Stack<String> extractElementsFromPath(String path) throws UnsupportedEncodingException {
-        String[] elements = (path.startsWith("/") ? path.substring(1) : path).split("/+");
+    private static Stack<String> extractElementsFromPath(String pPath) throws UnsupportedEncodingException {
+        // Strip leadings slahes
+        String cleanPath = pPath.replaceFirst("^/+","");
+        String[] elements = cleanPath.split("/+");
 
         Stack<String> ret = new Stack<String>();
         Stack<String> elementStack = new Stack<String>();

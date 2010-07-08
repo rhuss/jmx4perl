@@ -40,12 +40,13 @@ public class Config implements ConfigMBean,MBeanRegistration {
     private HistoryStore historyStore;
     private DebugStore debugStore;
 
-    // Name under which this bean gets registered
-    public static final String OBJECT_NAME = "jmx4perl:type=Config";
+    // Optional domain to used fo registering this MBean
+    private String qualifier;
 
-    public Config(HistoryStore pHistoryStore, DebugStore pDebugStore) {
+    public Config(HistoryStore pHistoryStore, DebugStore pDebugStore, String pQualifier) {
         historyStore = pHistoryStore;
         debugStore = pDebugStore;
+        qualifier = pQualifier;
     }
 
     public void setHistoryEntriesForAttribute(String pMBean, String pAttribute, String pPath, String pTarget, int pMaxEntries)
@@ -102,12 +103,16 @@ public class Config implements ConfigMBean,MBeanRegistration {
         return bOut.size();
     }
 
+    public String getObjectName() {
+        return OBJECT_NAME + (qualifier != null ? "," + qualifier : "");
+    }
     // ========================================================================
 
     // Provide our own name on registration
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws MalformedObjectNameException {
-        return new ObjectName(OBJECT_NAME);
+        return new ObjectName(getObjectName());
     }
+
 
     public void postRegister(Boolean registrationDone) {
     }

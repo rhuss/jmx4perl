@@ -65,7 +65,10 @@ public enum ConfigKey {
     // Runtime configuration (i.e. must come in with a request)
     // for ignoring errors during JMX operations and JSON serialization.
     // This works only for certain operations like pattern reads.
-    IGNORE_ERRORS("ignoreErrors");
+    IGNORE_ERRORS("ignoreErrors"),
+
+    // Optional domain name for registering own MBeans
+    MBEAN_QUALIFIER("mbeanQualifier");
 
     private String key;
     private String defaultValue;

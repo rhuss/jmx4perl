@@ -146,9 +146,6 @@ public class AgentServlet extends HttpServlet {
         }
     }
 
-    // Extract an return code. It's the highest status number contained
-    // in within the responnses
-
     private interface ServletRequestHandler {
         JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp)
                 throws IOException, MalformedObjectNameException;

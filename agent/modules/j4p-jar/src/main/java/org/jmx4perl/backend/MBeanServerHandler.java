@@ -43,7 +43,7 @@ import org.jmx4perl.handler.JsonRequestHandler;
  * @author roland
  * @since Jun 15, 2009
  */
-public class MBeanServerHandler implements MBeanServerHandlerMBean {
+public class MBeanServerHandler implements MBeanServerHandlerMBean,MBeanRegistration {
 
     // The MBeanServers to use
     // TODO: Dont cache them here ! Important for OSGi usage ...
@@ -52,10 +52,28 @@ public class MBeanServerHandler implements MBeanServerHandlerMBean {
 
     // Whether we are running under JBoss
     private boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
+
+    // Optional domain for registering this handler as a mbean
+    private String qualifier;
+
     // private boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
 
+
+    /**
+     * Create a new MBeanServer with no qualifier
+     */
     public MBeanServerHandler() {
+        this(null);
+    }
+
+    /**
+     * Create a new MBeanServer handler who is responsible for managing multiple intra VM {@link MBeanServer} at once
+     *
+     * @param pQualifier optional qualifier used for registering this object as an MBean (can be null)
+     */
+    public MBeanServerHandler(String pQualifier) {
         initMBeanServers();
+        qualifier = pQualifier;
     }
 
     /**
@@ -345,5 +363,24 @@ public class MBeanServerHandler implements MBeanServerHandlerMBean {
             // Shouldnt happen
             pRet.append("              INTERNAL ERROR: ").append(e).append("\n");
         }
+    }
+
+    // ==============================================================================================
+    // Needed for providing the name for our MBean
+    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+        return new ObjectName(getObjectName());
+    }
+
+    public String getObjectName() {
+        return OBJECT_NAME + (qualifier != null ? "," + qualifier : "");
+    }
+
+    public void postRegister(Boolean registrationDone) {
+    }
+
+    public void preDeregister() throws Exception {
+    }
+
+    public void postDeregister() {
     }
 }

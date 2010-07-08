@@ -88,14 +88,13 @@ public class BackendManager {
         // Create and remember request dispatchers
         localDispatcher = new LocalRequestDispatcher(objectToJsonConverter,
                                                      stringToObjectConverter,
-                                                     restrictor);
+                                                     restrictor,pConfig.get(ConfigKey.MBEAN_QUALIFIER));
         requestDispatchers = createRequestDispatchers(DISPATCHER_CLASSES.getValue(pConfig),
                                                       objectToJsonConverter,stringToObjectConverter,restrictor);
         requestDispatchers.add(localDispatcher);
 
         // Backendstore for remembering state
         initStores(pConfig);
-        init();
     }
 
     // Construct configured dispatchers by reflection. Returns always
@@ -193,12 +192,8 @@ public class BackendManager {
 
     // init various application wide stores for handling history and debug output.
     private void initStores(Map<ConfigKey, String> pConfig) {
-        int maxEntries;
-        try {
-            maxEntries = Integer.parseInt(HISTORY_MAX_ENTRIES.getValue(pConfig));
-        } catch (NumberFormatException exp) {
-            maxEntries = Integer.parseInt(HISTORY_MAX_ENTRIES.getDefaultValue());
-        }
+        int maxEntries = getIntConfigValue(pConfig,HISTORY_MAX_ENTRIES);
+        int maxDebugEntries = getIntConfigValue(pConfig,DEBUG_MAX_ENTRIES);
 
         String doDebug = DEBUG.getValue(pConfig);
         boolean debug = false;
@@ -206,18 +201,10 @@ public class BackendManager {
             debug = true;
         }
 
-        int maxDebugEntries;
-        try {
-            maxDebugEntries = Integer.parseInt(DEBUG_MAX_ENTRIES.getValue(pConfig));
-        } catch (NumberFormatException exp) {
-            maxDebugEntries = Integer.parseInt(DEBUG_MAX_ENTRIES.getDefaultValue());
-        }
 
         historyStore = new HistoryStore(maxEntries);
         debugStore = new DebugStore(maxDebugEntries,debug);
-    }
 
-    private void init() {
         try {
             localDispatcher.init(historyStore,debugStore);
         } catch (NotCompliantMBeanException e) {
@@ -229,6 +216,16 @@ public class BackendManager {
         } catch (InstanceAlreadyExistsException e) {
             error("Config MBean already exists: " + e,e);
         }
+    }
+
+    private int getIntConfigValue(Map<ConfigKey, String> pConfig, ConfigKey pKey) {
+        int maxDebugEntries;
+        try {
+            maxDebugEntries = Integer.parseInt(pKey.getValue(pConfig));
+        } catch (NumberFormatException exp) {
+            maxDebugEntries = Integer.parseInt(pKey.getDefaultValue());
+        }
+        return maxDebugEntries;
     }
 
     // Remove MBeans again.
