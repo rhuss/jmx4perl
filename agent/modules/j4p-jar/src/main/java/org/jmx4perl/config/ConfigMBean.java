@@ -36,7 +36,7 @@ import javax.management.MalformedObjectNameException;
 public interface ConfigMBean {
 
     // Name under which this bean gets registered
-    final String OBJECT_NAME = "jmx4perl:type=Config";
+    String OBJECT_NAME = "jmx4perl:type=Config";
 
 
     // Operations

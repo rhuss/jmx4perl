@@ -92,8 +92,8 @@ SUPPORTED APPLICATION SERVERS
 
   The OSGi agent budle has been tested on
 
-  * Felix 2.0.4
-  * Equinox 3.5.2
+  * Felix 2.0.4 & 3.0.1
+  * Equinox 3.5.2 & 3.6.0
 
   The JVM JDK 6 agent has been verified to work on 
 

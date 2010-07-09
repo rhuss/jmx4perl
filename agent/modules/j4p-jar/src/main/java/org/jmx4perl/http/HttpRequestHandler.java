@@ -148,6 +148,10 @@ public class HttpRequestHandler {
      */
     public JSONObject handleThrowable(Throwable exp) {
         JSONObject json;
+        if (exp instanceof RuntimeMBeanException) {
+            // Unwrap 
+            exp = exp.getCause();
+        }
         if (exp instanceof IllegalArgumentException) {
             json = getErrorJSON(400,exp);
         } else if (exp instanceof IllegalStateException) {

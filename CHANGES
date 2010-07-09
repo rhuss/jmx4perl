@@ -26,8 +26,11 @@
       is used
   - Started to add a java client library
   - j4psh beta version added
-  - Agent: Switched from JUnit to TestNG for testing because of
-    support of testing groups 
+  - Agent: 
+    + Switched from JUnit to TestNG for testing because of
+      support of testing groups 
+    + New servlet init parameter option 'mbeanQualifier' to allow
+      multiple j4p-servlet in a single application server
 
 0.65 (2010-3-30)
   - A JDK 6 java agent added for exporting the j4p protocol via
