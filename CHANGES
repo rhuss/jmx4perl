@@ -1,4 +1,4 @@
-0.70
+0.70 (2010-7-10)
   - Extended configuration syntax for check_jmx4perl as an alternative to
     command line options
     + Parameterized checks

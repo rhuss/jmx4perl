@@ -146,8 +146,9 @@ public class HttpRequestHandler {
      * @param exp exception to handle
      * @return its JSON representation
      */
-    public JSONObject handleThrowable(Throwable exp) {
+    public JSONObject handleThrowable(Throwable pThrowable) {
         JSONObject json;
+        Throwable exp = pThrowable;
         if (exp instanceof RuntimeMBeanException) {
             // Unwrap 
             exp = exp.getCause();
