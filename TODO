@@ -12,6 +12,7 @@
 24 Register MBeans with servlet name in order allow multiple j4p agent in the same server machine.
 50 check_jmx4perl: Multi-Line output optimized in check_multi format (i.e. with a
    summary line) so that it can be used for pnp as well
+51 Versionscheck in Requests. Offer upgrade path and recommendations.
 
 j4psh:
 
