@@ -259,7 +259,7 @@ predefined check is available:
                   --check tc_servlet_requests \
                   j4p-agent
  
- OK - 15.00 requests/minute | ''Requests j4p-agent''=15;5000;100
+ OK - 15.00 requests/minute | 'Requests j4p-agent'=15;5000;100
 
 where 
 

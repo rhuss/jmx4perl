@@ -1,3 +1,8 @@
+0.71
+  - Added 'ns' as unit (CpuThreadTime returns nano seconds)
+  - Fixed quoting of performance data in so far to let 
+    Nagios::Plugin the complete control
+
 0.70 (2010-7-10)
   - Extended configuration syntax for check_jmx4perl as an alternative to
     command line options
