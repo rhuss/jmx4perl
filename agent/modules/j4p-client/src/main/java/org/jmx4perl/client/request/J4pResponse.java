@@ -1,4 +1,4 @@
-package org.jmx4perl.client.response;
+package org.jmx4perl.client.request;
 
 import java.util.Date;
 
@@ -19,7 +19,7 @@ public abstract class J4pResponse<T extends J4pRequest> {
     private JSONObject jsonResponse;
 
     // request which lead to this response
-    protected T request;
+    private T request;
 
     // timestamp of this response
     private Date requestDate;

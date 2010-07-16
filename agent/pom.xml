@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-parent</artifactId>
-  <version>3</version>
+  <version>4</version>
   <name>j4p-parent</name>
   <description>j4p parent pom</description>
 
@@ -21,6 +21,11 @@
     <module>modules/j4p-osgi-bundle</module>
     <module>modules/j4p-client</module>
   </modules>
+
+  <ciManagement>
+    <system>hudson</system>
+    <url>http://labs.consol.de/hudson/job/jmx4perl</url>
+  </ciManagement>
 
   <build>
     <plugins>
@@ -115,7 +120,14 @@
         <artifactId>servlet-api</artifactId>
         <version>2.4</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>5.12.1</version>
+      </dependency>
     </dependencies>
+
   </dependencyManagement>
 
   <properties>
@@ -153,6 +165,24 @@
         <module>modules/j4p-jvm-jdk6</module>
       </modules>
     </profile>
+
+    <profile>
+      <id>jdk5</id>
+      <activation>
+        <jdk>1.5</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludedGroups>java6</excludedGroups>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
 
     <profile>
       <id>dist-labs</id>

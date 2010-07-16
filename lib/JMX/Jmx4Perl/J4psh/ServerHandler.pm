@@ -27,7 +27,7 @@ sub new {
                 config => $context->{config},
                };
     bless $self,(ref($class) || $class);
-    my $server = $self->_init_server_list($context->{config},$context->{args});
+    my $server = $self->_init_server_list($context->{initial_server},$context);
     $self->connect_to_server($server) if $server;
     return $self;
 }
@@ -77,18 +77,20 @@ sub list {
 
 sub _init_server_list {
     my $self = shift;
-    my $config = shift;
-    my $args = shift;
+    my $server = shift;
+    my $context = shift;
+    my $config = $context->{config};
+    my $args = $context->{args};
     my @servers = map { { name => $_->{name}, url => $_->{url}, from_config => 1 } } @{$config->get_servers};
     my $ret_server;
-    if ($args->{server}) {
-        my $config_s = $config->get_server_config($args->{server});
+    if ($server) {
+        my $config_s = $config->get_server_config($server);
         if ($config_s) {
             my $found = 0;
             my $i = 0;
-            my $entry = { name => $config_s->{name}, url => $config_s->{url}, from_config => 1 } ;
+            my $entry = { name => $server, url => $config_s->{url}, from_config => 1 } ;
             for my $s (@servers) {
-                if ($s->{name} eq $args->{server}) {
+                if ($s->{name} eq $server) {
                     $servers[$i] = $entry;
                     $found = 1;                 
                     last;
@@ -98,9 +100,9 @@ sub _init_server_list {
             push @servers,$entry unless $found;
             $ret_server = $config_s->{name};
         } else {
-            die "Invalid URL ",$args->{server} unless ($args->{server} =~ m|^\w+://|);
-            my $name = $self->_prepare_server_name($args->{server});
-            push @servers,{ name => $name, url => $args->{server} };
+            die "Invalid URL ",$server,"\n" unless ($server =~ m|^\w+://|);
+            my $name = $self->_prepare_server_name($server);
+            push @servers,{ name => $name, url => $server };
             $ret_server = $name;
         }
     }
@@ -138,6 +140,7 @@ sub create_agent {
     }
 }
 
+# Extract connection related args from the command line arguments
 sub _j4p_args {
     my $self = shift;
     my $o = shift;

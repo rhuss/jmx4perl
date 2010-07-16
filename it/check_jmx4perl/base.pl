@@ -23,7 +23,7 @@ sub exec_check_perl4jmx {
    
     my $cmd = "perl $FindBin::Bin/../../scripts/check_jmx4perl "
           .join(" ",map { '"' . $_ . '"' } @args); 
-    #print $cmd,"\n";
+#    print $cmd,"\n";
     open (F,"$cmd 2>&1 |") 
       || die "Cannot open check_jmx4perl: $!";
     my $content = join "",<F>;

@@ -35,6 +35,10 @@ import javax.management.MalformedObjectNameException;
  */
 public interface ConfigMBean {
 
+    // Name under which this bean gets registered
+    String OBJECT_NAME = "jmx4perl:type=Config";
+
+
     // Operations
     /**
      * Switch on history tracking for a specific attribute. If <code>pMaxEntries</code> is null
@@ -75,12 +79,6 @@ public interface ConfigMBean {
      */
     void resetDebugInfo();
 
-    /**
-     * Return information about the found MBeanServers
-     * @return info about MBeanServers
-     */
-    String mBeanServerInfo();
-
     // Attributes
 
     /**
@@ -93,7 +91,7 @@ public interface ConfigMBean {
 
     /**
      * Number of global limit for history entries. No attribute historization can exceed this
-     * limit (i.e if in {@link #setHistoryEntriesForAttribute(String, String, String, String, int)} 
+     * limit (i.e if in {@link #setHistoryEntriesForAttribute(String, String, String, String, int)}
      * the <code>pMaxEntries</code> is set larger than this limit, the global limit will be taken}
      *
      * @return the global history limit

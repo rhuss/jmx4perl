@@ -35,7 +35,7 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class MapHandler implements ObjectToJsonConverter.Handler {
+public class MapExtractor implements Extractor {
     private static final int MAX_STRING_LENGTH = 400;
 
     public Class getType() {

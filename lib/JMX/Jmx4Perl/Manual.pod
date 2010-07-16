@@ -274,7 +274,7 @@ The mule agent is not yet distributed as binary and not included in the default
 build. You can easily build it on your by using C<mvn install> within the
 F<agent/> subdirectory. You need maven (L<http://maven.apache.org>) as build
 tool installed. The agent can be found afterwards at
-F<agent/modules/j4p-mule/target/j4p-mule-0.50-agent.jar> (note the C<-agent>
+F<agent/modules/j4p-mule/target/j4p-mule-0.70.0-agent.jar> (note the C<-agent>
 classifier, replace the version number with the current jmx4perl version).
 
 Alternatively, the mule agent can be downloaded from our maven repository at

@@ -36,7 +36,7 @@ import java.util.Stack;
  * @author roland
  * @since Apr 19, 2009
  */
-public class ArrayHandler implements ObjectToJsonConverter.Handler {
+public class ArrayExtractor implements Extractor {
 
     public Class getType() {
         // Special handler, no specific Type

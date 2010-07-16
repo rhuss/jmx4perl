@@ -1,7 +1,6 @@
 package org.jmx4perl.converter.json.simplifier;
 
 import java.util.Map;
-import java.net.URL;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -30,17 +29,31 @@ import java.net.URL;
  * @author roland
  * @since Jul 27, 2009
  */
-public class UrlHandler extends SimplifierHandler<URL> {
-    public UrlHandler() {
-        super(URL.class);
+public class ClassSimplifier extends SimplifierExtractor<Class> {
+    public ClassSimplifier() {
+        super(Class.class);
     }
 
     @Override
-    void init(Map<String, Extractor<URL>> pStringExtractorMap) {
-        addExtractors(new Object[][] {{ "url", new UrlExtractor() }});
+    void init(Map<String, AttributeExtractor<Class>> pStringExtractorMap) {
+        Object[][] pAttrs = {
+                { "name", new NameAttributeExtractor() },
+                { "interfaces", new InterfaceAttributeExtractor() }
+        };
+        addExtractors(pAttrs);
     }
 
-    private static class UrlExtractor implements Extractor<URL> {
-        public Object extract(URL pUrl) { return pUrl.toExternalForm(); }
+    // ==================================================================================
+    private static class NameAttributeExtractor implements AttributeExtractor<Class> {
+        public Object extract(Class pClass) { return pClass.getName(); }
+    }
+
+    private static class InterfaceAttributeExtractor implements AttributeExtractor<Class> {
+        public Object extract(Class value) throws SkipAttributeException {
+            if (value.isInterface()) {
+                throw new SkipAttributeException();
+            }
+            return value.getInterfaces();
+        }
     }
 }

@@ -52,4 +52,14 @@ public class JmxRequestBuilder {
         request.setValue(pValue);
         return this;
     }
+
+    public JmxRequestBuilder extraArgs(List<String> pExtraArgs) {
+        request.setExtraArgs(pExtraArgs);
+        return this;
+    }
+
+    public JmxRequestBuilder extraArgs(String ... pExtraArgs) {
+        request.setExtraArgs(Arrays.asList(pExtraArgs));
+        return this;
+    }
 }

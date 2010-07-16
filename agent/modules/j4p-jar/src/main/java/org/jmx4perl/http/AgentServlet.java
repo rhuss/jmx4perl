@@ -1,5 +1,8 @@
-package org.jmx4perl;
+package org.jmx4perl.http;
 
+import org.jmx4perl.*;
+import org.jmx4perl.backend.BackendManager;
+import org.jmx4perl.ConfigKey;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
@@ -87,7 +90,7 @@ public class AgentServlet extends HttpServlet {
     }
 
     @Override
-    public void init(ServletConfig pConfig) throws ServletException {
+    public final void init(ServletConfig pConfig) throws ServletException {
         super.init(pConfig);
 
         // Different HTTP request handlers
@@ -100,7 +103,7 @@ public class AgentServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        backendManager.unregisterOwnMBeans();
+        backendManager.destroy();
         super.destroy();
     }
 
@@ -119,7 +122,7 @@ public class AgentServlet extends HttpServlet {
     @SuppressWarnings("PMD.AvoidCatchingThrowable")
     private void handle(ServletRequestHandler pReqHandler,HttpServletRequest pReq, HttpServletResponse pResp) throws IOException {
         JSONAware json = null;
-        int code = 200;
+        int code = 200; // Success
         try {
             // Check access policy
             requestHandler.checkClientIPAccess(pReq.getRemoteHost(),pReq.getRemoteAddr());
@@ -130,6 +133,10 @@ public class AgentServlet extends HttpServlet {
             if (backendManager.isDebug()) {
                 backendManager.info("Response: " + json);
             }
+        } catch (RuntimeMBeanException exp) {
+            JSONObject error = requestHandler.handleThrowable(exp.getTargetException());
+            code = (Integer) error.get("status");
+            json = error;
         } catch (Throwable exp) {
             JSONObject error = requestHandler.handleThrowable(exp);
             code = (Integer) error.get("status");
@@ -138,9 +145,6 @@ public class AgentServlet extends HttpServlet {
             sendResponse(pResp,code,json.toJSONString());
         }
     }
-
-    // Extract an return code. It's the highest status number contained
-    // in within the responnses
 
     private interface ServletRequestHandler {
         JSONAware handleRequest(HttpServletRequest pReq, HttpServletResponse pResp)
@@ -179,12 +183,12 @@ public class AgentServlet extends HttpServlet {
     }
     // =======================================================================
 
-    private Map<Config, String> servletConfigAsMap(ServletConfig pConfig) {
+    private Map<ConfigKey, String> servletConfigAsMap(ServletConfig pConfig) {
         Enumeration e = pConfig.getInitParameterNames();
-        Map<Config,String> ret = new HashMap<Config, String>();
+        Map<ConfigKey,String> ret = new HashMap<ConfigKey, String>();
         while (e.hasMoreElements()) {
             String keyS = (String) e.nextElement();
-            Config key = Config.getByKey(keyS);
+            ConfigKey key = ConfigKey.getByKey(keyS);
             if (key != null) {
                 ret.put(key,pConfig.getInitParameter(keyS));
             }

@@ -12,6 +12,7 @@ use Nagios::Plugin::Functions qw(:codes %STATUS_TEXT);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Carp;
 use Text::ParseWords;
+use Pod::Usage;
 
 our $AUTOLOAD;
 
@@ -55,6 +56,22 @@ sub new {
                 cmd_args => [ @ARGV ]
                };
     bless $self,(ref($class) || $class);
+    if (defined $self->{np}->opts->{doc}) {
+        my $section = $self->{np}->opts->{doc};
+        if ($section) {
+            my $real_section = { 
+                                tutorial => "TUTORIAL",
+                                reference => "REFERENCE",
+                                options => "COMMAND LINE",
+                                config => "CONFIGURATION",
+                           }->{lc $section};
+            if ($real_section) {
+                pod2usage(-verbose => 99, -sections =>  $real_section );
+            }
+        } else {
+            pod2usage(-verbose => 99);
+        }
+    }
     $self->_verify_and_initialize();
     return $self;
 }
@@ -106,19 +123,24 @@ sub execute {
         if (@extra_requests) {
             $self->_send_requests($jmx,@extra_requests);
         }
+
+        # Different outpus for multi checks/single checks
         my ($code,$message) = $self->_exit_message($np);
-        my $summary;
-        if ($code eq OK) {
-            $summary = "All " . $nr_checks . " checks OK";            
-        } else {
-            my $nr_warnings = scalar(@{$np->messages->{warning} || []});
-            my $nr_errors = scalar(@{$np->messages->{critical} || []});
-            my @parts;
-            push @parts,"$nr_errors error" . ($nr_errors > 1 ? "s" : "") if $nr_errors;
-            push @parts,"$nr_warnings warning" . ($nr_warnings > 1 ? "s" : "") if $nr_warnings;
-            $summary = $nr_warnings + $nr_errors . " of " . $nr_checks . " failed (" . join(" and ",@parts) . ")";
+        if ($nr_checks >1) {
+            my $summary;
+            if ($code eq OK) {
+                $summary = "All " . $nr_checks . " checks OK";            
+            } else {
+                my $nr_warnings = scalar(@{$np->messages->{warning} || []});
+                my $nr_errors = scalar(@{$np->messages->{critical} || []});
+                my @parts;
+                push @parts,"$nr_errors error" . ($nr_errors > 1 ? "s" : "") if $nr_errors;
+                push @parts,"$nr_warnings warning" . ($nr_warnings > 1 ? "s" : "") if $nr_warnings;
+                $summary = $nr_warnings + $nr_errors . " of " . $nr_checks . " failed (" . join(" and ",@parts) . ")";
+            }
+            $message = $summary . "\n" . $message;
         }
-        $np->nagios_exit($code, $summary . "\n" . $message);
+        $np->nagios_exit($code, $message);
     };
     if ($@) {
         # p1.pl, the executing script of the embedded nagios perl interpreter
@@ -480,12 +502,12 @@ sub _create_nagios_plugin {
           "                      [--config <config-file>] [--check <check-name>] [--server <server-alias>] [-v] [--help]\n" .
           "                      arg1 arg2 ....",
           version => $JMX::Jmx4Perl::VERSION,
-          url => "http://www.consol.com/opensource/nagios/",
+          url => "http://www.jmx4perl.org",
           plugin => "check_jmx4perl",
           blurb => "This plugin checks for JMX attribute values on a remote Java application server",
           extra => "\n\nYou need to deploy j4p.war on the target application server or as an intermediate proxy.\n" .
           "Please refer to the documentation for JMX::Jmx4Perl for further details.\n\n" .
-          "For a comprehensive documentation please consult the man page of check_jmx4perl"
+          "For a complete documentation please consult the man page of check_jmx4perl or use the option --doc"
          );
     $np->shortname(undef);
     $np->add_arg(
@@ -598,6 +620,10 @@ sub _create_nagios_plugin {
     $np->add_arg(
                  spec => "check=s",
                  help => "Name of a check configuration as defined in the configuration file"
+                );
+    $np->add_arg(
+                 spec => "doc:s",
+                 help => "Print the documentation of check_jmx4perl, optionally specifying the section (tutorial, args, config)"
                 );
     $np->getopts();
     return $np;

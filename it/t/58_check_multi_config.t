@@ -8,7 +8,7 @@ use It;
 
 require "check_jmx4perl/base.pl";
 
-my $jmx = It->new(verbose =>0)->jmx4perl;
+my $jmx = It->new(verbose =>1)->jmx4perl;
 my ($ret,$content);
 
 # ====================================================
@@ -22,7 +22,7 @@ is($ret,0,"Memory with value OK");
 ok($content =~ /\(base\)/,"First level inheritance");
 ok($content =~ /\(grandpa\)/,"Second level inheritance");
 ok($content =~ /Heap Memory/,"Heap Memory Included");
-ok($content =~ /Perm Gen/,"Perm Gen included");
+ok($content =~ /NonHeap Memory/,"NonHeap Memory included");
 
 # Nested multichecks
 ($ret,$content) = &exec_check_perl4jmx("--config $config_file --check nested"); 
@@ -32,7 +32,7 @@ ok($content =~ /\(grandpa\)/,"Second level inheritance");
 ok($content =~ /Thread-Count/,"Threads");
 ok($content =~ /'Thread-Count'/,"Threads");
 ok($content =~ /Heap Memory/,"Heap Memory Included");
-ok($content =~ /Perm Gen/,"Perm Gen included");
+ok($content =~ /NonHeap Memory/,"Non Heap Memory included");
 
 # Multicheck with reference to checks with parameters
 ($ret,$content) = &exec_check_perl4jmx("--config $config_file --check with_inner_args"); 

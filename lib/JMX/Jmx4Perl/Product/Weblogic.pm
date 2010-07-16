@@ -55,7 +55,7 @@ sub _try_server_domain {
       ("server_domain",
        "com.bea:Name=RuntimeService,Type=weblogic.management.mbeanservers.runtime.RuntimeServiceMBean",
        "DomainConfiguration",
-       "canonicalName");
+       "objectName");
 }
 
 sub jsr77 {

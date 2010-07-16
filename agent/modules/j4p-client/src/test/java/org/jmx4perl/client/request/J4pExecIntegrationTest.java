@@ -1,18 +1,14 @@
 package org.jmx4perl.client.request;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
 import javax.management.MalformedObjectNameException;
 
-import org.jmx4perl.client.J4pException;
-import org.jmx4perl.client.J4pRemoteException;
-import org.jmx4perl.client.response.J4pExecResponse;
-import org.json.simple.parser.ParseException;
-import org.junit.Test;
+import org.jmx4perl.client.exception.J4pException;
+import org.jmx4perl.client.exception.J4pRemoteException;
+import org.testng.annotations.Test;
 
-import static org.junit.Assert.*;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * @author roland
@@ -20,9 +16,12 @@ import static org.junit.Assert.*;
  */
 public class J4pExecIntegrationTest extends AbstractJ4pIntegrationTest {
 
+
     @Test
     public void simpleOperation() throws MalformedObjectNameException, J4pException {
-        J4pExecRequest request = new J4pExecRequest(itSetup.getOperationMBean(),"fetchNumber","inc");
+        J4pExecRequest request = new J4pExecRequest(itSetup.getOperationMBean(),"reset");
+        j4pClient.execute(request);
+        request = new J4pExecRequest(itSetup.getOperationMBean(),"fetchNumber","inc");
         J4pExecResponse resp = j4pClient.execute(request);
         assertEquals("0",resp.getValue());
         resp = j4pClient.execute(request);
@@ -36,7 +35,7 @@ public class J4pExecIntegrationTest extends AbstractJ4pIntegrationTest {
             J4pExecResponse resp = j4pClient.execute(request);
             fail();
         } catch (J4pRemoteException exp) {
-            assertEquals(500,exp.getStatus());
+            assertEquals(400,exp.getStatus());
             assertTrue(exp.getMessage().contains("IllegalArgumentException"));
             assertTrue(exp.getRemoteStackTrace().contains("IllegalArgumentException"));
         }

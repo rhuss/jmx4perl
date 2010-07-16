@@ -1,11 +1,10 @@
-package org.jmx4perl.client.response;
+package org.jmx4perl.client.request;
 
 import java.util.*;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.jmx4perl.client.request.J4pReadRequest;
 import org.json.simple.JSONObject;
 
 /**
@@ -17,7 +16,7 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since Apr 26, 2010
  */
-public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
+public final class J4pReadResponse extends J4pResponse<J4pReadRequest> {
 
     /**
      * Constructor, which should be used directly.
@@ -25,7 +24,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      * @param pRequest the request which lead to this response.
      * @param pJsonResponse the JSON response as obtained from the server agent.
      */
-    public J4pReadResponse(J4pReadRequest pRequest, JSONObject pJsonResponse) {
+    J4pReadResponse(J4pReadRequest pRequest, JSONObject pJsonResponse) {
         super(pRequest, pJsonResponse);
     }
 
@@ -40,7 +39,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      *                                      {@link ObjectName}s. Shouldnt occur, though.
      */
     public Collection<ObjectName> getObjectNames() throws MalformedObjectNameException {
-        ObjectName mBean = request.getObjectName();
+        ObjectName mBean = getRequest().getObjectName();
         if (mBean.isPattern()) {
             // The result value contains the list of fetched object names
             JSONObject values = getValue();
@@ -64,7 +63,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      * @return a collection of attribute names
      */
     public Collection<String> getAttributes(ObjectName pObjectName) {
-        ObjectName requestMBean = request.getObjectName();
+        ObjectName requestMBean = getRequest().getObjectName();
         if (requestMBean.isPattern()) {
             // We need to got down one level in the returned values
             JSONObject attributes = getAttributesForObjectNameWithPatternRequest(pObjectName);
@@ -88,6 +87,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      *         a returned from the returned list.
      */
     public Collection<String> getAttributes() {
+        J4pReadRequest request = getRequest();
         ObjectName requestBean = request.getObjectName();
         if (requestBean.isPattern()) {
             throw new IllegalArgumentException(
@@ -122,7 +122,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      *         or attributes.
      */
     public <V> V getValue(ObjectName pObjectName,String pAttribute) {
-        ObjectName requestMBean = request.getObjectName();
+        ObjectName requestMBean = getRequest().getObjectName();
         if (requestMBean.isPattern()) {
             JSONObject mAttributes = getAttributesForObjectNameWithPatternRequest(pObjectName);
             if (!mAttributes.containsKey(pAttribute)) {
@@ -149,6 +149,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
      * is called with a <code>null</code> argument, but the request leads to multiple attribute return values.
      */
     public <V> V getValue(String pAttribute) {
+        J4pReadRequest request = getRequest();
         ObjectName requestBean = request.getObjectName();
         if (requestBean.isPattern()) {
             throw new IllegalArgumentException(
@@ -178,7 +179,7 @@ public class J4pReadResponse extends J4pResponse<J4pReadRequest> {
     // ============================================================================================================
 
     private JSONObject getAttributesForObjectNameWithPatternRequest(ObjectName pObjectName) {
-        ObjectName pMBeanFromRequest = request.getObjectName();
+        ObjectName pMBeanFromRequest = getRequest().getObjectName();
         ObjectName objectName = pObjectName == null ? pMBeanFromRequest : pObjectName;
         JSONObject values = getValue();
         JSONObject attributes = (JSONObject) values.get(objectName.getCanonicalName());

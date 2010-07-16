@@ -5,11 +5,12 @@ import java.util.List;
 
 import javax.management.MalformedObjectNameException;
 
-import org.jmx4perl.client.*;
-import org.jmx4perl.client.response.*;
-import org.junit.Test;
+import org.jmx4perl.client.exception.*;
+import org.testng.annotations.Test;
 
-import static org.junit.Assert.*;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * @author roland
@@ -36,16 +37,19 @@ public class BulkRequestIntegrationTest extends AbstractJ4pIntegrationTest {
         J4pReadRequest req1 = new J4pReadRequest(itSetup.getAttributeMBean(),"ComplexNestedValue");
         req1.setPath("Blub/0");
         J4pReadRequest req2 = new J4pReadRequest("bla:type=blue","Sucks");
+        J4pReadRequest req3 = new J4pReadRequest("java.lang:type=Memory","HeapMemoryUsage");
         try {
-            List<J4pReadResponse> resp = j4pClient.execute(Arrays.asList(req1,req2));
+            List<J4pReadResponse> resp = j4pClient.execute(Arrays.asList(req1,req2,req3));
             fail();
         } catch (J4pBulkRemoteException e) {
             List results = e.getResults();
-            assertEquals(2,results.size());
+            assertEquals(3,results.size());
             results = e.getResponses();
-            assertEquals(1,results.size());
+            assertEquals(2,results.size());
             assertTrue(results.get(0) instanceof J4pReadResponse);
             assertEquals("Bla",((J4pReadResponse) results.get(0)).<String>getValue());
+            assertTrue(results.get(1) instanceof J4pReadResponse);
+
             results = e.getRemoteExceptions();
             assertEquals(1,results.size());
             assertTrue(results.get(0) instanceof J4pRemoteException);

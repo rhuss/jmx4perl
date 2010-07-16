@@ -54,12 +54,23 @@ public class ExecHandler extends JsonRequestHandler {
 
     @Override
     protected void checkForType(JmxRequest pRequest) {
-        if (!restrictor.isOperationAllowed(pRequest.getObjectName(),pRequest.getOperation())) {
+        if (!getRestrictor().isOperationAllowed(pRequest.getObjectName(),pRequest.getOperation())) {
             throw new SecurityException("Operation " + pRequest.getOperation() +
                     " forbidden for MBean " + pRequest.getObjectNameAsString());
         }
     }
 
+    /**
+     * Execute an JMX operation. The operation name is taken from the request, as well as the
+     * arguments to use. If the operation is given in the format "op(type1,type2,...)"
+     * (e.g "getText(java.lang.String,int)" then the argument types are taken into account
+     * as well. This way, overloaded JMX operation can be used. If an overloaded JMX operation
+     * is called without specifying the argument types, then an exception is raised.
+     *
+     * @param server server to try
+     * @param request request to process from where the operation and its arguments are extracted.
+     * @return the return value of the operation call
+     */
     @Override
     public Object doHandleRequest(MBeanServerConnection server, JmxRequest request)
             throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException, IOException {
@@ -85,6 +96,13 @@ public class ExecHandler extends JsonRequestHandler {
         return server.invoke(request.getObjectName(),types.operationName,params,types.paramClasses);
     }
 
+    /**
+     * Extract the operation and type list from a given request
+     *
+     * @param pServer server from which obtain the MBean type info
+     * @param pRequest the exec request
+     * @return combined object containing the operation name and parameter classes
+     */
     private OperationAndParamType extractOperationTypes(MBeanServerConnection pServer, JmxRequest pRequest)
             throws ReflectionException, InstanceNotFoundException, IOException {
         List<String> opArgs = splitOperation(pRequest.getOperation());
@@ -92,51 +110,86 @@ public class ExecHandler extends JsonRequestHandler {
         List<String> types = null;
         if (opArgs.size() > 1) {
             types = opArgs.subList(1,opArgs.size());
+        } else {
+            List<MBeanParameterInfo[]> paramInfos = extractMBeanParameterInfos(pServer, pRequest, operation);
+            if (paramInfos.size() == 1) {
+                return new OperationAndParamType(operation,paramInfos.get(0));
+            } else {
+                // type requested from the operation
+                throw new IllegalArgumentException(
+                        getErrorMessageForMissingSignature(pRequest, operation, paramInfos));
+            }
         }
 
+        List<MBeanParameterInfo[]> paramInfos = extractMBeanParameterInfos(pServer, pRequest, operation);
+        if (!hasMatchingSignature(types, paramInfos)) {
+            throw new IllegalArgumentException(
+                    "No operation " + pRequest.getOperation() + " on MBean " + pRequest.getObjectNameAsString() + " exists. " +
+                            "Known signatures: " + signatureToString(paramInfos));
+        }
+        return new OperationAndParamType(operation,types);
+    }
 
+    /**
+     * Extract a list of operation signatures which match a certain operation name. The returned list
+     * can contain multiple signature in case of overloaded JMX operations.
+     *
+     * @param pServer server from where to fetch the MBean info for a given request's object name
+     * @param pRequest the JMX request
+     * @param pOperation the operation whose signature should be extracted
+     * @return a list of signature. If the operation is overloaded, this contains mutliple entries,
+     *         otherwise only a single entry is contained
+     */
+    private List<MBeanParameterInfo[]> extractMBeanParameterInfos(MBeanServerConnection pServer, JmxRequest pRequest,
+                                                                  String pOperation)
+            throws InstanceNotFoundException, ReflectionException, IOException {
         try {
             MBeanInfo mBeanInfo = pServer.getMBeanInfo(pRequest.getObjectName());
             List<MBeanParameterInfo[]> paramInfos = new ArrayList<MBeanParameterInfo[]>();
             for (MBeanOperationInfo opInfo : mBeanInfo.getOperations()) {
-                if (opInfo.getName().equals(operation)) {
+                if (opInfo.getName().equals(pOperation)) {
                     paramInfos.add(opInfo.getSignature());
                 }
             }
             if (paramInfos.size() == 0) {
-                throw new IllegalArgumentException("No operation " + operation +
+                throw new IllegalArgumentException("No operation " + pOperation +
                         " found on MBean " + pRequest.getObjectNameAsString());
             }
-            if (types == null && paramInfos.size() > 1) {
-                    throw new IllegalArgumentException(
-                            getErrorMessageForMissingSignature(pRequest, operation, paramInfos));
-            }
-            OUTER:
-            for (MBeanParameterInfo[]  infos : paramInfos) {
-                String[] paramClasses = new String[infos.length];
-                if (types != null && types.size() != infos.length) {
-                    // Number of arguments dont match
-                    continue OUTER;
-                }
-                for (int i=0;i<infos.length;i++) {
-                    String type = infos[i].getType();
-                    if (types != null && !type.equals(types.get(i))) {
-                        // Non-matching signature
-                        continue OUTER;
-                    }
-                    paramClasses[i] = type;
-                }
-                // If we did it until here, we are finished.
-                return new OperationAndParamType(operation,paramClasses);
-            }
-            throw new IllegalArgumentException(
-                    "No operation " + pRequest.getOperation() + " on MBean " + pRequest.getObjectNameAsString() + " exists. " +
-                            "Known signatures: " + signatureToString(paramInfos));
-        } catch (IntrospectionException e) {
+            return paramInfos;
+        }  catch (IntrospectionException e) {
             throw new IllegalStateException("Cannot extract MBeanInfo for " + pRequest.getObjectNameAsString());
         }
     }
 
+    /**
+     * Check whether a matching signature exists from a list of MBean parameter infos. The match is done against a list of types
+     * (in string form) which was extracted from the request
+     *
+     * @param pTypes types to match agains. These are full qualified class names in string representation
+     * @param pParamInfos list of parameter infos
+     * @return a string
+     */
+    private boolean hasMatchingSignature(List<String> pTypes, List<MBeanParameterInfo[]> pParamInfos) {
+        OUTER:
+        for (MBeanParameterInfo[]  infos : pParamInfos) {
+            if (pTypes.size() != infos.length) {
+                // Number of arguments dont match
+                continue OUTER;
+            }
+            for (int i=0;i<infos.length;i++) {
+                String type = infos[i].getType();
+                if (!type.equals(pTypes.get(i))) {
+                    // Non-matching signature
+                    continue OUTER;
+                }
+            }
+            // If we did it until here, we are finished.
+            return true;
+        }
+        return false;
+    }
+
+    // Extract operation and optional type parameters
     private List<String> splitOperation(String pOperation) {
         List<String> ret = new ArrayList<String>();
         Pattern p = Pattern.compile("^(.*)\\((.*)\\)$");
@@ -179,10 +232,18 @@ public class ExecHandler extends JsonRequestHandler {
     // ==================================================================================
     // Used for parsing
     private static final class OperationAndParamType {
-        @SuppressWarnings("PMD.ArrayIsStoredDirectly")
-        private OperationAndParamType(String pOperationName, String[] pParamClazzes) {
+        private OperationAndParamType(String pOperationName, List<String> pParamClazzes) {
             operationName = pOperationName;
-            paramClasses = pParamClazzes;
+            paramClasses = new ArrayList<String>(pParamClazzes).toArray(new String[pParamClazzes.size()]);
+        }
+
+        private OperationAndParamType(String pOperationName, MBeanParameterInfo[] pParameterInfos) {
+            operationName = pOperationName;
+            paramClasses = new String[pParameterInfos.length];
+            int i=0;
+            for (MBeanParameterInfo info : pParameterInfos) {
+                paramClasses[i++] = info.getType();
+            }
         }
 
         private String operationName;

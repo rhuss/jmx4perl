@@ -1,10 +1,7 @@
 package org.jmx4perl.converter.json.simplifier;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Map;
-
-import javax.management.ObjectName;
+import java.net.URL;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -30,26 +27,20 @@ import javax.management.ObjectName;
  */
 
 /**
- * Special deserialization for ObjectNames to their canonical format
- *
  * @author roland
  * @since Jul 27, 2009
  */
-public class ObjectNameHandler extends SimplifierHandler<ObjectName> {
-
-    public ObjectNameHandler() {
-        super(ObjectName.class);
+public class UrlSimplifier extends SimplifierExtractor<URL> {
+    public UrlSimplifier() {
+        super(URL.class);
     }
 
-    // ==================================================================================
     @Override
-    void init(Map<String, Extractor<ObjectName>> pExtractorMap) {
-        addExtractors(new Object[][] {{ "objectName", new ObjectNameExtractor() }});
+    void init(Map<String, AttributeExtractor<URL>> pStringExtractorMap) {
+        addExtractors(new Object[][] {{ "url", new UrlAttributeExtractor() }});
     }
 
-    private static class ObjectNameExtractor implements Extractor<ObjectName> {
-        public Object extract(ObjectName value) throws SkipAttributeException {
-            return value.toString();
-        }
+    private static class UrlAttributeExtractor implements AttributeExtractor<URL> {
+        public Object extract(URL pUrl) { return pUrl.toExternalForm(); }
     }
 }

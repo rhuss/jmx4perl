@@ -1,12 +1,9 @@
 package org.jmx4perl.config;
 
 import java.io.*;
-import java.lang.management.ManagementFactory;
-import java.util.Set;
 
 import javax.management.*;
 
-import org.jmx4perl.backend.MBeanServerHandler;
 import org.jmx4perl.history.HistoryKey;
 import org.jmx4perl.history.HistoryStore;
 
@@ -42,15 +39,14 @@ public class Config implements ConfigMBean,MBeanRegistration {
 
     private HistoryStore historyStore;
     private DebugStore debugStore;
-    private MBeanServerHandler mBeanServerHandler;
 
-    // Name under which this bean gets registered
-    public static final String OBJECT_NAME = "jmx4perl:type=Config";
+    // Optional domain to used fo registering this MBean
+    private String qualifier;
 
-    public Config(HistoryStore pHistoryStore, DebugStore pDebugStore, MBeanServerHandler pMBeanServerHandler) {
+    public Config(HistoryStore pHistoryStore, DebugStore pDebugStore, String pQualifier) {
         historyStore = pHistoryStore;
         debugStore = pDebugStore;
-        mBeanServerHandler = pMBeanServerHandler;
+        qualifier = pQualifier;
     }
 
     public void setHistoryEntriesForAttribute(String pMBean, String pAttribute, String pPath, String pTarget, int pMaxEntries)
@@ -70,55 +66,6 @@ public class Config implements ConfigMBean,MBeanRegistration {
 
     public String debugInfo() {
         return debugStore.debugInfo();
-    }
-
-    public String mBeanServerInfo() {
-        StringBuffer ret = new StringBuffer();
-        Set<MBeanServer> mBeanServers = mBeanServerHandler.getMBeanServers();
-
-        ret.append("Found ").append(mBeanServers.size()).append(" MBeanServers\n");
-        for (MBeanServer s : mBeanServers) {
-            ret.append("    ")
-                    .append("++ ")
-                    .append(s.toString())
-                    .append(": default domain = ")
-                    .append(s.getDefaultDomain())
-                    .append(", ")
-                    .append(s.getMBeanCount())
-                        .append(" MBeans\n");
-
-            ret.append("        Domains:\n");
-            boolean javaLangFound = false;
-            for (String d : s.getDomains()) {
-                if ("java.lang".equals(d)) {
-                    javaLangFound = true;
-                }
-                appendDomainInfo(ret, s, d);
-            }
-            if (!javaLangFound) {
-                // JBoss fails to list java.lang in its domain list
-                appendDomainInfo(ret,s,"java.lang");
-            }
-        }
-        ret.append("\n");
-        ret.append("Platform MBeanServer: ")
-                .append(ManagementFactory.getPlatformMBeanServer())
-                .append("\n");
-        return ret.toString();
-    }
-
-    private void appendDomainInfo(StringBuffer pRet, MBeanServer pServer, String pDomain) {
-        try {
-            pRet.append("         == ").append(pDomain).append("\n");
-            Set<ObjectInstance> beans = pServer.queryMBeans(new ObjectName(pDomain + ":*"),null);
-            for (ObjectInstance o : beans) {
-                String n = o.getObjectName().getCanonicalKeyPropertyListString();
-                pRet.append("              ").append(n).append("\n");
-            }
-        } catch (MalformedObjectNameException e) {
-            // Shouldnt happen
-            pRet.append("              INTERNAL ERROR: ").append(e).append("\n");
-        }
     }
 
     public void resetDebugInfo() {
@@ -156,12 +103,16 @@ public class Config implements ConfigMBean,MBeanRegistration {
         return bOut.size();
     }
 
+    public String getObjectName() {
+        return OBJECT_NAME + (qualifier != null ? "," + qualifier : "");
+    }
     // ========================================================================
 
     // Provide our own name on registration
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws MalformedObjectNameException {
-        return new ObjectName(OBJECT_NAME);
+        return new ObjectName(getObjectName());
     }
+
 
     public void postRegister(Boolean registrationDone) {
     }

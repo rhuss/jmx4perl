@@ -2,7 +2,6 @@ package org.jmx4perl.client.request;
 
 import java.util.List;
 
-import org.jmx4perl.client.response.J4pResponse;
 import org.json.simple.JSONObject;
 
 /**

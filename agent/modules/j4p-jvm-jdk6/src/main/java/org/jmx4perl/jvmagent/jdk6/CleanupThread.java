@@ -27,42 +27,63 @@ class CleanUpThread extends Thread {
     public void run() {
         try {
             boolean retry = true;
-            while (retry) {
-                Thread[] threads = null;
-                int nrThreads = 0;
-                boolean fits = false;
-                int inc = 50;
-                while (!fits) {
-                    try {
-                        threads = new Thread[Thread.activeCount()+inc];
-                        nrThreads = Thread.enumerate(threads);
-                        fits = true;
-                    } catch (ArrayIndexOutOfBoundsException exp) {
-                        inc += 50;
-                    }
-                }
-                retry = false;
-                for (int i=0;i<nrThreads;i++) {
-                    final Thread t = threads[i];
-                    if (t.isDaemon() ||
-                            t.getThreadGroup().equals(threadGroup) ||
-                            t.getName().startsWith("DestroyJavaVM")) {
-                        continue;
-                    }
-                    try {
-                        t.join();
-                    } catch (Exception ex) {
-                        // Ignore that one.
-                    } finally {
-                        retry = true;
-                    }
-                    break;
-                }
+            while(retry) {
+                // Get all threads, wait for 'foreign' (== not our own threads)
+                // and when all finished, finish as well. This is in order to avoid
+                // hanging endless because the HTTP Serer thread cant be set into
+                // daemon mode
+                Thread threads[] = enumerateThreads();
+                retry = joinThreads(threads);
             }
         } finally {
             // All non-daemon threads stopped ==> server can be stopped, too
             server.stop(0);
         }
+    }
+
+
+    // Enumerate all active threads
+    private Thread[] enumerateThreads() {
+        boolean fits = false;
+        int inc = 50;
+        Thread[] threads = null;
+        int nrThreads = 0;
+        while (!fits) {
+            try {
+                threads = new Thread[Thread.activeCount()+inc];
+                nrThreads = Thread.enumerate(threads);
+                fits = true;
+            } catch (ArrayIndexOutOfBoundsException exp) {
+                inc += 50;
+            }
+        }
+        // Trim array
+        Thread ret[] = new Thread[nrThreads];
+        System.arraycopy(threads,0,ret,0,nrThreads);
+        return ret;
+    }
+
+    // Join threads, return false if only our own threads are left.
+    private boolean joinThreads(Thread pThreads[]) {
+        for (int i=0;i< pThreads.length;i++) {
+            final Thread t = pThreads[i];
+            if (t.isDaemon() ||
+                    t.getThreadGroup().equals(threadGroup) ||
+                    t.getName().startsWith("DestroyJavaVM")) {
+                // These are threads which should not prevent the server from stopping.
+                continue;
+            }
+            try {
+                t.join();
+            } catch (Exception ex) {
+                // Ignore that one.
+            } finally {
+                // We just joined a 'foreign' thread, so we redo the loop
+                return true;
+            }
+        }
+        // All 'foreign' threads has finished, hence we are prepared to stop
+        return false;
     }
 }
 

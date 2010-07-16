@@ -1,4 +1,4 @@
-package org.jmx4perl.client;
+package org.jmx4perl.client.exception;
 
 import org.jmx4perl.client.request.J4pRequest;
 
@@ -50,5 +50,14 @@ public class J4pRemoteException extends J4pException {
      */
     public String getRemoteStackTrace() {
         return remoteStacktrace;
+    }
+
+    /**
+     * Get the request leading to this exception
+     *
+     * @return request which caused this exception
+     */
+    public J4pRequest getRequest() {
+        return request;
     }
 }

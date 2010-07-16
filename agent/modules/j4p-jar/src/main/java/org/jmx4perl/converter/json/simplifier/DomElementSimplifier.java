@@ -1,5 +1,7 @@
 package org.jmx4perl.converter.json.simplifier;
 
+import org.w3c.dom.Element;
+
 import java.util.Map;
 
 /*
@@ -26,34 +28,38 @@ import java.util.Map;
  */
 
 /**
+ * Special deserialization for DOM Elements to shorten the info
+ *
  * @author roland
  * @since Jul 27, 2009
  */
-public class ClassHandler extends SimplifierHandler<Class> {
-    public ClassHandler() {
-        super(Class.class);
+public class DomElementSimplifier extends SimplifierExtractor<Element> {
+
+
+    public DomElementSimplifier() {
+        super(Element.class);
     }
 
+    // ==================================================================================
     @Override
-    void init(Map<String, Extractor<Class>> pStringExtractorMap) {
+    void init(Map<String, AttributeExtractor<Element>> pExtractorMap) {
         Object[][] pAttrs = {
-                { "name", new NameExtractor() },
-                { "interfaces", new InterfaceExtractor() }
+                { "name", new NameAttributeExtractor() },
+                { "value", new ValueAttributeExtractor() },
+                { "hasChildNodes", new ChildAttributeExtractor() }
         };
         addExtractors(pAttrs);
     }
 
     // ==================================================================================
-    private static class NameExtractor implements Extractor<Class> {
-        public Object extract(Class pClass) { return pClass.getName(); }
+    private static class ValueAttributeExtractor implements AttributeExtractor<Element> {
+        public Object extract(Element element) { return element.getNodeValue(); }
+    }
+    private static class NameAttributeExtractor implements AttributeExtractor<Element> {
+        public Object extract(Element element) { return element.getNodeName(); }
+    }
+    private static class ChildAttributeExtractor implements AttributeExtractor<Element> {
+        public Object extract(Element element) { return element.hasChildNodes(); }
     }
 
-    private static class InterfaceExtractor implements Extractor<Class> {
-        public Object extract(Class value) throws SkipAttributeException {
-            if (value.isInterface()) {
-                throw new SkipAttributeException();
-            }
-            return value.getInterfaces();
-        }
-    }
 }

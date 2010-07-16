@@ -1,4 +1,4 @@
-package org.jmx4perl.client;
+package org.jmx4perl.client.exception;
 
 /**
  * Base exception potentially raised when communicating with the server

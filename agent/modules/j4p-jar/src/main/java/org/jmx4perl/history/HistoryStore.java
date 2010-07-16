@@ -55,16 +55,31 @@ public class HistoryStore implements Serializable {
     private static final String KEY_VALUE = "value";
     private static final String KEY_TIMESTAMP = "timestamp";
 
+    /**
+     * Constructor for a history store
+     *
+     * @param pTotalMaxEntries number of entries to hold at max. Even when configured, this maximum can not
+     *        be overwritten. This is a hard limit.
+     */
     public HistoryStore(int pTotalMaxEntries) {
         globalMaxEntries = pTotalMaxEntries;
         historyStore = new HashMap<HistoryKey, HistoryEntry>();
         patterns = new HashMap<HistoryKey, Integer>();
     }
 
-    public int getGlobalMaxEntries() {
+    /**
+     * Get the number
+     * @return
+     */
+    public synchronized int getGlobalMaxEntries() {
         return globalMaxEntries;
     }
 
+    /**
+     * Set the global maximum limit for history entries
+     *
+     * @param pGlobalMaxEntries limit
+     */
     public synchronized void setGlobalMaxEntries(int pGlobalMaxEntries) {
         globalMaxEntries = pGlobalMaxEntries;
         // Refresh all entries
@@ -82,7 +97,7 @@ public class HistoryStore implements Serializable {
      * @param pMaxEntries number of maximal entries. If larger than globalMaxEntries,
      * then globalMaxEntries is used instead.
      */
-    public void configure(HistoryKey pKey,int pMaxEntries) {
+    public synchronized void configure(HistoryKey pKey,int pMaxEntries) {
         int maxEntries = pMaxEntries > globalMaxEntries ? globalMaxEntries : pMaxEntries;
 
         // Remove entries if set to 0
@@ -112,36 +127,21 @@ public class HistoryStore implements Serializable {
         }
     }
 
-    // Remove entries
-    private void removeEntries(HistoryKey pKey) {
-        if (pKey.isMBeanPattern()) {
-            patterns.remove(pKey);
-            List<HistoryKey> toRemove = new ArrayList<HistoryKey>();
-            for (HistoryKey key : historyStore.keySet()) {
-                if (pKey.matches(key)) {
-                    toRemove.add(key);
-                }
-            }
-            // Avoid concurrent modification exceptions
-            for (HistoryKey key : toRemove) {
-                historyStore.remove(key);
-            }
-        } else {
-            HistoryEntry entry = historyStore.get(pKey);
-            if (entry != null) {
-                historyStore.remove(pKey);
-            }
-        }
-    }
-
     /**
-     * Reset the complete store
+     * Reset the complete store.
      */
     public synchronized void reset() {
         historyStore = new HashMap<HistoryKey, HistoryEntry>();
         patterns = new HashMap<HistoryKey, Integer>();
     }
 
+    /**
+     * Update the history store with the value of an an read, write or execute operation. Also, the timestamp
+     * of the insertion is recorded. Also, the recorded history values are added to the given json value.
+     *
+     * @param pJmxReq request for which an entry should be added in this history store
+     * @param pJson the JSONObject to which to add the history.
+     */
     public synchronized void updateAndAdd(JmxRequest pJmxReq, JSONObject pJson) {
         long timestamp = System.currentTimeMillis() / 1000;
         pJson.put(KEY_TIMESTAMP,timestamp);
@@ -165,6 +165,28 @@ public class HistoryStore implements Serializable {
             }
         } else if (type == READ) {
             updateReadHistory(pJmxReq, pJson, timestamp);
+        }
+    }
+
+    // Remove entries
+    private void removeEntries(HistoryKey pKey) {
+        if (pKey.isMBeanPattern()) {
+            patterns.remove(pKey);
+            List<HistoryKey> toRemove = new ArrayList<HistoryKey>();
+            for (HistoryKey key : historyStore.keySet()) {
+                if (pKey.matches(key)) {
+                    toRemove.add(key);
+                }
+            }
+            // Avoid concurrent modification exceptions
+            for (HistoryKey key : toRemove) {
+                historyStore.remove(key);
+            }
+        } else {
+            HistoryEntry entry = historyStore.get(pKey);
+            if (entry != null) {
+                historyStore.remove(pKey);
+            }
         }
     }
 

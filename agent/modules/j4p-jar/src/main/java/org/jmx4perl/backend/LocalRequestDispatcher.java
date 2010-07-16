@@ -19,21 +19,39 @@ import javax.management.*;
  */
 public class LocalRequestDispatcher implements RequestDispatcher {
 
-
-
     // Handler for finding and merging the various MBeanHandler
     private MBeanServerHandler mBeanServerHandler;
 
     private RequestHandlerManager requestHandlerManager;
 
+    // MBean of configuration MBean
+    private ObjectName configMBeanName;
+
+    // Name of the exposed MBeanServerHandler-MBean
+    private ObjectName mbeanServerHandlerMBeanName;
+
+    // An (optional) qualifier for registering MBeans.
+    private String qualifier;
+
+    /**
+     * Create a new local dispatcher which accesses local MBeans.
+     *
+     * @param objectToJsonConverter a serializer to JSON
+     * @param stringToObjectConverter a de-serializer for arguments
+     * @param restrictor restrictor which checks the access for various operations
+     * @param pQualifier optional qualifier for registering own MBean to allow for multiple J4P instances in the VM
+     */
     public LocalRequestDispatcher(ObjectToJsonConverter objectToJsonConverter,
                                   StringToObjectConverter stringToObjectConverter,
-                                  Restrictor restrictor) {
+                                  Restrictor restrictor, String pQualifier) {
         requestHandlerManager = new RequestHandlerManager(objectToJsonConverter,stringToObjectConverter,restrictor);
         // Get all MBean servers we can find. This is done by a dedicated
         // handler object
-        mBeanServerHandler = new MBeanServerHandler();
+        mBeanServerHandler = new MBeanServerHandler(pQualifier);
+        qualifier = pQualifier;
     }
+
+
 
     // Can handle any request
     public boolean canHandle(JmxRequest pJmxRequest) {
@@ -51,23 +69,43 @@ public class LocalRequestDispatcher implements RequestDispatcher {
         return mBeanServerHandler.dispatchRequest(handler, pJmxReq);
     }
 
-    public void unregisterLocalMBean(ObjectName pMBeanName)
+    public void init(HistoryStore pHistoryStore, DebugStore pDebugStore)
+            throws MalformedObjectNameException, MBeanRegistrationException, InstanceAlreadyExistsException, NotCompliantMBeanException {
+        Config config = new Config(pHistoryStore,pDebugStore,qualifier);
+        configMBeanName = registerMBean(config,config.getObjectName());
+
+        mbeanServerHandlerMBeanName = registerMBean(mBeanServerHandler,mBeanServerHandler.getObjectName());
+    }
+
+    public void destroy() throws MalformedObjectNameException, InstanceNotFoundException, MBeanRegistrationException {
+        if (configMBeanName != null) {
+            unregisterMBean(configMBeanName);
+        }
+        if (mbeanServerHandlerMBeanName != null) {
+            unregisterMBean(mbeanServerHandlerMBeanName);
+        }
+    }
+
+
+    public ObjectName registerMBean(Object pMbean,String pName)
+            throws MBeanRegistrationException, NotCompliantMBeanException,
+            MalformedObjectNameException, InstanceAlreadyExistsException {
+        // Websphere adds extra parts to the object name if registered explicitely, but
+        // we need a defined name on the client side. So we register it with 'null' in websphere
+        // and let the bean define its name. On the other side, Resin throws an exception
+        // if registering with a null name, so we have to do this explicite check.
+        return mBeanServerHandler.registerMBean(
+                pMbean,
+                mBeanServerHandler.checkForClass("com.ibm.websphere.management.AdminServiceFactory") ?
+                        null :
+                        pName);
+    }
+
+    public void unregisterMBean(ObjectName pMBeanName)
             throws MBeanRegistrationException, InstanceNotFoundException,
             MalformedObjectNameException {
         mBeanServerHandler.unregisterMBean(pMBeanName);
     }
 
-    public ObjectName registerConfigMBean(HistoryStore pHistoryStore, DebugStore pDebugStore)
-            throws MBeanRegistrationException, NotCompliantMBeanException,
-            MalformedObjectNameException, InstanceAlreadyExistsException {
-        // Websphere adds extra parts to the object name if registered explicitely, but
-        // we need a defined name on the client side. So we register it with 'null' in websphere
-        // and let the bean define its namen. On the others side, Resin throws an exception
-        // if registering with a null name.
-        return mBeanServerHandler.registerMBean(
-                new Config(pHistoryStore,pDebugStore,mBeanServerHandler),
-                mBeanServerHandler.checkForClass("com.ibm.websphere.management.AdminServiceFactory") ?
-                        null :
-                        Config.OBJECT_NAME);
-    }
+
 }

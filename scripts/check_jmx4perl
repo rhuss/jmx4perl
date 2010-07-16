@@ -1,13 +1,38 @@
 #!/usr/bin/perl 
 # nagios: +epn
 
+use FindBin qw ($Bin);
+
+# Used for running directly out of the distrib dir,
+# but we put the lib at last to avoid security issues
+# on a proper installed system
+#BEGIN { push(@INC, qq($Bin/../lib)); }
+use lib qq($Bin/../lib);
+use Nagios::Plugin::Functions;
+use JMX::Jmx4Perl::Nagios::CheckJmx4Perl;
+
+# Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
+# to the usual Nagios conventions and to avoid redundancy in the UI display.
+BEGIN {
+    no warnings 'redefine';
+    *Nagios::Plugin::Functions::get_shortname = sub {
+        return undef;
+    };
+}
+
+# Create new object and use this for the check
+# Hopefully it gets cleaned up aftewards if running
+# within the embedded Nagios perl interpreter. At least, 
+# we don't keep any references.
+JMX::Jmx4Perl::Nagios::CheckJmx4Perl->new(@ARGV)->execute();
+
 =head1 NAME 
 
-check_jmx4perl - Nagios check using jmx4perl for accessing JMX information 
+check_jmx4perl - Nagios plugin using jmx4perl for accessing JMX data remotely
 
 =head1 SYNOPSIS 
 
- # Check used heap memory for absolute values
+ # Check for used heap memory (absolute values)
  check_jmx4perl --url http://localhost:8888/j4p \
                 --name memory_used \
                 --mbean java.lang:type=Memory \
@@ -16,6 +41,20 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --critical 10000000 \
                 --warning   5000000 
 
+ # Check that used heap memory is less than 80% of the available memory
+ check_jmx4perl --url http://localhost:8888/j4p \
+                --alias MEMORY_HEAP_USED \
+                --base MEMORY_HEAP_MAX \ 
+                --critical :80
+
+ # Use predefined checks in a configuration file with a server alias
+ # Server alias is 'webshop', check is about requests per minute for the 
+ # servlet 'socks_shop'
+ check_jmx4perl --config /etc/nagios/check_jmx4perl/tomcat.cfg
+                --server webshop \
+                --check tc_servlet_requests \
+                --critical 1000 \
+                socks_shop
  
  # Check for string values by comparing them literally
  check_jmx4perl --url http://localhost::8888/j4p \
@@ -25,17 +64,6 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --critical 'Stopped' \
                 --warning '!Started'
 
- # Check used heap memory for absolute values by using an alias
- check_jmx4perl --url http://localhost:8888/j4p \
-                --alias MEMORY_HEAP_USED \
-                --critical 10000000 \
-                --warning   5000000 
-
- # Check that the used heap memory is below 80% of the available memory
- check_jmx4perl --url http://localhost:8888/j4p \
-                --alias MEMORY_HEAP_USED \
-                --base MEMORY_HEAP_MAX \ 
-                --critical :80
 
  # Check that no more than 5 threads are started in a minute
  check_jmx4perl --url http://localhost:8888/j4p \
@@ -44,69 +72,293 @@ check_jmx4perl - Nagios check using jmx4perl for accessing JMX information
                 --critical 5
 
  # Execute a JMX operation on an MBean and use the return value for threshold
+ # Here a thread-deadlock is detected.
  check_jmx4perl --url http://localhost:8888/j4p \
-                --mbean jmx4perl:type=Runtime \
-                --operation getNrQueriesFor \
-                --critical 10 \
-                "operation" \
-                "java.lang:type=Memory" \
-                "gc" 
+                --mbean java.lang:type=Threading \
+                --operation findDeadlockedThreads \
+                --null no-deadlock \
+                --string 1 \
+                --critical !no-deadlock \
+                --critical 10
 
  # Use check_jmx4perl in proxy mode
  check_jmx4perl --url http://localhost:8888/j4p \
                 --alias MEMORY_HEAP_USED \
                 --critical 10000000 \
-                --target service:jmx:rmi:///jndi/rmi://bhut:9999/jmxrmi
-  
- # Use predefined checks in a configuration file with a server alias
- # Server alias is 'webshop', check is about requests per minute for the 
- # servlet 'socks_shop'
- check_jmx4perl --config /etc/nagios/check_jmx4perl/tomcat.cfg
-                --server webshop \
-                --check tc_servlet_requests \
-                --critical 1000 \
-                socks_shop
+                 --target service:jmx:rmi:///jndi/rmi://bhut:9999/jmxrmi
 
 =head1 DESCRIPTION
 
 C<check_jmx4perl> is a Nagios plugin for monitoring Java applications. It uses
-an agent based approach for accessing JMX exposed informations remotely. See
-L<JMX::Jmx4Perl> for more background information about the technical details. 
+an agent based approach for accessing JMX exposed information remotely. 
 
 Before start using C<check_jmx4perl> an agent must be installed on the target
 platform. For JEE application server this is a simple webapplication packaged
-as a C<war> archive. For othter platforms, other agents are available as
-well. Please refer to the C<README> for the installation instructions and the
-supported platforms. 
+as a C<war> archive. For other platforms, other agents are available,
+too. Please refer to the C<README> for installation instructions and the
+supported platforms.
 
-Regardless which agent are in use, it can be reached by a simple URL. This URL
-needs to be used in the C<check_jmx4perl> configuration.
+C<check_jmx4perl>s can also be used in an agentless mode (i.e. no agent needs
+to be installed on the target platform). Ssee L</"Proxy mode"> for details.
 
-This plugin can be used in two modes: First, all required parameters for
-identifying the JMX information can be given via the command line. Second, a
-configuration file can be used to define one or more nagios checks. This is the
-recommended mode, since it allows for more advanced features not available when
+This plugin can be configured in two ways: Either, all required parameters for
+identifying the JMX information can be given via the command line. Or, a
+configuration file can be used to define one or more Nagios checks. This is the
+recommended way, since it allows for more advanced features not available when
 using the command line alone. Each command line argument has an equivalent
-option in the configuration files. 
+option in the configuration files, though.
+
+This documentation contains four parts. First, a L<tutorial|/"TUTORIAL"> gives
+a 5 minute quickstart for installing and using C<check_jmx4perl>. The middle
+part offers some technical background information on JMX itself, the
+L<features|/"REFERENCE"> provided by this plugin and finally the L<command line
+arguments|/"COMMAND LINE"> and the L<configuration file|/"CONFIGURATION">
+directives are described.
 
 =head1 TUTORIAL
 
-Before we dive into the more nifty details, first a 5 minute tutorial to get a
-first impression:
+Before we dive into the more nifty details, this 5 minutes quickstart gives
+a simple cooking recipe for configuration and setup of C<check_jmx4perl>. 
 
+=over 
 
+=item * 
 
+This tutorial uses I<tomcat> as an application server. Download it from
+L<http://tomcat.apache.org> (either version 5 or 6) and extract it:
 
+  $ tar zxvf apache-tomcat-*.tar.gz
+  $ # We need this variable later on:
+  $ TC=`pwd`/apache-tomcat*
 
-=head1 BACKGROUND
+=item *
 
-This section explains the basics necessary to better understand the operations
-of C<check_jmx4perl>.
+Download I<jmx4perl> from L<http://search.cpan.org/roland/jmx4perl> and install
+it:
 
-=head1 MBeans
+  $ tar zxvf jmx4perl-*.tar.gz
+  $ cd jmx4perl*
+  $ # Store current directory for later reference:
+  $ J4P=`pwd`      
+  $ perl Build.PL
+  $ sudo ./Build install
 
-JMX's central entity is an E<MBean>. An MBean exposes management information in
-a well defined way. Each MBean has a unique name with the following structure:
+This is installs the Perl modules around C<JMX::Jmx4Perl> which can be used for
+programmatic JMX access. There are some CPAN dependencies for jmx4perl, the
+build will fail if there are missing modules. Please install the missing
+modules via cpan (C<cpan I<module>>). The Nagios plugin C<check_jmx4perl> is
+installed in a standard location (F</usr/bin>, F</usr/local/bin> or whatever
+your Perl installation thinks is appropriate) as well as the other scripts
+C<jmx4perl> (a generic tool for accessing JMX) and C<j4psh> (an interactive JMX
+shell).
+
+=item * 
+
+Deploy the jmx4perl agent in Tomcat:
+
+  $ cd $J4P
+  $ cp agent/j4p.war $TC/webapps 
+
+=item * 
+
+Start Tomcat:
+
+  $ $TC/bin/startup.sh
+
+=item * 
+
+Check your setup:
+  
+  $ jmx4perl http://localhost:8080/j4p
+
+This prints out a summary about your application
+server. L<http://localhost:8080/j4p> is the URL under which the agent is
+reachable. Tomcat itself listens on port 8080 by default, and any autodeployed
+war archive can be reached under its filename without the .war suffix (j4p in
+this case).
+
+=item *
+
+Try a first Nagios check for checking the amount of available heap memory in
+relation to the maximal available heap:
+
+  $ check_jmx4perl --url http://localhost:8080/j4p  \
+                   --mbean java.lang:type=Memory    \
+                   --attribute HeapMemoryUsage      \
+                   --path used                      \
+                   --base java.lang:type=Memory/HeapMemoryUsage/max \
+                   --warning 80                     \
+                   --critical 90        
+
+  OK - [java.lang:type=Memory,HeapMemoryUsage,used] : In range 9.83% (12778136 / 129957888) | 
+      '[java.lang:type#Memory,HeapMemoryUsage,used]'=12778136;103966310.4;116962099.2;0;129957888            
+
+where 
+
+=over 
+
+=item --url http://localhost:8080/j4p
+
+is the agent URL
+
+=item --mbean java.lang:type=Memory
+
+is the MBean name
+
+=item --attribute HeapMemoryUsage
+
+is the attribute to monitor
+
+=item --path used
+
+is an inner path (see L</"Pathes">), which specifies an inner value within a
+more complex structure. The value C<HeapMemoryUsage> is a composed value (Jav
+type: CompositeData) which combines multiple memory related data. The complete
+value can be viewed with I<jmx4perl>:
+
+   $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
+
+   $VAR1 = {
+          'committed' => '85000192',
+          'used' => '15106608',
+          'max' => '129957888',
+          'init' => '0'
+        };
+
+=item --base java.lang:type=Memory/HeapMemoryUsage/max
+
+is the base value for which a relative threshold should be applied. This is a
+shortcut notation in the format I<mbean>C</>I<attribute>C</>I<path>. 
+
+=item --warning 80
+
+is the warning threshold in percent. I.e. a C<WARNING> will be raised by this
+plugin when the heap memory usage is larger than 80% of the maximal available
+heap memory for the application server (which is I<smaller> than the available
+memory of the operating system)
+
+=item --critical 90
+
+is the critical threshold in percent. If the available heap memory reaches 90%
+of the available heap, a C<CRITICAL> alert will be returned.
+
+=back
+
+All available command line options are described in L</"COMMAND LINE">. 
+
+=item *
+
+For more complex checks the usage of a configuration file is recommended. This
+also allows you to keep your Nagios service definitions small and tidy. E.g. for
+monitoring the number of request per minute for a certain web application, a
+predefined check is available:
+
+ $ check_jmx4perl --url http://localhost:8080/j4p \
+                  --config $J4P/config/tomcat.cfg \
+                  --critical 100 \
+                  --check tc_servlet_requests \
+                  j4p-agent
+ 
+ OK - 15.00 requests/minute | ''Requests j4p-agent''=15;5000;100
+
+where 
+
+=over 
+
+=item --config $J4P/config/tomcat.cfg 
+
+is the path to configuration file. There a several predefined checks coming
+with this distribution, which are documented inline. Look there for some
+inspiration for what to check.
+
+=item --critical 100
+
+A threshold von 100, i.e. the checked value must be 100 or less, otherwise a
+critical alert is raised.
+
+=item --check tc_servlet_requests
+
+is the name of the check to perform which must be defined in the configuration
+file 
+
+=item j4p-agent
+
+is an extra argument used by the predefined check. It is the name of the
+servlet for which the number of requests should be monitored. To get the name
+of all registered servlets use C<jmx4perl list>:
+
+  $ jmx4perl http://localhost:8080/j4p list | grep j2eeType=Servlet
+
+The servlet name is the value of the C<name> property of the listed MBeans.
+
+=back
+
+Configuration files are very powerful and are the recommended way for
+configuring C<check_jmx4perl> for any larger installation. Features like multi
+checks are even only available when using a configuration file. The syntax for
+configuration files are explained in depth in L</"CONFIGURATION">.
+
+=item *
+
+Finally, a Nagios service definition needs to be added. For the memory example
+above, a command for relative checks can be defined:
+
+  define command {
+     command_name         check_jmx4perl_relative
+     command_line         $USER3$/check_jmx4perl \
+                              --url $ARG1$ \
+                              --mbean $ARG2$ \
+                              --attribute $ARG3$ \
+                              --path $ARG4$ \
+                              --base $ARG5$ \
+                              $ARG6$
+  } 
+
+Put this into place where you normally define commands (either in the global
+Nagios F<commands.cfg> or in a specific commands configuration file in the
+commands directory). C<$USER3> is a custom variable and should point to the
+directory where C<check_jmx4perl> is installed (e.g. F</usr/local/bin>).
+
+The service definition itself then looks like:
+
+  define service {
+     service_description    j4p_localhost_memory
+     host_name              localhost
+     check_command          check_jmx4perl_relative \
+                            !http://localhost:8080/j4p \
+                            !java.lang:type=Memory \
+                            !HeapMemoryUsage \
+                            !used \
+                            !java.lang.type=Memory/HeapMemoryUsage/max \
+                            !--warning 80 --critical 90
+  }  
+
+Add this section to your service definitions (depending on you Nagios
+installation). This example adds a service to host C<localhost> for checking the
+heap memory, raising a C<WARNING> if 80% of the available heap is used and a
+C<CRITICAL> if more than 90% of the heap memory is occupied.
+
+=back
+
+Installing and using jmx4perl is really that easy. The Nagios configuration in
+this example is rather simplistic, of course a more flexible Nagios setup is
+possible. The blog post
+L<http://labs.consol.de//blog/jmx4perl/check_jmx4perl-einfache-servicedefinitionen/>
+(written by Gerhard Lausser) shows some advanced configuration setup. (It is in
+german, but the automatic translation from L<http://bit.ly/bgReAs> seems to be
+quite usable).
+
+=head1 REFERENCE
+
+This section explains the JMX basics necessary to better understand the usage
+of C<check_jmx4perl>. It tries to be as brief as possible, but some theory is
+required to get the link to the Java world.
+
+=head2 MBeans
+
+JMX's central entity is an C<MBean>. An MBean exposes management information in
+a well defined way. Each MBean has a unique name called I<Object Name> with the
+following structure:
 
   domain:attribute1=value1,attribute2=value2, .....
 
@@ -114,19 +366,17 @@ E.g.
 
   java.lang:type=Memory
 
-point to the MBean which let you access the memory information of the target
+points to the MBean which lets you access the memory information of the target
 server. 
 
-Before you start monitoring, you need to know the MBean name. Unfortunately,
-except for so called I<MXBeans>
+Unfortunately, except for so called I<MXBeans>
 (L<http://java.sun.com/j2se/1.5.0/docs/api/java/lang/management/package-summary.html>)
-there is no standard naming scheme for MBeans. Each platform uses its own, so
-the first task is to identify the object name of the MBean to monitor. (There
-used to be a Java naming standard defined in B<JSR77>
-(L<http://jcp.org/en/jsr/detail?id=77>), unfortunately is whas never widely
+there is no standard naming for MBeans. Each platform uses its own. There used
+to be a naming standard defined in B<JSR77>
+(L<http://jcp.org/en/jsr/detail?id=77>), unfortunately it was never widely
 adopted.
 
-There are various ways to identify MBeans on a server:
+There are various ways for identifying MBeans on a server:
 
 =over 
 
@@ -143,31 +393,31 @@ Use C<j4psh> for interactively exploring the JMX namespace.
 =item *
 
 Use an alias. An alias is a shortcut for an MBean name, predefined by
-L<JMX::Jmx4Perl>. All known aliases can be shown with C<jmx4perl>.  Since each
-platform can have slightly different MBean names for the same information, this
-is extra level of indirection might help in identifying MBeans. See below for
-more about aliases.
+L<JMX::Jmx4Perl>. All known aliases can be shown with C<jmx4perl aliases>.
+Since each platform can have slightly different MBean names for the same
+information, this extra level of indirection might help in identifying
+MBeans. See L</"Aliases"> for more about aliases.
 
 =item *
 
 Use a predefined check. C<check_jmx4perl> comes with quite some checks
 predefined in various configuration files. These are ready for use out of the
-box. 
+box. L</Predefined checks> are described in an extra section.
 
 =item *
 
-As your Java application development team for application specific MBean names. 
+Ask your Java application development team for application specific MBean names. 
 
-=back.
+=back
 
-=head2 Operational Modes
+=head2 Attributes and Operations
 
 C<check_jmx4perl> can obtain the information to monitor from two sources:
-Either as MBean I<attributes> or as return value from JMX I<operations>.  Since
-JMX values can be any Java Object, it is important to understand, how
-C<check_jmx4perl> (or JMX::Jmx4Perl in general) handles this situation.
+Either as MBean I<attributes> or as a return value from JMX I<operations>.
+Since JMX values can be any Java object, it is important to understand, how
+C<check_jmx4perl> (or I<jmx4perl> in general) handles this situation.
 
-Simple data types can be used directly in threshhold checking. I.e. the
+Simple data types can be used directly in threshold checking. I.e. the
 following data types can be used directly
 
 =over
@@ -199,18 +449,22 @@ String
 =back
 
 C<String> and C<Boolean> can be used in I<string> checks only, whereas the others
-can be used in both, I<numeric> and I<string> checks (see below).
+can be used in both, I<numeric> and I<string> checks (see L</"String checks">).
+
+For numeric checks, the threhsholds has to be specified according to the format
+defined in
+L<http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT> 
 
 =head3 Pathes
 
 For more complex types, C<check_jmx4perl> provides the concept of so called
-I<pathes> for specifying an inner attribute of a more complex attribute or
-operation return value. A path is build of parts, separated by slashes
-(/). It's simplified variant of an XPath expression for accessing parts of an
-XML document. Each part points to an level of the JSON serialized object. 
+I<pathes> for specifying an inner attribute of a more complex value. A path
+contains parts separated by slashes (/). It is similar to an XPath expression
+for accessing parts of an XML document. Each part points to an inner level of
+complex object.
 
 For example, the MBean C<java.lang:type=Memory> exposes an attribute called
-C<HeapMemoryUsage>. This attribute is a combound data type, which contains
+C<HeapMemoryUsage>. This attribute is a compound data type, which contains
 multiple entries. Looking with C<jmx4perl> at this attribute
 
  $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
@@ -221,10 +475,9 @@ multiple entries. Looking with C<jmx4perl> at this attribute
            'init' => '0'
          };
 
-one can see, that there are 4 values coming with the reponse. With a path C<used>
-one can directly pick the used heap memory usage (8135440 bytes in this case)
-which can be used in a threshold check. This path can be used with
-C<check_jmx4perl> like 
+it can be seen, that there are 4 values coming with the reponse. With a path
+C<used> one can directly pick the used heap memory usage (8135440 bytes in this
+case) which then can be used for a threshold check. 
 
  $ check_jmx4perl --url http://localhost:8080/j4p \ 
                   --mbean java.lang:type=Memory \ 
@@ -235,90 +488,148 @@ C<check_jmx4perl> like
 
 =head3 Attributes
 
-Attribute are values which can be obtained from MBeans. They can be of a simple
-data type like a string or an integer, but they can be arbitrarly complex (e.g
-an arbitrary Java type). Simple data types can be used directly for threshold
-checking where the value is compared against a critical or warning threshold
-directly. 
-
-
-
-
--- Values
--- 
+Attributes are values obtained from MBean properties.  Complex values are
+translated into a JSON structure on the agent side, which works for most
+types. To access a single value from a complex value, the path mechanism
+described above can be used. Thresholds can be applied to simple data types
+only, so for complex attributes a path is I<required>.
 
 =head3 Operations
 
+The return values of operations can be used for threshold checking, too. Since
+a JMX exposed operation can take arguments, these has to be provided as extra
+arguments on the command line or in the configuration. Due to the agent's
+nature and the protocol used (JSON), only simple typed arguments like strings,
+numbers or booleans ("true"/"false") can be used.
+
+Example:
+
+ $ check_jmx4perl --url http://localhost:8888/j4p \
+                  --mbean jmx4perl:type=Runtime \
+                  --operation getNrQueriesFor \
+                  --critical 10 \
+                  "operation" \
+                  "java.lang:type=Memory" \
+                  "gc" 
+
+This example contacts a MBean C<jmx4perl:type=Runtime> registered by the j4p
+agent in order to check for the number of queries for a certain MBean via this
+agent. For this purpose an JMX operation C<getNrQueriesFor> is exposed which
+takes three arguments: The type ("operation"/"attribute"), the MBean's
+ObjectName and the operation/attribute name which was called.
+
+If the opertion to be called is an I<overloaded operation> (i.e. an operation
+whose name exists multiple times on the same MBean but with different parameter
+types), the argument types must be given within parentheses:
+
+     --operation checkUserCount(java.lang.String,java.lang.String)
 
 =head2 Aliases
 
+Aliases are shortcut for common MBean names and attributes. E.g. the alias
+C<MEMORY_HEAP_MAX> specifies the MBean C<java.lang:type=Memory>, the attribute
+C<HeapMemoryUsage> and the path C<max>. Aliases can be specified with the
+C<--alias> option or with the configuration directive C<Alias>. Aliases can be
+translated to different MBean names on different application server. For this
+C<check_jmx4perl> uses an autodetection mechanism to determine the target
+platform. Currently this mechanism uses one or more extra server
+round-trips. To avoid this overhead, the C<--product> option (configuration:
+C<Product>) can be used to specify the target platform explicitely. This is
+highly recommended in case you are using the aliasing feature.
+
+Aliases are not extensible and can not take any parameters. All availables
+aliases can be viewed with 
+
+  jmx4perl aliases
+
+A much more flexible alternative to aliases are I<parameterized checks>, which
+are defined in a configuration file. See L</CONFIGURATION> for more details
+about parameterized checks.
+
 =head2 Relative Checks
 
-=head2 Incremental Checks
+Relative values are often more interesting than absolute numbers. E.g. the
+knowledge that 140 MBytes heap memory is used is not as important as the
+knowledge, that 56% of the available memory is used. Relative checks calculate
+the ratio of a value to a base value. (Another advantage is that Nagios service
+definitions for relative checks are generic as they can be applied for target
+servers with different memory footprints).
 
-=head2 Output Tuning
-
-=head2 Proxy mode
- 
-=head1 COMMAND LINE 
-
-The pure command line interface (without a configuration file) is mostly suited
-for simple checks where the predefined defaults are suitable. For all other use
-case, a configuration file fits better. 
-
-=head2 Command Line Options
-
-
-
-
-Command for providing Nagios conmpliant output for JMX response fetched via
-L<JMX::Jmx4Perl>. It knows about critical (via C<--critical>) and warning (via
-C<--warning>) thresholds. 
-
-You can also use direct string comparison. In this case C<--critical> and
-C<--warning> are not treated as numerical values but as string types. They are
-compared literally against the value retrieved and yield the corresponding
-Nagios status if matched. If the threshold is given with a leading C<!>, the
-condition is negated. E.g. a C<--critical '!Running'> given returns a
-C<CRITICAL> if the value is I<not> equals to C<Running>. As a final option you
-can also use a regular expression by using C<qr/.../> as threshold value
-(substitute C<...> with the pattern to used for comparison). Boolean values are
-returned as C<true> or C<false> strings from the agent, so you can check for
-them as well with this kind of string comparison.
-
-Whether string comparison or a numerical check is used is determined
-automatically based on the value returned. You can enforce a particular mode by
-providing the option C<--numeric> or C<--string> respectively.
-
-Values obtained from the server can be interpreteted as relative values when
-C<--base> is given. The argument provided here is first tried as an alias name
-or checked as an absolute, numeric value. Alternatively, you can use a full
-MBean/Attribute/Path specification by using a C</> as separator, e.g. 
+The base value has to be given with C<--base> (configuration: C<Base>). The
+argument provided here is first tried as an alias name or checked as an
+absolute, numeric value. Alternatively, you can use a full MBean/attribute/path
+specification by using a C</> as separator, e.g.
 
   ... --base java.lang:type=Memory/HeapMemoryUsage/max ...
 
 If one of these parts (the path is optional) contains a slash within its name,
-the part must be URI encoded. I.e. all parts are URI decoded before usages as
-naming pattern. In any case, using an alias or direct MBean names, the base
-value is fetched first for calculating the relative value. For a numeric value
-given here this is of course not necessary.
+the slash must be escaped with a backslash (\/). Backslashes in MBean names are
+escaped with a double backslash (\\). 
 
-C<--delta> switches on incremental mode in which the difference between two
-following values is used. The optional argument are interpreted as seconds
-which are used for calculating the speed of growth. If not given, only the
-difference between the current and the latest value is taken. C<--delta>
-doesn't work with C<--base>.
+Example: 
 
-With the option C<--operation> a JMX operation is triggered and the return
-value used for threshold calculations. Additionally, if use an operation
-alias with C<--alias>, you can ommit C<--operation> and C<--mbean>. Any
-arguments required for the operation need to be provided as additional
-arguments. 
+   check_jmx4perl --url http://localhost:8080/j4p \ 
+                  --value java.lang:type=Memory/HeapMemoryUsage/used \ 
+                  --base java.lang:type=Memory/HeapMemoryUsage/max \ 
+                  --critical 90
 
-The output of C<check_jmx4perl> can be highly customized. First of all, you can
-provide a unit-of-measurement with the option C<--unit>. This specifies how the
-the attribute or an operation's return value should be interpreted. The
-units available are
+This check will trigger a state change to CRITICAL if the used heap memory will
+exceed 90% of the available heap memory. 
+
+=head2 Incremental Checks
+
+For some values it is worth monitoring the increase rate (velocity). E.g. for
+threads it can be important to know how fast threads are created.
+
+Incremental checks are switched on with the C<--delta> option (configuration:
+C<Delta>). This option takes an optional argument which is interpreted as
+seconds for normalization.
+
+Example: 
+
+  check_jmx4perl --url http://localhost:8080/j4p \ 
+                 --mbean java.lang:type=Threading \ 
+                 --attribute TotalStartedThreadCount \ 
+                 --delta 60 \ 
+                 --critical 5
+
+This will fail as CRITICAL if more than 5 threads are created per minute (60
+seconds). Technically C<check_jmx4perl> uses the I<history> feature of the j4p
+agent deployed on the target server. This will always store the result and the
+timestamp of the last check on the server side and returns these historical
+values on the next check so that the velocity can be calculated. If no value is
+given for C<--delta>, no normalization is used. In the example above, without a
+normalization value of 60, a CRITICAL is returned if the number of threads
+created increased more than 5 between two checks.
+
+C<--delta> doesn't work yet with C<--base> (e.g. incremental mode for
+relative checks is not available).
+
+=head2 String checks
+
+In addition to standard numerical checks, direct string comparison can be
+used. This mode is switched on either explicitely via C<--string>
+(configuration: C<String>) or by default implicitely if a heuristics determines
+that a value is non-numeric. Numeric checking can be enforced with the option
+C<--numeric> (configuration: Numeric).
+
+For string checks, C<--critical> and C<--warning> are not
+treated as numerical values but as string types. They are compared literally
+against the value retrieved and yield the corresponding Nagios status if
+matched. If the threshold is given with a leading C<!>, the condition is
+negated. E.g. a C<--critical '!Running'> returns C<CRITICAL> if the value
+I<not> equals to C<Running>. Alternatively you can also use a regular
+expression by using C<qr/.../> as threshold value (substitute C<...> with the
+pattern to used for comparison). Boolean values are returned as C<true> or
+C<false> strings from the agent, so you can check for them as well with this
+kind of string comparison.
+
+=head2 Output Tuning
+
+The output of C<check_jmx4perl> can be highly customized. A unit-of-measurement
+can be provided with the option C<--unit> (configuration: C<Unit>) which 
+specifies how the the attribute or an operation's return value should be
+interpreted. The units available are
 
   B  - Byte
   KB - Kilo Byte
@@ -334,10 +645,11 @@ units available are
   d  - Days
 
 The unit will be used for performance data as well as for the plugin's
-output. Large numbers are converted to larger units (and reverse for small
-number that are smaller than 1). E.g. C<2048 KB> is converted to C<2
-MB>. However, beautifying by conversion is I<only> performed for the plugin
-output, B<not> for the performance data for which no conversions happens at all.
+output. Large numbers are converted to larger units automatically (and reverse
+for small number that are smaller than 1). E.g. C<2048 KB> is converted to C<2
+MB>. Beautifying by conversion is I<only> performed for the plugin
+output, B<not> for the performance data for which no conversions happens at
+all.
 
 Beside unit handling, you can provide your own label for the Nagios output via
 C<--label>. The provided option is interpreted as a pattern with the following
@@ -346,19 +658,19 @@ placeholders:
  %v   the absolute value 
  %f   the absolute value as floating point number
  %r   the relative value for relative calculations (--base)
- %u   the value's unit for the output when --unit is used
- %w   the the base value's for the output unit when --unit is used
+ %u   the value's unit for the output when --unit is used (after shortening)
+ %w   the base value's unit for the output when --unit is used (after shortening)
  %b   the absolut base value as it is used with --base 
  %c   the Nagios exit code in the Form "OK", "WARNING", "CRITICAL" 
       or "UNKNOWN"
- %t   Threshold value which fails ("" when the check doesn't fail)
+ %t   Threshold value which failed ("" when the check doesn't fail)
  %n   name, either calulated automatically or given with --name
  %d   the delta value used for normalization when using incremental mode
 
 Note that C<%u> and C<%w> are typically I<not> the same as the C<--unit>
 option. They specify the unit I<after> the conversion for the plugin output as
-described above. You can use the same modifiers as for C<sprintf> to fine tune
-the output.
+described above. You can use the same length modifiers as for C<sprintf> to
+fine tune the output.
 
 Example: 
 
@@ -366,58 +678,1078 @@ Example:
                 --alias MEMORY_HEAP_USED \
                 --base MEMORY_HEAP_MAX \ 
                 --critical :80 \
-                --label "Heap-Memory: %.2r% used (%.2v %u / %.2b %u)" \
+                --label "Heap-Memory: %.2r% used (%.2v %u / %.2b %w)" \
                 --unit B
 
 will result in an output like
 
  OK - Heap-Memory: 3.48% used (17.68 MB / 508.06 MB) | '[MEMORY_HEAP_USED]'=3.48%;;:80
 
-C<check_jmx4perl> can be used in a proxy mode as well. When the option
-C<--target> is given, the agent servlet use this url as a JMX Service URL and
-tries to connect via a JSR-160 to specified target to obtain the JMX
-information from there. Additionally C<--target-user> and C<--target-password>
-can be used to provide credentials if the target server is secure with user-
-and password name. Please see the manual for more information about the proxy
-mode and its limitations.
+=head2 Security
+
+Since the j4p-agent is usually a simple war-file, it can be secured as any
+other Java Webapplication. Since setting up authentication is JEE Server
+specific, a detailed instruction is beyond the scope of this document. Please
+refer to your appserver documentation, how to do this. At the moment,
+C<check_jmx4perl> can use Basic-Authentication for authentication purposes
+only.
+
+In addition to this user/password authentication, the j4p-agent uses a policy
+file for fine granular access control. The policy is defined with an XML file
+packaged within the agent. In order to adapt this to your needs, you need to
+extract the war file, edit it, and repackage the agent with a policy file. A
+future version of jmx4perl might provide a more flexible way for changing the
+policy.
+
+In detail, the following steps are required:
+
+=over
+
+=item * 
+
+Extract F<j4p.war> in a temporary directory:
+
+   $ mkdir j4p
+   $ cd j4p
+   $ jar xvf $J4P/agent/j4p.war
+
+C<$J4P> is the jmx4perl distribution directory.
+
+=item * 
+
+Copy over the template policy file into the right place.
+
+   $ cp $J4P/agent/j4p-access.xml.template WEB-INF/classes/j4p-access.xml
+
+=item * 
+
+Edit the policy according to your needs.
+   
+   $ vi WEB-INF/classes/j4p-access.xml
+   
+=item * 
+
+Repackage the war file
+
+   $ jar cvf $J4P/agent/j4p.war *
+
+=item *
+
+Deploy the agent F<$J4P/agent/j4p.war> as usual
+
+=back
+
+The template policy file F<j4p-access.xml.template> contains inline
+documentation and examples, so you can easily adapt it to your environment.
+
+Restrictions can be set to on various parameters :
+
+=head3 Client IP address
+
+Access to the j4p-agent can be restricted based on the client IP accessing the
+agent. A single host, either with hostname or IP address can be set or even a
+complete subnet.
+
+Example:
+
+  <remote>
+    <host>127.0.0.1</host>
+    <host>10.0.0.0/16</host>
+  </remote>
+
+Only the localhost or any host in the subnet 10.0 is allowed to access the
+agent.  If the C<E<lt>remoteE<gt>> section is missing, access from all hosts
+is allowed. 
+
+=head3 Commands
+
+The access can be restricted to certain commands.
+
+Example:
+
+   <commands>
+     <command>read</command>
+   </commands>
+
+This will only allow reading of attributes, but no other operation like
+execution of operations. If the C<E<lt>commandsE<gt>> section is missing, any
+command is allowed. The commands known are
+
+=over
+
+=item read
+
+Read an attribute
+
+=item write
+
+Write an attribute (used by C<check_jmx4perl> only when using incremental checks)
+
+=item exec
+
+Execution of an operation
+
+=item list
+
+List all MBeans (not used by C<check_jmx4perl>)
+
+=item version
+
+Version command (not used by C<check_jmx4perl>)
+
+=item search
+
+Search for MBean (not used by C<check_jmx4perl>)
+
+=back
+
+=head3 Specific MBeans
+
+The most specific policy can be put on the MBeans themselves. For this, two
+sections can be defined, depending on whether a command is globaly enabled or
+denied.
+
+=over 
+
+=item <allow>
+
+The C<E<lt>allowE<gt>> section is used to switch on access for operations and
+attributes in case C<read>, C<write> or C<exec> are globally disabled (see
+above). Wildcards can be used for MBean names and attributes/and operations.
+
+Example:
+   
+  <allow>
+    <mbean>
+      <name>jmx4perl:*</name>
+      <operation>*</operation>
+      <attribute>*</attribute>
+    </mbean>
+    <mbean>
+      <name>java.lang:type=Threading</name>
+      <operation>findDeadlockedThreads</operation>
+    </mbean>
+    <mbean>
+    <name>java.lang:type=Memory</name>
+      <attribute mode="read">Verbose</attribute>
+    </mbean>
+
+  </allow>
+
+This will allow access to all operation and attributes of all MBeans in 
+the C<jmx4perl:> domain and to the operation C<findDeadlockedThreads> on the
+MBean C<java.lang:type=Threading> regardless whether the C<read> or C<exec>
+command is enabled globally. The attribute C<Verbose> on
+C<java.lang:type=Memory> is allowed to be read, but cannot be written (if the
+C<mode> attribute is not given, both read and write is allowed by default).
+
+=item <deny>
+
+The C<E<lt>denyE<gt>> section forbids access to certain MBean's operation
+and/or attributes, even when the command is allowed globally.
+
+Example:
+
+  <deny>
+    <mbean>
+      <!-- Exposes user/password of data source, so we forbid this one -->
+      <name>com.mchange.v2.c3p0:type=PooledDataSource*</name>
+      <attribute>properties</attribute>
+    </mbean>
+  </deny>
+
+This will forbid the access to the specified attribute, even if C<read> is allowed globally. 
+If there is an overlap between <allow> and <deny>, <allow> takes precedence.
+
+=back 
+
+=head2 Proxy mode
+
+C<check_jmx4perl> can be used in an I<agentless mode> as well, i.e. no
+j4p-agent needs to deployed on the target server. The setup for the agentless
+mode is a bit more complicated, though:
+
+=over
+
+=item * 
+
+The target server needs to export its MBeans via JSR-160. The configuration for
+JMX export is different for different JEE Server. L<http://labs.consol.de> has
+some cooking recipes for various servers (JBoss, Weblogic).
+
+=item * 
+
+A dedicated I<proxy server> needs to be setup on which the F<j4p-agent.war>
+gets deployed. This can be a simple Tomcat or Jetty servlet container. Of
+course, an already existing JEE Server can be used as proxy server as well.
+
+=item *
+
+For using C<check_jmx4perl> the target JMX URL for accessing the target server
+is required. This URL typically looks like
+
+  service:jmx:rmi:///jndi/rmi://host:9999/jmxrmi
+
+but this depends on the server to monitor. Please refer to your JEE server's
+documentation for how the export JMX URL looks like.
+
+=item *
+
+C<check_jmx4perl> uses the proxy mody if the option C<--target> (configuration:
+<Target>) is provided. In this case, this Nagios plugin contacts the proxy
+server specified as usual with C<--url> (config: Url in Server section) and put
+the URL specified with C<--target> in the request. The agent in the proxy then
+dispatches this request to the real target and uses the JMX procotol specified
+with in the target URL. The answer received is then translated into a JSON
+response which is returned to C<check_jmx4perl>.
+
+Example:
+
+   check_jmx4perl --url http://proxy:8080/j4p \
+                  --target service:jmx:rmi:///jndi/rmi://jeeserver:9999/jmxrmi
+                  --alias MEMORY_HEAP_USED
+                  --base MEMORY_HEAP_MAX
+                  --critical 90
+
+Here the host I<proxy> is listening on port 8080 for j4p requests and host I<jeeserver>
+exports its JMX data via JSR-160 over port 9999. (BTW, I<proxy> can be
+monitored itself as usual).
+
+So, what mode is more appropriate ? Both, the I<agent mode> and the
+I<proxy mode> have advantages and disadvantages.
+
+=back
+
+=head3 Advantages
+
+=over 
+
+=item * 
+
+No agent needs to be installed on the target server. This might be useful for
+policy reasons.
+
+=item *
+
+Compared to other Nagios JMX plugin's no JVM startup is required since the
+proxy server is already running. 
+
+=back
+
+=head3 Disadvantages
+
+=over 
+
+=item * 
+
+It takes two hops to get to the target server
+
+=item *
+
+Exporting JMX via JSR-160 is often not that easy as it may seem. (See post
+series on remote JMX on labs.consol.de)
+
+=item *
+
+Some features like merging of MBean Servers are not available in proxy mode. (i.e
+you need to know in advance which MBean-Server on the target you want to
+contact for a certain MBean, since this information is part of the JMX URL)
+
+=item *
+
+Bulk request needs to be detangled into multiple JMX request since JSR-160
+doesn't know anything about bulk requests.
+
+=item *
+
+jmx4perl's fine granular security policy is not available, since JSR-160 JMX is
+an all-or-nothing thing. (except you are willing to dive deep into Java
+Security stuff)
+
+=item *
+
+For JSR-160 objects to be transferable to the proxy, the proxy needs to know
+about the Java types and those types must be serializable. If this is not the
+case, the proxy isn't able to collect the information from the target. So only
+a subset of MBeans can be monitored this way.  
+
+The agent protocol is more flexible since it translates the data into a JSON
+structure I<before> putting it on the wire.
+
+=back
+
+To summarize, I would always recommend the I<agent mode> over the I<proxy mode>
+except when an agentless operation is required (e.g. for policy reasons). 
+
+=head1 COMMAND LINE
+
+The pure command line interface (without a configuration file) is mostly suited
+for simple checks where the predefined defaults are suitable. For all other use
+cases, a L<configuration|/"CONFIGURATION"> file fits better. 
+
+C<check_jmx4perl> knows about the following command line options:
+
+=over
+
+=item --url (-u)
+
+The URL for accessing the target server (or the j4p-proxy server, see L</"Proxy Mode"> 
+for details about the JMX proxy mode)
+
+Example:
+
+  --url http://localhost:8080/j4p
+
+=item --mbean (-m)
+
+Object name of MBean to access
+
+Example:
+
+  --mbean java.lang:type=Runtime
+
+=item --attribute (-a)
+
+A MBean's attribute name. The value of this attribute is used for threshold
+checking.
+
+Example:
+
+  --attribute Uptime
+
+=item --operation (-o)
+
+A MBean's operation name. The operation gets executed on the server side and
+the return value is used for threshold checking. Any arguments required for
+this operation has to be given as additional arguments to
+C<check_jmx4perl>. See L</"Attributes and Operations"> for details. 
+
+Example:
+
+  check_jmx4perl ... --mbean java.lang:type=Threading \
+                     --operation getThreadUserTime 1
+
+Operation C<getThreadUserTime> takes a single argument the thread id (a long)
+which is given as extra argument.
+
+=item --path (-p)
+
+Path for extracting an inner element from an attribute or operation return
+value. See L</"Pathes"> for details about pathes.
+
+Example:
+  
+   --path used
+
+=item --value
+
+Shortcut for giving C<--mbean>, C<--attribute> and C<--path> at once. 
+
+Example:
+
+   --value java.lang:type=Memory/HeapMemoryUsage/used
+
+Any slash (/) in the MBean name must be escaped with a backslash
+(\/). Backslashes in names has to be escaped as \\.
+
+=item --base (-b)
+
+Switches on relative checking. The value given points to an attribute which
+should be used as base value and has to be given in the shortcut notation
+described above. Alternatively, the value can be an absolute number or an alias
+name (L</"Aliases">) The threshold are the interpreted as relative values in
+the range [0,100]. See L</"Relative Checks"> for details.
+
+Example:
+
+  --base 100000
+  --base java.lang:type=Memory/HeapMemoryUsage/max
+  --base MEMORY_HEAP_MAX
+
+=item --delta (-d)
+
+Switches on incremental checking, i.e. the increase rate (or velocity) of an
+attribute or operation return value is measured. The value given here is used
+for normalization (in seconds). E.g. C<--delta 60> normalizes the velocity to
+'growth per minute'. See L</"Incremental Checks"> for details.
+
+=item --string
+
+Forces string checking, in which case the threshold values are compared as
+strings against the measured values. See L</"String checks"> for more
+details. By default, a heuristic based on the measured value is applied to
+determine, whether numerical or string checking should be use
+
+Example:
+
+  --string --critical '!Running'
+ 
+=item --numeric
+
+Forces numeric checking, in which case the measured valued are compared against
+the given thresholds according to the Nagios developer guideline specification
+(L<http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT>) 
+
+Example:
+
+  --numeric --critical ~:80
+
+=item --null
+
+The value to be used in case the attribute or the operation's return value is
+C<null>. This is useful when doing string checks. By default, this value is
+"C<null>".
+
+Example:
+
+  --null "no deadlock" --string --critical "!no deadlock"
+
+=item --name (-n)
+
+Name to be used for the performance data. By default a name is calculated based
+on the MBean's name and the attribute/operation to monitor.
+
+Example:
+
+  --name "HeapMemoryUsage"
+
+=item --label (-l)
+
+Label for using in the plugin output which can be a format specifier as
+described in L</"Output Tuning">. 
+
+Example:
+
+  --label "%.2r% used (%.2v %u / %.2b %w)"
+
+=item --unit 
+
+Natural unit of the value measured. E.g. when measuring memory, then the memory
+MXBean exports this number as bytes. The value given here is used for
+shortening the value's output by converting to the largest possible unit. See
+L</"Output Tuning"> for details.
+
+Example:
+
+   --alias MEMORY_HEAP_USED --unit B
+
+=item --critical (-c)
+
+Critical threshold. For string checks, see L<"String checks"> for how the
+critical value is interpreted. For other checks, the value given here should
+conform to the specification defined in
+L<http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT>. 
+
+Example:
+
+   --critical :90
+
+=item --warning (-w)
+
+Warning threshold, which is interpreted the same way as the C<--critical>
+threshold (see above). At least a warning or critical threshold must be given.
+
+=item --alias
+
+An alias is a shortcut for an MBean attribute or operation. See L</"Aliases">
+for details.
+
+Example:
+
+  --alias RUNTIME_UPTIME
+
+=item --product
+
+When aliasing is used, C<check_jmx4perl> needs to known about the target server
+type for resolving the alias. By default it used an autodetection facility,
+which at least required an additional request. To avoid this, the product can
+be explicitely specified here
+
+Example:
+
+   --product jboss
+
+=item --user, --password
+
+User and password needed when the agent is secured with Basic
+Authentication. By default, no authentication is used.
+
+=item --timeout (-t)
+
+How long to wait for an answer from the agent at most (in seconds). By default,
+the timeout is 180s.
+
+=item --proxy
+
+A HTTP proxy server to use for accessing the j4p-agent.
+
+Example:
+
+  --proxy http://proxyhost:8001/
+
+=item --target, --target-user, --target-password
+
+Switches on j4p-proxy mode and specifies the URL for accessing the target
+platform. Optionally, user and password for accessing the target can be given,
+too. See L</"Proxy Mode"> for details.
+
+Example:
+
+  --target service:jmx:rmi:///jndi/rmi://bhut:9999/jmxrmi
+
+=item --config
+
+Specifies a configuration file from where server and check definitions can be
+obtained. See L</"CONFIGURATION"> for details about the configuration file's
+format. 
+
+Example:
+
+   --config /etc/jmx4perl/tomcat.cfg
+
+=item --server
+
+Specify a symbolic name for a server connection. This name is used to lookup a
+server in the configuration file specified with C<--config>
+
+Example:
+
+ servers.cfg:
+   <Server tomcat>
+      Url http://localhost:8080/j4p
+      User roland
+      Password fcn
+   </Server>
+
+   --config /etc/jmx4perl/servers.cfg --server tomcat
+
+See L</"CONFIGURATION"> for more about server definitions.
+
+=item --check
+
+The name of the check to use as defined in the configuration file. See
+L</"CONFIGURATION"> about the syntax for defining checks and multi checks.
+Additional arguments for parameterized checks should be given as additional
+arguments on the command line. Please note, that checks specified with
+C<--check> have precedence before checks defined explicitely on the command
+line. 
+
+Example:
+
+   --config /etc/jmx4perl/tomcat.cfg --check tc_servlet_requests j4p-agent
+
+=item --version
+
+Prints out the version of this plugin
+
+=item --verbose (-v)
+
+Enables verbose output during the check, which is useful for debugging. Don't
+use it in production, it will confuse Nagios.
+
+=item --doc, --help (-h), --usage (-?)
+
+C<--usage> give a short synopsis, C<--help> prints out a bit longe usage
+information. 
+
+C<--doc> prints out this man page. If an argument is given, it will only print
+out the relevant sections. The following sections are recognized:
+
+=over
+
+=item tutorial
+
+A 5 minute quickstart
+
+=item reference
+
+Reference manual explaining the various operational modes. 
+
+=item options
+
+Command line options available for C<check_jmx4perl>
+
+=item config 
+
+Documentation for the configuration syntax
+
+=back
+
+=back
 
 =head1 CONFIGURATION
 
-=head2 Multichecks
+Using C<check_jmx4perl> with a configuration file is the most powerful way for
+defining Nagios checks. A simple configuration file looks like 
+
+   # Define server connection parameters
+   <Server tomcat>
+      Url = http://localhost:8080/j4p
+   </Server>
+
+   # A simple heap memory check with a critical threshold of 
+   # 90% of the maximal heap memory. 
+   <Check memory_heap>     
+     Value = java.lang:type=Memory/HeapMemoryUsage/used
+     Base = java.lang:type=Memory/HeapMemoryUsage/max
+     Unit = B
+     Label = Heap-Memory: %.2r% used (%.2v %u / %.2b %u)
+     Name = Heap
+     Critical = 90
+   </Check>
+
+A configuration file is provided on the command line with the option
+C<--config>. It can be divided into two parts: A section defining server
+connection parameters and a section defining the checks themselves. 
+
+=head2 <Server>
+
+With C<E<lt>Server I<name>E<gt>> the connection parameters for a specific
+server is defined. In order to select a server the C<--server I<name>> command
+line option has to be used. Within a C<E<lt>ServerE<gt>> configuration element,
+the following keys can be used:
+
+=over
+
+=item Url
+
+The URL under which the j4p agent can be reached.
+
+=item User, Password
+
+If authentication is switched on, the user and the credentials can be provided
+with the B<User> and B<Password> directive, respectively. Currently only Basic
+Authentication is supported.
+
+=item Product
+
+The type of application server to monitor. This configuration can speed up
+checks significantly, but only when aliases are used. By default when using
+aliases, C<check_jmx4perl> uses autodetection for determine the target's
+platform. This results in at least one additional HTTP-Request. This
+configuration does not has any effect when MBeans are always used with their
+full name. 
+
+=item Proxy
+
+A HTTP Proxy URL and credentials can be given with the C<E<lt>ProxyE<gt>>
+sub-section. Example:
+
+  <Server>
+  ....
+    <Proxy>
+      Url = http://proxy.company.com:8001
+      User = woody
+      Password = buzz
+    </Proxy>
+  </Server>
+
+=over
+
+=item Url
+
+The proxy URL
+
+=item User, Password
+
+Optional user and credentials for accessing the proxy
+
+=back 
+
+=item Target
+
+With this directive, the JMX-Proxy mode can be switched on. As described in
+section L</"Proxy mode">, C<check_jmx4perl> can operate in an agentless mode,
+where the agent servlet is deployed only on an intermediated, so called
+JMX-Proxy server, whereas the target platform only needs to export JMX
+information in the traditional way (e.g. via JSR-160 export). This mode is
+especially useful if the agent is not allowed to be installed on the target
+platform. However, this approach has some drawbacks and some functionality is
+missing there, so the agent-mode is the recommended way. A sample JMX-Proxy
+configuration looks like:
+
+  <Target>
+     # TODO: "Real" URL
+     Url = http://target:8080/j4p
+     User = max
+     Password = frisch 
+  </Target>
+
+For a discussion about the advantages and disadvantages of the JMX-Proxy mode,
+please have a look at L<http://labs.consol.de/> which contains some evaluations
+of this mode for various application servers (e.g. JBoss and Weblogic). 
+
+=over 
+
+=item Url
+
+The JMX-RMI Url to access the target platform. 
+
+=item User, Password
+
+User and password for authentication against the target server. 
+
+=back
+  
+=back 
+
+=head2 Single Check
+
+With C<E<lt>CheckE<gt>> a single check can be defined. It takes any option
+available also available via the command line. Each check has a name, which can
+be referenced from the commandline with the option C<--check I<name>>.
+
+Example:
+
+  <Check memory_heap>
+    Value = java.lang:type=Memory/HeapMemoryUsage/used
+    Base = java.lang:type=Memory/HeapMemoryUsage/max
+    Label = Heap-Memory:
+    Name = Heap
+    Critical = 90
+  </Check>
+
+The C<E<lt>CheckE</gt>> section knows about the following directives:
+
+=over
+
+=item Mbean
+
+The C<ObjectName> of the MBean to monitor.
+
+=item Attribute
+
+Attribute to monitor. 
+
+=item Operation
+
+Operation, whose return value should be monitored. Either C<Attribute> or
+C<Operation> should be given, but not both. If the operation takes arguments,
+these need to be given as additional arguments to the C<check_jmx4perl> command
+line call. In the rare case, you need to call an overloaded operation (i.e. an
+operation whose name exists multiple times on the same MBean but with different
+parameter types), the argument types can be given within parentheses:
+
+  <Check>
+     ....
+     Operation = checkUserCount(java.lang.String,java.lang.String)
+     ...
+  </Check>
+
+=item Alias
+
+Alias, which must be known to C<check_jmx4perl>. Use C<jmx4perl aliases> to get
+a list of all known aliases. If C<Alias> is given as configuration directive,
+C<Operation> and/or C<Attribute> is ignored. Please note, that using C<Alias>
+without C<Product> in the server section leads to at least one additional HTTP
+request. 
+
+=item Path
+
+Path to apply to the attribute or operation return value. See L</"Pathes"> for
+more information about pathes. 
+
+=item Value
+
+Value is a shortcut for specifying C<MBean>, C<Attribute> and C<Path> at
+once. Simply concatenate all three parts via C</> (the C<Path> part is
+optional). Slashes within MBean names needs to be escaped with a C<\>
+(backslash). Example:
+
+  Value = java.lang:type=Memory/HeapMemoryUsage/used
+
+is equivalent to 
+
+  MBean = java.lang:type=Memory
+  Attribute = HeapMemoryUsage
+  Path = used
+
+=item Base
+
+Switches on relative checks. See L</"Relative Checks"> for more information
+about relative checks. The value specified with this directive defines the
+base value against which the relative value should be calculated. The format is
+the same as for C<Value>:
+
+  Base = java.lang:type=Memory/HeapMemoryUsage/max
+
+For relative checks, the C<Critical> and C<Warning> Threshold are interpreted
+as a value between 0% and 100%.
+
+=item Delta
+
+Switches on incremental mode as described in section L</"Incremental
+Checks">. The value given is used for normalization the increase rate. E.g.
+
+  Delta = 60 
+
+measures the growth rate per minute (60 seconds). If no value is given, the
+absolute increase between two checks is used. 
+
+=item Numeric
+
+This directive switches on numeric mode, i.e. the given threshold values are
+compared numerically against the returned JMX value. By default, the check mode
+is determined by an heuristic. 
+
+=item String
+
+String checks, which are switched on with this directive, are useful for
+non-numeric thresholds. See L</"String checks"> for more details. 
+
+=item Name
+
+The name to be used in the performance data. By default, a name is calculated
+based on the MBean and attribute/operation name.
+
+=item Label
+
+Format for setting the plugin output (not the performance data, use C<Name> for
+this). It takes a printf like format string which is described in detail in
+L</"Output Tuning">. 
+
+=item Unit
+
+This specifies how the return value should be interpreted. This value, if
+given, must conform to the unit returned by the JMX
+attribute/operation. E.g. for C<java.lang:type=Memory/HeapMemoryUsage/used>
+unit, if set, must be C<B> since this JMX call returns the used memory measured
+in bytes. The value given here is only used for shortening the plugin's output
+automatically. For more details and for what units are available refer to
+section L</"Output Tuning">.
+
+=item Critical
+
+Specifies the critical threshold. If C<String> is set (or the heuristics
+determines a string check), this should be a string value as described in
+L</"String checks">. For relative checks, this should be a relative value in
+ther range [0,100]. Otherwise, it is a simple numeric value which is used as
+threshold. For numeric checks, the threshhold can be given in the format
+defined at
+L<http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT>. 
+
+=item Warning
+
+Defines the warning threshold the same way as described for the C<Critical>
+threshold. 
+
+=item Null
+
+Replacement value when an attribute is null or an operation returns a null
+value. This value then can be used in string checks in order to check against
+null values. By default, this value is "C<null>".
+
+=item Use
+
+In order to use parent checks, this directive specifies the parent along with
+any parameters passed through. For example,
+
+  Use = memory_relative_base(80,90),base_label
+
+uses a parent check named C<memory_relative_base>, which must be a check
+defined in the same configuration file (or an imported on). Additionally, the
+parameters C<80> and C<90> are passed to this check (which can be accessed
+there via the argument placeholders C<$0> and C<$1>). See L</"Parent checks">
+and L</"Parameterized checks"> for more information about check inheritance. 
+
+Multiple parents can be given by providing them in a comma separated list. 
+
+=back
+
+=head2 Includes
+
+Checks can be organized in multiple configuration files. To include another
+configuration file, the C<include> directive can be used:
+
+  include tomcat.cfg
+  include threads.cfg
+  include memory.cfg
+
+If given as relative path, the configuration files are looked up in the same
+directory as the current configuration file. Absolute pathes can be given, too. 
 
 =head2 Parent checks
 
+With C<check_jmx4perl> parent checks it is possible to define common base
+checks, which are usable in various sub-checks. Any C<E<lt>CheckE<gt>> can be a
+parent check as soon as it is referenced via a C<Use> directive from within
+another check's definition. When a check with a parent check is used, its
+configuration is merged with this from the parent check with own directives
+having a higher priority. Parent checks can have parent checks as well (and so
+on). 
+
+For example, consider the following configuration:
+
+  <Check grand_parent>
+     Name grand_parent
+     Label GrandPa
+     Critical 10
+  </Check>
+
+  <Check parent_1>
+     Use grand_parent
+     Name parent_1
+     Critical 20
+  </Check>
+
+  <Check parent_2>
+     Name parent_2
+     Warning 20
+  </Check> 
+
+  <Check check>
+     Use parent_1,parent_2
+     Warning 40
+  </Check>
+
+In this scenario, when check C<check> is used, it has a C<Name> "C<parent_2>"
+(last parent check in C<Use>), a C<Label> "GrandPa" (inherited from
+C<grand_parent> via C<parent_1>), a C<Critical> 20 (inherited from C<parent_1>)
+and a C<Warning> 40 (directly give in the check definition). 
+
+A parent value of a configuration directive can be refered to with the
+placeholder C<$BASE>. For example:
+
+  <Check parent>
+    Name Parent
+  </Check>
+
+  <Check check>
+    Use parent
+    Name Child: $BASE
+  </Check>
+
+This will lead to a C<Name> "C<Child: Parent>" since C<$BASE> is resolved to
+the parent checks valus of C<Name>, C<"Parent"> in this case. The base value is
+searched upwards in the inheritance hierarchy (parent, grand parent, ...) until
+a value is found. If nonen is found, an empty string is used for C<$BASE>.
+
 =head2 Parameterized checks
+
+Checks can be parameterized, i.e. they can take arguments which are replaced in
+the configuration during runtime. Arguments are used in check definition via
+the positional format C<$0>, C<$1>, .... (e.g. C<$0> is the first argument
+given). Arguments can either be given on the command line as extra arguments to
+C<check_jmx4perl> or within the C<Use> directive to provide arguments to parent
+checks. 
+
+Example:
+
+  <Check parent>
+    Name $0
+    Label $1
+  </Check>
+
+  <Check child_check>
+    Use parent($0,"Check-Label")   
+    ....
+  </Check>
+
+  $ check_jmx4perl --check child_check .... "Argument-Name"
+  OK - Check-Label | 'Argument-Name'= ....
+
+As it can be seen in this example, arguments can be propagated to a parent
+check. In this case, C<$0> from the command line (C<Argument-Name>) is passed
+through to the parent check which uses it in the C<Name> directive. C<$1> from
+the parent check is replaced with the value "C<Check-Label>" given in the
+C<Use> directive of the child check.
+
+Parameters can have default values. These default values are taken in case an
+argument is missing (either when declaring the parent check or missing from the
+command line). Default values are specified with
+C<${>I<arg-nr>C<:>I<default>C<}>. For example,
+
+ <Check relative_base>
+   Label = %.2r% used (%.2v %u / %.2b %w)
+   Critical = ${0:90}
+   Warning = ${1:80}
+ </Check>
+
+defines a default value of 90% for the critical threshold and 80% for the
+warning threshold. If a child check uses this parent definition and only wants
+to ommit the first parameter (but explicitely specifying the second parameter)
+it can do so by leaving the first parameter empty:
+
+  <Check child>
+     Use relative_base(,70)
+  </Check>
+
+=head2 Multichecks
+
+Multiple checks can be combined to a single I<MultiCheck>. The advantage of a
+multi check is, that multiple values can be retrieved from the server side with
+a single HTTP request. The output is conformant to Nagios 3 multiline
+format. It will lead to a C<CRITICAL> value as soon as one check is critical,
+same for C<WARNING>. If both, C<CRITICAL> and C<WARNING> is triggered by two or
+more checks, then a C<CRITICAL> is taken.
+
+A multi-check can be defined with the directive C<E<lt>MultiCheckE<gt>>, which
+contain various references to other C<E<lt>CheckE<gt>> definitions or other
+multi check definitions.
+
+Example:
+
+  <MultiCheck all>
+    MultiCheck memory
+    MultiCheck threads
+  </MultiCheck>
+
+  <MultiCheck memory>
+    Check memory_heap($0,80)
+    Check memory_pool_base("CMS Perm Gen",90,80)
+  </MultiCheck>
+
+  <MultiCheck threads>
+    Check thread_inc
+    Check thread_deadlock
+  </MultiCheck>
+
+Here a multi check group I<memory> has been defined with reference to two
+checks, which must exist somewhere else in the configuration file. As it can be
+seen, parameters can be given through to the check in the usual way (literally
+or with references to command line arguments). The group I<all> combines the
+two groups I<memory> and I<thread>, containing effectively four checks. 
+
+A multi-check is referenced from the command line like any other check:
+
+  $ check_jmx4perl .... --check all 90
+
+(90 is the argument which replaces C<$0> in the definition above). 
 
 =head2 Predefined checks
 
+C<check_jmx4perl> comes with a collection of predefined configuration for
+various application servers. The configurations can be found in the directory
+F<config> within the toplevel distribution directory. The configurations are
+fairly well documented inline. 
 
+=head3 common.cfg
 
-=cut
+Common check definitions, which can be used as parents for own checks. E.g. a
+check C<relative_base> can be used as parent for getting a nicely formatted
+output message.
 
-use FindBin qw ($Bin);
-# Used for running directly out of the distrib dir,
-# but we put the lib at last to avoid security issues
-# on a proper installed system
-#BEGIN { push(@INC, qq($Bin/../lib)); }
-use lib qq($Bin/../lib);
-use Nagios::Plugin::Functions;
-use JMX::Jmx4Perl::Nagios::CheckJmx4Perl;
+=head3 memory.cfg
 
-# Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
-# to the usual Nagios conventions and to avoid redundancy in the UI display.
-BEGIN {
-    no warnings 'redefine';
-    *Nagios::Plugin::Functions::get_shortname = sub {
-        return undef;
-    };
-}
+Memory checks for heap and non-heap memoy as well as for various memory
+pools. Particularly interesting here is the so called I<Perm Gen> pool as it
+holds the java type information which can overflow e.g after multiple
+redeployments when the old classloader of the webapp can't be cleared up by the
+garbage collector (someone might still hold a reference to it). 
 
-# Create new object and use this for the check
-# Hopefully it gets cleaned up aftewards if running
-# within the embedded Nagios perl interpreter. At least, 
-# we don't keep any references.
-JMX::Jmx4Perl::Nagios::CheckJmx4Perl->new(@ARGV)->execute();
+=head3 threads.cfg
+
+Checks for threads, i.e. checking for the tread count increase rate. A check
+for finding out deadlocks (on a JDK 6 VM) is provided, too.
+
+=head3 jetty.cfg
+
+Various checks for jetty like checking for running servlets, thread count within
+the app server, sessions (number and lifing time) or requests per minute.
+
+=head3 tomcat.cfg
+
+Mostly the same checks as for jetty, but for tomcat as application server. 
 
 =head1 LICENSE
 
@@ -441,3 +1773,5 @@ along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
 roland@cpan.org
 
 =cut
+
+1;

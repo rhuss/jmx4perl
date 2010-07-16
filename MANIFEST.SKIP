@@ -75,3 +75,5 @@ osgi.txt
 MYMETA.yml
 blog_ideas.txt
 agent/.sonar-ide.properties
+docs/
+agent/classes

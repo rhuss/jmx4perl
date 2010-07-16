@@ -394,7 +394,7 @@ sub try_attribute {
     }
     my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
     my $response = $jmx4perl->request($request);
-    if ($response->status == 404) {
+    if ($response->status == 404 || $response->status == 400) {
         $self->{$property} = "";
     } elsif ($response->is_ok) {
         $self->{$property} = $response->value;

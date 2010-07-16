@@ -1,13 +1,11 @@
-package org.jmx4perl;
+package org.jmx4perl.backend;
 
-import org.jmx4perl.backend.LocalRequestDispatcher;
-import org.jmx4perl.backend.RequestDispatcher;
-import org.jmx4perl.config.DebugStore;
-import org.jmx4perl.config.Restrictor;
-import org.jmx4perl.config.RestrictorFactory;
+import org.jmx4perl.*;
+import org.jmx4perl.config.*;
 import org.jmx4perl.converter.StringToObjectConverter;
 import org.jmx4perl.converter.json.ObjectToJsonConverter;
 import org.jmx4perl.history.HistoryStore;
+import org.jmx4perl.LogHandler;
 import org.json.simple.JSONObject;
 
 import javax.management.*;
@@ -18,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.jmx4perl.Config.*;
+import static org.jmx4perl.ConfigKey.*;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -52,6 +50,7 @@ import static org.jmx4perl.Config.*;
  */
 public class BackendManager {
 
+    // Dispatches request to local MBeanServer
     private LocalRequestDispatcher localDispatcher;
 
     // Converter for converting various attribute object types
@@ -67,16 +66,13 @@ public class BackendManager {
     // Storage for storing debug information
     private DebugStore debugStore;
 
-    // MBean used for configuration
-    private ObjectName configMBeanName;
-
     // Loghandler for dispatching logs
     private LogHandler logHandler;
 
     // List of RequestDispatchers to consult
     private List<RequestDispatcher> requestDispatchers;
 
-    public BackendManager(Map<Config,String> pConfig, LogHandler pLogHandler) {
+    public BackendManager(Map<ConfigKey,String> pConfig, LogHandler pLogHandler) {
 
 
         // Central objects
@@ -92,50 +88,53 @@ public class BackendManager {
         // Create and remember request dispatchers
         localDispatcher = new LocalRequestDispatcher(objectToJsonConverter,
                                                      stringToObjectConverter,
-                                                     restrictor);
+                                                     restrictor,pConfig.get(ConfigKey.MBEAN_QUALIFIER));
         requestDispatchers = createRequestDispatchers(DISPATCHER_CLASSES.getValue(pConfig),
                                                       objectToJsonConverter,stringToObjectConverter,restrictor);
         requestDispatchers.add(localDispatcher);
 
         // Backendstore for remembering state
         initStores(pConfig);
-        registerOwnMBeans();
     }
 
+    // Construct configured dispatchers by reflection. Returns always
+    // a list, an empty one if no request dispatcher should be created
     private List<RequestDispatcher> createRequestDispatchers(String pClasses,
                                                              ObjectToJsonConverter pObjectToJsonConverter,
                                                              StringToObjectConverter pStringToObjectConverter,
                                                              Restrictor pRestrictor) {
         List<RequestDispatcher> ret = new ArrayList<RequestDispatcher>();
-        if (pClasses == null || pClasses.length() == 0) {
-            return ret;
-        }
-        String[] names = pClasses.split("\\s*,\\s*");
-        for (String name : names) {
-            try {
-                Class clazz = this.getClass().getClassLoader().loadClass(name);
-                Constructor constructor = clazz.getConstructor(ObjectToJsonConverter.class,
-                                                               StringToObjectConverter.class,
-                                                               Restrictor.class);
-                RequestDispatcher dispatcher =
-                        (RequestDispatcher)
-                                constructor.newInstance(pObjectToJsonConverter,
-                                                        pStringToObjectConverter,
-                                                        pRestrictor);
-                ret.add(dispatcher);
-            } catch (ClassNotFoundException e) {
-                throw new IllegalArgumentException("Couldn't load class " + name + ": " + e,e);
-            } catch (NoSuchMethodException e) {
-                throw new IllegalArgumentException("Class " + name + " has invalid constructor: " + e,e);
-            } catch (IllegalAccessException e) {
-                throw new IllegalArgumentException("Constructor of " + name + " couldn't be accessed: " + e,e);
-            } catch (InvocationTargetException e) {
-                throw new IllegalArgumentException(e);
-            } catch (InstantiationException e) {
-                throw new IllegalArgumentException(name + " couldn't be instantiated: " + e,e);
+        if (pClasses != null && pClasses.length() > 0) {
+            String[] names = pClasses.split("\\s*,\\s*");
+            for (String name : names) {
+                ret.add(createDispatcher(name, pObjectToJsonConverter, pStringToObjectConverter, pRestrictor));
             }
         }
         return ret;
+    }
+
+    // Create a single dispatcher
+    private RequestDispatcher createDispatcher(String pDispatcherClass, ObjectToJsonConverter pObjectToJsonConverter, StringToObjectConverter pStringToObjectConverter, Restrictor pRestrictor) {
+        try {
+            Class clazz = this.getClass().getClassLoader().loadClass(pDispatcherClass);
+            Constructor constructor = clazz.getConstructor(ObjectToJsonConverter.class,
+                                                           StringToObjectConverter.class,
+                                                           Restrictor.class);
+            return (RequestDispatcher)
+                            constructor.newInstance(pObjectToJsonConverter,
+                                                    pStringToObjectConverter,
+                                                    pRestrictor);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException("Couldn't load class " + pDispatcherClass + ": " + e,e);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("Class " + pDispatcherClass + " has invalid constructor: " + e,e);
+        } catch (IllegalAccessException e) {
+        throw new IllegalArgumentException("Constructor of " + pDispatcherClass + " couldn't be accessed: " + e,e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalArgumentException(e);
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException(pDispatcherClass + " couldn't be instantiated: " + e,e);
+        }
     }
 
     /**
@@ -192,13 +191,9 @@ public class BackendManager {
     }
 
     // init various application wide stores for handling history and debug output.
-    private void initStores(Map<Config, String> pConfig) {
-        int maxEntries;
-        try {
-            maxEntries = Integer.parseInt(HISTORY_MAX_ENTRIES.getValue(pConfig));
-        } catch (NumberFormatException exp) {
-            maxEntries = Integer.parseInt(HISTORY_MAX_ENTRIES.getDefaultValue());
-        }
+    private void initStores(Map<ConfigKey, String> pConfig) {
+        int maxEntries = getIntConfigValue(pConfig,HISTORY_MAX_ENTRIES);
+        int maxDebugEntries = getIntConfigValue(pConfig,DEBUG_MAX_ENTRIES);
 
         String doDebug = DEBUG.getValue(pConfig);
         boolean debug = false;
@@ -206,20 +201,12 @@ public class BackendManager {
             debug = true;
         }
 
-        int maxDebugEntries;
-        try {
-            maxDebugEntries = Integer.parseInt(DEBUG_MAX_ENTRIES.getValue(pConfig));
-        } catch (NumberFormatException exp) {
-            maxDebugEntries = Integer.parseInt(DEBUG_MAX_ENTRIES.getDefaultValue());
-        }
 
         historyStore = new HistoryStore(maxEntries);
         debugStore = new DebugStore(maxDebugEntries,debug);
-    }
 
-    private void registerOwnMBeans() {
         try {
-            configMBeanName = localDispatcher.registerConfigMBean(historyStore,debugStore);
+            localDispatcher.init(historyStore,debugStore);
         } catch (NotCompliantMBeanException e) {
             error("Error registering config MBean: " + e,e);
         } catch (MBeanRegistrationException e) {
@@ -231,21 +218,27 @@ public class BackendManager {
         }
     }
 
+    private int getIntConfigValue(Map<ConfigKey, String> pConfig, ConfigKey pKey) {
+        int maxDebugEntries;
+        try {
+            maxDebugEntries = Integer.parseInt(pKey.getValue(pConfig));
+        } catch (NumberFormatException exp) {
+            maxDebugEntries = Integer.parseInt(pKey.getDefaultValue());
+        }
+        return maxDebugEntries;
+    }
+
     // Remove MBeans again.
-    public void unregisterOwnMBeans() {
-        if (configMBeanName != null) {
-            try {
-                localDispatcher.unregisterLocalMBean(configMBeanName);
-            } catch (MalformedObjectNameException e) {
-                // wont happen
-                error("Invalid name for config MBean: " + e,e);
-            } catch (InstanceNotFoundException e) {
-                error("No Mbean registered with name " + configMBeanName + ": " + e,e);
-            } catch (MBeanRegistrationException e) {
-                error("Cannot unregister MBean: " + e,e);
-            }
-        } else {
-            error("Internal Problem: No ConfigMBean name !",null);
+    public void destroy() {
+        try {
+            localDispatcher.destroy();
+        } catch (MalformedObjectNameException e) {
+            // wont happen
+            error("Invalid name for config MBean: " + e,e);
+        } catch (InstanceNotFoundException e) {
+            error("MBean not found: " + e,e);
+        } catch (MBeanRegistrationException e) {
+            error("Cannot unregister MBean: " + e,e);
         }
     }
 

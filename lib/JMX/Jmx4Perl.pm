@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.70_3";
+$VERSION = "0.70";
 
 my $REGISTRY = {
                 # Agent based
@@ -192,9 +192,7 @@ sub new {
 
     # Merge in config from a configuration file if a server name is given
     if ($cfg->{server}) {
-        my $config = $cfg->{config} ? 
-          $cfg->{config} : 
-            new JMX::Jmx4Perl::Config($cfg->{config_file});
+        my $config = $cfg->{config} ? $cfg->{config} : new JMX::Jmx4Perl::Config($cfg->{config_file});
         my $server_cfg = $config->get_server_config($cfg->{server});
         if (defined($server_cfg)) {
             $cfg = { %$server_cfg, %$cfg };

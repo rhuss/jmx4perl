@@ -1,8 +1,8 @@
 package org.jmx4perl.converter.json.simplifier;
 
-import org.w3c.dom.Element;
-
 import java.util.Map;
+
+import javax.management.ObjectName;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -28,38 +28,26 @@ import java.util.Map;
  */
 
 /**
- * Special deserialization for DOM Elements to shorten the info
+ * Special deserialization for ObjectNames to their canonical format
  *
  * @author roland
  * @since Jul 27, 2009
  */
-public class DomElementHandler extends SimplifierHandler<Element> {
+public class ObjectNameSimplifier extends SimplifierExtractor<ObjectName> {
 
-
-    public DomElementHandler() {
-        super(Element.class);
+    public ObjectNameSimplifier() {
+        super(ObjectName.class);
     }
 
     // ==================================================================================
     @Override
-    void init(Map<String, SimplifierHandler.Extractor<Element>> pExtractorMap) {
-        Object[][] pAttrs = {
-                { "name", new NameExtractor() },
-                { "value", new ValueExtractor() },
-                { "hasChildNodes", new ChildExtractor() }
-        };
-        addExtractors(pAttrs);
+    void init(Map<String, AttributeExtractor<ObjectName>> pExtractorMap) {
+        addExtractors(new Object[][] {{ "objectName", new ObjectNameAttributeExtractor() }});
     }
 
-    // ==================================================================================
-    private static class ValueExtractor implements Extractor<Element> {
-        public Object extract(Element element) { return element.getNodeValue(); }
+    private static class ObjectNameAttributeExtractor implements AttributeExtractor<ObjectName> {
+        public Object extract(ObjectName value) throws SkipAttributeException {
+            return value.toString();
+        }
     }
-    private static class NameExtractor implements Extractor<Element> {
-        public Object extract(Element element) { return element.getNodeName(); }
-    }
-    private static class ChildExtractor implements Extractor<Element> {
-        public Object extract(Element element) { return element.hasChildNodes(); }
-    }
-
 }

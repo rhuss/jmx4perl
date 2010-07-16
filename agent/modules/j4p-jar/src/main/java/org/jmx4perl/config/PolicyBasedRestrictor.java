@@ -204,50 +204,59 @@ public class PolicyBasedRestrictor implements Restrictor {
             if (node.getNodeType() != Node.ELEMENT_NODE) {
                 continue;
             }
-            NodeList childs = node.getChildNodes();
-            for (int j = 0;j<childs.getLength();j++) {
-                Node mBeanNode = childs.item(j);
-                if (mBeanNode.getNodeType() != Node.ELEMENT_NODE) {
-                    continue;
-                }
-                assertNodeName(mBeanNode,"mbean");
-                NodeList params = mBeanNode.getChildNodes();
-                String name = null;
-                Set<String> readAttributes = new HashSet<String>();
-                Set<String> writeAttributes = new HashSet<String>();
-                Set<String> operations = new HashSet<String>();
-                for (int k = 0; k<params.getLength(); k++) {
-                    Node param = params.item(k);
-                    if (param.getNodeType() != Node.ELEMENT_NODE) {
-                        continue;
-                    }
-                    assertNodeName(param,"name","attribute","operation");
-                    String tag = param.getNodeName();
-                    if (tag.equals("name")) {
-                        if (name != null) {
-                            throw new SecurityException("<name> given twice as MBean name");
-                        } else {
-                            name = param.getTextContent().trim();
-                        }
-                    } else if (tag.equals("attribute")) {
-                        Node mode = param.getAttributes().getNamedItem("mode");
-                        readAttributes.add(param.getTextContent().trim());
-                        if (mode == null || !mode.getNodeValue().equalsIgnoreCase("read")) {
-                            writeAttributes.add(param.getTextContent().trim());
-                        }
-                    } else {
-                        operations.add(param.getTextContent().trim());
-                }
-                }
-                if (name == null) {
-                    throw new SecurityException("No <name> given for <mbean>");
-                }
-                ObjectName oName = new ObjectName(name);
-                if (oName.isPattern()) {
-                    pConfig.addPattern(oName);
-                }
-                pConfig.addValues(oName,readAttributes,writeAttributes,operations);
+            extractPolicyConfig(pConfig, node.getChildNodes());
+        }
+    }
+
+    private void extractPolicyConfig(MBeanPolicyConfig pConfig, NodeList pChilds) throws MalformedObjectNameException {
+        for (int j = 0;j< pChilds.getLength();j++) {
+            Node mBeanNode = pChilds.item(j);
+            if (mBeanNode.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
             }
+            assertNodeName(mBeanNode,"mbean");
+            extractMBeanPolicy(pConfig, mBeanNode);
+        }
+    }
+
+    private void extractMBeanPolicy(MBeanPolicyConfig pConfig, Node pMBeanNode) throws MalformedObjectNameException {
+        NodeList params = pMBeanNode.getChildNodes();
+        String name = null;
+        Set<String> readAttributes = new HashSet<String>();
+        Set<String> writeAttributes = new HashSet<String>();
+        Set<String> operations = new HashSet<String>();
+        for (int k = 0; k < params.getLength(); k++) {
+            Node param = params.item(k);
+            if (param.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            assertNodeName(param,"name","attribute","operation");
+            String tag = param.getNodeName();
+            if (tag.equals("name")) {
+                if (name != null) {
+                    throw new SecurityException("<name> given twice as MBean name");
+                } else {
+                    name = param.getTextContent().trim();
+                }
+            } else if (tag.equals("attribute")) {
+                extractAttribute(readAttributes, writeAttributes, param);
+            } else if (tag.equals("operation")) {
+                operations.add(param.getTextContent().trim());
+            } else {
+                throw new SecurityException("Tag <" + tag + "> invalid");
+            }
+        }
+        if (name == null) {
+            throw new SecurityException("No <name> given for <mbean>");
+        }
+        pConfig.addValues(new ObjectName(name),readAttributes,writeAttributes,operations);
+    }
+
+    private void extractAttribute(Set<String> pReadAttributes, Set<String> pWriteAttributes, Node pParam) {
+        Node mode = pParam.getAttributes().getNamedItem("mode");
+        pReadAttributes.add(pParam.getTextContent().trim());
+        if (mode == null || !mode.getNodeValue().equalsIgnoreCase("read")) {
+            pWriteAttributes.add(pParam.getTextContent().trim());
         }
     }
 
@@ -317,6 +326,9 @@ public class PolicyBasedRestrictor implements Restrictor {
             readAttributes.put(pOName,pReadAttributes);
             writeAttributes.put(pOName,pWriteAttributes);
             operations.put(pOName,pOperations);
+            if (pOName.isPattern()) {
+                addPattern(pOName);
+            }
         }
 
         Set<String> getValues(JmxRequest.Type pType, ObjectName pName) {

@@ -14,11 +14,11 @@ public class Activator implements BundleActivator {
         itSetup = new ItSetup();
     }
 
-    public void start(BundleContext context) throws Exception {
+    public void start(BundleContext context) {
         itSetup.start();
     }
 
-    public void stop(BundleContext context) throws Exception {
+    public void stop(BundleContext context) {
         itSetup.stop();
     }
 }

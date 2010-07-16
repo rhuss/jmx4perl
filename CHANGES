@@ -1,4 +1,4 @@
-0.70
+0.70 (2010-7-10)
   - Extended configuration syntax for check_jmx4perl as an alternative to
     command line options
     + Parameterized checks
@@ -8,10 +8,10 @@
     + Predefined checks for certain environments (as sample configuration files)
     + Added null value check, can be tuned with --null
   - Added '--value' as a shortcut for --mbean/--attribute/--value  
-  - Better documentation for check_jmx4perl                                                                                 
-  - <Server> sections are now named blocks, taking the server name as block 
+  - Better documentation for check_jmx4perl (30 extra pages)
+ - <Server> sections are now named blocks, taking the server name as block 
     name (similar to <Check>). The old syntax with an "Name" argument is 
-    still support but must not mixed with the new syntax.
+    still support but must not be mixed with the new syntax.
   - Path elements containing '/' can now be escaped with '\/'
   - j4p-osgi-bundle including pax-web-bundle so only a single bundle
     is needed for deploying (when no OSGi HttpService is installed)
@@ -26,7 +26,12 @@
       is used
   - Started to add a java client library
   - j4psh beta version added
-   
+  - Agent: 
+    + Switched from JUnit to TestNG for testing because of
+      support of testing groups 
+    + New servlet init parameter option 'mbeanQualifier' to allow
+      multiple j4p-servlet in a single application server
+
 0.65 (2010-3-30)
   - A JDK 6 java agent added for exporting the j4p protocol via
     HTTP/JSON.

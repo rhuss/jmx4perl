@@ -9,10 +9,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.management.MalformedObjectNameException;
+
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.jmx4perl.*;
+import org.jmx4perl.backend.BackendManager;
+import org.jmx4perl.ConfigKey;
+import org.jmx4perl.http.HttpRequestHandler;
+import org.jmx4perl.LogHandler;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
@@ -45,7 +51,7 @@ import org.json.simple.JSONObject;
  * @author roland
  * @since Mar 3, 2010
  */
-public class J4pHttpHandler implements HttpHandler,LogHandler {
+public class J4pHttpHandler implements HttpHandler, LogHandler {
 
     // Backendmanager for doing request
     private BackendManager backendManager;
@@ -60,8 +66,8 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
     private Pattern contentTypePattern = Pattern.compile(".*;\\s*charset=([^;,]+)\\s*.*");
 
 
-    public J4pHttpHandler(Map<Config,String> pConfig) {
-        context = pConfig.get(Config.AGENT_CONTEXT);
+    public J4pHttpHandler(Map<ConfigKey,String> pConfig) {
+        context = pConfig.get(ConfigKey.AGENT_CONTEXT);
         if (!context.endsWith("/")) {
             context += "/";
         }
@@ -83,30 +89,9 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
             // Dispatch for the proper HTTP request method
             URI uri = pExchange.getRequestURI();
             if ("GET".equalsIgnoreCase(method)) {
-                ParsedUri parsedUri = new ParsedUri(uri,context);
-                JmxRequest jmxReq =
-                        JmxRequestFactory.createRequestFromUrl(parsedUri.getPathInfo(),parsedUri.getParameterMap());
-                if (backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {
-                    debug("URI: " + uri);
-                    debug("Path-Info: " + parsedUri.getPathInfo());
-                    debug("Request: " + jmxReq.toString());
-                }
-                json = requestHandler.executeRequest(jmxReq);
+                json = executeGetRequest(uri);
             } else if ("POST".equalsIgnoreCase(method)) {
-                if (backendManager.isDebug()) {
-                    debug("URI: " + uri);
-                }
-                String encoding = null;
-                Headers headers = pExchange.getRequestHeaders();
-                String cType =  headers.getFirst("Content-Type");
-                if (cType != null) {
-                    Matcher matcher = contentTypePattern.matcher(cType);
-                    if (matcher.matches()) {
-                        encoding = matcher.group(1);
-                    }
-                }
-                InputStream is = pExchange.getRequestBody();
-                json = requestHandler.handleRequestInputStream(is, encoding);
+                json = executePostRequest(pExchange, uri);
             } else {
                 throw new IllegalArgumentException("HTTP Method " + method + " is not supported.");
             }
@@ -121,8 +106,37 @@ public class J4pHttpHandler implements HttpHandler,LogHandler {
         } finally {
             sendResponse(pExchange,code,json.toJSONString());
         }
-
     }
+
+    private JSONAware executeGetRequest(URI pUri) {
+        ParsedUri parsedUri = new ParsedUri(pUri,context);
+        JmxRequest jmxReq =
+                JmxRequestFactory.createRequestFromUrl(parsedUri.getPathInfo(),parsedUri.getParameterMap());
+        if (backendManager.isDebug() && !"debugInfo".equals(jmxReq.getOperation())) {
+            debug("URI: " + pUri);
+            debug("Path-Info: " + parsedUri.getPathInfo());
+            debug("Request: " + jmxReq.toString());
+        }
+        return requestHandler.executeRequest(jmxReq);
+    }
+
+    private JSONAware executePostRequest(HttpExchange pExchange, URI pUri) throws MalformedObjectNameException, IOException {
+        if (backendManager.isDebug()) {
+            debug("URI: " + pUri);
+        }
+        String encoding = null;
+        Headers headers = pExchange.getRequestHeaders();
+        String cType =  headers.getFirst("Content-Type");
+        if (cType != null) {
+            Matcher matcher = contentTypePattern.matcher(cType);
+            if (matcher.matches()) {
+                encoding = matcher.group(1);
+            }
+        }
+        InputStream is = pExchange.getRequestBody();
+        return requestHandler.handleRequestInputStream(is, encoding);
+    }
+
 
     private void sendResponse(HttpExchange pExchange, int pCode, String s) throws IOException {
         OutputStream out = null;

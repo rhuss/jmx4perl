@@ -1,5 +1,7 @@
-package org.jmx4perl;
+package org.jmx4perl.http;
 
+import org.jmx4perl.*;
+import org.jmx4perl.backend.BackendManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
@@ -144,8 +146,13 @@ public class HttpRequestHandler {
      * @param exp exception to handle
      * @return its JSON representation
      */
-    public JSONObject handleThrowable(Throwable exp) {
+    public JSONObject handleThrowable(Throwable pThrowable) {
         JSONObject json;
+        Throwable exp = pThrowable;
+        if (exp instanceof RuntimeMBeanException) {
+            // Unwrap 
+            exp = exp.getCause();
+        }
         if (exp instanceof IllegalArgumentException) {
             json = getErrorJSON(400,exp);
         } else if (exp instanceof IllegalStateException) {

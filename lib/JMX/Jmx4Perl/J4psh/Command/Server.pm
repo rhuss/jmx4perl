@@ -23,7 +23,6 @@ JMX::Jmx4Perl::J4psh::Command::Server - Server related commands
 
 sub name { "server" }
 
-
 sub top_commands {
     my $self = shift;
     return {
@@ -35,7 +34,13 @@ List all servers stored in the configuration
 and those connected during this session 
 (indicated by a '*')
 EOT
-                         },
+                         }
+           };
+}
+
+sub global_commands {
+    my $self = shift;
+    return {
             "connect" => { 
                           desc => "Connect to a server by its URL or symbolic name",
                           minargs => 1, maxargs => 2,
@@ -50,7 +55,7 @@ is reachable. Alternatively a <name> as stored in the configuration
 can be given. Is using the <url> form an additional <name>
 can be given which will be used as name in the server list.
 EOT
-                         },
+                         }
            };
 }
 

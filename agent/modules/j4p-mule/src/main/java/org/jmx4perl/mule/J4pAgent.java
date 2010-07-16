@@ -1,6 +1,6 @@
 package org.jmx4perl.mule;
 
-import org.jmx4perl.AgentServlet;
+import org.jmx4perl.http.AgentServlet;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.HandlerContainer;
 import org.mortbay.jetty.Server;
@@ -69,6 +69,7 @@ public class J4pAgent extends AbstractAgent {
 
     protected J4pAgent() {
         super("j4p-agent");
+        server = null;
     }
 
     public void stop() throws MuleException {

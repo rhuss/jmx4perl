@@ -30,7 +30,7 @@ import java.util.Map;
  * @author roland
  * @since Jan 1, 2010
  */
-public enum Config {
+public enum ConfigKey {
 
     // Maximum number of history entries to keep
     HISTORY_MAX_ENTRIES("historyMaxEntries","10"),
@@ -65,17 +65,28 @@ public enum Config {
     // Runtime configuration (i.e. must come in with a request)
     // for ignoring errors during JMX operations and JSON serialization.
     // This works only for certain operations like pattern reads.
-    IGNORE_ERRORS("ignoreErrors");
+    IGNORE_ERRORS("ignoreErrors"),
+
+    // Optional domain name for registering own MBeans
+    MBEAN_QUALIFIER("mbeanQualifier");
 
     private String key;
     private String defaultValue;
-    private static Map<String, Config> keyByName;
+    private static Map<String, ConfigKey> keyByName;
 
-    Config(String pValue) {
+    // Build up internal reverse map
+    static {
+        keyByName = new HashMap<String, ConfigKey>();
+        for (ConfigKey ck : ConfigKey.values()) {
+            keyByName.put(ck.getKeyValue(),ck);
+        }
+    }
+
+    ConfigKey(String pValue) {
         this(pValue,null);
     }
 
-    Config(String pValue, String pDefault) {
+    ConfigKey(String pValue, String pDefault) {
         key = pValue;
         defaultValue = pDefault;
     }
@@ -85,15 +96,7 @@ public enum Config {
         return key;
     }
 
-    public static Config getByKey(String pKeyS) {
-        if (keyByName == null) {
-            synchronized (Config.class) {
-                keyByName = new HashMap<String, Config>();
-                for (Config ck : Config.values()) {
-                    keyByName.put(ck.getKeyValue(),ck);
-                }
-            }
-        }
+    public static ConfigKey getByKey(String pKeyS) {
         return keyByName.get(pKeyS);
     }
 
@@ -107,7 +110,7 @@ public enum Config {
 
     // Extract value from map, including a default value if
     // value is not set
-    public String getValue(Map<Config, String> pConfig) {
+    public String getValue(Map<ConfigKey, String> pConfig) {
         String value = pConfig.get(this);
         if (value == null) {
             value = this.getDefaultValue();
@@ -116,9 +119,9 @@ public enum Config {
     }
 
     // Extract config options from a given map
-    public static Map<Config,String> extractConfig(Map<String,String> pMap) {
-        Map<Config,String> ret = new HashMap<Config, String>();
-        for (Config c : Config.values()) {
+    public static Map<ConfigKey,String> extractConfig(Map<String,String> pMap) {
+        Map<ConfigKey,String> ret = new HashMap<ConfigKey, String>();
+        for (ConfigKey c : ConfigKey.values()) {
             String value = pMap.get(c.getKeyValue());
             if (value != null) {
                 ret.put(c,value);
