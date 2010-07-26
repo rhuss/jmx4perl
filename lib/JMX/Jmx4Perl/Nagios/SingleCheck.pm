@@ -143,8 +143,7 @@ sub extract_responses {
     
     # Normalize value 
     my ($value_conv,$unit) = $self->_normalize_value($value);
-    # Common args
-    my $label = "'".$self->_get_name(cleanup => 1)."'";
+    my $label = $self->_get_name(cleanup => 1);
     if ($self->base) {
         # Calc relative value 
         my $base_value = $self->_base_value($self->base,$responses,$requests);
@@ -287,6 +286,7 @@ sub _base_value {
 my @UNITS = ([ qw(us ms s m h d) ],[qw(B KB MB GB TB)]);
 my %UNITS = 
   (
+   ns => 10**3,
    us => 10**3,
    ms => 10**3,
    s => 1,
@@ -375,6 +375,10 @@ sub _get_name {
         # Enable this when '=' gets forbidden
         $name =~ s/=/#/g;
     }
+    # Prepare label for usage with Nagios::Plugin, which will blindly 
+    # add quotes if a space is contained in the label.
+    # We are doing the escape of quotes ourself here
+    $name =~ s/'/''/g;
     return $name;
 }
 

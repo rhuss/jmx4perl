@@ -1,3 +1,8 @@
+0.71
+  - Added 'ns' as unit (CpuThreadTime returns nano seconds)
+  - Fixed quoting of performance data in so far to let 
+    Nagios::Plugin the complete control
+
 0.70 (2010-7-10)
   - Extended configuration syntax for check_jmx4perl as an alternative to
     command line options
@@ -9,7 +14,7 @@
     + Added null value check, can be tuned with --null
   - Added '--value' as a shortcut for --mbean/--attribute/--value  
   - Better documentation for check_jmx4perl (30 extra pages)
- - <Server> sections are now named blocks, taking the server name as block 
+  - <Server> sections are now named blocks, taking the server name as block 
     name (similar to <Check>). The old syntax with an "Name" argument is 
     still support but must not be mixed with the new syntax.
   - Path elements containing '/' can now be escaped with '\/'
