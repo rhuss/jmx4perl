@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-client</artifactId>
-  <version>0.70.0</version>
+  <version>0.71.0.M1</version>
   <packaging>jar</packaging>
   <name>j4p-client</name>
   <description>j4p-client - client library for accessing the j4p agents</description>

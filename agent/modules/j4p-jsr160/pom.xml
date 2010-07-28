@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-jsr160</artifactId>
-  <version>0.70.0</version>
+  <version>0.71.0.M1</version>
   <packaging>jar</packaging>
   <name>j4p-jsr160</name>
   <description>j4p-160 - jar file containing JSR 160 based code for proxying</description>
