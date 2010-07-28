@@ -2,6 +2,9 @@
   - Added 'ns' as unit (CpuThreadTime returns nano seconds)
   - Fixed quoting of performance data in so far to let 
     Nagios::Plugin the complete control
+  - Fixed '--color' option and UseColor config directive 
+    (section: <Shell>) to j4psh
+  - Added detection of a suitable pager for j4psh
 
 0.70 (2010-7-10)
   - Extended configuration syntax for check_jmx4perl as an alternative to

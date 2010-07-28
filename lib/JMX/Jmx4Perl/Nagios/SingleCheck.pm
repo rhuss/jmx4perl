@@ -283,7 +283,7 @@ sub _base_value {
 # Normalize value if a unit-of-measurement is given.
 
 # Units and how to convert from one level to the next
-my @UNITS = ([ qw(us ms s m h d) ],[qw(B KB MB GB TB)]);
+my @UNITS = ([ qw(ns us ms s m h d) ],[qw(B KB MB GB TB)]);
 my %UNITS = 
   (
    ns => 10**3,

@@ -183,7 +183,8 @@ my $build = $class->new
                    "Config::General" => 0,
                    "Term::ShellUI" => 0,
                    "Term::Size" => "0.207",
-                   "Term::Clui" => 0
+                   "Term::Clui" => 0,
+                   "File::SearchPath" => 0,
                   },
    build_requires => {
                       "Module::Build" => "0.34",
