@@ -29,7 +29,7 @@ sub init {
     my $self = shift;
     $self->{complete} = new JMX::Jmx4Perl::J4psh::CompletionHandler($self);
     $self->{servers} = new JMX::Jmx4Perl::J4psh::ServerHandler($self);
-    $self->{shell} = new JMX::Jmx4Perl::J4psh::Shell(config => $self->config->{shell},use_color => $self->{args}->{color});;
+    $self->{shell} = new JMX::Jmx4Perl::J4psh::Shell(config => $self->config->{shell},args => $self->{args});;
     my $no_color_prompt = $self->{shell}->readline ne "Term::ReadLine::Gnu";
     $self->{commands} = new JMX::Jmx4Perl::J4psh::CommandHandler($self,$self->{shell},
                                                                  no_color_prompt => $no_color_prompt,

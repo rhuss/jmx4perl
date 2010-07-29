@@ -4,6 +4,7 @@ use strict;
 use Term::ShellUI;
 use Term::ANSIColor qw(:constants);
 use Data::Dumper;
+use File::SearchPath qw/ searchpath /;
 
 =head1 NAME 
 
@@ -71,22 +72,9 @@ sub color {
     }
 }
 
-
 sub color_theme {
     return shift->_get_set("color_theme",@_);
 }
-
-sub use_color { 
-    my $self = shift;
-    my $use_color = "yes";
-    if (exists $self->{args}->{color}) {
-        $use_color = $self->{args}->{color};
-    } elsif (exists $self->{config}->{use_color}) {
-        $use_color = $self->{config}->{use_color};
-    } 
-    return $use_color =~ /(yes|true|on)$/;
-}
-
 
 sub use_color {
     my $self = shift;
@@ -96,6 +84,7 @@ sub use_color {
     }
     return $self->{use_color};
 }
+
 
 sub _resolve_color {
     my $self = shift;
@@ -129,6 +118,14 @@ sub _init {
     # Init color theme
     $self->_init_theme($config->{theme});
 
+    my $use_color = "yes";
+    if (exists $self->{args}->{color}) {
+        $use_color = $self->{args}->{color};
+    } elsif (exists $self->{config}->{usecolor}) {
+        $use_color = $self->{config}->{usecolor};
+    } 
+    $self->use_color($use_color);
+
     # Force pipe, quit if less than a screen-full.
     my @args = (
                 '-f',  # force, needed for color output
@@ -150,6 +147,26 @@ sub _init {
         }
     } else {
         $ENV{LESS} = join " ",@args;
+    }
+    if ($self->{config}->{pager}) {
+        $ENV{PAGER} = $self->{config}->{pager};
+    } elsif (!$ENV{PAGER}) {
+        # Try to find a suitable pager
+        my $pager = searchpath( "less", env => 'PATH', exe => 1 );
+        if ($pager) {
+            $ENV{PAGER} = $pager;
+        } else {
+            $pager = searchpath( "more", env => 'PATH', exe => 1 );
+            if ($pager) {
+                $ENV{PAGER} = $pager;
+                $self->use_color("no");
+            }
+        }
+    } else {
+        if ($ENV{PAGER} =~ /more$/) {
+            # If we are using "more", disable coloring
+            $self->use_color("no");
+        }
     }
 }
 
