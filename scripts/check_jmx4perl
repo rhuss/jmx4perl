@@ -1409,7 +1409,7 @@ Example:
     Critical = 90
   </Check>
 
-The C<E<lt>CheckE</gt>> section knows about the following directives:
+The C<E<lt>CheckE<gt>> section knows about the following directives:
 
 =over
 

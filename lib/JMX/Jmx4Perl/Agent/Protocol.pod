@@ -169,6 +169,8 @@ something like
 
   http://localhost:8080/j4p/write/java.lang:type=Memory/Verbose/true
 
+=back
+
 =head3 exec
 
 With this mode, you can execute a JMX operation on a target MBean. The format
