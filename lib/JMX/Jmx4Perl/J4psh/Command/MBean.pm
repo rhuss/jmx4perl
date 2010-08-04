@@ -2,12 +2,10 @@
 
 package JMX::Jmx4Perl::J4psh::Command::MBean;
 use strict;
-use vars qw(@ISA);
-use JMX::Jmx4Perl::J4psh::Command;
+use base qw(JMX::Jmx4Perl::J4psh::Command);
 use JMX::Jmx4Perl::Request;
 use Data::Dumper;
 
-@ISA = qw(JMX::Jmx4Perl::J4psh::Command);
 
 =head1 NAME 
 

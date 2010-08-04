@@ -28,7 +28,7 @@ and errors respectively.
 package JMX::Jmx4Perl::Response;
 
 use strict;
-use vars qw(@ISA @EXPORT);
+use vars qw(@EXPORT);
 
 =item $response = JMX::Jmx4Perl::Response->new($status,$request,$value,$error,$stacktrace)
 
