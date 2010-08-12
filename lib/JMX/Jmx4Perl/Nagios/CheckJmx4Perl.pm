@@ -76,6 +76,8 @@ sub new {
     return $self;
 }
 
+=back
+
 =head1 $check->execute()
 
 Send the JMX request to the server monitored and print out a nagios output. 
@@ -679,8 +681,6 @@ sub AUTOLOAD {
 sub DESTROY {
 
 }
-
-=back 
 
 =head1 LICENSE
 

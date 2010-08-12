@@ -87,6 +87,8 @@ sub cmd_server_list {
     }
 }
 
+=back
+
 =head1 LICENSE
 
 This file is part of jmx4perl.
