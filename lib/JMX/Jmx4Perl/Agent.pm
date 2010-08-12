@@ -6,14 +6,13 @@ use URI::Escape qw(uri_escape_utf8);
 use HTTP::Request;
 use Carp;
 use strict;
-use vars qw($VERSION $DEBUG @ISA);
-use JMX::Jmx4Perl;
+use vars qw($VERSION $DEBUG);
+use base qw(JMX::Jmx4Perl);
 use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Response;
 use JMX::Jmx4Perl::Agent::UserAgent;
 use Data::Dumper;
 
-@ISA = qw(JMX::Jmx4Perl);
 
 $VERSION = $JMX::Jmx4Perl::VERSION;
 
