@@ -5,6 +5,7 @@
   - Fixed '--color' option and UseColor config directive 
     (section: <Shell>) to j4psh
   - Added detection of a suitable pager for j4psh
+  - Fixed bug in server configuration when using old style syntax
 
 0.70 (2010-7-10)
   - Extended configuration syntax for check_jmx4perl as an alternative to
