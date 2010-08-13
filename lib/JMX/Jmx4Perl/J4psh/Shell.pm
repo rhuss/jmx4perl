@@ -4,7 +4,6 @@ use strict;
 use Term::ShellUI;
 use Term::ANSIColor qw(:constants);
 use Data::Dumper;
-use File::SearchPath qw/ searchpath /;
 
 =head1 NAME 
 
@@ -19,6 +18,7 @@ JMX::Jmx4Perl::J4psh::Shell - Facade to Term::ShellUI
 =cut
 
 my $USE_TERM_SIZE;
+my $USE_SEARCH_PATH;
 BEGIN {
     
     eval {
@@ -27,6 +27,11 @@ BEGIN {
     };
     $USE_TERM_SIZE = $@ ? 0 : 1;
 
+    eval {
+        require "File::SearchPath";
+        File::SearchPath->import('searchpath');
+    };
+    $USE_SEARCH_PATH = $@ ? 0 : 1;      
 }
 
 
@@ -152,21 +157,22 @@ sub _init {
         $ENV{PAGER} = $self->{config}->{pager};
     } elsif (!$ENV{PAGER}) {
         # Try to find a suitable pager
-        my $pager = searchpath( "less", env => 'PATH', exe => 1 );
-        if ($pager) {
-            $ENV{PAGER} = $pager;
-        } else {
-            $pager = searchpath( "more", env => 'PATH', exe => 1 );
-            if ($pager) {
-                $ENV{PAGER} = $pager;
-                $self->use_color("no");
+        if ($USE_SEARCH_PATH) {
+            for my $p (qw(less more)) {
+                my $pager = searchpath($p, env => 'PATH', exe => 1 );
+                if ($pager) {
+                    $ENV{PAGER} = $pager;
+                    last;
+                }
             }
         }
-    } else {
-        if ($ENV{PAGER} =~ /more$/) {
-            # If we are using "more", disable coloring
-            $self->use_color("no");
-        }
+        # No searching available, we rely on Term::Clue for finding the proper
+        # pager.
+    } 
+      
+    if ($ENV{PAGER} && $ENV{PAGER} =~ /more$/) {
+        # If we are using "more", disable coloring
+        $self->use_color("no");
     }
 }
 

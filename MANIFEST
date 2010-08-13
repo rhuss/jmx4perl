@@ -131,7 +131,6 @@ agent/modules/j4p-osgi/src/main/java/org/jmx4perl/osgi/J4pHttpContext.java
 agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml
-beans.txt
 Build.PL
 CHANGES
 config/common.cfg
