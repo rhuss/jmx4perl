@@ -24,10 +24,8 @@ JMX::Jmx4Perl::Config - Configuration file support for Jmx4Perl
   # ================================================================
   # Sample configuration for jmx4perl
 
-  <Server>
-    # Name how this config could accessed
-    Name = localhost
-
+  # localhost is the name how this config could accessed
+  <Server localhost>
     # Options for JMX::Jmx4Perl->new, case is irrelevant
     Url  = http://localhost:8080/j4p
     User = roland
