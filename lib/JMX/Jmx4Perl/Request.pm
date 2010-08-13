@@ -124,12 +124,11 @@ Further context information which is another hash.
 package JMX::Jmx4Perl::Request;
 
 use strict;
-use vars qw(@ISA @EXPORT);
+use vars qw(@EXPORT);
 use Carp;
 use Data::Dumper;
 
-require Exporter;
-@ISA = qw(Exporter);
+use base qw(Exporter);
 @EXPORT = (
            "READ","WRITE","EXEC","LIST", "SEARCH",
            "REGNOTIF","REMNOTIF", "VERSION"
