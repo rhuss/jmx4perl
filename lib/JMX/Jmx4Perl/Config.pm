@@ -155,6 +155,8 @@ sub _extract_servers {
     my $ret = {};
     return $ret unless $servers;
     if (ref($servers) eq "ARRAY") {
+        # Its a list of servers using old style (no named section, but with
+        # embedded 'name'
         for my $s (@$servers) {
             die "No name given for server config " . Dumper($s) . "\n" unless $s->{name};
             $ret->{$s->{name}} = $s;
@@ -162,7 +164,17 @@ sub _extract_servers {
         return $ret;
     } elsif (ref($servers) eq "HASH") {
         for my $name (keys %$servers) {
-            $servers->{$name}->{name} = $name;
+            if (ref($servers->{$name}) eq "HASH") {
+                # A single, 'named' server section
+                $servers->{$name}->{name} = $name;
+            } else {
+                # It's a single server entry with 'old' style naming (e.g. no
+                # named section but a 'Name' property
+                my $ret = {};
+                my $name = $servers->{name} || die "Missing name for server section ",Dumper($servers);
+                $ret->{$name} = $servers;
+                return $ret;
+            }
         }
         return $servers;
     } else {
