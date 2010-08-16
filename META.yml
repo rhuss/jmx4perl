@@ -1,42 +1,24 @@
 ---
-name: jmx4perl
-version: 0.71_3
+abstract: 'Easy JMX access to Java JEE applications'
 author:
-  - Roland Huss (roland@cpan.org)
-abstract: Easy JMX access to Java JEE applications
-license: gpl
-resources:
-  license: http://opensource.org/licenses/gpl-license.php
+  - 'Roland Huss (roland@cpan.org)'
 build_requires:
   Module::Build: 0.34
   Test: 0
   Test::Deep: 0
   Test::More: 0
-requires:
-  Carp: 0
-  Data::Dumper: 0
-  Getopt::Long: 0
-  JSON: 2.12
-  LWP::UserAgent: 0
-  Module::Find: 0
-  Pod::Usage: 0
-  Scalar::Util: 0
-  URI: 1.35
-  base: 0
-recommends:
-  Config::General: 0
-  File::SearchPath: 0
-  Nagios::Plugin: 0.27
-  Term::Clui: 0
-  Term::ShellUI: 0
-  Term::Size: 0.207
-  Text::ParseWords: 0
 configure_requires:
-  Module::Build: 0.34
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3607'
+license: gpl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: jmx4perl
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.71_3
+    version: 0.71
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
@@ -104,7 +86,25 @@ provides:
     file: lib/JMX/Jmx4Perl/Request.pm
   JMX::Jmx4Perl::Response:
     file: lib/JMX/Jmx4Perl/Response.pm
-generated_by: Module::Build version 0.34
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+recommends:
+  Config::General: 0
+  File::SearchPath: 0
+  Nagios::Plugin: 0.27
+  Term::Clui: 0
+  Term::ShellUI: 0
+  Term::Size: 0.207
+  Text::ParseWords: 0
+requires:
+  Carp: 0
+  Data::Dumper: 0
+  Getopt::Long: 0
+  JSON: 2.12
+  LWP::UserAgent: 0
+  Module::Find: 0
+  Pod::Usage: 0
+  Scalar::Util: 0
+  URI: 1.35
+  base: 0
+resources:
+  license: http://opensource.org/licenses/gpl-license.php
+version: 0.71
