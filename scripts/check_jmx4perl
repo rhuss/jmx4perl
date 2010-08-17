@@ -133,7 +133,7 @@ L<http://tomcat.apache.org> (either version 5 or 6) and extract it:
 
 =item *
 
-Download I<jmx4perl> from L<http://search.cpan.org/roland/jmx4perl> and install
+Download I<jmx4perl> from L<http://search.cpan.org/~roland/jmx4perl> and install
 it:
 
   $ tar zxvf jmx4perl-*.tar.gz
@@ -469,7 +469,7 @@ multiple entries. Looking with C<jmx4perl> at this attribute
 
  $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
  $VAR1 = {
-           'committed' => '85000192',
+           'committed' => '5000192',
            'used' => '8135440',
            'max' => '129957888',
            'init' => '0'
