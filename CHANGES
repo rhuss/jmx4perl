@@ -1,4 +1,4 @@
-0.71
+0.71 (2010-8-16)
   - Added 'ns' as unit (CpuThreadTime returns nano seconds)
   - Fixed quoting of performance data in so far to let 
     Nagios::Plugin the complete control
