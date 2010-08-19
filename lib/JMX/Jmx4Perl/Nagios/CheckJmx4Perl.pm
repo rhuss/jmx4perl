@@ -126,7 +126,7 @@ sub execute {
             $self->_send_requests($jmx,@extra_requests);
         }
 
-        # Different outpus for multi checks/single checks
+        # Different outputs for multi checks/single checks
         my ($code,$message) = $self->_exit_message($np);
         if ($nr_checks >1) {
             my $summary;
@@ -182,13 +182,11 @@ sub _send_requests {
     my $start_time;
     if ($o->verbose) {
         # TODO: Print summary of request (GET vs POST)
-        # print "Request URL: ",$jmx->request_url($request),"\n";
         if ($self->user) {
             print "Remote User: ",$o->user,"\n";
         }
         $start_time = [gettimeofday];
     }
-
     my @responses = $jmx->request(@requests);
     if ($o->verbose) {
         print "Result fetched in ",tv_interval($start_time) * 1000," ms:\n";

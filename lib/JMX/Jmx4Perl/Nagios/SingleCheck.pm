@@ -77,7 +77,6 @@ sub get_requests {
     } else {
         push @requests,JMX::Jmx4Perl::Request->new(EXEC,$self->_prepare_exec_args($jmx,@$args));
     }
-
     if ($self->base) {
         if (!looks_like_number($self->base)) {
             # It looks like a number, so we will use the base literally
@@ -420,8 +419,7 @@ sub _prepare_exec_args {
 sub _split_attr_spec {
     my $self = shift;
     my $name = shift;
-
-    return &parse_line('/',0,$name);
+    return &parse_line('/',1,$name);
 }
 
 

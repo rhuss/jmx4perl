@@ -62,6 +62,7 @@ public class ItSetup {
               "namewithstrange=\"chars\"",
               "namewithstrange:\"chars\"",
               ",,,",
+              ",,/,,",
               "===",
               "***",
               "\"\"\"",
