@@ -182,10 +182,8 @@ public class ReadHandler extends JsonRequestHandler {
     private boolean shouldAllAttributesBeFetched(List<String> pAttributeNames) {
        if (pAttributeNames == null || pAttributeNames.size() == 0) {
            return true;
-       } else if (pAttributeNames.size() == 1 && pAttributeNames.get(0) == null) {
-           return true;
        } else {
-           return false;
+           return pAttributeNames.size() == 1 && pAttributeNames.get(0) == null;
        }
     }
 

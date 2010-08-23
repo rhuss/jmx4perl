@@ -459,9 +459,9 @@ public class JmxRequest {
                 attributeNames = Arrays.asList((String) pAttrval);
                 multiAttributeMode = false;
             } else if (pAttrval instanceof Collection) {
-                Collection attributes = (Collection) pAttrval;
+                Collection<String> attributes = (Collection<String>) pAttrval;
                 if (attributes.size() == 1 && attributes.iterator().next() == null) {
-                    attributeNames = Arrays.asList(null);
+                    attributeNames = Arrays.asList((String) null);
                 } else {
                     attributeNames = new ArrayList<String>(attributes);
                     multiAttributeMode = true;
