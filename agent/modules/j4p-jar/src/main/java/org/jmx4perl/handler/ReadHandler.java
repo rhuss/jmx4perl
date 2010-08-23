@@ -148,8 +148,7 @@ public class ReadHandler extends JsonRequestHandler {
                                    JmxRequest.ValueFaultHandler pFaultHandler)
             throws InstanceNotFoundException, IOException, ReflectionException, AttributeNotFoundException, MBeanException {
         List<String> attributes = pAttributeNames;
-        if (pAttributeNames == null || pAttributeNames.size() == 0 ||
-                (pAttributeNames.size() == 1 && pAttributeNames.get(0) == null)) {
+        if (shouldAllAttributesBeFetched(pAttributeNames)) {
             // All attributes are requested, we look them up now
             attributes = getAllAttributesNames(pServers,pMBeanName);
         }
@@ -178,6 +177,16 @@ public class ReadHandler extends JsonRequestHandler {
             }
         }
         return ret;
+    }
+
+    private boolean shouldAllAttributesBeFetched(List<String> pAttributeNames) {
+       if (pAttributeNames == null || pAttributeNames.size() == 0) {
+           return true;
+       } else if (pAttributeNames.size() == 1 && pAttributeNames.get(0) == null) {
+           return true;
+       } else {
+           return false;
+       }
     }
 
     // Get the MBeanInfo from one of the provided MBeanServers

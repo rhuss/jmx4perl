@@ -456,9 +456,16 @@ public class JmxRequest {
     private void initAttribute(Object pAttrval) {
         if (pAttrval != null) {
             if (pAttrval instanceof String) {
-                setAttributeName((String) pAttrval);
+                attributeNames = Arrays.asList((String) pAttrval);
+                multiAttributeMode = false;
             } else if (pAttrval instanceof Collection) {
-                setAttributeNames(new ArrayList((Collection) pAttrval));
+                Collection attributes = (Collection) pAttrval;
+                if (attributes.size() == 1 && attributes.iterator().next() == null) {
+                    attributeNames = Arrays.asList(null);
+                } else {
+                    attributeNames = new ArrayList<String>(attributes);
+                    multiAttributeMode = true;
+                }
             }
         }
     }
