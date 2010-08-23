@@ -25,3 +25,7 @@ ok($content =~ /^OK/,"Content contains OK");
 is($ret,2,"CRITICAL expected");
 ok($content =~ /jmx4perl.it:name=\\\/\\\/server\\\/client,type=naming\/Ok/,"Content contains MBean name");
 
+($ret,$content) = &exec_check_perl4jmx("--value jmx4perl.it:type=naming,name=\\\"jdbc/testDB\\\"/Ok " . 
+                                       "--critical OK");
+is($ret,2,"CRITICAL expected");
+ok($content =~ m|jmx4perl.it:type=naming,name="jdbc/testDB"/Ok|,"Content contains weired MBean name");
