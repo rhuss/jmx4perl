@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p14</artifactId>
-  <version>${applicationVersion}</version>
+  <version>0.36</version>
   <packaging>jar</packaging>
   <name>j4p14-jar</name>
   <description>j4p14 - jar file containing servlet and helper classes backported for JDK14</description>
@@ -18,9 +18,17 @@
 
   <dependencies>
     <dependency>
-      <groupId>javaee</groupId>
-      <artifactId>javaee-api</artifactId>
-      <version>5</version>
+      <groupId>mx4j</groupId>
+      <artifactId>mx4j-jmx</artifactId>
+      <version>3.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.4</version>
       <scope>provided</scope>
     </dependency>
 
@@ -33,7 +41,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.6</version>
+      <version>3.8.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -10,9 +10,9 @@
 
   <parent>
     <groupId>org.jmx4perl</groupId>
-    <artifactId>j4p-agent-parent</artifactId>
-    <version>1</version>
-    <relativePath>../modules/pom.xml</relativePath>
+    <artifactId>j4p-parent</artifactId>
+    <version>2</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <packaging>pom</packaging>

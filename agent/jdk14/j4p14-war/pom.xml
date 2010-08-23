@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p14-agent</artifactId>
-  <version>${applicationVersion}</version>
+  <version>0.36</version>
   <packaging>war</packaging>
   <name>j4p14-war</name>
   <description>j4p14-war - agent web application backported for Java 1.4</description>
@@ -21,7 +21,7 @@
     <dependency>
       <groupId>org.jmx4perl</groupId>
       <artifactId>j4p14</artifactId>
-      <version>${applicationVersion}</version>
+      <version>0.36</version>
     </dependency>
   </dependencies>
 
