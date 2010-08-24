@@ -1,4 +1,12 @@
-0.71
+0.72 
+  - Fixed problem with quotes in the config when using "Value"
+    and/or "Base".
+  - Adapted tomcat.cfg to be more flexible (e.g. replaced 'Catalina'
+    domain part by a wildcard).
+  - Fixed bug for merged MBeanServers when using multiple attributes 
+    and/or MBean patterns for a READ request
+
+0.71 (2010-8-16)
   - Added 'ns' as unit (CpuThreadTime returns nano seconds)
   - Fixed quoting of performance data in so far to let 
     Nagios::Plugin the complete control
