@@ -77,7 +77,6 @@ sub get_requests {
     } else {
         push @requests,JMX::Jmx4Perl::Request->new(EXEC,$self->_prepare_exec_args($jmx,@$args));
     }
-
     if ($self->base) {
         if (!looks_like_number($self->base)) {
             # It looks like a number, so we will use the base literally
@@ -420,10 +419,18 @@ sub _prepare_exec_args {
 sub _split_attr_spec {
     my $self = shift;
     my $name = shift;
-
-    return &parse_line('/',0,$name);
+    my @ret = ();
+    # Text:ParseWords is used for split on "/" taking into account
+    # quoting and escaping
+    for my $p (&parse_line("/",1,$name)) {
+        # We need to 'unescape' things ourselves
+        # since we want quotes to remain in the names (using '0'
+        # above would kill those quotes, too). 
+        $p =~ s|\\(.)|$1|sg;
+        push @ret,$p;
+    }    
+    return @ret;
 }
-
 
 sub _check_threshhold {
     my $self = shift;

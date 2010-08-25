@@ -8,7 +8,6 @@ jmx4perl - JMX access tools and modules
 
 use Getopt::Long;
 use FindBin;
-use lib "$FindBin::Bin/../lib";
 use JMX::Jmx4Perl;
 use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Alias;

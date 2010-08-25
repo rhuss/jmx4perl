@@ -1,10 +1,19 @@
-0.71
+0.72 
+  - Fixed problem with quotes in the config when using "Value"
+    and/or "Base".
+  - Adapted tomcat.cfg to be more flexible (e.g. replaced 'Catalina'
+    domain part by a wildcard).
+  - Fixed bug for merged MBeanServers when using multiple attributes 
+    and/or MBean patterns for a READ request
+
+0.71 (2010-8-16)
   - Added 'ns' as unit (CpuThreadTime returns nano seconds)
   - Fixed quoting of performance data in so far to let 
     Nagios::Plugin the complete control
   - Fixed '--color' option and UseColor config directive 
     (section: <Shell>) to j4psh
   - Added detection of a suitable pager for j4psh
+  - Fixed bug in server configuration when using old style syntax
 
 0.70 (2010-7-10)
   - Extended configuration syntax for check_jmx4perl as an alternative to

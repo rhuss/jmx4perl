@@ -83,14 +83,16 @@ So, to fetch the C<"used"> value only, specify C<used> as path within the
 request. You can access deeper nested values by building up a path with "/" as
 separator. This looks a bit like a simplified form of XPath.
 
-=item maxDepth, maxObjects, maxCollectionSize
+=item maxDepth, maxObjects, maxCollectionSize, ignoreErrors
 
 With these number you can restrict the size of the JSON structure
 returned. C<maxDepth> gives the maximum nesting level of the JSON
 object,C<maxObjects> returns the maximum number of objects to be returned in
-total and C<maxCollectionSize> restrict the number of all arrays and collections
-(maps, lists) in the answer. Note, that you should use this restrictions if you
-are doing massive bulk operations.
+total and C<maxCollectionSize> restrict the number of all arrays and
+collections (maps, lists) in the answer. Note, that you should use this
+restrictions if you are doing massive bulk operations. C<ignoreErrors> is
+useful for read requests with multiple attributes to skip errors while reading
+attribute values on the errors side (the error text will be set as value).
 
 =item target
 
@@ -122,12 +124,11 @@ Further context information which is another hash.
 package JMX::Jmx4Perl::Request;
 
 use strict;
-use vars qw(@ISA @EXPORT);
+use vars qw(@EXPORT);
 use Carp;
 use Data::Dumper;
 
-require Exporter;
-@ISA = qw(Exporter);
+use base qw(Exporter);
 @EXPORT = (
            "READ","WRITE","EXEC","LIST", "SEARCH",
            "REGNOTIF","REMNOTIF", "VERSION"

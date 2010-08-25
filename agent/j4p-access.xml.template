@@ -102,7 +102,7 @@
   <deny>
     <mbean>
       <!-- Exposes user/password of data source, so we forbid this one -->
-      <name>com.mchange.v2.c3p0:type=PooledDataSource*</name>
+      <name>com.mchange.v2.c3p0:type=PooledDataSource,*</name>
       <attribute>properties</attribute>
     </mbean>
   </deny>

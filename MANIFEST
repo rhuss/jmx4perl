@@ -131,7 +131,6 @@ agent/modules/j4p-osgi/src/main/java/org/jmx4perl/osgi/J4pHttpContext.java
 agent/modules/j4p-war/pom.xml
 agent/modules/j4p-war/src/main/webapp/WEB-INF/web.xml
 agent/pom.xml
-beans.txt
 Build.PL
 CHANGES
 config/common.cfg
@@ -214,6 +213,7 @@ t/30_request.t
 t/40_check_jmx4perl.t
 t/50_config.t
 t/60_parse_name.t
+t/70_pod_syntax.t
 t/j4p_test.cfg
 t/lib/It.pm
 t/lib/ProductTest/Test1Handler.pm

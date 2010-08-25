@@ -2,10 +2,9 @@
 
 package JMX::Jmx4Perl::J4psh::Command::Server;
 use strict;
-use vars qw(@ISA);
 use Term::ANSIColor qw(:constants);
 
-@ISA = qw(JMX::Jmx4Perl::J4psh::Command);
+use base qw(JMX::Jmx4Perl::J4psh::Command);
 
 
 =head1 NAME 
@@ -86,6 +85,8 @@ sub cmd_server_list {
         }
     }
 }
+
+=back
 
 =head1 LICENSE
 

@@ -66,7 +66,7 @@ calls. With jmx4perl, JMX operations can be executed.
 
 =item Notifications
 
-Listeners can register to get notified for certain notifications by the
+Listeners can register to get notified for certain notifications by
 MBeans. This is not yet supported by jmx4perl and it is technically quite
 challenging, since HTTP, our transport protocol, is a typical request-response
 based protocol which is unidirectional by nature. However there are already
@@ -82,8 +82,8 @@ An agent based approach requires you to install a small Java Webapplication
 within your JEE application server. It registers itself locally to the JMX
 MBeanServer, and listens to HTTP requests whose results are translated into a
 JSON representation. This reponse can be easily picked up by a Perl module,
-L<JMX::Jmx4Perl> in our case. This kind of approach differs from the canonical
-approach as suggested by the JMX specification itself. 
+L<JMX::Jmx4Perl> in our case. This kind of approach differs from the classical
+approach as suggested by the JMX specification itself.
 
 This approach works for the following environments:
 
@@ -100,14 +100,20 @@ outside.
 
 =item *
 
-Not actually ready, but definitively scheduled for the next release is
-packaging as an OSGi bundle for operation in an OSGi environment (along with an
-OSGi HttpService). Stay tuned ...
+Within an OSGi container where the agent gets deployed as an bundle. Two
+variants are available: One, which requires an installed OSGi HttpService and
+one, which comes with an embedded HTTP server.
+
+=item *
+
+For E<every> Java 6 application running with Sun's (pardon, Oracle's) JVM, a JVM
+level agent is available which uses the HTTP server embedded in every Sun Java
+6 JDK.
 
 =back 
 
-Beside this restriction concerning the runtime environment, this approach has
-also quite some advantages:
+Beside this restriction concerning the runtime environment, this agent based
+approach has also quite some advantages: 
 
 =head2 Advantages
 
@@ -144,9 +150,9 @@ Firewall friendly since all HTTP communication goes over a single port.
 =item * 
 
 The agent can be deployed only to certain Java runtime container (Servlet
-container, Mule Agent, OSGi container). But please read on, even when your
-runtime environment doesn't fit in here. With the I<proxy> approach arbitrary
-Java applications can be connected to.
+container, Mule Agent, OSGi container, every Java 6 appliction). But please
+read on, even when your runtime environment doesn't fit in here. With the
+I<proxy> approach arbitrary Java applications can be connected to.
 
 =back 
 
@@ -163,7 +169,7 @@ backend and vice versa.
 
 A dedicated proxy serlvet server is needed for hosting C<j4p.war>, which supports
 the I<agent mode> as well as the I<proxy mode>. A lightweight container like
-Tomcat or Jetty are a perfect choice for this mode. The setup is straight
+Tomcat or Jetty is a perfect choice for this mode. The setup is straight
 forward: 
 
 =over
@@ -271,7 +277,7 @@ Consult L<jmx4perl> for further details.
 =head2 Mule agent
 
 The mule agent is not yet distributed as binary and not included in the default
-build. You can easily build it on your by using C<mvn install> within the
+build. You can easily build it on your own by using C<mvn install> within the
 F<agent/> subdirectory. You need maven (L<http://maven.apache.org>) as build
 tool installed. The agent can be found afterwards at
 F<agent/modules/j4p-mule/target/j4p-mule-0.70.0-agent.jar> (note the C<-agent>
@@ -466,15 +472,19 @@ the formats as defined by L<Nagios::Plugin>. You can use autodetection and
 aliasing here as well. C<check_jmx4perl> can use relative critical and warning
 thresholds which refer to some base value taken from another MBean's
 attribute. An incremental mode can be used to measure the growth rate of
-certain value (like number of threads). Finally, it can monitor the return
-value of some JMX operations as well. Please refer to L<check_jmx4perl> for a
-detailed documentation.
+certain value (like number of threads). Also, it can monitor the return value
+of JMX operations as well. C<check_jmx4perl> can use a configuration file with
+a sophisticated syntax including inheritance, parameterizatiosn and multi-check
+definitions.
+
+Please refer to L<check_jmx4perl> for a
+detailed documentation (which has a 30+ pages manual on its own).
 
 =head1 WHAT'S NEXT ?
 
 There are several entry points for jmx4perl. The easiest is to start to play
-around with L<jmx4perl>. This is a complete command lines for exploring the
-MBeans on your JEE Server. 
+around with L<jmx4perl>. This is a full featured command line tool for
+exploring the MBeans on your JEE Server.
 
 If you want to use the Nagios Plugin L<check_jmx4perl> start reading its
 documentation. A Nagios cookbook is on the roadmap. If you want to restrict
@@ -500,12 +510,12 @@ RSS Feedreader if you want to keep in touch with the latest jmx4perl evolution
 
 The deployed agent servlet is quite mighty in the default distribution as you
 can perform any operation exposed by a MBean via JMX. Of course, you should
-secure the agent via standard mechanism (e.g via Basic Authentication) to allow
-only access to certain users. But even then, you might not want your
-monitoring guys to access the heart of the JEE Server. Therefore, you can
-restrict access to certain MBeans only by using a so called I<policy> file. You
-have to rebuild the agent if you want to use this feature, though. To do this,
-here's the recipe:
+secure the agent via standard mechanism (e.g via Basic or Digest
+authentication) to allow only access to certain users. But even then, you might
+not want your monitoring guys to access the heart of the JEE Server. Therefore,
+you can restrict access to certain MBeans only by using a so called I<policy>
+file. You have to rebuild the agent if you want to use this feature, though. To
+do this, here's the recipe:
 
 =over
 

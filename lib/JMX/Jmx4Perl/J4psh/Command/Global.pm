@@ -2,12 +2,9 @@
 
 package JMX::Jmx4Perl::J4psh::Command::Global;
 use strict;
-use vars qw(@ISA);
 use Term::ANSIColor qw(:constants);
 use Term::Clui;
-use JMX::Jmx4Perl::J4psh::Command;
-
-@ISA = qw(JMX::Jmx4Perl::J4psh::Command);
+use base qw(JMX::Jmx4Perl::J4psh::Command);
 
 =head1 NAME 
 
@@ -91,6 +88,8 @@ sub cmd_last_error {
         }
     }
 }
+
+=back
 
 =head1 LICENSE
 
