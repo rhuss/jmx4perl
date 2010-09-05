@@ -231,7 +231,7 @@ sub command_attributes {
                     if ($response->stacktrace) {
                         print $response->stacktrace;
                     } else {
-                        print Dumper($response);
+                        print _dump($response);
                     }
                 }
             } else {
@@ -241,7 +241,7 @@ sub command_attributes {
                         print "$mbean -- $a";
                         my $val = $values->{$a};
                         if (ref($val)) {
-                            print "\n   ",Dumper($val);
+                            print " = ",_dump($val);
                         } else {
                             print " = ",$val,"\n";
                         }
@@ -435,6 +435,17 @@ sub _check_for_error {
     }
 }
 
+sub _dump {
+    my $value = shift;
+    local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Useqq = 1;
+    local $Data::Dumper::Deparse = 1;
+    local $Data::Dumper::Quotekeys = 0;
+    local $Data::Dumper::Sortkeys = 1;
+    return Dumper($value);
+}
+
 sub _has_tty {
   return -t STDOUT;
 }
@@ -443,7 +454,7 @@ sub _print_response {
     my $resp = shift;
     my $val = $resp->value;
     if (ref($val)) {
-        print Dumper($val);
+        print _dump($val);
     } else {
         print $val;
         print "\n" if &_has_tty;
@@ -455,7 +466,7 @@ sub _print_response {
             my $value = $entry->{value};
             if (ref($value)) {
                 print $time,"\n";
-                print Dumper($value);
+                print _dump($value);
                 print "\n";
             } else {
                 printf " %s : %s\n",$time,$value;
