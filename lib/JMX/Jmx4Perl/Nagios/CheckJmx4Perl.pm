@@ -100,7 +100,6 @@ sub execute {
                                      password => $self->password,
                                      product => $self->product, proxy => $self->proxy,
                                      $self->target ? (target => $target) : ());
-
         my @requests;
         for my $check (@{$self->{checks}}) {
             push @requests,@{$check->get_requests($jmx,\@ARGV)};            
@@ -652,10 +651,11 @@ sub AUTOLOAD {
     my $np = $self->{np};
     my $name = $AUTOLOAD;
     $name =~ s/.*://;   # strip fully-qualified portion
-    $name =~ s/-/_/g;
+    my $opts_name = $name;
+    $opts_name =~ s/_/-/;
 
     if ($SERVER_CONFIG_KEYS->{$name}) {        
-        return $np->opts->{$name} if $np->opts->{$name};
+        return $np->opts->{$opts_name} if $np->opts->{$opts_name};
         my $c = $SERVER_CONFIG_KEYS->{$name};
         if ($c) {
             my @parts = split "/",$c;
