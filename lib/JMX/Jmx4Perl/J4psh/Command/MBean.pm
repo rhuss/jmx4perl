@@ -245,6 +245,7 @@ sub _dump {
     local $Data::Dumper::Quotekeys = 0;
     local $Data::Dumper::Sortkeys = 1;
     my $ret = Dumper($value);
+    $ret =~ s/^/   /gm;
     return $ret;
 }
 # =================================================================================================== 
