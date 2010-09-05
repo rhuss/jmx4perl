@@ -634,13 +634,13 @@ my $SERVER_CONFIG_KEYS = {
                           "product" => "product",
                          };
 
-# Get target configuration or empty hash if no jmx-proxy mode
+# Get target configuration or undef if no jmx-proxy mode
 # is used
 sub target_config {
     return shift->_target_or_proxy_config("target","target-user","target-password");
 }
 
-# Get proxy configuration or an empty hash if no proxy configuration
+# Get proxy configuration or undef if no proxy configuration
 # is used
 sub proxy_config {
     return shift->_target_or_proxy_config("proxy","proxy-user","proxy-password");
@@ -667,7 +667,7 @@ sub _target_or_proxy_config {
         # Use configuration directly from the server definition:
         return $server_config->{$main_key}
     } else {
-        return {};
+        return undef;
     }
 }
 

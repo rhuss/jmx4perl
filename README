@@ -217,9 +217,18 @@ PROFESSIONAL SERVICES
   form at http://www.consol.com/contact/ )
 
 ACKNOWLEDGMENTS
+  
+  Big thanks go to ...
 
-  Many thanks go to Gerhard Lausser, who pushed me to think harder
-  about a better way for monitoring JEE Servers with Nagios.
+  * Gerhard Lausser, who initially pushed me to think harder
+    about a better way for monitoring JEE Servers with Nagios.
+
+  * Danijel Tasov for patching, patching, patching and keeping 
+    an eye on contemporary perl styling.
+ 
+  * All bug reporters and blog commenters for helping me to 
+    increase the overall quality (and for letting me know that 
+    this is not software for the ivory tower)
 
 BUGS 
 
