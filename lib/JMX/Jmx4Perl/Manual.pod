@@ -106,7 +106,7 @@ one, which comes with an embedded HTTP server.
 
 =item *
 
-For E<every> Java 6 application running with Sun's (pardon, Oracle's) JVM, a JVM
+For I<every> Java 6 application running with Sun's (pardon, Oracle's) JVM, a JVM
 level agent is available which uses the HTTP server embedded in every Sun Java
 6 JDK.
 
