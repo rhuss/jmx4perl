@@ -217,13 +217,12 @@ type: CompositeData) which combines multiple memory related data. The complete
 value can be viewed with I<jmx4perl>:
 
    $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
-
-   $VAR1 = {
-          'committed' => '85000192',
-          'used' => '15106608',
-          'max' => '129957888',
-          'init' => '0'
-        };
+   {
+     committed => 85000192,
+     init => 0
+     max => 129957888,
+     used => 15106608,
+   }
 
 =item --base java.lang:type=Memory/HeapMemoryUsage/max
 
@@ -455,7 +454,7 @@ For numeric checks, the threhsholds has to be specified according to the format
 defined in
 L<http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT> 
 
-=head3 Pathes
+=head3 Paths
 
 For more complex types, C<check_jmx4perl> provides the concept of so called
 I<pathes> for specifying an inner attribute of a more complex value. A path
@@ -468,12 +467,12 @@ C<HeapMemoryUsage>. This attribute is a compound data type, which contains
 multiple entries. Looking with C<jmx4perl> at this attribute
 
  $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
- $VAR1 = {
-           'committed' => '5000192',
-           'used' => '8135440',
-           'max' => '129957888',
-           'init' => '0'
-         };
+ {
+   committed => 85000192,
+   init => 0
+   max => 129957888,
+   used => 15106608,
+ }
 
 it can be seen, that there are 4 values coming with the reponse. With a path
 C<used> one can directly pick the used heap memory usage (8135440 bytes in this

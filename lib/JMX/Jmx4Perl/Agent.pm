@@ -26,19 +26,19 @@ JMX::Jmx4Perl::Agent - JSON-HTTP based acess to a remote JMX agent
  my $answer = $agent->get_attribute("java.lang:type=Memory","HeapMemoryUsage");
  print Dumper($answer);
 
- $VAR1 = {
-    'value' => {
-                'committed' => 18292736,
-                'used' => 15348352,
-                'max' => 532742144,
-                'init' => 0
-               },
-    'status' => 200,
-    'request' => {
-                   'attribute' => 'HeapMemoryUsage',
-                   'name' => 'java.lang:type=Memory'
-                  },
- };
+ {
+   request => {
+     attribute => "HeapMemoryUsage",
+     name => "java.lang:type=Memory"
+   },
+   status => 200,
+   value => {
+     committed => 18292736,
+     init => 0,
+     max => 532742144,
+     used => 15348352
+   }
+ }
 
 =head1 DESCRIPTION
 

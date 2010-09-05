@@ -283,12 +283,12 @@ Example:
   $val = $jmx->get_attribute("java.lang:type=Memory","HeapMemoryUsage");
   print Dumper($val);
 
-  $VAR1 = {
-          'committed' => '174530560',
-          'used' => '35029320',
-          'max' => '1580007424',
-          'init' => '134217728'
-        };
+  {
+    committed => 174530560,
+    init => 134217728,
+    max => "1580007424",
+    used => 35029320
+  }
 
 =item Single MBean, multiple attributes
 
@@ -296,45 +296,51 @@ In this case, this method returns a map with the attribute name as keys and the
 attribute values as map values. It will die if not a single attribute could be
 fetched, otherwise unknown attributes are ignored.
 
-  $val = $jmx->get_attribute("java.lang:type=Memory",["HeapMemoryUsage","NonHeapMemoryUsage"]);
+  $val = $jmx->get_attribute(
+      "java.lang:type=Memory",
+      ["HeapMemoryUsage","NonHeapMemoryUsage"]
+  );
   print Dumper($val);
 
-  $VAR1 = {
-          'NonHeapMemoryUsage' => {
-                                    'committed' => '87552000',
-                                    'used' => '50510976',
-                                    'max' => '218103808',
-                                    'init' => '24317952'
-                                  },
-          'HeapMemoryUsage' => {
-                                 'committed' => '174530560',
-                                 'used' => '37444832',
-                                 'max' => '1580007424',
-                                 'init' => '134217728'
-                               }
-        };
+  {
+    HeapMemoryUsage => {
+      committed => 174530560,
+      init => 134217728,
+      max => "1580007424",
+      used => 37444832
+    },
+    NonHeapMemoryUsage => {
+      committed => 87552000,
+      init => 24317952,
+      max => 218103808,
+      used => 50510976
+    }
+  }
 
 =item MBean pattern, one or more attributes
 
-  $val = $jmx->get_attribute("java.lang:type=*",["HeapMemoryUsage","NonHeapMemoryUsage"]);
+  $val = $jmx->get_attribute(
+      "java.lang:type=*",
+      ["HeapMemoryUsage","NonHeapMemoryUsage"]
+  );
   print Dumper($val);
 
-  $VAR1 = {
-          'java.lang:type=Memory' => {
-                                       'NonHeapMemoryUsage' => {
-                                                                 'committed' => '87552000',
-                                                                 'used' => '50514304',
-                                                                 'max' => '218103808',
-                                                                 'init' => '24317952'
-                                                               },
-                                       'HeapMemoryUsage' => {
-                                                              'committed' => '174530560',
-                                                              'used' => '38868584',
-                                                              'max' => '1580007424',
-                                                              'init' => '134217728'
-                                                            }
-                                     }
-        };
+  {
+    "java.lang:type=Memory" => {
+      HeapMemoryUsage => {
+        committed => 174530560,
+        init => 134217728,
+        max => "1580007424",
+        used => 38868584
+      },
+      NonHeapMemoryUsage => {
+        committed => 87552000,
+        init => 24317952,
+        max => 218103808,
+        used => 50514304
+      }
+    }
+  }
 
 The return value is a map with the matching MBean names as keys and as value
 another map, with attribute names keys and attribute value values. If not a
@@ -694,7 +700,15 @@ given, the returned value has the following format
                        { 
                          desc => <description of operation>
                          ret => <return java type>
-                         args => [{ desc => <description>, name => <name>, type => <java type>}, .... ]
+                         args =>
+                         [
+                            {
+                              desc => <description>,
+                              name => <name>,
+                              type => <java type>
+                            },
+                            ....
+                         ]
                        },
                        ....
                 },
@@ -747,10 +761,10 @@ Example:
   print $domain,"\n",Dumper($attrs);
 
   java.lang
-  $VAR1 = {
-            'name' => 'Code Cache',
-            'type' => 'MemoryPool'
-          };
+  {
+    name => "Code Cache",
+    type => "MemoryPool"
+  }
 
 =cut
 
