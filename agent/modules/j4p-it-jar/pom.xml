@@ -5,7 +5,7 @@
 
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-it-jar</artifactId>
-  <version>0.71.0</version>
+  <version>0.72.0.M1</version>
   <packaging>bundle</packaging>
   <name>j4p-it-jar</name>
   <description>j4p - integration test jar</description>
