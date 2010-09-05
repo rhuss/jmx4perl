@@ -238,8 +238,14 @@ sub cmd_execute_operation {
 sub _dump {
     my $self = shift;
     my $value = shift;
+    local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Useqq = 1;
+    local $Data::Dumper::Deparse = 1;
+    local $Data::Dumper::Quotekeys = 0;
+    local $Data::Dumper::Sortkeys = 1;
     my $ret = Dumper($value);
-    $ret =~ s/^([^=]+=)/" " x length($1)/e;
+    $ret =~ s/^/   /gm;
     return $ret;
 }
 # =================================================================================================== 
