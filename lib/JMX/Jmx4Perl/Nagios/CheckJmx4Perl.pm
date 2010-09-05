@@ -91,16 +91,12 @@ sub execute {
 
         # Request
         my @optional = ();
-        my $target = $self->target ? {
-                                      url => $self->target,
-                                      $self->target_user ? (user => $self->target_user) : (),
-                                      $self->target_password ? (password => $self->target_password) : (),                      
-                                     } : {};
+        my $target_config = $self->target_config;
         my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $self->url, user => $self->user, 
                                      password => $self->password,
-                                     product => $self->product, proxy => $self->proxy,
-                                     $self->target ? (target => $target) : ());
-
+                                     product => $self->product, 
+                                     proxy => $self->proxy_config,
+                                     target => $target_config);
         my @requests;
         for my $check (@{$self->{checks}}) {
             push @requests,@{$check->get_requests($jmx,\@ARGV)};            
@@ -109,14 +105,14 @@ sub execute {
         my @extra_requests = ();
         my $nr_checks = scalar(@{$self->{checks}});
         if ($nr_checks == 1) {
-            my @r = $self->{checks}->[0]->extract_responses($responses,\@requests,{ target => $target });
+            my @r = $self->{checks}->[0]->extract_responses($responses,\@requests,{ target => $target_config });
             push @extra_requests,@r if @r;
         } else {
             my $i = 1;
             for my $check (@{$self->{checks}}) {
                 # A check can consume more than one response
                 my @r = $check->extract_responses($responses,\@requests,
-                                                    { target => $target, 
+                                                    { target => $target_config, 
                                                       prefix => $self->_multi_check_prefix($check,$i++,$nr_checks)});
                 push @extra_requests,@r if @r;
             }
@@ -633,18 +629,47 @@ sub _create_nagios_plugin {
 # Known config options (key: cmd line arguments, values: keys in config);
 my $SERVER_CONFIG_KEYS = {
                           "url" => "url",
-                          "target" => "target",
                           "user" => "user",
                           "password" => "password",
                           "product" => "product",
-                          "target_user" => "target/user",
-                          "target_password" => "target/password",
-                          "target_url" => "target/url",
-                          "proxy" => "proxy",
-                          "proxy_url" => "proxy/url",
-                          "proxy_user" => "proxy/user",
-                          "proxy_password" => "proxy/password"
                          };
+
+# Get target configuration or empty hash if no jmx-proxy mode
+# is used
+sub target_config {
+    return shift->_target_or_proxy_config("target","target-user","target-password");
+}
+
+# Get proxy configuration or an empty hash if no proxy configuration
+# is used
+sub proxy_config {
+    return shift->_target_or_proxy_config("proxy","proxy-user","proxy-password");
+}
+
+sub _target_or_proxy_config {
+    my $self = shift;
+    
+    my $main_key = shift;
+    my $user_opt = shift;
+    my $password_opt = shift;
+
+    my $np = $self->{np};
+    my $opts = $np->opts;
+    my $server_config = $self->_server_config;
+    if ($opts->{$main_key}) {
+        # Use configuration from the command line:
+        return { 
+                url => $opts->{$main_key},
+                user => $opts->{$user_opt},
+                password => $opts->{$password_opt}
+               }
+    } elsif ($server_config && $server_config->{$main_key}) {
+        # Use configuration directly from the server definition:
+        return $server_config->{$main_key}
+    } else {
+        return {};
+    }
+}
 
 # Autoloading is used to fetch the proper connection parameters
 sub AUTOLOAD {
@@ -652,10 +677,11 @@ sub AUTOLOAD {
     my $np = $self->{np};
     my $name = $AUTOLOAD;
     $name =~ s/.*://;   # strip fully-qualified portion
-    $name =~ s/-/_/g;
+    my $opts_name = $name;
+    $opts_name =~ s/_/-/;
 
     if ($SERVER_CONFIG_KEYS->{$name}) {        
-        return $np->opts->{$name} if $np->opts->{$name};
+        return $np->opts->{$opts_name} if $np->opts->{$opts_name};
         my $c = $SERVER_CONFIG_KEYS->{$name};
         if ($c) {
             my @parts = split "/",$c;

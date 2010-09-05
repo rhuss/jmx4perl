@@ -344,7 +344,10 @@ sub _verify_response {
     my ($self,$req,$resp) = @_;
     my $np = $self->{np};
     if ($resp->is_error) {
-        $np->nagios_die("Error: ".$resp->status." ".$resp->error_text.($resp->stacktrace ? "\nStacktrace:\n".$resp->stacktrace : ""));
+        my $stacktrace = $resp->stacktrace;
+        my $extra = "";
+        $extra = ref($stacktrace) eq "ARRAY" ? join "\n",@$stacktrace : $stacktrace if $stacktrace;
+        $np->nagios_die("Error: ".$resp->status." ".$resp->error_text.$extra);
     }
     
     if (!$req->is_mbean_pattern && (ref($resp->value) && !$self->string)) { 
@@ -610,7 +613,7 @@ my $CHECK_CONFIG_KEYS = {
                          "label" => "label",
                          # New:
                          "value" => "value",
-                         "null" => "null"
+                         "null" => "null",
                         };
 
 
