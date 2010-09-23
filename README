@@ -90,7 +90,7 @@ SUPPORTED APPLICATION SERVERS
   * Resin 3.1.9
   * Spring dm Server 2.0.0.RELEASE
 
-  The OSGi agent budle has been tested on
+  The OSGi agent bundle has been tested on
 
   * Felix 2.0.4 & 3.0.1
   * Equinox 3.5.2 & 3.6.0
@@ -107,14 +107,7 @@ SUPPORTED APPLICATION SERVERS
   * Oracle WebLogic 9.2 MP3 & 10.0.2.0
   * Glassfish 2.1.1 and v3
 
-  The jmx4perl OSGi Bundle has been tested with the following containers: 
-
-  * Felix ...
-  * Equinox ...
-  * Knopflerfish ...
-  * Spring dm Server ...
-
-  More test are scheduled, detailed setup instructions for individual
+  More tests are scheduled, detailed setup instructions for individual
   JEE servers can be found at http://labs.consol.de/tags/jsr-160
   
   It is expected that every Java application server which runs with at

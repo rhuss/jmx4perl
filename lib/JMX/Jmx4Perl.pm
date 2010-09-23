@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.72_1";
+$VERSION = "0.72";
 
 my $REGISTRY = {
                 # Agent based
@@ -826,9 +826,9 @@ sub formatted_list {
         $path = $path_or_resp;
         $list = $self->list($path);
     }
-    
     my @path = ();
     @path = split m|/|,$path if $path;
+    #print Dumper(\@path);
     croak "A path can be used only for a domain name or MBean name" if @path > 2;
     my $intent = "";
     my $ret = &_format_map("",$list,\@path,0);

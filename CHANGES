@@ -1,4 +1,4 @@
-0.72 
+0.72 (2010-9-20)
   - Fixed problem with quotes in the config when using "Value"
     and/or "Base".
   - Adapted tomcat.cfg to be more flexible (e.g. replaced 'Catalina'
@@ -8,6 +8,8 @@
   - Fixed broken --target, --target-user and --target-password for 
     check_jmx4perl (same for --proxy and co.)
   - Tuned output of complex data in j4psh
+  - Unwrap an MBeanException to use the target exception for an error 
+    message
 
 0.71 (2010-8-16)
   - Added 'ns' as unit (CpuThreadTime returns nano seconds)
