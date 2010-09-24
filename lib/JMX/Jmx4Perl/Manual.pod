@@ -298,6 +298,11 @@ contain the following section:
  </management:custom-agent>
  <management:jmx-server/>
 
+For Mule 3.0 the C<custom-agent> declaration lives in the core mule namespace
+(so don't use the C<management:> prefix within Mule 3.0). Don't forget to
+include the proper namespace declarations as pointed out in the Mule
+documentation. 
+
 Starting up mule should yield a startup message like 
 
  *********************************************************

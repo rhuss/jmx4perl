@@ -20,6 +20,6 @@ if ($product) {
 my $info = $jmx->info();
 my $info_product = $1 if $info =~ /^Name:\s+(.*)/m;
 my $info_version = $1 if $info =~ /^Version:\s+(.*)/m;
-is($jmx->product->name,$info_product,"Product name match");
+is($jmx->product->name,$info_product || "unknown","Product name match");
 is($jmx->product->version,$info_version,"Product version match") if $info_version;
 
