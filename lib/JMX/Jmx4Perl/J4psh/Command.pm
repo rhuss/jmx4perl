@@ -7,17 +7,6 @@ use Term::Clui;
 
 use Getopt::Long qw(GetOptionsFromArray);
 
-my $USE_TERM_SIZE;
-BEGIN {
-    
-    eval {
-        require "Term/Size.pm";
-        Term::Size->import('chars');
-    };
-    $USE_TERM_SIZE = $@ ? 0 : 1;
-
-}
-
 =head1 NAME 
 
 JMX::Jmx4Perl::J4psh::Command - Base object for commands

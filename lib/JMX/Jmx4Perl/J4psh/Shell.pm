@@ -20,18 +20,8 @@ JMX::Jmx4Perl::J4psh::Shell - Facade to Term::ShellUI
 my $USE_TERM_SIZE;
 my $USE_SEARCH_PATH;
 BEGIN {
-    
-    eval {
-        require "Term/Size.pm";
-        Term::Size->import('chars');
-    };
-    $USE_TERM_SIZE = $@ ? 0 : 1;
-
-    eval {
-        require "File::SearchPath";
-        File::SearchPath->import('searchpath');
-    };
-    $USE_SEARCH_PATH = $@ ? 0 : 1;      
+    $USE_TERM_SIZE   = eval 'use Term::Size qw/chars/; 1';
+    $USE_SEARCH_PATH = eval 'use File::SearchPath qw/searchpath/; 1';
 }
 
 
@@ -232,19 +222,11 @@ sub _init_theme {
 }
 
 sub term_width { 
-    if ($USE_TERM_SIZE) {
-        return (chars)[0];
-    } else {
-        return 120;
-    }
+    return $USE_TERM_SIZE ? (chars())[0] : 120;
 }
 
 sub term_height {
-    if ($USE_TERM_SIZE) {
-        return (chars)[1];
-    } else {
-        return 24;
-    }
+    return $USE_TERM_SIZE ? (chars())[1] : 24;
 }
 
 =head1 LICENSE
