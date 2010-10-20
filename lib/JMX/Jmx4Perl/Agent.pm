@@ -73,6 +73,10 @@ L<LWP::UserAgent>
 
 Credentials to use for the HTTP request
 
+=item post
+
+If true, always use POST requests
+
 =item proxy => { http => '<http_proxy>', https => '<https_proxy>', ...  }
 
 =item proxy => <http_proxy>
@@ -227,7 +231,9 @@ sub _to_http_request {
 sub _use_GET_request {
     my $self = shift;
     my $reqs = shift;
-    if (@$reqs == 1) {
+    if($self->cfg("post")) {
+        return 0;
+    } elsif (@$reqs == 1) {
         my $req = $reqs->[0];
         # For proxy configs and explicite set POST request, get is not used
         return !defined($req->get("target")) && $req->method ne "POST" ;
