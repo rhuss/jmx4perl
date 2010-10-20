@@ -42,7 +42,7 @@ appliation servers in a painless way. You can find a nagios check in the
 scripts directory, which is a prefactored check directly usable for a Nagios
 setup.
 
-Additionally, there is a command line tool called (incidentally ;-) L<jmx4perl>
+Additionally, there is a command line tool called (accidentally ;-) L<jmx4perl>
 which allows for simple access to JMX MBeans and much more. 
 
 =head1 MBean Features

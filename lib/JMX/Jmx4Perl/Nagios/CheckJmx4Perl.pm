@@ -294,7 +294,9 @@ sub _resolve_multicheck {
                 for my $name (@$c_names) {
                     my ($c_name,$c_args) = $self->_parse_check_ref($name);
                     my $args_merged = $self->_merge_multicheck_args($c_args,$args);
-                    my $check = $config->{check}->{$c_name} ||
+                    # We need a copy of the check hash to avoid mangling it up
+                    # if it is referenced multiple times
+                    my $check = { %{$config->{check}->{$c_name}} } ||
                       $np->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check);
                     $check->{key} = $c_name;
                     $check->{args} = $args_merged;
