@@ -1,3 +1,10 @@
+0.73 
+  - Fixed RT #61903 which occurs when the same check is referenced 
+    multiple times (with potentially different parameters) in a 
+    multicheck scenario.
+  - Fixed RT #62342: Perl warning when using operations and not --name
+    in check_jmx4perl
+
 0.72 (2010-9-24)
   - Fixed problem with quotes in the config when using "Value"
     and/or "Base".

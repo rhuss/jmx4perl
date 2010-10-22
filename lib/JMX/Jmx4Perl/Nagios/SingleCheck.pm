@@ -365,12 +365,19 @@ sub _get_name {
         if ($self->name) {
             $name = $self->name;
         } else {
-            # Default name
-            $name = $self->alias ? 
-          "[".$self->alias.($self->path ? "," . $self->path : "") ."]" : 
-            $self->value ? 
-              "[" . $self->value . "]" :
-            "[".$self->mbean.",".$self->attribute.($self->path ? "," . $self->path : "")."]";
+            # Default name, tried to be generated from various parts
+            if ($self->alias) {
+                $name = "[".$self->alias.($self->path ? "," . $self->path : "") ."]";
+            } else {
+                my $val = $self->value;
+                if ($val) {
+                    $name = "[" . $self->value . "]";
+                } else {
+                    my $a_or_o = $self->attribute || $self->operation || "";
+                    my $p = $self->path ? "," . $self->path : "";
+                    $name = "[" . $self->mbean . "," . $a_or_o . $p . "]";
+                }
+            }
         }
     }
     if ($args->{cleanup}) {
