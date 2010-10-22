@@ -4,6 +4,8 @@
     multicheck scenario.
   - Fixed RT #62342: Perl warning when using operations and not --name
     in check_jmx4perl
+  - Added --method to jmx4perl, config option 'method' for JMX::Jmx4Perl 
+    in order to allow a default HTTP Method to use.
 
 0.72 (2010-9-24)
   - Fixed problem with quotes in the config when using "Value"

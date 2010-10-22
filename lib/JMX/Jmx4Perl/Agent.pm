@@ -73,9 +73,11 @@ L<LWP::UserAgent>
 
 Credentials to use for the HTTP request
 
-=item post
+=item method => <method>
 
-If true, always use POST requests
+The HTTP method to use for contacting the agent. Must be either "GET" or
+"POST". This method is used, if the request to send dosen't specify the method
+and no other parameters forces a POST context.
 
 =item proxy => { http => '<http_proxy>', https => '<https_proxy>', ...  }
 
@@ -166,11 +168,17 @@ sub request {
     my @jmx_requests = $self->cfg('target') ? $self->_update_targets(@_) : @_;
     my $ua = $self->{ua};
     my $http_req = $self->_to_http_request(@jmx_requests);
-    print "Requesting ",$http_req->uri,"\n" if $self->{cfg}->{verbose};
+    if ($self->{cfg}->{verbose}) {
+        print $http_req->as_string;
+        print "===========================================================\n";
+    }
     #print Dumper($http_req);
     my $http_resp = $ua->request($http_req);
     my $json_resp = {};
-    #print "Response: ",Dumper($http_resp) if $self->{cfg}->{verbose};
+    if ($self->{cfg}->{verbose}) {
+        print $http_resp->as_string,"\n";
+        print "===========================================================\n";
+    }
     eval {
         $json_resp = from_json($http_resp->content());
     };
@@ -231,12 +239,17 @@ sub _to_http_request {
 sub _use_GET_request {
     my $self = shift;
     my $reqs = shift;
-    if($self->cfg("post")) {
-        return 0;
-    } elsif (@$reqs == 1) {
+    if (@$reqs == 1) {
         my $req = $reqs->[0];
-        # For proxy configs and explicite set POST request, get is not used
-        return !defined($req->get("target")) && $req->method ne "POST" ;
+        # For proxy configs and explicite set POST request, get can not be
+        # used
+        return 0 if defined($req->get("target"));
+        #print Dumper($req);
+        for my $r ($req->method,$self->cfg('method')) {
+            return lc($r) eq "get" if defined($r);
+        }
+        # GET by default
+        return 1;
     } else {
         return 0;
     }

@@ -307,7 +307,7 @@ sub method {
         die "Unknown request method ",$value if length($value) && $value !~ /^(POST|GET)$/i;
         $self->{method} = uc($value);
     }
-    return defined($self->{method}) ? $self->{method} : "";
+    return defined($self->{method}) ? $self->{method} : undef;
 }
 
 =item $req->is_mbean_pattern
