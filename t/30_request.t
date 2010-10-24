@@ -40,7 +40,7 @@ for my $name (keys %$names) {
 # Check for autodetection of requests
 my $name="domain:attr=val";
 my $req = new JMX::Jmx4Perl::Request(READ,$name,"attribute");
-is($req->method(),"","Method not defined");
+is($req->method(),undef,"Method not defined");
 $req = new JMX::Jmx4Perl::Request(READ,$name,"attribute",{method => "PoSt"});
 is($req->method(),"POST","Post method");
 $req = new JMX::Jmx4Perl::Request(READ,$name,["a1","a2"]);    
