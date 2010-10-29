@@ -256,7 +256,8 @@ sub new {
                 $self->{path} = shift;
                 # Use post for complex read requests
                 if (ref($self->{attribute}) eq "ARRAY") {
-                    if (&method($self) eq "GET") {
+                    my $method = &method($self);
+                    if (defined($method) && $method eq "GET") {
                         # Was already explicitely set
                         die "Cannot query for multiple attributes " . join(",",@{$self->{attributes}}) . " with a GET request"
                           if ref($self->{attribute}) eq "ARRAY";
