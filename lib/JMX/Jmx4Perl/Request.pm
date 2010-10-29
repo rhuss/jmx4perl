@@ -131,7 +131,7 @@ use Data::Dumper;
 use base qw(Exporter);
 @EXPORT = (
            "READ","WRITE","EXEC","LIST", "SEARCH",
-           "REGNOTIF","REMNOTIF", "VERSION"
+           "REGNOTIF","REMNOTIF", "AGENT_VERSION"
           );
 
 use constant READ => "read";
@@ -141,11 +141,11 @@ use constant LIST => "list";
 use constant SEARCH => "search";
 use constant REGNOTIF => "regnotif";
 use constant REMNOTIF => "remnotif";
-use constant VERSION => "version";
+use constant AGENT_VERSION => "version";
 
 my $TYPES = 
 { map { $_ => 1 } (READ, WRITE, EXEC, LIST, SEARCH,
-                   REGNOTIF, REMNOTIF, VERSION) };
+                   REGNOTIF, REMNOTIF, AGENT_VERSION) };
 
 =item  $req = new JMX::Jmx4Perl::Request(....);
 
@@ -278,7 +278,7 @@ sub new {
                 $self->{mbean} = shift;
                 #No check here until now, is done on the server side as well.
                 #die "MBean name ",$self->{mbean}," is not a pattern" unless &is_mbean_pattern($self);
-            } elsif ($type eq VERSION) {
+            } elsif ($type eq AGENT_VERSION) {
                 # No extra parameters required
             }  else {
                 croak "Type ",$type," not supported yet";

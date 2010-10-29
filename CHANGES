@@ -6,6 +6,10 @@
     in check_jmx4perl
   - Added --method to jmx4perl, config option 'method' for JMX::Jmx4Perl 
     in order to allow a default HTTP Method to use.
+  - Changed request command constant 'VERSION' to 'AGENT_VERSION' in 
+    order to avoid conflicts with the usual versioning conventions for 
+    Perl Modules. This is an API change, so in case you are using requests
+    with the constant VERSION you should change this to AGENT_VERSION 
 
 0.72 (2010-9-24)
   - Fixed problem with quotes in the config when using "Value"

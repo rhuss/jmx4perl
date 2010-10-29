@@ -633,8 +633,8 @@ interpreted. The units available are
   B  - Byte
   KB - Kilo Byte
   MB - Mega Byte
-  GM - Giga Byte
-  TM - Terra Byte
+  GB - Giga Byte
+  TB - Terra Byte
   
   us - Microseconds
   ms - Milliseconds

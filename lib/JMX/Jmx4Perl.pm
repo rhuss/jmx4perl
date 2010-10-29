@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.72";
+$VERSION = "0.73_1";
 
 my $REGISTRY = {
                 # Agent based
@@ -565,7 +565,7 @@ The return value is a hash with the keys C<agent> and C<protocol>
 sub version {
     my $self = shift;
     
-    my $request = new JMX::Jmx4Perl::Request(VERSION);
+    my $request = new JMX::Jmx4Perl::Request(AGENT_VERSION);
     my $response = $self->request($request);
 
     if ($response->is_error) {
