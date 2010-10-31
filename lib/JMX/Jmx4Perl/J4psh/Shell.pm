@@ -128,8 +128,8 @@ sub _init {
                 '-X'   # no init
                );
     if ($self->use_color) {
-        # Raw characters
-        push @args,'-r';
+        # Raw control characters
+        push @args,'-R';
     }
     if ($ENV{LESS}) {
         my $l = "";
