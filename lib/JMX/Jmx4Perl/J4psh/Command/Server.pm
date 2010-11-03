@@ -68,7 +68,7 @@ sub cmd_connect {
         $context->servers->connect_to_server($arg,$name);
         $context->commands->reset_stack;
         my ($yellow,$reset) = $context->color("host",RESET);
-        print "Connected to " . $yellow . $context->server . $reset .  " (" . $context->agent->url . ").\n";
+        print "Connected to " . $yellow . $context->server . $reset .  " (" . $context->agent->url . ").\n" if $context->agent;
     }
 }
 

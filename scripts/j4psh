@@ -85,23 +85,13 @@ if ($opts{version}) {
 }
 
 # Parse configuration files
-my $j4p_config = new JMX::Jmx4Perl::Config(&get_config($opts{config}));
+my $j4p_config = new JMX::Jmx4Perl::Config($opts{config});
 
 # Create global context object
 my $j4psh = new JMX::Jmx4Perl::J4psh(initial_server => $server,config => $j4p_config,args => \%opts);
 
 # Let the shell run
 $j4psh->run;
-
-sub get_config {
-    my $file = shift || $ENV{HOME} . "/.j4p";
-    my $ret = {};
-
-    if ($file && -e $file) {
-        $ret = { new Config::General(-ConfigFile => $file,-LowerCaseNames => 1)->getall };        
-    } 
-    return $ret;
-}
 
 =head1 LICENSE
 

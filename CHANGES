@@ -1,4 +1,4 @@
-0.73 
+0.73 (2010-11-03)
   - Fixed RT #61903 which occurs when the same check is referenced 
     multiple times (with potentially different parameters) in a 
     multicheck scenario.
@@ -10,6 +10,8 @@
     order to avoid conflicts with the usual versioning conventions for 
     Perl Modules. This is an API change, so in case you are using requests
     with the constant VERSION you should change this to AGENT_VERSION 
+  - Fixed issues when browsing with less in j4psh
+  - Extended config handling in j4psh to allow includes
 
 0.72 (2010-9-24)
   - Fixed problem with quotes in the config when using "Value"
