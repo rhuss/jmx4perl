@@ -9,7 +9,7 @@ use Data::Dumper;
 
 my $jmx = new It(verbose => 0)->jmx4perl;
 
-my $resp = $jmx->request(new JMX::Jmx4Perl::Request(VERSION));
+my $resp = $jmx->request(new JMX::Jmx4Perl::Request(AGENT_VERSION));
 my $value = $resp->{value};
 my $version_exp = $JMX::Jmx4Perl::VERSION;
 my ($base,$ext) = ($1,$3) if $version_exp =~ /^([\d.]+)(_(\d+))?$/;
