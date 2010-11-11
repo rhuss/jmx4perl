@@ -1489,7 +1489,7 @@ absolute increase between two checks is used.
 
 This directive switches on numeric mode, i.e. the given threshold values are
 compared numerically against the returned JMX value. By default, the check mode
-is determined by an heuristic. 
+is determined by a heuristic algorithm. 
 
 =item String
 

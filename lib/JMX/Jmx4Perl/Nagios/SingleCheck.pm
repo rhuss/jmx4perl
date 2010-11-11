@@ -415,8 +415,21 @@ sub _prepare_exec_args {
     my $np = $self->{np};
     my $jmx = shift;
 
-    my @args = @_;
-
+    # Merge CLI arguments and arguments from the configuration,
+    # with CLI arguments taking precedence
+    my @cli_args = @_;
+    my $config_args = $self->{config}->{args};
+    my @args = ();
+    if ($config_args) {
+        my @c_args = (@$config_args);
+        while (@cli_args || @c_args) {
+            my $arg1 = shift @cli_args;
+            my $arg2 = shift @c_args;
+            push @args, defined($arg1) ? $arg1 : $arg2;
+        }
+    } else {
+        @args = @cli_args;
+    }
     if ($self->alias) {
         my @req_args = $jmx->resolve_alias($self->alias);
         $np->nagios_die("Cannot resolve operation alias ",$self->alias()) unless @req_args >= 2;

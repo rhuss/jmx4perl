@@ -17,7 +17,7 @@ my $config_file = $FindBin::Bin . "/../check_jmx4perl/multi_check.cfg";
 
 # Simple multicheck
 ($ret,$content) = &exec_check_perl4jmx("--config $config_file --check memory"); 
-
+print ($ret,$content);
 is($ret,0,"Memory with value OK");
 ok($content =~ /\(base\)/,"First level inheritance");
 ok($content =~ /\(grandpa\)/,"Second level inheritance");
@@ -55,6 +55,10 @@ is($ret,0,"Multicheck with value OK");
 ok($content =~ /HelloLabel/,"First param");
 ok($content =~ /NestedWithOuterArgs/,"NestedWithOuterArgs");
 
+($ret,$content) = &exec_check_perl4jmx("--config $config_file --check overloaded_multi_check"); 
+is($ret,0,"Multicheck with argument for operation");
+ok($content =~ /Value 1 in range/,"OperationWithArgument");
+
 # TODO:
 
 # Unknown multicheck name
@@ -62,3 +66,5 @@ ok($content =~ /NestedWithOuterArgs/,"NestedWithOuterArgs");
 # Unknown nested multicheck name
 
 # Unknown check name within a multi check
+
+# No multicheck name
