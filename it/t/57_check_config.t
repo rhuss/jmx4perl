@@ -67,3 +67,14 @@ is($ret,2,"CRITICAL");
 ok($content =~ /critical/i,"Critical expected");
 ok($content =~ /Blubber/,"Name replacement from command line");
 
+($ret,$content) = &exec_check_perl4jmx("--config $config_file --check invalid_method 10 20"); 
+is($ret,3,"UNKNOWN");
+ok($content =~ /Unknown.*method/,"Unknown request method");
+
+($ret,$content) = &exec_check_perl4jmx("--config $config_file --method invalid --check thread_count 10 20"); 
+is($ret,3,"UNKNOWN");
+ok($content =~ /Unknown.*method/,"Unknown request method");
+
+($ret,$content) = &exec_check_perl4jmx("--config $config_file --method get --check thread_count 200 300"); 
+is($ret,0,"OK");
+ok($content =~ /in range/,"In range");

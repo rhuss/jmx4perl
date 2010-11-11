@@ -623,6 +623,11 @@ sub _create_nagios_plugin {
                  spec => "doc:s",
                  help => "Print the documentation of check_jmx4perl, optionally specifying the section (tutorial, args, config)"
                 );
+    $np->add_arg(
+                 spec => "method=s",
+                 help => "HTTP method to use. Either \"get\" or \"post\""
+                );
+    
     $np->getopts();
     return $np;
 }

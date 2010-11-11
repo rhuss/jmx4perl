@@ -64,7 +64,6 @@ sub get_requests {
     my $jmx = shift;
     my $args = shift;
 
-    my $request;
     my $do_read = $self->attribute || $self->value;
     if ($self->alias) {
         my $alias = JMX::Jmx4Perl::Alias->by_name($self->alias);
@@ -72,11 +71,18 @@ sub get_requests {
         $do_read = $alias->type eq "attribute";
     }
     my @requests = ();
+    my $request;
     if ($do_read) {
-        push @requests,JMX::Jmx4Perl::Request->new(READ,$self->_prepare_read_args($jmx));
+        $request = JMX::Jmx4Perl::Request->new(READ,$self->_prepare_read_args($jmx));
     } else {
-        push @requests,JMX::Jmx4Perl::Request->new(EXEC,$self->_prepare_exec_args($jmx,@$args));
+        $request = JMX::Jmx4Perl::Request->new(EXEC,$self->_prepare_exec_args($jmx,@$args));
     }
+    my $method = $self->{np}->opts->{method} || $self->{config}->{method};
+    if ($method) {
+        $request->method($method);
+    }
+    push @requests,$request;
+
     if ($self->base) {
         if (!looks_like_number($self->base)) {
             # It looks like a number, so we will use the base literally
@@ -423,9 +429,9 @@ sub _prepare_exec_args {
     if ($config_args) {
         my @c_args = (@$config_args);
         while (@cli_args || @c_args) {
-            my $arg1 = shift @cli_args;
-            my $arg2 = shift @c_args;
-            push @args, defined($arg1) ? $arg1 : $arg2;
+            my $cli_arg = shift @cli_args;
+            my $config_arg = shift @c_args;
+            push @args, defined($cli_arg) ? $cli_arg : $config_arg;
         }
     } else {
         @args = @cli_args;

@@ -305,7 +305,7 @@ sub method {
     my $self = shift;
     my $value = shift;
     if (defined($value)) {
-        die "Unknown request method ",$value if length($value) && $value !~ /^(POST|GET)$/i;
+        die "Unknown request method ",$value if length($value) && uc($value) !~ /^(POST|GET)$/i;
         $self->{method} = uc($value);
     }
     return defined($self->{method}) ? $self->{method} : undef;

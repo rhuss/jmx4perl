@@ -1178,6 +1178,13 @@ Authentication. By default, no authentication is used.
 How long to wait for an answer from the agent at most (in seconds). By default,
 the timeout is 180s.
 
+=item --method
+
+The HTTP metod to use for sending the jmx4perl request. This can be either
+C<get> or C<post>. By default, an method is determined automatically. C<get>
+for simple, single requests, C<post> for bulk request or requests using a JMX
+proxy. 
+
 =item --proxy
 
 A HTTP proxy server to use for accessing the j4p-agent.
@@ -1537,6 +1544,12 @@ threshold.
 Replacement value when an attribute is null or an operation returns a null
 value. This value then can be used in string checks in order to check against
 null values. By default, this value is "C<null>".
+
+=item Method
+
+HTTP Method to use for the check. Available values are C<GET> or C<POST> for
+GET or POST HTTP-Requests, respectively. By default a method is determined
+automatically. The value can be given case insensitively. 
 
 =item Use
 

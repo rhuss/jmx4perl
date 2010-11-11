@@ -2,7 +2,9 @@
   - Fixed problem with multichecks including operation-checks with
     arguments. Specifying them in a configuration has been falsely
     ignored. 
-
+  - Added '--method' command line option and 'Method' check
+    configuration option to check_jmx4perl for selecting the prefered
+    HTTP request method. 
 
 0.73 (2010-11-03)
   - Fixed RT #61903 which occurs when the same check is referenced 

@@ -29,7 +29,8 @@ for my $k (keys %s) {
 # Alias attribute checks
 
 for my $k (keys %s) {
-    ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED -c $k");
+    ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED -c $k --method post");
+    #print Dumper($ret,$content);
     is($ret,$s{$k}->[0],"MEMORY_HEAP_USED -c $k : $ret");
     ok($content =~ /^$s{$k}->[1]/,"MEMORY_HEAP_USED $k : " . $s{$k}->[1]);
 }
