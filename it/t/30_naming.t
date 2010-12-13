@@ -25,7 +25,7 @@ my @names =
 
 my @searches = 
   (
-   [ "*:name=//server/client,*", qr|jmx4perl\.it:.*name=//server/client| ]
+   [ "*:name=//server/client,*", qr#(jmx4perl|jolokia)\.it:.*name=//server/client# ]
   );
 
 # Basic check:
@@ -38,6 +38,7 @@ for my $name (@names) {
 
 for my $s (@searches) {
     my $r = $jmx->search($s->[0]);
+    #print Dumper($r);
     ok($r->[0] =~ $s->[1],"Search " . $s->[0]);    
 }
 

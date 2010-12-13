@@ -47,6 +47,10 @@ List all MBeans available
 
 Search for MBeans
 
+=ite AGENT_VERSION 
+
+Get the agent's version and extra runtime information of the serverside.
+
 =item REGISTER_NOTIFICATION
 
 Register for a JMX notification (not supported yet)

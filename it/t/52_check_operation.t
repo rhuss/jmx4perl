@@ -27,5 +27,9 @@ ok($content =~ /counter=(\d+)/ && $1 eq "1","Second operation returns 1");
 is($ret,2,"Third operation");
 ok($content =~ /counter=(\d+)/ && $1 eq "2","Third operation returns 2");
 
+# A single slash argument
+($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=operation --operation emptyStringArgumentCheck",
+                                       "-c 1 /");
+print Dumper($ret,$content);
 $jmx->execute("jmx4perl.it:type=operation","reset");
 

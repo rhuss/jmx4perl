@@ -54,6 +54,19 @@ is($unit,"TB");
 ($value,$unit) = $scheck->_normalize_value(1024*1024,"B");
 is($value,1);
 is($unit,"MB");
+($value,$unit) = $scheck->_normalize_value("1000","ms");
+is($value,1);
+is($unit,"s");
+($value,$unit) = $scheck->_normalize_value(1/60,"m");
+is($value,1);
+is($unit,"s");
+($value,$unit) = $scheck->_normalize_value(0.001,"us");
+is($value,1);
+is($unit,"ns");
+($value,$unit) = $scheck->_normalize_value(1010,"ns");
+is($value,1.01);
+is($unit,"us");
+
 
 my $label = $scheck->_exit_message(code => &Nagios::Plugin::OK,mode => "numeric",value => "2.1", unit => "MB");
 is($label,"Memory : Value 2.10 MB in range");

@@ -291,10 +291,10 @@ sub _base_value {
 my @UNITS = ([ qw(ns us ms s m h d) ],[qw(B KB MB GB TB)]);
 my %UNITS = 
   (
-   ns => 10**3,
+   ns => 1,   
    us => 10**3,
    ms => 10**3,
-   s => 1,
+   s => 10**3,
    m => 60,
    h => 60,
    d => 24,
@@ -331,7 +331,7 @@ sub _normalize_value {
                 # Go down the scale ...
                 return ($value,$unit) if $i == 0;
                 for my $j (reverse(0 .. $i-1)) {
-                    if ($ret <= 1) {     
+                    if ($ret < 1) {     
                         $ret *= $UNITS{$units->[$j+1]};
                         $u = $units->[$j];
                     } else {
