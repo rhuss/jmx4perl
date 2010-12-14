@@ -75,6 +75,6 @@ ok($content =~ /Unknown.*method/,"Unknown request method");
 is($ret,3,"UNKNOWN");
 ok($content =~ /Unknown.*method/,"Unknown request method");
 
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --method get --check thread_count 200 300"); 
+($ret,$content) = &exec_check_perl4jmx("--config $config_file --method get --check thread_count 300 400"); 
 is($ret,0,"OK");
 ok($content =~ /in range/,"In range");

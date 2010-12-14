@@ -1,15 +1,17 @@
 #!/usr/bin/perl
 
+package It;
+
 use strict;
 use JMX::Jmx4Perl;
 use Exporter;
 use vars qw(@EXPORT);
+use Data::Dumper;
 
 @EXPORT = qw($IT_BEAN);
 
 my $IT_BEAN = "jmx4perl:type=it,name=testbean";
 
-package It;
 
 sub new { 
     my $class = shift;

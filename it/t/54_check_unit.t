@@ -38,6 +38,7 @@ ok($content =~ /2 d/,"SecondsLong: Output");
 
 ($ret,$content) = &exec_check_perl4jmx
   ("--mbean jmx4perl.it:type=attribute --attribute SmallMinutes --critical :10000 --unit m");
+#print Dumper($ret,$content);
 is($ret,0,"SmallMinutes: OK");
-ok($content =~ /10.00 us/,"SmallMinutes: Output");
+ok($content =~ /10.00 ms/,"SmallMinutes: Output");
 

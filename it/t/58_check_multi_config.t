@@ -17,7 +17,7 @@ my $config_file = $FindBin::Bin . "/../check_jmx4perl/multi_check.cfg";
 
 # Simple multicheck
 ($ret,$content) = &exec_check_perl4jmx("--config $config_file --check memory"); 
-print ($ret,$content);
+#print ($ret,$content);
 is($ret,0,"Memory with value OK");
 ok($content =~ /\(base\)/,"First level inheritance");
 ok($content =~ /\(grandpa\)/,"Second level inheritance");
