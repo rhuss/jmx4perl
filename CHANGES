@@ -8,6 +8,7 @@
   - Fixed normalization of time values (RT #63545)
   - Improved default check_jmx4perl configuration (in hopefully a backward 
     compatible way)
+  - Multi check service summary now contains the name of failed services
 
 0.73 (2010-11-03)
   - Fixed RT #61903 which occurs when the same check is referenced 

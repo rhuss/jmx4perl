@@ -162,6 +162,15 @@ sub extract_responses {
                           $self->unit ? (uom => $self->unit) : ());
         # Do the real check.
         my ($code,$mode) = $self->_check_threshhold($rel_value);
+        # For Multichecks, we remember the label of a currently failed check
+        if ($code != OK && $opts->{error_stat}) {
+            my $label = $self->{config}->{key} || $self->{config}->{name};
+            if ($label) {
+                my $arr = $opts->{error_stat}->{$code} || [];
+                push @$arr,$label;
+                $opts->{error_stat}->{$code} = $arr;
+            }
+        }
         my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
                                                     value => $value_conv, unit => $unit,base => $base_conv, 

@@ -91,6 +91,7 @@ sub execute {
 
         # Request
         my @optional = ();
+        my $error_stat = { };
         my $target_config = $self->target_config;
         my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $self->url, user => $self->user, 
                                      password => $self->password,
@@ -112,8 +113,11 @@ sub execute {
             for my $check (@{$self->{checks}}) {
                 # A check can consume more than one response
                 my @r = $check->extract_responses($responses,\@requests,
-                                                    { target => $target_config, 
-                                                      prefix => $self->_multi_check_prefix($check,$i++,$nr_checks)});
+                                                    { 
+                                                     target => $target_config, 
+                                                     prefix => $self->_multi_check_prefix($check,$i++,$nr_checks),
+                                                     error_stat => $error_stat
+                                                    });
                 push @extra_requests,@r if @r;
             }
         }
@@ -124,7 +128,7 @@ sub execute {
 
         # Different outputs for multi checks/single checks
         my ($code,$message) = $self->_exit_message($np);
-        if ($nr_checks >1) {
+        if ($nr_checks > 1) {
             my $summary;
             if ($code eq OK) {
                 $summary = "All " . $nr_checks . " checks OK";            
@@ -132,9 +136,19 @@ sub execute {
                 my $nr_warnings = scalar(@{$np->messages->{warning} || []});
                 my $nr_errors = scalar(@{$np->messages->{critical} || []});
                 my @parts;
-                push @parts,"$nr_errors error" . ($nr_errors > 1 ? "s" : "") if $nr_errors;
-                push @parts,"$nr_warnings warning" . ($nr_warnings > 1 ? "s" : "") if $nr_warnings;
-                $summary = $nr_warnings + $nr_errors . " of " . $nr_checks . " failed (" . join(" and ",@parts) . ")";
+                my $extra = "";
+                my $nr = 0;
+                for my $code (CRITICAL,WARNING,UNKNOWN) {
+                    if (my $errs = $error_stat->{$code}) {
+                        $extra .= scalar(@$errs) . " " . $STATUS_TEXT{$code} . " (" . join (",",@$errs) . "), ";
+                        $nr += scalar(@$errs);
+                    }
+                }
+                if ($nr > 0) {
+                    # Cut off extra chars at the end
+                    $extra = substr($extra,-2);
+                }
+                $summary = $nr . " of " . $nr_checks . " failed: " . $extra;
             }
             $message = $summary . "\n" . $message;
         }

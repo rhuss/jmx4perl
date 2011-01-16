@@ -13,7 +13,7 @@ if( $@ ) {
     plan skip_all => 'Nagios::Plugin not installed';
 }
 else {
-    plan tests => 21;
+    plan tests => 29;
 }
 
 Nagios::Plugin->import();
