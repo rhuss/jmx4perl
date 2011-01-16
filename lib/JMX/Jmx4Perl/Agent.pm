@@ -372,8 +372,8 @@ sub _escape {
     my $input = shift;
     my $opts = { @_ };
     $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
-    $input =~ s|-/$|+/|; # The last slash needs a special escape    
-    $input =~ s|^/-|/^|; # as well as the first slash
+    $input =~ s|^/-|/^|; # The first slash needs to be escaped (first)
+    $input =~ s|-/$|+/|; # as well as last slash. They need a special escape.
 
     return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
                                                               # default

@@ -84,7 +84,7 @@ SUPPORTED APPLICATION SERVERS
   * Jonas 4.10.7 (with Jetty 5.1.10 and Tomcat 5.5.28) and 5.1.1
   * Apache Geronimo 2.2 (Jetty 7 and Tomcat 6)
   * Glassfish 2.1.1 and v3
-  * Apache Tomcat 5.5.28 & 6.0.26
+  * Apache Tomcat 5.5.31 & 6.0.30 & 7.0.6
   * Jetty 5.1.15 & 6.1.22 & 7.0.1 (with JMX enabled) & 8.0.0.M0
   * IBM Websphere 6.1 & 7.0
   * Resin 3.1.9

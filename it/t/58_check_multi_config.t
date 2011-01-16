@@ -60,7 +60,7 @@ is($ret,0,"Multicheck with argument for operation");
 ok($content =~ /Value 1 in range/,"OperationWithArgument");
 
 ($ret,$content) = &exec_check_perl4jmx("--config $config_file --check failing_multi_check"); 
-print Dumper($ret,$content);
+#print Dumper($ret,$content);
 is($ret,2,"Failing memory multicheck is CRITICAL");
 ok($content =~ /memory_non_heap/,"Failed check name is contained in summary");
 

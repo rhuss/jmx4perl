@@ -12,6 +12,8 @@ my ($ret,$content);
 # ====================================================
 # Operation return value check
 
+# A single slash argument
+
 $jmx->execute("jmx4perl.it:type=operation","reset");
 
 ($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=operation --operation fetchNumber",
@@ -27,9 +29,9 @@ ok($content =~ /counter=(\d+)/ && $1 eq "1","Second operation returns 1");
 is($ret,2,"Third operation");
 ok($content =~ /counter=(\d+)/ && $1 eq "2","Third operation returns 2");
 
-# A single slash argument
 ($ret,$content) = &exec_check_perl4jmx("--mbean jmx4perl.it:type=operation --operation emptyStringArgumentCheck",
                                        "-c 1 /");
-print Dumper($ret,$content);
+is($ret,0,"Single slash argument (return code)");
+ok($content =~ /false/,"Single slash argument (return message)");
 $jmx->execute("jmx4perl.it:type=operation","reset");
 
