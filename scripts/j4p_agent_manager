@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+use JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
+use strict;
+
+# Agent manager for 
+# - downloading the agent from a remote site
+# - adding security constraints
+# - manipulating the policy file
+# - deploying it to the target server
+
+my %opts = ();
+GetOptions(\%opts,
+           "mode|m=s",
+           "agent|a=s",
+           "proxy=s",
+           "outdir|o=s",
+           "repository|r=s",
+           "quiet|q",
+           "version|v=s",
+           "help|h"
+          );
+
+my %COMMANDS = 
+  (
+   download => \&command_download
+  );
+
+my %AGENTS = 
+  (
+   "war" => [ "jolokia-war", "jolokia-war-%v.war", "jolokia.war" ],
+   "osgi" => [ "jolokia-osgi", "jolokia-osgi-%v.jar", "jolokia.jar" ],
+   "osgi-bundle" => [ "jolokia-osgi-bundle", "jolokia-osgi-bundle-%v.jar", "jolokia-bundle.jar" ],
+   "mule" => [ "jolokia-mule", "jolokia-mule-%v.jar", "jolokia-mule.jar" ],
+   "jdk6" => [ "jolokia-jvm-jdk6", "jolokia-jvm-jdk6-%v-agent.jar", "jolokia.jar" ]
+  );
+
+
+my $mode = $opts{mode} || "download";
+my $command = $COMMANDS{$mode} || die "Unknown mode " . $mode . "\n";
+
+my $meta = JMX::Jmx4Perl::Agent::Manager::JolokiaMeta->new
+  (
+     { 
+      log_handler => { error => sub { die @_ } }
+     }
+  )->load();
+
+eval {
+    &$command($meta,\%opts);
+};
+die "Error while executing command '" . $mode . "' : " . $@ . "\n" if $@;
+
+# ===========================================================
+
+# Download an agent
+sub command_download {
+    my ($meta,$args) = @_;
+    
+    my $agent = $args->{agent} || "war";
+    my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
+    
+    for my $repository (@$repositories) {
+        eval {
+            my $version = $2 if $agent =~ s/(.*):([\d\.]+)\s*$/$1/;
+            if ($version) {        
+                &verify_version($meta,$version);
+            } else {
+                $version = &latest_version($meta);
+            }
+            my $download_url = &get_download_url($repository,$agent,$version);
+            &download($AGENTS{$agent}->[2],$download_url,$args->{outdir});
+        };
+        if ($@) {
+            print "Cannot fetch from $repository: " . $@ . "Trying next ...\n";
+        } else {
+            return;
+        }
+    }
+    die "Couldn't download a $agent agent from any these repositories:\n   ",join("\n   ",@$repositories),"\n";
+}
+
+sub download {
+    my ($agent, $url, $dir) = @_;
+    $dir ||= ".";
+
+    # TODO: Download with progress bar (siehe blog)
+}
+
+sub verify_version {
+    my ($meta,$version) = @_;
+    my @versions = keys %{$meta->get('versions')};
+    die "No version $version known. Known versions: [",join(", ",sort @versions),"]\n"
+      unless grep { $version eq $_ } @versions;
+}
+
+sub latest_version { 
+    my ($meta) = @_;
+    my $max = 0;
+    map { $max = $_ if $max <= $_ } keys %{$meta->get('versions')};
+    return $max;
+}
+
+sub get_download_url {
+    my ($repository,$agent,$version) = @_;
+    my ($name,$artifact) = artifact_and_name($agent,$version);
+    $repository =~ s/\/+$//;            
+    return $repository . "/org/jolokia/" . $name . "/" . $version . "/" . $artifact;
+}
+
+# Map agent to its artifact id and its full name (including any classifier)
+sub artifact_and_name {
+    my $agent = shift;
+    my $version = shift;
+
+    my $parts = $AGENTS{$agent} || die "Unknown agent type $agent. Known agent types are: ",join(", ",sort keys %AGENTS),"\n";
+    my $name = $parts->[0];
+    my $artifact = $parts->[1];
+    $artifact =~ s/\%v/$version/g;
+    return ($name,$artifact);
+}
+
