@@ -2,6 +2,10 @@
 
 use Getopt::Long;
 use JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
+use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
+use JMX::Jmx4Perl::Agent::Manager::Logger;
+use Digest::MD5;
+use Data::Dumper;
 use strict;
 
 # Agent manager for 
@@ -21,7 +25,7 @@ GetOptions(\%opts,
            "version|v=s",
            "help|h"
           );
-
+ 
 my %COMMANDS = 
   (
    download => \&command_download
@@ -40,12 +44,8 @@ my %AGENTS =
 my $mode = $opts{mode} || "download";
 my $command = $COMMANDS{$mode} || die "Unknown mode " . $mode . "\n";
 
-my $meta = JMX::Jmx4Perl::Agent::Manager::JolokiaMeta->new
-  (
-     { 
-      log_handler => { error => sub { die @_ } }
-     }
-  )->load();
+my $logger = new JMX::Jmx4Perl::Agent::Manager::Logger(quiet => $opts{quiet});
+my $meta = JMX::Jmx4Perl::Agent::Manager::JolokiaMeta->new(logger => $logger)->load();
 
 eval {
     &$command($meta,\%opts);
@@ -70,7 +70,11 @@ sub command_download {
                 $version = &latest_version($meta);
             }
             my $download_url = &get_download_url($repository,$agent,$version);
-            &download($AGENTS{$agent}->[2],$download_url,$args->{outdir});
+            my $dir = $args->{outdir} || ".";
+            my $file = $dir . "/" . $AGENTS{$agent}->[2];
+            $logger->info("Download from repository " . $repository);
+            &download($download_url,$file,$args);
+            &verify_md5($file,$meta->{versions}->{$version}->{md5});
         };
         if ($@) {
             print "Cannot fetch from $repository: " . $@ . "Trying next ...\n";
@@ -82,10 +86,34 @@ sub command_download {
 }
 
 sub download {
-    my ($agent, $url, $dir) = @_;
-    $dir ||= ".";
+    my ($url, $file, $args) = @_;
+    my $config = $args || {};
+    my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent(quiet => $config->{quiet});
+    my $response = $ua->get($url,":content_file" => $file);
+    if ($response->is_error) {
+        die "Could not download agent from " . $url . ": " . $response->status_line . "\n";
+    }
+    $logger->info("Saved " . $file); 
+}
 
-    # TODO: Download with progress bar (siehe blog)
+sub verify_md5 {
+    my $file = shift;
+    my $md5 = shift;
+    if ($md5) {
+        my $md5 = new Digest::MD5();
+        open (my $fh, "<", $file) || die "Cannot open $file for MD5 check: $!\n";
+        $md5->addfile($fh);
+        my $md5_calc = $md5->hexdigest;
+        close $fh;
+        if (lc($md5) eq lc($md5_calc)) {
+            $logger->info("Passed MD5 check (" . $md5 . ")");
+        } else {
+            $logger->error("Failed MD5 check. Got: " . $md5_calc . ", Expected: " . $md5);
+            exit(1);
+        }
+    } else {
+        $logger->info("Skipping MD5 check");        
+    }
 }
 
 sub verify_version {
@@ -120,4 +148,3 @@ sub artifact_and_name {
     $artifact =~ s/\%v/$version/g;
     return ($name,$artifact);
 }
-
