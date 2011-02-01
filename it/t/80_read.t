@@ -51,4 +51,9 @@ ok($value->{"jmx4perl.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeco
 ok($value->{"jmx4perl.it:type=attribute"}->{State} eq "true","State");
 $jmx->execute("jmx4perl.it:type=attribute","reset");
 
+
+my $value = $jmx->get_attribute("jmx4perl.it:type=attribute","ObjectName");
+ok($value->{objectName} eq "bla:type=blub","object name simplified");
+ok(!defined($value->{canonicalName}),"no superfluos parameters");
+
 #print Dumper(\@resps);

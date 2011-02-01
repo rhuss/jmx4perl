@@ -31,6 +31,8 @@ j4psh:
 [localhost:8080 com.sun.appserv:J2EEApplication=null, ...] : cat *
 Error: java.lang.ClassCastException: org.json.simple.JSONArray cannot be cast to java.lang.String at /opt/local/lib/perl5/site_perl/5.8.9/JMX/Jmx4Perl/J4psh/Command/MBean.pm line 155.
 92 overloaded exec()
+93 cd ../type=Memory (cd mit relativen Pfaden ..)
+94 refresh()
 
 java-client:
 
