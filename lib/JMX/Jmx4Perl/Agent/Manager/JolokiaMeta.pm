@@ -4,9 +4,15 @@
 # www.jolokia.org
 
 package JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
+
+use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
+use JMX::Jmx4Perl::Agent::Manager::Logger;
 use JSON;
 use Data::Dumper;
 use base qw(LWP::UserAgent);
+use strict;
+
+my $JOLOKIA_META_URL = "http://www.jolokia.org/jolokia.meta";
 
 =head1 NAME
 
@@ -34,12 +40,8 @@ sub new {
     my $class = shift;
     my $self = ref($_[0]) eq "HASH" ? $_[0] : {  @_ };
     # Dummy logging if not provided
-    $self->{log_handler} = { 
-                            error => sub {},
-                            info => sub {},
-                           } 
-      unless $self->{log_handler};
-    bless $self,(ref($class) || $class);
+    $self->{logger} = new JMX::Jmx4Perl::Agent::Manager::Logger::None unless $self->{logger};
+    return bless $self,(ref($class) || $class);
 }
 
 =item $meta->load($force)
@@ -105,6 +107,7 @@ sub _from_cache {
         }
         my $ret = join "",<F>;
         close F;        
+        $self->_info("Loaded Jolokia meta data from cache");
         return from_json($ret,{utf8 => 1});
     } else {
         return undef;
@@ -126,16 +129,29 @@ sub _to_cache {
 
 # Load from server
 sub _load_from_server {
+    my $self = shift;
+
     # Load with HTTP-Client, hardcoded for now
-    print "Load from server\n";
+    $self->_info("Loading Jolokia meta data from server");
+    if (undef) {
+        my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent($self->{ua_config});
+        my $response = $ua->get($JOLOKIA_META_URL);
+        if ($response->is_success) {
+            my $content = $response->decoded_content;  # or whatever
+            return from_json($content, {utf8 => 1});
+        }
+        else {
+            die "Cannot load Jolokia Meta-Data: " . $response->status_line . "\n";
+        }
+    }
     return {
             repositories => [
                              "http://labs.consol.de/maven/repository"
                             ],            
             versions => {
-                         "0.82" => { signed => 0 } ,
-                         "0.81" => { signed => 0 } ,
-                         "0.80" => { signed => 0 }                         
+                         "0.82" => { md5 => 0 } ,
+                         "0.81" => { md5 => 0 } ,
+                         "0.80" => { md5 => 0 }                         
                         } 
            };
 }
@@ -143,11 +159,12 @@ sub _load_from_server {
 # Do something with errors and info messages
 sub _error {
     my $self = shift;
-    &{$self->{log_handler}->{error}}(@_);
+    $self->{logger}->error(@_);
 }
 
 sub _info {
-    &{$self->{log_handler}->{info}}(@_);
+    my $self = shift;
+    $self->{logger}->info(@_);
 }
 
 1; 
