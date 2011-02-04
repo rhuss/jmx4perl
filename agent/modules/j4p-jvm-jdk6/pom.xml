@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jmx4perl</groupId>
   <artifactId>j4p-jvm-jdk6</artifactId>
-  <version>0.74.0</version>
+  <version>0.75.0</version>
   <packaging>jar</packaging>
   <name>${project.artifactId}</name>
   <description>j4p-jvm-jdk6 - j4p agent as a JVM agent using Sun's HttpServer</description>

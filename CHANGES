@@ -1,3 +1,7 @@
+0.75 (2001-2-4)
+  - Fixed typo in POD documentation which prevented a successful 
+    build in some situations
+
 0.74 (2011-1-16)
   - Fixed problem with multichecks including operation-checks with
     arguments. Specifying them in a configuration has been falsely

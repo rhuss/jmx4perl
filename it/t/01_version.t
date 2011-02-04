@@ -15,7 +15,9 @@ my $version_exp = $JMX::Jmx4Perl::VERSION;
 my ($base,$ext) = ($1,$3) if $version_exp =~ /^([\d.]+)(_(\d+))?$/;
 $base = $base . ".0" unless $base =~ /^\d+\.\d+\.\d+$/;
 $version_exp = $base . ($ext ? ".M" . $ext : "");
-is($value->{agent},$version_exp,"Version " . $version_exp);
+ok($value->{agent} >= $version_exp,"Version " . $version_exp);
+print "Agent-Version:\n";
+print Dumper($value);
 ok($value->{protocol} > 0,"Protocol version " . $value->{protocol});
 #print Dumper(\@resps);
 

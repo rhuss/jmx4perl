@@ -47,7 +47,7 @@ List all MBeans available
 
 Search for MBeans
 
-=ite AGENT_VERSION 
+=item AGENT_VERSION 
 
 Get the agent's version and extra runtime information of the serverside.
 
