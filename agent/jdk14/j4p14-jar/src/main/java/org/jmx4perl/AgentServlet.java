@@ -151,11 +151,11 @@ public class AgentServlet extends HttpServlet {
                 log("Path-Info: " + pReq.getPathInfo());
                 log("Request: " + jmxReq.toString());
             }
-
+            boolean useValueWithPath = doUseReturnValueWithPath(jmxReq);
             Object retValue = callRequestHandler(jmxReq);
             if (debug) log("Return: " + retValue);
 
-            json = objectToJsonConverter.convertToJson(retValue,jmxReq);
+            json = objectToJsonConverter.convertToJson(retValue,jmxReq,useValueWithPath);
             historyStore.updateAndAdd(jmxReq,json);
 
             json.put("status",new Integer(200) /* success */);
@@ -198,6 +198,7 @@ public class AgentServlet extends HttpServlet {
         }
     }
 
+
     private void checkClientIPAccess(HttpServletRequest pReq) {
         if (!restrictor.isRemoteAccessAllowed(pReq.getRemoteHost(),pReq.getRemoteAddr())) {
             throw new SecurityException("No access from client " + pReq.getRemoteAddr() + " allowed");
@@ -212,6 +213,15 @@ public class AgentServlet extends HttpServlet {
             throw new UnsupportedOperationException("Unsupported operation '" + pJmxReq.getType() + "'");
         }
         return mBeanServerHandler.dispatchRequest(handler, pJmxReq);
+    }
+
+    private boolean doUseReturnValueWithPath(JmxRequest pJmxReq) {
+        String type = pJmxReq.getType();
+        RequestHandler handler = (RequestHandler) requestHandlerMap.get(type);
+        if (handler == null) {
+            throw new UnsupportedOperationException("Unsupported operation '" + pJmxReq.getType() + "'");
+        }
+        return handler.useReturnValueWithPath();
     }
 
 

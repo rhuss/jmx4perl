@@ -31,6 +31,8 @@ import java.lang.reflect.InvocationTargetException;
  */
 
 /**
+ * Handler for dealing with write request.
+ *
  * @author roland
  * @since Jun 12, 2009
  */
@@ -95,6 +97,16 @@ public class WriteHandler extends RequestHandler {
         Attribute attribute = new Attribute(request.getAttributeName(),values[0]);
         server.setAttribute(request.getObjectName(),attribute);
         return values[1];
+    }
+
+    /**
+     * The old value is returned directly, hence we do not want any path conversion
+     * on this value
+     *
+     * @return false;
+     */
+    public boolean useReturnValueWithPath() {
+        return false;
     }
 }
 

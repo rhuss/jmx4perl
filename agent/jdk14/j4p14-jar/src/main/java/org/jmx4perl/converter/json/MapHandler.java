@@ -103,6 +103,10 @@ public class MapHandler implements ObjectToJsonConverter.Handler {
         return oldValue;
     }
 
+    public boolean canSetValue() {
+        return true;
+    }
+
     private String trimString(String pString) {
         if (pString.length() > 400) {
             return pString.substring(0,400) + " ...";

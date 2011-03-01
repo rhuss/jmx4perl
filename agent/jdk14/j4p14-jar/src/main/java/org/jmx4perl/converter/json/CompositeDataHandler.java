@@ -72,4 +72,8 @@ public class CompositeDataHandler implements ObjectToJsonConverter.Handler {
             throws IllegalAccessException, InvocationTargetException {
         throw new IllegalArgumentException("CompositeData cannot be written to");
     }
+
+    public boolean canSetValue() {
+        return false;
+    }
 }

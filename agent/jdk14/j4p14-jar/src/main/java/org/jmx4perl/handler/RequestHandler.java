@@ -129,4 +129,13 @@ public abstract class RequestHandler {
                 throws InstanceNotFoundException, AttributeNotFoundException, ReflectionException, MBeanException    {
         return null;
     }
+
+    /**
+     * Use the path for the return value by default
+     *
+     * @return true
+     */
+    public boolean useReturnValueWithPath() {
+        return true;
+    }    
 }

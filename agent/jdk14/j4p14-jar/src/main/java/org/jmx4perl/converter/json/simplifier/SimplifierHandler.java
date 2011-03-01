@@ -94,6 +94,10 @@ abstract class SimplifierHandler implements ObjectToJsonConverter.Handler {
     }
 
 
+    public boolean canSetValue() {
+        return false;
+    }
+
     // ============================================================================
     interface Extractor {
         Object extract(Object value) throws SkipAttributeException;

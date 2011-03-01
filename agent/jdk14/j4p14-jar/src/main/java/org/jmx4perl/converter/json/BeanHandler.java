@@ -56,7 +56,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
     final private static Set IGNORE_METHODS = new HashSet(Arrays.asList(
             new String[] { "getClass" }
     ));
-    private static final String[] GETTER_PREFIX = new String[] { "get", "is"};
+    private static final String[] GETTER_PREFIX = new String[] { "get", "is", "has"};
 
 
     public Class getType() {
@@ -117,10 +117,14 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
                 if (name.startsWith(pref) && name.length() > pref.length()
                         && method.getParameterTypes().length == 0) {
                     int len = pref.length();
-                    String attribute =
-                            new StringBuffer(name.substring(len,len+1).toLowerCase()).
-                                    append(name.substring(len+1)).toString();
-                    attrs.add(attribute);
+                    String firstLetter = name.substring(len,len+1);
+                    // Only for getter compliant to the beans conventions (first letter after prefix is upper case)
+                    if (firstLetter.toUpperCase().equals(firstLetter)) {
+                        String attribute =
+                                new StringBuffer(firstLetter.toLowerCase()).
+                                        append(name.substring(len+1)).toString();
+                        attrs.add(attribute);
+                    }
                 }
             }
         }
@@ -147,6 +151,16 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
             }
             // We found a valid method
             break;
+        }
+        // Finally, try the attribute name directly
+        if (method == null) {
+            try {
+                method = clazz.getMethod(
+                        new StringBuilder(pAttribute.substring(0,1).toLowerCase())
+                                .append(pAttribute.substring(1)).toString(),new Class[0]);
+            } catch (NoSuchMethodException exp) {
+                method = null;
+            }
         }
         if (method == null) {
             throw new AttributeNotFoundException(
@@ -196,12 +210,18 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         Object oldValue;
         try {
             Method getMethod = clazz.getMethod(getter, new Class[0]);
+            getMethod.setAccessible(true);
             oldValue = getMethod.invoke(pInner, new Object[0]);
         } catch (NoSuchMethodException exp) {
             // Ignored, we simply dont return an old value
             oldValue = null;
         }
+        found.setAccessible(true);
         found.invoke(pInner,new Object[] { pConverter.convertFromString(params[0].getName(),pValue) });
         return oldValue;
+    }
+
+    public boolean canSetValue() {
+        return true;
     }
 }
