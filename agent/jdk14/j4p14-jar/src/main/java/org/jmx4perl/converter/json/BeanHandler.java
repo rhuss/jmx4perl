@@ -7,6 +7,8 @@ import javax.management.AttributeNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.*;
 
 /*
@@ -210,18 +212,32 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
         Object oldValue;
         try {
             Method getMethod = clazz.getMethod(getter, new Class[0]);
-            getMethod.setAccessible(true);
+            AccessController.doPrivileged(new SetMethodAccessibleAction(getMethod));
             oldValue = getMethod.invoke(pInner, new Object[0]);
         } catch (NoSuchMethodException exp) {
             // Ignored, we simply dont return an old value
             oldValue = null;
         }
-        found.setAccessible(true);
+        AccessController.doPrivileged(new SetMethodAccessibleAction(found));
         found.invoke(pInner,new Object[] { pConverter.convertFromString(params[0].getName(),pValue) });
         return oldValue;
     }
 
     public boolean canSetValue() {
         return true;
+    }
+
+    // Privileged action for setting the accesibility mode for a method to true
+    private static class SetMethodAccessibleAction implements PrivilegedAction {
+        private final Method getMethod;
+
+        public SetMethodAccessibleAction(Method pGetMethod) {
+            getMethod = pGetMethod;
+        }
+
+        public Object run() {
+            getMethod.setAccessible(true);
+            return null;
+        }
     }
 }

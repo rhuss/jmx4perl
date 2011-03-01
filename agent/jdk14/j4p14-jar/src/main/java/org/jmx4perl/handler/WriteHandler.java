@@ -6,6 +6,8 @@ import org.jmx4perl.converter.json.ObjectToJsonConverter;
 
 import javax.management.*;
 import java.lang.reflect.InvocationTargetException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 /*
  * jmx4perl - WAR Agent for exporting JMX via JSON
@@ -73,7 +75,7 @@ public class WriteHandler extends RequestHandler {
         }
     }
 
-    private Object setAttribute(JmxRequest request, MBeanServer server)
+    private Object setAttribute(final JmxRequest request, final MBeanServer server)
             throws MBeanException, AttributeNotFoundException, InstanceNotFoundException,
             ReflectionException, IntrospectionException, InvalidAttributeValueException, IllegalAccessException, InvocationTargetException {
         // Old value, will throw an exception if attribute is not known. That's good.
@@ -93,9 +95,20 @@ public class WriteHandler extends RequestHandler {
                     " found for MBean " + request.getObjectNameAsString());
         }
         String type = aInfo.getType();
-        Object[] values = objectToJsonConverter.getValues(type,oldValue,request);
-        Attribute attribute = new Attribute(request.getAttributeName(),values[0]);
-        server.setAttribute(request.getObjectName(),attribute);
+        final Object[] values = objectToJsonConverter.getValues(type,oldValue,request);
+        final Attribute attribute = new Attribute(request.getAttributeName(),values[0]);
+        AccessController.doPrivileged(new PrivilegedAction() {
+            public Object run() {
+                try {
+                    server.setAttribute(request.getObjectName(),attribute);
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Cannot set value " + values[0] + " on " +
+                                                               request.getObjectName() + ": " + e,e);
+                }
+                return null;
+            }
+        });
+
         return values[1];
     }
 
