@@ -189,7 +189,7 @@ public class BeanHandler implements ObjectToJsonConverter.Handler {
 
         Class clazz = pInner.getClass();
         Method found = null;
-        Method[] methods = pValue.getClass().getMethods();
+        Method[] methods = clazz.getMethods();
         for (int j = 0; j < methods.length; j++) {
             Method method = methods[j];
             if (method.getName().equals(setter)) {
