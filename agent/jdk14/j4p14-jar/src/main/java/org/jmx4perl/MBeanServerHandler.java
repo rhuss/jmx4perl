@@ -214,7 +214,13 @@ public class MBeanServerHandler {
         try {
             Class mbeanHomeClass = Class.forName("weblogic.management.MBeanHome");
             String jndiName = (String) mbeanHomeClass.getField("LOCAL_JNDI_NAME").get(null);
-            InitialContext ctx = new InitialContext();
+            Hashtable lookupProps = null;
+            if (System.getProperty("j4p.jndi.principal") != null) {
+                lookupProps = new Hashtable();
+                lookupProps.put("java.naming.security.principal",System.getProperty("j4p.jndi.principal"));
+                lookupProps.put("java.naming.security.credentials",System.getProperty("j4p.jndi.credentials"));
+            }
+            InitialContext ctx = new InitialContext(lookupProps);
 
             Object mbeanHome = ctx.lookup(jndiName);
             if (mbeanHome != null) {
