@@ -5,6 +5,29 @@
   <servlet>
     <servlet-name>j4p-agent</servlet-name>
     <servlet-class>org.jmx4perl.AgentServlet</servlet-class>
+
+
+    <!-- Parameter that might be necessary to lookup the MBeanServer
+         via JNDI on a Weblogic 8.1 instance -->
+    <!--
+    <init-param>
+      <description>
+        JNDI principal used for JNDI base lookup
+        of MBeanServer (e.g. for Weblogic)
+      </description>
+      <param-name>jndi.principal</param-name>
+      <param-value>system</param-value>
+    </init-param>
+    <init-param>
+      <description>
+        JNDI credentials used for JNDI base lookup
+        of MBeanServer (e.g. for Weblogic)
+      </description>
+      <param-name>jndi.credentials</param-name>
+      <param-value>manager</param-value>
+    </init-param>
+    -->
+
     <init-param>
       <description>
         Debugging state after startup. Can be changed via

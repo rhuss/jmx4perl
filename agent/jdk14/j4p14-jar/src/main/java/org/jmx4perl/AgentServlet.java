@@ -105,7 +105,7 @@ public class AgentServlet extends HttpServlet {
 
         // Get all MBean servers we can find. This is done by a dedicated
         // handler object
-        mBeanServerHandler = new MBeanServerHandler();
+        mBeanServerHandler = new MBeanServerHandler(pConfig);
 
         // Backendstore for remembering state
         initStores();

@@ -5,6 +5,8 @@ import org.jmx4perl.handler.RequestHandler;
 import javax.management.*;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.servlet.ServletConfig;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -47,8 +49,8 @@ public class MBeanServerHandler {
     boolean isJBoss = checkForClass("org.jboss.mx.util.MBeanServerLocator");
     boolean isWebsphere = checkForClass("com.ibm.websphere.management.AdminServiceFactory");
 
-    public MBeanServerHandler() {
-        mBeanServers = findMBeanServers();
+    public MBeanServerHandler(ServletConfig config) {
+        mBeanServers = findMBeanServers(config);
         for (Iterator it = mBeanServers.iterator(); it.hasNext(); ) {
             System.out.println(">>>>> " + it.next());
         }
@@ -169,8 +171,9 @@ public class MBeanServerHandler {
      *
      * @return the MBeanServer found
      * @throws IllegalStateException if no MBeanServer could be found.
+     * @param pConfig
      */
-    private Set findMBeanServers() {
+    private Set findMBeanServers(ServletConfig pConfig) {
 
         // Check for JBoss MBeanServer via its utility class
         Set servers = new LinkedHashSet();
@@ -179,7 +182,7 @@ public class MBeanServerHandler {
         addWebsphereMBeanServer(servers);
         addFromMBeanServerFactory(servers);
         addFromJndiContext(servers);
-        addFromWeblogicJndi(servers);
+        addFromWeblogicJndi(servers,pConfig);
         addPlatformMBeanServer(servers);
 
         if (servers.size() == 0) {
@@ -210,15 +213,15 @@ public class MBeanServerHandler {
         }
     }
 
-    private void addFromWeblogicJndi(Set pServers) {
+    private void addFromWeblogicJndi(Set pServers, ServletConfig pConfig) {
         try {
             Class mbeanHomeClass = Class.forName("weblogic.management.MBeanHome");
             String jndiName = (String) mbeanHomeClass.getField("LOCAL_JNDI_NAME").get(null);
             Hashtable lookupProps = null;
-            if (System.getProperty("j4p.jndi.principal") != null) {
+            if (pConfig.getInitParameter("jndi.principal") != null) {
                 lookupProps = new Hashtable();
-                lookupProps.put("java.naming.security.principal",System.getProperty("j4p.jndi.principal"));
-                lookupProps.put("java.naming.security.credentials",System.getProperty("j4p.jndi.credentials"));
+                lookupProps.put("java.naming.security.principal", pConfig.getInitParameter("jndi.principal"));
+                lookupProps.put("java.naming.security.credentials",pConfig.getInitParameter("jndi.credentials"));
             }
             InitialContext ctx = new InitialContext(lookupProps);
 
