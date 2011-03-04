@@ -13,6 +13,8 @@ use Carp;
 use Scalar::Util qw(looks_like_number);
 use URI::Escape;
 use Text::ParseWords;
+use JSON;
+
 our $AUTOLOAD;
 
 =head1 NAME
@@ -206,7 +208,9 @@ sub _null_safe_value {
     my $self = shift;
     my $value = shift;
     if (defined($value)) {
-        if (ref($value) && $self->string) {
+        if (JSON::is_bool($value)) {
+            return "$value";
+        } elsif (ref($value) && $self->string) {
             # We can deal with complex values withing string comparison
             if (ref($value) eq "ARRAY") {
                 return join ",",@{$value};
@@ -365,7 +369,7 @@ sub _verify_response {
         $np->nagios_die("Error: ".$resp->status." ".$resp->error_text.$extra);
     }
     
-    if (!$req->is_mbean_pattern && (ref($resp->value) && !$self->string)) { 
+    if (!$req->is_mbean_pattern && (ref($resp->value) && !$self->string) && !JSON::is_bool($resp->value)) { 
         $np->nagios_die("Response value is a " . ref($resp->value) .
                         ", not a plain value. Did you forget a --path parameter ?". " Value: " . 
                         Dumper($resp->value));

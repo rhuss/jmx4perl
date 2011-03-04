@@ -1,3 +1,18 @@
+2011-02-18 - Jolokia 0.83
+    OSGi-Agents:
+      Felix 3.0.8 (bundle,pure) & 2.0.5 (bundle)
+      Equinox 3.6.1 (bundle,pure) & 3.7M5 (bundle)
+      Virgo 2.1 (kernel: bundle, pure -- web: bundle)
+
+    JEE-Server
+      Tomcat 5.5.31 & 6.0.30 & 7.0.6 
+      Jetty 5.1.15 & 6.1.26 & 7.2.2 & 8.0.0.M2
+      Geronimo 2.1.6 & 3.0 M1
+      JBoss 5.1.0 & 6.0.0
+      Glassfish 2.1.1 & 3.0.1
+      Jonas 5.2.0-M3
+
+
 2011-01-16 - Jmx4Perl 0.74 & Jolokia 0.82
     JEE-Server
       Tomcat 5.5.31 & 6.0.30 & 7.0.6 

@@ -19,9 +19,13 @@ my ($ret,$content);
 is($ret,0,"Initial history fetch returns OK");
 ok($content =~ /mem=(\d+)/ && $1 eq "0","Initial history fetch returns 0 mem delta");
 
+# Trigger Garbage collection
+$jmx->execute("java.lang:type=Memory","gc");
+
 my $mem = $jmx->get_attribute(MEMORY_HEAP_USED);
 my $c = abs(0.40 * $mem);
 ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c -$c:$c --name mem");
+#print Dumper($ret,$content);
 is($ret,0,"Second history fetch returns OK for -c $c");
 ok($content =~ /mem=([\-\d]+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
 #print "$c: $content\n";

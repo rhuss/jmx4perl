@@ -1,4 +1,11 @@
-0.75 (2001-2-4)
+0.76
+  - Support for new JSON serialization style of Jolokia 0.84 added. 
+    (i.e numbers and booleans are not returned as plain strings anymore
+    but as Long, Double, true/false. Null is returned as JSON-null.
+    If you have trouble with boolean checks in check_jmx4perl, please
+    update to this jmx4perl version.
+
+0.75 (2011-2-4)
   - Fixed typo in POD documentation which prevented a successful 
     build in some situations
 

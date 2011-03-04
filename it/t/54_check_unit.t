@@ -27,13 +27,13 @@ ok($content =~ /3\.50 MB/,"Bytes Unit: Output");
 ($ret,$content) = &exec_check_perl4jmx
   ("--mbean jmx4perl.it:type=attribute --attribute LongSeconds --critical :10000 ");
 is($ret,2,"SecondsLong: CRITICAL");
-ok($content =~ /172800.0/,"SecondsLong: Perfdata");
+ok($content =~ /172800/,"SecondsLong: Perfdata");
 ok($content !~ /2 d/,"SecondsLong: Output");
 
 ($ret,$content) = &exec_check_perl4jmx
   ("--mbean jmx4perl.it:type=attribute --attribute LongSeconds --critical :10000 --unit s");
 is($ret,2,"SecondsLong: CRITICAL");
-ok($content =~ /172800.0/,"SecondsLong: Perfdata");
+ok($content =~ /172800/,"SecondsLong: Perfdata");
 ok($content =~ /2 d/,"SecondsLong: Output");
 
 ($ret,$content) = &exec_check_perl4jmx
