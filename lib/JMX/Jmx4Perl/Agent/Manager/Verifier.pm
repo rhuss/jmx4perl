@@ -19,6 +19,7 @@ BEGIN {
     @VERIFIERS = ();
     my @verifiers = (
                      [ "Crypt::OpenPGP", "JMX::Jmx4Perl::Agent::Manager::Verifier::OpenPGPVerifier" ],
+                     [ "Digest::SHA1", "JMX::Jmx4Perl::Agent::Manager::Verifier::SHA1Verifier" ],                     
                      [ "Digest::MD5", "JMX::Jmx4Perl::Agent::Manager::Verifier::MD5Verifier" ],                     
                     );
     for my $v (@verifiers) {
@@ -56,7 +57,7 @@ sub verify {
                 $verifier->verify(%args,signature => $content,logger => $log);
                 return;
             } else {
-                $log->warn($verifier->name . ": Couldn't load $url$ext, trying next lower validation");
+                $log->warn($verifier->name . ": Couldn't load $url$ext, trying simpler validation");
             }
         }
     }

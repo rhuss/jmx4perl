@@ -135,7 +135,7 @@ sub _load_from_server {
 
     # Load with HTTP-Client, hardcoded for now
     $self->_info("Loading Jolokia meta data from $JOLOKIA_META_URL");
-    if (undef) {
+    if (1) {
         my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent($self->{ua_config});
         my $response = $ua->get($JOLOKIA_META_URL);
         if ($response->is_success) {
