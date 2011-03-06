@@ -55,7 +55,7 @@ sub verify {
         }
         $log->info($self->name,
                    ": Verified PGP signature",
-                   ($validate != 1 ? (", signed by ","[em]",$validate,"[/em]") : ""),
+                   ($validate != 1 ? (", signed by ",$validate) : ""),
                    ($key ? " ($key)" :""));
         return 1;
     } elsif ($validate == 0) {

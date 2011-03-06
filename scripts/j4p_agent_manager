@@ -4,6 +4,7 @@ use Getopt::Long;
 use JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
 use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
 use JMX::Jmx4Perl::Agent::Manager::Logger;
+use JMX::Jmx4Perl;
 use Digest::MD5;
 use Data::Dumper;
 use strict;
@@ -63,19 +64,26 @@ sub command_download {
     
     my $agent = $args->{agent} || "war";
     my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
+
+    my $version = $2 if $agent =~ s/(.*):([\d\.]+)\s*$/$1/;
+    if ($version) {        
+        &verify_version($meta,$version);
+    } else {
+        $version = $meta->latest_matching_version($JMX::Jmx4Perl::VERSION);
+        unless ($version) { 
+            $logger->error("Cannot find compatible Jolokia version for Jmx4Perl ",$JMX::Jmx4Perl::VERSION);
+            exit(1);
+        }
+    }
+    $logger->info("Using ","[em]","Jolokia $version","[/em]", 
+                  " for ","[em]","Jmx4Perl $JMX::Jmx4Perl::VERSION","[/em]");
     
     for my $repository (@$repositories) {
         eval {
-            my $version = $2 if $agent =~ s/(.*):([\d\.]+)\s*$/$1/;
-            if ($version) {        
-                &verify_version($meta,$version);
-            } else {
-                $version = &latest_version($meta);
-            }
             my $download_url = &get_download_url($repository,$agent,$version);
             my $dir = $args->{outdir} || ".";
             my $file = $dir . "/" . $AGENTS{$agent}->[2];
-            $logger->info("Downloading ","[em]",$agent," agent, version ",$version,"[/em]", " from repository " . $repository);
+            $logger->info("Downloading ","[em]",$agent," agent","[/em]", " version ",$version," from repository " . $repository);
             &download($download_url,$file,$args);
             &verify_signature($file,$download_url);
         };
@@ -108,15 +116,10 @@ sub verify_signature {
 sub verify_version {
     my ($meta,$version) = @_;
     my @versions = keys %{$meta->get('versions')};
-    die "No version $version known. Known versions: [",join(", ",sort @versions),"]\n"
+    $logger->error("No version $version known. Known versions: [",join(", ",sort @versions),"]") && die "\n"
       unless grep { $version eq $_ } @versions;
-}
-
-sub latest_version { 
-    my ($meta) = @_;
-    my $max = 0;
-    map { $max = $_ if $max <= $_ } keys %{$meta->get('versions')};
-    return $max;
+    $logger->warn("Current Jmx4Perl version $JMX::Jmx4Perl::VERSION is not supported by Jolokia version $version")
+                  unless $meta->versions_compatible($JMX::Jmx4Perl::VERSION,$version);
 }
 
 sub get_download_url {

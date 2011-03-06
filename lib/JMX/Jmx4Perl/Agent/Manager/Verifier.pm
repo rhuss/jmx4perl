@@ -56,7 +56,7 @@ sub verify {
                 $verifier->verify(%args,signature => $content,logger => $log);
                 return;
             } else {
-                $log->warn($verifier->name . ": Couldn't load $url$ext, tying next lower validation");
+                $log->warn($verifier->name . ": Couldn't load $url$ext, trying next lower validation");
             }
         }
     }

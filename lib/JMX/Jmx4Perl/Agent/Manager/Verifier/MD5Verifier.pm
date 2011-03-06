@@ -23,7 +23,7 @@ sub verify {
     my %args = @_;
     my $logger = $args{logger};
     my $sig = $args{signature};    
-
+    chomp $sig;
     my $md5 = new Digest::MD5();
     my $file = $args{path};
     if ($file) {
@@ -34,10 +34,11 @@ sub verify {
         my $data = $args{data};
         $md5->add($data);        
     }
-    if (lc($sig) eq lc($md5->hexdigest)) {
-        $logger->info("Passed MD5 check (" . $md5->hexdigest . ")",($file ? " for file $file" : ""));
+    my $md5_calc = $md5->hexdigest;
+    if (lc($sig) eq lc($md5_calc)) {
+        $logger->info("Passed MD5 check (" . $md5_calc . ")",($file ? " for file $file" : ""));
     } else {
-        $logger->error("Failed MD5 check. Got: " . $md5->hexdigest . ", Expected: " . $md5);
+        $logger->error("Failed MD5 check. Got: " . $md5_calc . ", Expected: " . $sig);
         die "\n";
     }
 }

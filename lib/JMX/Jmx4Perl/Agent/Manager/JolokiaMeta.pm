@@ -135,7 +135,7 @@ sub _load_from_server {
 
     # Load with HTTP-Client, hardcoded for now
     $self->_info("Loading Jolokia meta data from $JOLOKIA_META_URL");
-    if (1) {
+    if (undef) {
         my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent($self->{ua_config});
         my $response = $ua->get($JOLOKIA_META_URL);
         if ($response->is_success) {
@@ -158,8 +158,39 @@ sub _load_from_server {
                          "0.81" => { jmx4perl => "[0.73,1.0)" } ,
                         } 
            };
-    print to_json($data);
     return $data;
+}
+
+# Get the latest matching Jolokia version for a given Jmx4Perl version
+sub latest_matching_version {
+    my $self = shift;
+    my $jmx4perl_version = shift;
+    # Iterate over all existing versions, starting from the newest one, 
+    # and return the first matching
+    my $version_info = $self->get("versions");
+    for my $v (sort { $b <=> $a } keys %$version_info) {
+        my $range = $version_info->{$v}->{jmx4perl};
+        if ($range) {
+            my ($l,$l_v,$u_v,$u) = ($1,$2,$3,$4) if $range =~ /^\s*([\[\(])\s*([\d\.]+)\s*,\s*([\d\.]+)\s*([\)\]])\s*$/;
+            if ($l_v) {
+                my $cond = "\$a " . ($l eq "[" ? ">=" : ">").  $l_v . " && \$a" . ($u eq "]" ? "<=" : "<") . $u_v;
+                my $a = $jmx4perl_version;
+                if (eval $cond) { 
+                    return $v;
+                }
+            }
+        }
+    }
+    return undef;
+}
+
+# Check, whether the Jolokia and Jmx4Perl versions match
+sub versions_comptabile {
+    my $self = shift;
+    my $jmx4perl_version = shift;
+    my $jolokia_version = shift;
+
+    return 1;
 }
 
 # Do something with errors and info messages

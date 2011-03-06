@@ -46,7 +46,7 @@ sub error {
     my $self = shift;
     my $text = join "",@_;
     my ($cs,$ce) = $HAS_COLOR ? (RED,RESET) : ("","");
-    print $cs . "E " . $text . $ce . "\n";
+    print $cs . $text . $ce . "\n";
 }
 
 package JMX::Jmx4Perl::Agent::Manager::Logger::None;
