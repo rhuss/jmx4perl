@@ -186,6 +186,7 @@ my $build = $class->new
                    "Term::Size" => "0.207",
                    "Term::Clui" => 0,
                    "File::SearchPath" => 0,
+                   "Crypt::OpenPGP" => 0
                   },
    build_requires => {
                       "Module::Build" => "0.34",

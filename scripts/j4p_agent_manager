@@ -44,9 +44,12 @@ my %AGENTS =
 my $mode = $opts{mode} || "download";
 my $command = $COMMANDS{$mode} || die "Unknown mode " . $mode . "\n";
 
-my $logger = new JMX::Jmx4Perl::Agent::Manager::Logger(quiet => $opts{quiet});
-my $meta = JMX::Jmx4Perl::Agent::Manager::JolokiaMeta->new(logger => $logger)->load();
+# TODO: Add UserAgent Config here
+my $ua_config = {};
 
+my $logger = new JMX::Jmx4Perl::Agent::Manager::Logger(quiet => $opts{quiet});
+my $meta = JMX::Jmx4Perl::Agent::Manager::JolokiaMeta->new(logger => $logger,ua_config => $ua_config)->load();
+my $verifier = JMX::Jmx4Perl::Agent::Manager::Verifier->new(logger => $logger,ua_config => $ua_config);
 eval {
     &$command($meta,\%opts);
 };
@@ -72,9 +75,9 @@ sub command_download {
             my $download_url = &get_download_url($repository,$agent,$version);
             my $dir = $args->{outdir} || ".";
             my $file = $dir . "/" . $AGENTS{$agent}->[2];
-            $logger->info("Download from repository " . $repository);
+            $logger->info("Downloading ","[em]",$agent," agent, version ",$version,"[/em]", " from repository " . $repository);
             &download($download_url,$file,$args);
-            &verify_md5($file,$meta->{versions}->{$version}->{md5});
+            &verify_signature($file,$download_url);
         };
         if ($@) {
             print "Cannot fetch from $repository: " . $@ . "Trying next ...\n";
@@ -93,27 +96,13 @@ sub download {
     if ($response->is_error) {
         die "Could not download agent from " . $url . ": " . $response->status_line . "\n";
     }
-    $logger->info("Saved " . $file); 
+    $logger->info("Saved ", "[em]", $file, "[/em]"); 
 }
 
-sub verify_md5 {
+sub verify_signature {
     my $file = shift;
-    my $md5 = shift;
-    if ($md5) {
-        my $md5 = new Digest::MD5();
-        open (my $fh, "<", $file) || die "Cannot open $file for MD5 check: $!\n";
-        $md5->addfile($fh);
-        my $md5_calc = $md5->hexdigest;
-        close $fh;
-        if (lc($md5) eq lc($md5_calc)) {
-            $logger->info("Passed MD5 check (" . $md5 . ")");
-        } else {
-            $logger->error("Failed MD5 check. Got: " . $md5_calc . ", Expected: " . $md5);
-            exit(1);
-        }
-    } else {
-        $logger->info("Skipping MD5 check");        
-    }
+    my $url = shift;
+    $verifier->verify(url => $url, path => $file);
 }
 
 sub verify_version {

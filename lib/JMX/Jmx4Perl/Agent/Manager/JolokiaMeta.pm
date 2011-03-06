@@ -7,6 +7,7 @@ package JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
 
 use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
 use JMX::Jmx4Perl::Agent::Manager::Logger;
+use JMX::Jmx4Perl::Agent::Manager::Verifier;
 use JSON;
 use Data::Dumper;
 use base qw(LWP::UserAgent);
@@ -39,8 +40,9 @@ and caching this data.
 sub new {
     my $class = shift;
     my $self = ref($_[0]) eq "HASH" ? $_[0] : {  @_ };
-    # Dummy logging if not provided
+    # Dummy logging if none is provided
     $self->{logger} = new JMX::Jmx4Perl::Agent::Manager::Logger::None unless $self->{logger};
+    $self->{verifier} = new JMX::Jmx4Perl::Agent::Manager::Verifier(logger => $self->{logger},ua_config => $self->{ua_config});
     return bless $self,(ref($class) || $class);
 }
 
@@ -83,7 +85,7 @@ Get a value from the meta data.
 sub get { 
     my $self = shift;
     my $key = shift;
-    die "No yet loaded" unless $self->{_meta};
+    $self->_fatal("No yet loaded") unless $self->{_meta};
     return $self->{_meta}->{$key};    
 }
 
@@ -132,34 +134,44 @@ sub _load_from_server {
     my $self = shift;
 
     # Load with HTTP-Client, hardcoded for now
-    $self->_info("Loading Jolokia meta data from server");
-    if (undef) {
+    $self->_info("Loading Jolokia meta data from $JOLOKIA_META_URL");
+    if (1) {
         my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent($self->{ua_config});
         my $response = $ua->get($JOLOKIA_META_URL);
         if ($response->is_success) {
             my $content = $response->decoded_content;  # or whatever
+            $self->{verifier}->verify(ua_config => $self->{ua_config}, logger => $self->{logger},
+                                      url => $JOLOKIA_META_URL, data => $content);
             return from_json($content, {utf8 => 1});
         }
         else {
-            die "Cannot load Jolokia Meta-Data: " . $response->status_line . "\n";
+            $self->_fatal("Cannot load Jolokia Meta-Data from $JOLOKIA_META_URL: " . $response->status_line);
         }
     }
-    return {
+    my $data = {
             repositories => [
                              "http://labs.consol.de/maven/repository"
                             ],            
             versions => {
-                         "0.82" => { md5 => 0 } ,
-                         "0.81" => { md5 => 0 } ,
-                         "0.80" => { md5 => 0 }                         
+                         "0.83" => { jmx4perl => "[0.73,1.0)" } ,
+                         "0.82" => { jmx4perl => "[0.73,1.0)" } ,
+                         "0.81" => { jmx4perl => "[0.73,1.0)" } ,
                         } 
            };
+    print to_json($data);
+    return $data;
 }
 
 # Do something with errors and info messages
 sub _error {
     my $self = shift;
     $self->{logger}->error(@_);
+}
+
+sub _fatal {
+    my $self = shift;
+    $self->{logger}->error(@_);
+    die "\n";
 }
 
 sub _info {

@@ -38,3 +38,7 @@ Error: java.lang.ClassCastException: org.json.simple.JSONArray cannot be cast to
 java-client:
 
 200 Respect redirect answers (jetty without trailing slash)
+
+
+
+Math::Pari --> dynamic download during build
