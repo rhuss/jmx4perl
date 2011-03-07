@@ -78,7 +78,7 @@ my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
 
 =head1 SYNOPSIS
 
-  jmx4perl .... http://server:8080/j4p ["info"] 
+  jmx4perl .... http://server:8080/jolokia ["info"] 
 
   jmx4perl .... <agent-url> read <mbean-name> <attribute-name> [path] 
 
@@ -115,7 +115,7 @@ Options:
 
 =head1 DESCRIPTION
 
-B<jmx4perl> is a command line utility for easily accessing an instrumented
+B<jmx4perl> is a command line utility for an easy access of an instrumented
 application server. Before you can use this tool, you need to deploy a small
 agent application. In the following C<agent-url> is the URL for accessing this
 agent. If you use a configuration file, you can use also a symbolic name as
@@ -372,7 +372,7 @@ sub command_search {
 
 =head1 HISTORY TRACKING
 
-The agent j4p knows about a history mode, which can remember a certain
+The agent knows about a history mode, which can remember a certain
 amount return values from previous requests. This mode can be switched on/off
 on a per attribute (+ inner path) and operation basis. By default it is
 switched off completely. You can switch in on by executing the
@@ -415,7 +415,7 @@ sub command_version {
         die "Cannot fetch agent version: ",$resp->error_text;
     }
     my $val = $resp->{value};
-    print "j4p-agent " . $val->{agent} . " (protocol: " . $val->{protocol} . ")\n";
+    print "Jolokia Agent " . $val->{agent} . " (protocol: " . $val->{protocol} . ")\n";
     exit(0);
 }
 
@@ -640,6 +640,11 @@ L<JMX::Jmx4Perl> - Entry point for programmatic JMX access which is used by
 this tool.
 
 L<check_jmx4perl> - a production ready Nagios check using L<JMX::Jmx4Perl>
+
+L<j4p_agent_manager> - utility for downloading and managing Jolokia agents
+
+L<j4psh> - readline based JMX shell with context sensitive command line
+completion. 
 
 =head1 LICENSE
 

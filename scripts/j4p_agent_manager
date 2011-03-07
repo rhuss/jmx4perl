@@ -1,5 +1,11 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+j4p_agent_manager - Utility for managing Jolokia agents used by jmx4perl
+
+=cut
+
 use Getopt::Long;
 use JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
 use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
@@ -10,8 +16,93 @@ use Digest::MD5;
 use Data::Dumper;
 use strict;
 
+=head1 SYNOPSIS
+
+  # Execute command 'command' with options and additional, command specific 
+  # arguments
+  j4p_agent_manager [options] <command> <arg1> <arg2> ...
+
+  # Download the latest Jolokia WAR agent compatible with this jmx4perl release
+  # into the local directory as 'jolokia.war'
+  j4p_agent_manager download
+
+  # Print information about a downloaded agent (i.e. its version)
+  j4p_agent_manager info jolokia.war
+
+  # Current Jmx4Perl version
+  j4p_agent_manager --version
+
+  # Online help
+  j4p_agent_manager --help
+
+Options:
+
+  Command 'download':
+     --agent <type>[:<version>]  Agent to download. <type> must be one of "war", "osgi", 
+                                 "osgi-bundle", "mule" or "jdk6". An optional Jolokia version 
+                                 can be added after a colon.
+     --outdir <dir>              Output directory for the agent downloaded (default: ".")
+     --repository <repo-url>     Repository URL from where to fetch the Jolokia agent. 
+                                 (default is taken from meta data)
+
+  Command 'info':
+     --verify                    Check signature of given file
+     
+  General:
+     --quiet            No output on the standard out
+     --verbose          Print verbose
+     --no-color         Don't use colors
+     --no-cache         Fetch meta information afresh from www.jolokia.org
+     --proxy            Proxy-URL for HTTP(S) requests
+     --proxy-user       Proxy user for proxy authentication
+     --proxy-password   Proxy password for proxy authentication
+     --help             Print online help (and exit)
+     --version          Current Jmx4Perl version
+
+=head1 DESCRIPTION
+
+B<j4p_agent_manager> is a command line utility for managing the Jolokia agent,
+which is used by jmx4perl for accessing remote JMX information. Several 
+commands are available
+
+=over 
+
+=item download (default)
+
+This mode allows for downloading the latest Jolokia agent version compatible
+with this Jmx4Perl installation or any other agent version. PGP is used
+optionally for verifying the integrity of the downloaded artifacts.
+
+=item info
+
+For a given Jolokia agent, this manager gives you information about the version
+of the agent and also allows for PGP validation.
+
+=back
+
+=head1 META-DATA
+
+Meta-data about the available Jolokia agents and their compatibility to given
+Jmx4Perl versions is obtained from L<http://www.jolokia.org/jolokia.meta>. This
+meta data is cached locally in F<~/.jolokia_meta> and only fetched once a
+day. The meta download can be forced by using the option C<--no-cache>. 
+
+=head1 VALIDATION
+
+B<j4p_agent_manager> uses PGP for validating all files downloaded. For this to
+work, the CPAN module L<Crypt::OpenPGP> must be installed. If it is not
+available, validation falls back to simple checksum validation with a SHA1
+alogrithm, or, if this is not possible to an MD5 check. Since the checksums are
+also downloaded over an insecure channel, using PGP is highly recommended. The
+public key used for the signature check is contained locally in
+L<JMX::Jmx4Perl::Agent::Manager::Verifier::OpenPGPVerifier> so there is no need
+to add the key manually or to download it from an PGP key server.
+
+=head1 COMMANDS
+
+=cut
+
 # Agent manager for 
-# - downloading the agent from a remote site
 # - adding security constraints
 # - manipulating the policy file
 # - deploying it to the target server
@@ -19,20 +110,24 @@ use strict;
 my %opts = ();
 GetOptions(\%opts,
            "agent|a=s",
-           "proxy=s",
            "outdir|o=s",
            "repository|r=s",
            "quiet|q",
-           "version|v=s",
-           "help|h",
-           "verify",
-           "debug",
+           "version|v",
+           "verify!",
+           "verbose",
            "color!",
            "proxy=s",
            "proxy-user=s",
            "proxy-password=s",
            "cache!",
+           "help|h" => sub { &Getopt::Long::HelpMessage() },
           );
+
+if ($opts{version}) {
+    print "j4p_agent_manager ",$JMX::Jmx4Perl::VERSION,"\n";
+    exit(0);
+}
 
 my %COMMANDS = 
   (
@@ -52,7 +147,7 @@ my $ua_config = {
 
 my $logger = new JMX::Jmx4Perl::Agent::Manager::Logger
   (
-   quiet => $opts{quiet},debug => $opts{debug},
+   quiet => $opts{quiet},debug => $opts{verbose},
    color => defined($opts{color}) ? $opts{color} : 1
   );
 my $meta = new JMX::Jmx4Perl::Agent::Manager::JolokiaMeta
@@ -70,23 +165,52 @@ my $verifier = new JMX::Jmx4Perl::Agent::Manager::Verifier
 
 # ===========================================================
 
-# Print information about a given artifact
-sub command_info {
-    my ($meta,$args,$file) = @_;
-    my $handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
-    my $ret = $handler->info;
-    $logger->info("Type:    ","[em]",$ret->{type},"[/em]");
-    $logger->info("Version: ","[em]",$ret->{version},"[/em]");
-    my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
-    if ($args->{verify}) {
-        for my $repo (@$repositories) {
-            my $url = &get_download_url($meta,$repo,$ret->{type},$ret->{version});
-            &verify_signature($file,$url);
-        }
-    }
-}
+=head2 download
 
-# Download an agent
+This commands allows for downloading a certain Jolokia agent from Jolokia's
+Maven repository. The repository URL is taken from the meta descriptor, but can
+be overridden with the C<--repository> option. Agents come in several flavors: 
+
+=over
+
+=item * war
+
+The WAR agent is the most popular one and is used for instrumenting an JEE
+application server. It is a simple web application which needs to deployed on
+the target server
+
+=item * osgi, osgi-bundle
+
+The OSGi agents can be used to access OSGi containers
+
+=item * mule
+
+For accessing a Mule ESB, this agent is the proper choice
+
+=item * jdk6
+
+For all other Java server, which don't contain a servlet container, this agent
+can be used. The only prerequisite is, that the application must run with an
+Oracle Java 6 virtual machine
+
+=back
+
+Much more information about those agents can be found at
+L<http://www.jolokia.org/agent.html>.
+
+By default, the war agent is downloaded. The agent type ("war", "osgi",
+"osgi-bundle", "mule" or "jdk6" can be specified with the C<--agent> option. 
+
+Also by default, the latest agent version compatible with the installed
+Jmx4Perl release is downloaded. A specific version can be given on the command
+line also with the C<--agent> option, added after the agent type with a
+':'. E.g. C<--agent osgi:0.82> will download the OSGi agent with version 0.82. 
+
+The output directory for the agent can be specified with the C<--outdir>
+option. By default, the agent is stored in the current working directory. 
+
+=cut
+
 sub command_download {
     my ($meta,$args) = @_;
     
@@ -124,6 +248,36 @@ sub command_download {
     }
     die "Couldn't download a $agent agent from any these repositories:\n   ",join("\n   ",@$repositories),"\n";
 }
+
+=head2 info
+
+In order to determine the version number of an already downloaded agent, the
+C<info> command can be used. It takes as single argument the path to the agent,
+e.g. 
+
+   j4p_agent_manager info ./jolokia.war
+
+With the option C<--verify> an additional signature check can be performed,
+where the signature is fetched from the Jolokia repository.
+
+=cut
+
+sub command_info {
+    my ($meta,$args,$file) = @_;
+    my $handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
+    my $ret = $handler->info;
+    $logger->info("Type:    ","[em]",$ret->{type},"[/em]");
+    $logger->info("Version: ","[em]",$ret->{version},"[/em]");
+    my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
+    if ($args->{verify}) {
+        for my $repo (@$repositories) {
+            my $url = &get_download_url($meta,$repo,$ret->{type},$ret->{version});
+            &verify_signature($file,$url);
+        }
+    }
+}
+
+# ======================================================================================= 
 
 sub download {
     my ($url, $file, $args) = @_;
@@ -172,3 +326,35 @@ sub artifact_and_name {
     $artifact =~ s/\%v/$version/g;
     return ($name,$artifact);
 }
+
+=head1 SEE ALSO
+
+L<check_jmx4perl> - a production ready Nagios check using L<JMX::Jmx4Perl>
+
+L<jmx4perl> - CLI for accessing the agents
+
+L<j4psh> - readline based JMX shell with context sensitive command line
+completion. 
+
+=head1 LICENSE
+
+This file is part of jmx4perl.
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
