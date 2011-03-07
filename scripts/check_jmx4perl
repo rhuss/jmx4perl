@@ -33,7 +33,7 @@ check_jmx4perl - Nagios plugin using jmx4perl for accessing JMX data remotely
 =head1 SYNOPSIS 
 
  # Check for used heap memory (absolute values)
- check_jmx4perl --url http://localhost:8888/j4p \
+ check_jmx4perl --url http://localhost:8888/jolokia \
                 --name memory_used \
                 --mbean java.lang:type=Memory \
                 --attribute HeapMemoryUsage \ 
@@ -42,7 +42,7 @@ check_jmx4perl - Nagios plugin using jmx4perl for accessing JMX data remotely
                 --warning   5000000 
 
  # Check that used heap memory is less than 80% of the available memory
- check_jmx4perl --url http://localhost:8888/j4p \
+ check_jmx4perl --url http://localhost:8888/jolokia \
                 --alias MEMORY_HEAP_USED \
                 --base MEMORY_HEAP_MAX \ 
                 --critical :80
@@ -57,7 +57,7 @@ check_jmx4perl - Nagios plugin using jmx4perl for accessing JMX data remotely
                 socks_shop
  
  # Check for string values by comparing them literally
- check_jmx4perl --url http://localhost::8888/j4p \
+ check_jmx4perl --url http://localhost::8888/jolokia \
                 --mbean myDomain:name=myMBean \
                 --attribute stringAttribute \
                 --string \
@@ -66,14 +66,14 @@ check_jmx4perl - Nagios plugin using jmx4perl for accessing JMX data remotely
 
 
  # Check that no more than 5 threads are started in a minute
- check_jmx4perl --url http://localhost:8888/j4p \
+ check_jmx4perl --url http://localhost:8888/jolokia \
                 --alias THREAD_COUNT_STARTED \
                 --delta 60 \
                 --critical 5
 
  # Execute a JMX operation on an MBean and use the return value for threshold
  # Here a thread-deadlock is detected.
- check_jmx4perl --url http://localhost:8888/j4p \
+ check_jmx4perl --url http://localhost:8888/jolokia \
                 --mbean java.lang:type=Threading \
                 --operation findDeadlockedThreads \
                 --null no-deadlock \
@@ -82,7 +82,7 @@ check_jmx4perl - Nagios plugin using jmx4perl for accessing JMX data remotely
                 --critical 10
 
  # Use check_jmx4perl in proxy mode
- check_jmx4perl --url http://localhost:8888/j4p \
+ check_jmx4perl --url http://localhost:8888/jolokia \
                 --alias MEMORY_HEAP_USED \
                 --critical 10000000 \
                  --target service:jmx:rmi:///jndi/rmi://bhut:9999/jmxrmi
@@ -154,10 +154,10 @@ shell).
 
 =item * 
 
-Deploy the jmx4perl agent in Tomcat:
+Deploy the Jolokia agent in Tomcat:
 
-  $ cd $J4P
-  $ cp agent/j4p.war $TC/webapps 
+  $ cd $TC/webapps
+  $ j4p_agent_manager
 
 =item * 
 
@@ -169,12 +169,12 @@ Start Tomcat:
 
 Check your setup:
   
-  $ jmx4perl http://localhost:8080/j4p
+  $ jmx4perl http://localhost:8080/jolokia
 
 This prints out a summary about your application
-server. L<http://localhost:8080/j4p> is the URL under which the agent is
+server. L<http://localhost:8080/jolokia> is the URL under which the agent is
 reachable. Tomcat itself listens on port 8080 by default, and any autodeployed
-war archive can be reached under its filename without the .war suffix (j4p in
+war archive can be reached under its filename without the .war suffix (jolokia in
 this case).
 
 =item *
@@ -182,7 +182,7 @@ this case).
 Try a first Nagios check for checking the amount of available heap memory in
 relation to the maximal available heap:
 
-  $ check_jmx4perl --url http://localhost:8080/j4p  \
+  $ check_jmx4perl --url http://localhost:8080/jolokia  \
                    --mbean java.lang:type=Memory    \
                    --attribute HeapMemoryUsage      \
                    --path used                      \
@@ -197,7 +197,7 @@ where
 
 =over 
 
-=item --url http://localhost:8080/j4p
+=item --url http://localhost:8080/jolokia
 
 is the agent URL
 
@@ -216,7 +216,7 @@ more complex structure. The value C<HeapMemoryUsage> is a composed value (Jav
 type: CompositeData) which combines multiple memory related data. The complete
 value can be viewed with I<jmx4perl>:
 
-   $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
+   $ jmx4perl http://localhost:8080/jolokia read java.lang:type=Memory HeapMemoryUsage
    {
      committed => 85000192,
      init => 0
@@ -252,13 +252,13 @@ also allows you to keep your Nagios service definitions small and tidy. E.g. for
 monitoring the number of request per minute for a certain web application, a
 predefined check is available:
 
- $ check_jmx4perl --url http://localhost:8080/j4p \
+ $ check_jmx4perl --url http://localhost:8080/jolokia \
                   --config $J4P/config/tomcat.cfg \
                   --critical 100 \
                   --check tc_servlet_requests \
-                  j4p-agent
+                  jolokia-agent
  
- OK - 15.00 requests/minute | 'Requests j4p-agent'=15;5000;100
+ OK - 15.00 requests/minute | 'Requests jolokia-agent'=15;5000;100
 
 where 
 
@@ -280,13 +280,13 @@ critical alert is raised.
 is the name of the check to perform which must be defined in the configuration
 file 
 
-=item j4p-agent
+=item jolokia-agent
 
 is an extra argument used by the predefined check. It is the name of the
 servlet for which the number of requests should be monitored. To get the name
 of all registered servlets use C<jmx4perl list>:
 
-  $ jmx4perl http://localhost:8080/j4p list | grep j2eeType=Servlet
+  $ jmx4perl http://localhost:8080/jolokia list | grep j2eeType=Servlet
 
 The servlet name is the value of the C<name> property of the listed MBeans.
 
@@ -324,7 +324,7 @@ The service definition itself then looks like:
      service_description    j4p_localhost_memory
      host_name              localhost
      check_command          check_jmx4perl_relative \
-                            !http://localhost:8080/j4p \
+                            !http://localhost:8080/jolokia \
                             !java.lang:type=Memory \
                             !HeapMemoryUsage \
                             !used \
@@ -466,7 +466,7 @@ For example, the MBean C<java.lang:type=Memory> exposes an attribute called
 C<HeapMemoryUsage>. This attribute is a compound data type, which contains
 multiple entries. Looking with C<jmx4perl> at this attribute
 
- $ jmx4perl http://localhost:8080/j4p read java.lang:type=Memory HeapMemoryUsage
+ $ jmx4perl http://localhost:8080/jolokia read java.lang:type=Memory HeapMemoryUsage
  {
    committed => 85000192,
    init => 0
@@ -478,7 +478,7 @@ it can be seen, that there are 4 values coming with the reponse. With a path
 C<used> one can directly pick the used heap memory usage (8135440 bytes in this
 case) which then can be used for a threshold check. 
 
- $ check_jmx4perl --url http://localhost:8080/j4p \ 
+ $ check_jmx4perl --url http://localhost:8080/jolokia \ 
                   --mbean java.lang:type=Memory \ 
                   --attribute HeapMemoryUsage \
                   --path used \
@@ -503,7 +503,7 @@ numbers or booleans ("true"/"false") can be used.
 
 Example:
 
- $ check_jmx4perl --url http://localhost:8888/j4p \
+ $ check_jmx4perl --url http://localhost:8888/jolokia \
                   --mbean jmx4perl:type=Runtime \
                   --operation getNrQueriesFor \
                   --critical 10 \
@@ -511,7 +511,7 @@ Example:
                   "java.lang:type=Memory" \
                   "gc" 
 
-This example contacts a MBean C<jmx4perl:type=Runtime> registered by the j4p
+This example contacts a MBean C<jmx4perl:type=Runtime> registered by the jolokia
 agent in order to check for the number of queries for a certain MBean via this
 agent. For this purpose an JMX operation C<getNrQueriesFor> is exposed which
 takes three arguments: The type ("operation"/"attribute"), the MBean's
@@ -567,7 +567,7 @@ escaped with a double backslash (\\).
 
 Example: 
 
-   check_jmx4perl --url http://localhost:8080/j4p \ 
+   check_jmx4perl --url http://localhost:8080/jolokia \ 
                   --value java.lang:type=Memory/HeapMemoryUsage/used \ 
                   --base java.lang:type=Memory/HeapMemoryUsage/max \ 
                   --critical 90
@@ -586,14 +586,14 @@ seconds for normalization.
 
 Example: 
 
-  check_jmx4perl --url http://localhost:8080/j4p \ 
+  check_jmx4perl --url http://localhost:8080/jolokia \ 
                  --mbean java.lang:type=Threading \ 
                  --attribute TotalStartedThreadCount \ 
                  --delta 60 \ 
                  --critical 5
 
 This will fail as CRITICAL if more than 5 threads are created per minute (60
-seconds). Technically C<check_jmx4perl> uses the I<history> feature of the j4p
+seconds). Technically C<check_jmx4perl> uses the I<history> feature of the jolokia
 agent deployed on the target server. This will always store the result and the
 timestamp of the last check on the server side and returns these historical
 values on the next check so that the velocity can be calculated. If no value is
@@ -673,7 +673,7 @@ fine tune the output.
 
 Example: 
 
- check_jmx4perl --url http://localhost:8888/j4p \
+ check_jmx4perl --url http://localhost:8888/jolokia \
                 --alias MEMORY_HEAP_USED \
                 --base MEMORY_HEAP_MAX \ 
                 --critical :80 \
@@ -686,14 +686,14 @@ will result in an output like
 
 =head2 Security
 
-Since the j4p-agent is usually a simple war-file, it can be secured as any
+Since the jolokia-agent is usually a simple war-file, it can be secured as any
 other Java Webapplication. Since setting up authentication is JEE Server
 specific, a detailed instruction is beyond the scope of this document. Please
 refer to your appserver documentation, how to do this. At the moment,
 C<check_jmx4perl> can use Basic-Authentication for authentication purposes
 only.
 
-In addition to this user/password authentication, the j4p-agent uses a policy
+In addition to this user/password authentication, the jolokia-agent uses a policy
 file for fine granular access control. The policy is defined with an XML file
 packaged within the agent. In order to adapt this to your needs, you need to
 extract the war file, edit it, and repackage the agent with a policy file. A
@@ -706,11 +706,12 @@ In detail, the following steps are required:
 
 =item * 
 
-Extract F<j4p.war> in a temporary directory:
+Extract F<jolokia.war> to a temporary directory:
 
-   $ mkdir j4p
-   $ cd j4p
-   $ jar xvf $J4P/agent/j4p.war
+   $ j4p_agent_manager
+   $ mkdir jolokia
+   $ cd jolokia
+   $ jar xvf ../jolokia.war
 
 C<$J4P> is the jmx4perl distribution directory.
 
@@ -718,34 +719,35 @@ C<$J4P> is the jmx4perl distribution directory.
 
 Copy over the template policy file into the right place.
 
-   $ cp $J4P/agent/j4p-access.xml.template WEB-INF/classes/j4p-access.xml
+   $ wget .../jolokia-access.xml.template
+   $ mv jolokia-access.xml.template WEB-INF/classes/jolokia-access.xml
 
 =item * 
 
 Edit the policy according to your needs.
    
-   $ vi WEB-INF/classes/j4p-access.xml
+   $ vi WEB-INF/classes/jolokia-access.xml
    
 =item * 
 
 Repackage the war file
 
-   $ jar cvf $J4P/agent/j4p.war *
+   $ jar cvf $J4P/agent/jolokia.war *
 
 =item *
 
-Deploy the agent F<$J4P/agent/j4p.war> as usual
+Deploy the agent F<$J4P/agent/jolokia.war> as usual
 
 =back
 
-The template policy file F<j4p-access.xml.template> contains inline
+The template policy file F<jolokia-access.xml.template> contains inline
 documentation and examples, so you can easily adapt it to your environment.
 
 Restrictions can be set to on various parameters :
 
 =head3 Client IP address
 
-Access to the j4p-agent can be restricted based on the client IP accessing the
+Access to the jolokia-agent can be restricted based on the client IP accessing the
 agent. A single host, either with hostname or IP address can be set or even a
 complete subnet.
 
@@ -865,7 +867,7 @@ If there is an overlap between <allow> and <deny>, <allow> takes precedence.
 =head2 Proxy mode
 
 C<check_jmx4perl> can be used in an I<agentless mode> as well, i.e. no
-j4p-agent needs to deployed on the target server. The setup for the agentless
+jolokia-agent needs to deployed on the target server. The setup for the agentless
 mode is a bit more complicated, though:
 
 =over
@@ -878,7 +880,7 @@ some cooking recipes for various servers (JBoss, Weblogic).
 
 =item * 
 
-A dedicated I<proxy server> needs to be setup on which the F<j4p-agent.war>
+A dedicated I<proxy server> needs to be setup on which the F<jolokia.war>
 gets deployed. This can be a simple Tomcat or Jetty servlet container. Of
 course, an already existing JEE Server can be used as proxy server as well.
 
@@ -904,13 +906,13 @@ response which is returned to C<check_jmx4perl>.
 
 Example:
 
-   check_jmx4perl --url http://proxy:8080/j4p \
+   check_jmx4perl --url http://proxy:8080/jolokia \
                   --target service:jmx:rmi:///jndi/rmi://jeeserver:9999/jmxrmi
                   --alias MEMORY_HEAP_USED
                   --base MEMORY_HEAP_MAX
                   --critical 90
 
-Here the host I<proxy> is listening on port 8080 for j4p requests and host I<jeeserver>
+Here the host I<proxy> is listening on port 8080 for jolokia requests and host I<jeeserver>
 exports its JMX data via JSR-160 over port 9999. (BTW, I<proxy> can be
 monitored itself as usual).
 
@@ -992,12 +994,12 @@ C<check_jmx4perl> knows about the following command line options:
 
 =item --url (-u)
 
-The URL for accessing the target server (or the j4p-proxy server, see L</"Proxy Mode"> 
+The URL for accessing the target server (or the jolokia-proxy server, see L</"Proxy Mode"> 
 for details about the JMX proxy mode)
 
 Example:
 
-  --url http://localhost:8080/j4p
+  --url http://localhost:8080/jolokia
 
 =item --mbean (-m)
 
@@ -1187,7 +1189,7 @@ proxy.
 
 =item --proxy
 
-A HTTP proxy server to use for accessing the j4p-agent.
+A HTTP proxy server to use for accessing the jolokia-agent.
 
 Example:
 
@@ -1195,7 +1197,7 @@ Example:
 
 =item --target, --target-user, --target-password
 
-Switches on j4p-proxy mode and specifies the URL for accessing the target
+Switches on jolokia-proxy mode and specifies the URL for accessing the target
 platform. Optionally, user and password for accessing the target can be given,
 too. See L</"Proxy Mode"> for details.
 
@@ -1222,7 +1224,7 @@ Example:
 
  servers.cfg:
    <Server tomcat>
-      Url http://localhost:8080/j4p
+      Url http://localhost:8080/jolokia
       User roland
       Password fcn
    </Server>
@@ -1242,7 +1244,7 @@ line.
 
 Example:
 
-   --config /etc/jmx4perl/tomcat.cfg --check tc_servlet_requests j4p-agent
+   --config /etc/jmx4perl/tomcat.cfg --check tc_servlet_requests jolokia-agent
 
 =item --version
 
@@ -1290,7 +1292,7 @@ defining Nagios checks. A simple configuration file looks like
 
    # Define server connection parameters
    <Server tomcat>
-      Url = http://localhost:8080/j4p
+      Url = http://localhost:8080/jolokia
    </Server>
 
    # A simple heap memory check with a critical threshold of 
@@ -1319,7 +1321,7 @@ the following keys can be used:
 
 =item Url
 
-The URL under which the j4p agent can be reached.
+The URL under which the jolokia agent can be reached.
 
 =item User, Password
 
@@ -1376,7 +1378,7 @@ configuration looks like:
 
   <Target>
      # TODO: "Real" URL
-     Url = http://target:8080/j4p
+     Url = http://target:8080/jolokia
      User = max
      Password = frisch 
   </Target>

@@ -42,7 +42,6 @@ lib/JMX/Jmx4Perl/Agent/Manager/Verifier/ChecksumVerifier.pm
 lib/JMX/Jmx4Perl/Agent/Manager/Verifier/MD5Verifier.pm
 lib/JMX/Jmx4Perl/Agent/Manager/Verifier/OpenPGPVerifier.pm
 lib/JMX/Jmx4Perl/Agent/Manager/Verifier/SHA1Verifier.pm
-lib/JMX/Jmx4Perl/Agent/Protocol.pod
 lib/JMX/Jmx4Perl/Agent/UserAgent.pm
 lib/JMX/Jmx4Perl/Alias.pm
 lib/JMX/Jmx4Perl/Alias/Object.pm

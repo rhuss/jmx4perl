@@ -1,49 +1,42 @@
-                               jmx4perl
+                               Jmx4Perl
                                ========
 
 INTRODUCTION
 
-  jmx4perl provides an alternate way for accessing Java JEE Server
+  Jmx4Perl provides an alternate way for accessing Java JEE Server
   management interfaces which are based on JMX (Java Management
   Extensions). It is an agent based approach, where a small Java
   Webapplication deployed on the application server provides an
   HTTP/JSON based access to JMX MBeans registered within the
   application server.
 
-  A discussion about the pros and cons of an agent based vs. a direct
-  JMX remoting (which is available via JSR 160 connectors) can be
-  found in the manual "JMX::Jmx4Perl::Manual" contained within this
-  package. The biggest advantage for an agent based approach is that
-  no local java installation is required.
-
-  Since version 0.50 a second operational mode has been added in which
-  jmx4perl acts as a JMX bridge. It accepts the usual HTTP/JSON
-  requests which are forwarded to the target server via JSR-160 based
-  remote communication. The advantage of this proxy mode is that no
-  agent is required to be installed on the target platform.
-
 HOW IT WORKS
 
-  For the agent mode, you need to deploy a small (~ 100k) Java Agent
-  WAR (web archive) to the Java application server to monitor. Thats
-  all on the java side. There is no need to add any startup parameters
-  to the application server and to open any additional ports. All
-  communication takes places via HTTP where JSON objects are
-  exchanged. Additionally, the agent benefits from the security
-  infrastructure in place which every application server provides for
-  web application.
+  For the agent mode a small Java Agent WAR (web archive) needs to be
+  deployed on the Java application server. This agent is provided by
+  the Jolokia project (www.jolokia.org). There is no need to add any
+  startup parameters to the application server and to open any
+  additional ports. All communication takes places via HTTP where JSON
+  objects are exchanged. Additionally, the agent benefits from the
+  security infrastructure in place which every application server
+  provides for web application. More information about the agent can
+  be found at http://www.jolokia.org
 
-  The proxy mode needs the j4p.war to de deployed on an arbitrary
-  servlet engine, which can reach the target platform to monitor for
-  the selected JSR-160 connector (e.g RMI/JRMP or RMI/IIOP). The
-  target server needs to have remote JMX access enabled.
+  The Perl module JMX::Jmx4Perl accesses the deployed agent servlet
+  and transform the request's results from JSON into a simple Perl
+  object.
 
-  The Perl module JMX::Jmx4Perl::Agent accesses the deployed agent
-  servlet and transform the request's results from JSON into a simple
-  Perl object. This distribution contains a sample Nagios check
-  'check_jmx4perl' which use this result to perform various checks.
-  The tool 'jmx4perl' provides an easy access to the
-  agent from the command line.
+TOOLS
+
+  This distribution comes with several tools, which uses the
+  JMX::Jmx4Perl for accessing the server:
+
+  jmx4perl          - Command line tool for gathering JMX information
+  check_jmx4perl    - Full featured Nagios Plugin
+  j4psh             - Interactive, readline based JMX shell with context 
+                      sensitive command completion
+  j4p_agent_manager - Utility for downloading and managing Jolokia 
+                      agents.
 
 INSTALLATION
 
@@ -55,119 +48,24 @@ INSTALLATION
   ./Build test
   ./Build install
 
-  will install the modules. If you have Java and "ant" (a Java build
-  tool) installed, the Java agent will be compiled and packaged as
-  well when you use 'Build dist'. However, this is not required. A
-  precompiled "j4p.war" can be found in the "agent" directory.
+  will install the modules. 
 
-  For the module to work, you need to deploy "j4p.war" to the JEE
-  Server to monitor. The concrete steps depend on the specific
-  deploying mechanism of your target server, which in most cases is a
-  simple copy in to a specific directory. Please consult the
-  documentation of your Java application server for the details (look
-  for "deployment" and "war")
+  In order to download the Jolokia WAR agent into the local directory
+  as jolokia.war, use the following command
+
+  j4p_agent_manager
+
+  This agent "jolokia.war" needs to be deployed on the JEE Server to
+  monitor. Please consult http://www.jolokia.org/agent.html for more
+  information how to install the agent.
 
   To test it, you can use 'jmx4perl' with the URL of the deployed
   agent:
 
-      jmx4perl http://<jeeserver>:<port>/j4p
+      jmx4perl http://<jeeserver>:<port>/jolokia
       
-  Consult 'man jmx4perl' for further details. 
+  Consult 'man jmx4perl' for details. 
  
-SUPPORTED APPLICATION SERVERS
-  
-  The following Java Application Servers has been confirmed to work
-  with jmx4perl in agent mode deployed as war:
-
-  * JBoss 4.2.3 GA, 5.1.0 GA & 6.0.0 M3
-  * Oracle WebLogic 9.2 MP3 & 10.0.2.0
-  * Jonas 4.10.7 (with Jetty 5.1.10 and Tomcat 5.5.28) and 5.1.1
-  * Apache Geronimo 2.2 (Jetty 7 and Tomcat 6)
-  * Glassfish 2.1.1 and v3
-  * Apache Tomcat 5.5.31 & 6.0.30 & 7.0.6
-  * Jetty 5.1.15 & 6.1.22 & 7.0.1 (with JMX enabled) & 8.0.0.M0
-  * IBM Websphere 6.1 & 7.0
-  * Resin 3.1.9
-  * Spring dm Server 2.0.0.RELEASE
-
-  The OSGi agent bundle has been tested on
-
-  * Felix 2.0.4 & 3.0.1
-  * Equinox 3.5.2 & 3.6.0
-
-  The JVM JDK 6 agent has been verified to work on 
-
-  * ActiveMQ 5.3.1
-  * Terracotta 3.2.1
-  * Hadoop 0.20.2
-
-  The proxy mode has been explicitely tested for 
-
-  * JBoss 4.2.3 GA & 5.1.0 GA
-  * Oracle WebLogic 9.2 MP3 & 10.0.2.0
-  * Glassfish 2.1.1 and v3
-
-  More tests are scheduled, detailed setup instructions for individual
-  JEE servers can be found at http://labs.consol.de/tags/jsr-160
-  
-  It is expected that every Java application server which runs with at
-  least Java 1.5 and conforms to at least version 2.4 of the Servlet
-  specification should work out of the box.  Please open a bug at
-  http://rt.cpan.org/Public/Bug/Report.html?Queue=jmx4perl if you
-  encounter any problems.
-
-MULE AGENT SUPPORT
-
-  This distribution contains a Mule ESB (www.mulesoft.org) agent which
-  can be deployed on the Mule ESB (running in standalone
-  mode). Currently, you need to build the agent from source,
-  though. Maven is required for building the agen. Call 'mvn install'
-  within the 'agent' directory, you find the agent then as
-  'agent/modules/j4p-mule/target/j4p-mule-<version>-agent.jar'.
-  Alternatively the agent jar can be downloaded from the maven
-  labs.consol.de's repository at
-  http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/
-
-  Installation instruction are included in JMX::Jmx4Perl::Manual
-  The initial article related can be found at
-  http://labs.consol.de/blog/jmx4perl/jmx4perl-mule-agent
-
-OSGi AGENT SUPPORT
-
-  An j4p OSGi bundle can be deployed on any OSGi container where a
-  OSGi compliant HttpService is available. You can download the bundle
-  from http://labs.consol.de/maven/repository/org/jmx4perl/j4p-osgi
-  or build it from scratch with maven. The source is located in
-  agent/modules/j4p-osgi
-  
-JDK6 JVM AGENT
-
-  A native Java JVM agent is provided, too. The only dependency is on
-  Sun's JDK 6, which contains a lightweight HTTP Server used for
-  exporting the j4p data. You can download it from 
-  http://labs.consol.de/maven/repository/org/jmx4perl/j4p-jvm-jdk6
-  or build it from scratch with maven out of
-  agent/modules/j4p-jvm-jdk6.
-
-  To use it simply provide the following argument to the Java
-  application to monitor (any Java 6 application can be used):
-
-  -javaagent:/path/to/j4p-jvm-jdk6-<version>-agent.jar
-
-  By default, it will listen on port 8778, but this can be configured
-  as well as other aspects like authentication:
-
-  * Provide options on the commandline as key-value pairs:
-    -javaagent:agent.jar=port=7777,host=localhost
-
-  * Via a properties file
-    -javaagent:agent.jar=config=/path/to/config.properties
-
-  * Via packaging a j4p-agent.properties top level in the agent.jar
-
-  Options are used in the given precedence, the former overwritting
-  the later values.
-
 RESOURCES
 
   * Jmx4perl's source is hosted on github.com. You can clone the
@@ -182,7 +80,7 @@ RESOURCES
 
 LICENSE
   
-  Copyright (C) 2009 Roland Huss (roland@cpan.org)
+  Copyright (C) 2009-2011 Roland Huss (roland@cpan.org)
 
   Jmx4perl is free software: you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by

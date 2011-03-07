@@ -18,10 +18,30 @@ name: jmx4perl
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.75
+    version: 0.90_1
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
+  JMX::Jmx4Perl::Agent::Manager::ArtifactHandler:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/ArtifactHandler.pm
+  JMX::Jmx4Perl::Agent::Manager::DownloadAgent:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/DownloadAgent.pm
+  JMX::Jmx4Perl::Agent::Manager::JolokiaMeta:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/JolokiaMeta.pm
+  JMX::Jmx4Perl::Agent::Manager::Logger:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/Logger.pm
+  JMX::Jmx4Perl::Agent::Manager::Logger::None:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/Logger.pm
+  JMX::Jmx4Perl::Agent::Manager::Verifier:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/Verifier.pm
+  JMX::Jmx4Perl::Agent::Manager::Verifier::ChecksumVerifier:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/Verifier/ChecksumVerifier.pm
+  JMX::Jmx4Perl::Agent::Manager::Verifier::MD5Verifier:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/Verifier/MD5Verifier.pm
+  JMX::Jmx4Perl::Agent::Manager::Verifier::OpenPGPVerifier:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/Verifier/OpenPGPVerifier.pm
+  JMX::Jmx4Perl::Agent::Manager::Verifier::SHA1Verifier:
+    file: lib/JMX/Jmx4Perl/Agent/Manager/Verifier/SHA1Verifier.pm
   JMX::Jmx4Perl::Agent::UserAgent:
     file: lib/JMX/Jmx4Perl/Agent/UserAgent.pm
   JMX::Jmx4Perl::Alias:
@@ -87,7 +107,11 @@ provides:
   JMX::Jmx4Perl::Response:
     file: lib/JMX/Jmx4Perl/Response.pm
 recommends:
+  Archive::Zip: 0
   Config::General: 0
+  Crypt::OpenPGP: 0
+  Digest::MD5: 0
+  Digest::SHA1: 0
   File::SearchPath: 0
   Nagios::Plugin: 0.27
   Term::Clui: 0
@@ -107,4 +131,4 @@ requires:
   base: 0
 resources:
   license: http://opensource.org/licenses/gpl-license.php
-version: 0.75
+version: 0.90_1

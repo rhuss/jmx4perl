@@ -28,22 +28,30 @@ way. This is done with the I<agent> and I<proxy> based approaches described
 below. In short, the building blocks of this bridge are based on standards well
 known and used in both worlds: HTTP and JSON.
 
-Another goal is to provide an abstraction for accessing certain, commonly known
-MBeans for various supported JEE application server, which differ in naming
-from brand to brand. For now, the JEE servers supported are JBoss 4 & 5, Oracle
-WebLogic 9 & 10, Websphere 6 & 7, Glassfish 2 & 3, Jonas 4 and Geronimo 2 as
-well as the pure servlet containers Jetty 5 and 6, Tomcat 4, 5 & 6. Other
-platforms might work as well, however they are not yet tested. Please let me
-know, whether jmx4perl works for you on other servers as well (which is highly
-likely due to the simplistic nature of the agent).  B<jmx4perl> is not an
-academic exercise. In fact it originates from the need to let Nagios (a well
-known open source monitoring solution, see L<http://www.nagios.org>) access JEE
-appliation servers in a painless way. You can find a nagios check in the
-scripts directory, which is a prefactored check directly usable for a Nagios
-setup.
+The agent part of jmx4perl can be found at www.jolokia.org. This site also
+contains all relevant documentation for setting up the agent for various
+platforms. I.e. the following starting points are of interest, when Jolokia is
+used with jmx4perl
 
-Additionally, there is a command line tool called (accidentally ;-) L<jmx4perl>
-which allows for simple access to JMX MBeans and much more. 
+=over
+
+=item L<http://www.jolokia.org/agent.html> 
+
+Overview of all Jolokia agents
+
+=item L<http://www.jolokia.org/reference/html/index.html>
+
+Reference manul which contains detailed installation instructions for various
+platforms. 
+
+=back 
+
+The client part of Jmx4Perl is contained in this library and consist of a set
+of Perl modules for programatic access as well as a handful of command line
+tools.
+
+L<jmx4perl> allows for simple access to JMX MBeans and much more from the
+command line and is a good starting point.
 
 =head1 MBean Features
 
@@ -196,7 +204,7 @@ service URL (like C<service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi>) in
 order to specify the target server. Use the proxy server's URL as the agent
 URL:
 
- jmx4perl http://localhost:8080/j4p  \
+ jmx4perl http://localhost:8080/jolokia  \
       --target service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi list
 
 
@@ -256,121 +264,23 @@ you need to have installed. Using
   ./Build test
   ./Build install
 
-will install the modules. If you have Java and "ant" (a Java build
-tool) installed, the Java agent will be compiled and packaged as
-well. However, this is not required. A precompiled F<j4p.war>
-can be found in the F<agent> directory.
+will install the modules. 
 
-For the module to work, you need to deploy F<j4p.war> to the JEE Server
-to monitor. The concrete steps depend on the specific way for deploying on the
-target server, which in most cases is as simple as copying the agent into a
-specific directory. Please consult the documentation of your Java application
-server for the details (look for "deployment" and "web application" (or "war))) 
+In order to download the Jolokia WAR agent into the local directory as
+jolokia.war, use the following command
+
+  j4p_agent_manager
+
+This agent "jolokia.war" needs to be deployed on the JEE Server to
+monitor. Please consult http://www.jolokia.org/agent.html for more information
+how to install the agent.
 
 To test it, you can use L<jmx4perl> with the URL of the deployed
 agent:
 
-  jmx4perl http://<jeeserver>:<port>/j4p
+  jmx4perl http://<jeeserver>:<port>/jolokia
       
 Consult L<jmx4perl> for further details. 
-
-=head2 Mule agent
-
-The mule agent is not yet distributed as binary and not included in the default
-build. You can easily build it on your own by using C<mvn install> within the
-F<agent/> subdirectory. You need maven (L<http://maven.apache.org>) as build
-tool installed. The agent can be found afterwards at
-F<agent/modules/j4p-mule/target/j4p-mule-0.70.0-agent.jar> (note the C<-agent>
-classifier, replace the version number with the current jmx4perl version).
-
-Alternatively, the mule agent can be downloaded from our maven repository at
-L<http://labs.consol.de/maven/repository/org/jmx4perl/j4p-mule/> or you can use
-C<./Build get_mule_agent> to download the current mule agent
-automatically. (BTW, C<./Build get_war> downloads the current jmx4perl standard
-agent from labs.consol.de repository).
-
-The agent jar needs to be stored within the Mule installation in
-F<lib/opt/>. Additionally, the Mule configuration needs to be adapted to
-contain the following section:
-
- <management:custom-agent name="j4p-agent" class="org.jmx4perl.mule.J4pAgent">
-   <spring:property name="port" value="8899"/>
- </management:custom-agent>
- <management:jmx-server/>
-
-For Mule 3.0 the C<custom-agent> declaration lives in the core mule namespace
-(so don't use the C<management:> prefix within Mule 3.0). Don't forget to
-include the proper namespace declarations as pointed out in the Mule
-documentation. 
-
-Starting up mule should yield a startup message like 
-
- *********************************************************
- * Mule ESB and Integration Platform                     *
- * Version: 2.2.1 Build: 14422                           *
- * MuleSource, Inc.                                      *
- * For more information go to http://mule.mulesource.org *
- *                                                       *
- * Server started: 12/9/09 3:36 PM                       *
- * Server ID: myMule                                     *
- * JDK: 1.6.0_15 (mixed mode)                            *
- * OS encoding: MacRoman, Mule encoding: UTF-8           *
- * OS: Mac OS X (10.6.2, x86_64)                         *
- * Host: localhost (127.0.0.1)                           * 
- *                                                       *
- * Agents Running:                                       *
- *   Wrapper Manager: Mule PID #0, Wrapper PID #861      *
- *   j4p Agent: http://localhost:8899/j4p                *
- *   JMX Agent                                           *
- *********************************************************
-
-Note the URL for the j4p agent which can be used with C<jmx4perl> or
-C<check_jmx4perl> like
-
- jmx4perl http://localhost:8899/j4p list
-
-which will result in an output similar to
-
- Mule.myMule:
-    Mule.myMule:name=AllStatistics,type=org.mule.Statistics
-        Attributes:
-            Enabled                             boolean
-        Operations:
-            void logSummary()                   
-            java.lang.String printXmlSummary()  
-            java.lang.String printHtmlSummary() 
-            void clear()                        
-            java.lang.String printCSVSummary()  
- 
- ....
- java.lang:
-    java.lang:type=Memory
-        Attributes:
-            NonHeapMemoryUsage                  CompositeData [ro] 
-            ObjectPendingFinalizationCount      int [ro]
-            Verbose                             boolean
-            HeapMemoryUsage                     CompositeData [ro]
-        Operations:
-            void gc()
-
-Note that Mule was started here with a server id myMule (startup option:
-C<-M-Dmule.serverId=myMule>). As you can see you have access to the Mule specific
-MBeans and the Java platform MXBeans (which BTW is not easy achievable using
-Mules JSR-160 agents directly).
-
-For enabling basic security the properties user and password can be set:
-
- <management:custom-agent name="j4p-agent" class="org.jmx4perl.mule.J4pAgent">
-   <spring:property name="user" value="roland"/>
-   <spring:property name="password" value="wtf"/>
- </management:custom-agent>
- <management:jmx-server/>
-
-On the client side the options C<--user> and C<--password> can be used with
-C<jmx4perl> and C<check_jmx4perl> for specifying the credentials.
-
-Finally, all other options as specified as init parameters in C<j4p.war>s web.xml
-can be used as properties here as well.
 
 =head1 FEATURES
 
@@ -394,46 +304,10 @@ same types as for writing attributes are supported.
 
 Jmx4Perl is able to autodectect various application servers. This is done by
 querying a certain MBean attribute which is unique for this specific
-product. The following application servers can be autodetected:
-
-=over
-
-=item * 
-
-JBoss 4 and 5 (L<http://www.jboss.org/jbossas/>)
-
-=item *
-
-Oracle WebLogic 9 & 10 (L<http://www.oracle.com/appserver/>)
-
-=item *
-
-IBM Websphere 6 & 7 (L<http://www.ibm.com/websphere>)
-
-=item *
-
-Glassfish 2 and 3 (L<https://glassfish.dev.java.net/>)
-
-=item *
-
-Apache Geronimo 2 (L<http://geronimo.apache.org/>)
-
-=item * 
-
-Jonas 4 (L<http://jonas.ow2.org/>)
-
-=item * 
-
-Tomcat 4, 5 and 6 (L<http://tomcat.apache.org/>)
-
-=item * 
-
-Jetty 5 and 6 (http://www.mortbay.org/jetty/)
-
-=back 
-
-All these application servers has been tested to work with jmx4perl. The
-testing environment is a 64bit Ubuntu 9.04 installation, running in a virtual
+product. Many application servers has been tested to work with Jolokia and
+hence with Jmx4Perl. In fact, Jmx4Perl comes with an integrastion test suite,
+which is used for integration testing the Jolokia agents. The testing
+environment is a 64bit Ubuntu 9.04 installation, running in a virtual
 machine. However, this should not make any difference for another platform, so
 I'm pretty confident that the application servers from the list above will work
 with jmx4perl on any OS. Please open a bug at
@@ -461,7 +335,7 @@ without worrying about aliasing at all.
 
 =head2 History Tracking
 
-The agent C<j4p> can be switched into a history tracking mode, where it records
+The agent C<jolokia> can be switched into a history tracking mode, where it records
 the values for C<read>, C<write> and C<exec> operations. You have to call a
 certain, jmx4perl specific, MBean to turn it on. If switched on each request
 contains an additional history entry containing the list of historical values
@@ -527,15 +401,15 @@ do this, here's the recipe:
 =item 1.
 
 Change into the directory F<agent>. There you will find a template policy file
-called F<j4p-access.xml.template>
+called F<jolokia-access.xml.template>
 
 =item 2. 
 
-Copy this template to F<j4p-access.xml> (all within the agent directory). 
+Copy this template to F<jolokia-access.xml> (all within the agent directory). 
 
 =item 3. 
 
-Edit F<j4p-access.xml> to your needs. In the section C<commands> you can
+Edit F<jolokia-access.xml> to your needs. In the section C<commands> you can
 restrict the request types, only those present here are allowed to be
 called. If the complete C<commands> section is missing, no restriction on a
 request type is in effect. In the C<mbeans> part you can provide MBeans by name
@@ -553,27 +427,27 @@ be on the save side do an C<ant clean> before calling C<ant> without argument.
 
 =item 5.
 
-Deploy the F<j4p.war> which was created in Step 4.   
+Deploy the F<jolokia.war> which was created in Step 4.   
 
 =back
 
 A typical workflow looks like
 
  $ cd agent/
- $ cp j4p-access.xml.template j4p-access.xml
- $ vi j4p-access.xml
+ $ cp jolokia-access.xml.template jolokia-access.xml
+ $ vi jolokia-access.xml
  $ ant clean
  $ ant
- $ jar tvf j4p.war
+ $ jar tvf jolokia.war
       0 Thu Jul 30 10:42:24 CEST 2009 META-INF/
      95 Thu Jul 30 10:42:22 CEST 2009 META-INF/MANIFEST.MF
       0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/
    1872 Tue Jul 28 09:09:32 CEST 2009 WEB-INF/web.xml
       0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/lib/
   16046 Wed Jul 01 22:26:42 CEST 2009 WEB-INF/lib/json_simple-1.1.jar
-  85124 Thu Jul 30 10:42:22 CEST 2009 WEB-INF/lib/j4p-agent.jar
-      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/classes/j4p-access.xml
- $ cp j4p.war $DEPLOYMENT_DIR/
+  85124 Thu Jul 30 10:42:22 CEST 2009 WEB-INF/lib/jolokia-agent.jar
+      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/classes/jolokia-access.xml
+ $ cp jolokia.war $DEPLOYMENT_DIR/
 
 =head1 LICENSE
 
