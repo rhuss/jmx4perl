@@ -77,9 +77,7 @@ sub add_policy {
     $self->_fatal("No such file $file") unless -e $policy;
     
     my $jar = $self->_read_archive();
-
-    my $info = $self->info;
-    my $path = ($info->{type} eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
+    my $path = $self->_policy_path;
     
     my $existing = $jar->removeMember($path);
     my $res = $jar->addFile($policy,$path);
@@ -95,9 +93,7 @@ sub remove_policy {
     my $file = $self->{file};
     
     my $jar = $self->_read_archive();
-
-    my $info = $self->info;
-    my $path = ($info->{type} eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
+    my $path = $self->_policy_path;
     
     my $existing = $jar->removeMember($path);
     if ($existing) {
@@ -107,6 +103,28 @@ sub remove_policy {
     } else {
         $self->_info("No policy found, leaving ","[em]",$file,"[/em]"," untouched.");
     }
+}
+
+sub has_policy {
+    my $self = shift;
+
+    my $jar = $self->_read_archive();
+    my $path = $self->_policy_path;
+    return $jar->memberNamed($path) ? $path : undef;
+}
+
+sub get_policy {
+    my $self = shift;
+
+    my $jar = $self->_read_archive();
+    my $path = $self->_policy_path;
+    return $jar->contents($path);
+}
+
+sub _policy_path {
+    my $self = shift;
+    my $info = $self->info;
+    return ($info->{type} eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
 }
 
 sub _fatal {

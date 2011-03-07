@@ -48,11 +48,13 @@ Options:
      --repository <repo-url>       Repository URL from where to fetch the Jolokia agent. 
                                    (default is taken from meta data)
      --template <name>[:<version>] Download a template with given name and optional version. E.g.
-                                   "jolokia-access:0.83". If used with --agent, the same version
+                                   "jolokia-access.xml:0.83". If used with --agent, the same version
                                    as for the agent is used by default
+     --policy                      Same as --template jolokia-access.xml
 
   Command 'info':
      --verify                      Check signature of given file
+     --policy                      Print out an embedded jolokia-access.xml
 
   Command 'repack':
      --policy                      Adds a jolokia-access.xml policy file, which is in the current 
@@ -236,7 +238,8 @@ sub command_download {
     my ($meta,$args) = @_;
     
     my ($agent,$agent_version) = &_parse_version($args->{agent});
-    my ($template,$template_version) = &_parse_version($args->{template});
+    my $t = $args->{template} || ($args->{policy} ? "jolokia-access.xml" : undef);
+    my ($template,$template_version) = &_parse_version($t);
 
     $agent = "war" if (!$template && !$agent);
     $agent_version = &_agent_version($meta,$agent_version);
@@ -333,9 +336,17 @@ where the signature is fetched from the Jolokia repository.
 sub command_info {
     my ($meta,$args,$file) = @_;
     my $handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
+    if ($args->{policy}) {
+        my $policy = $handler->get_policy;
+        &fatal("No jolokia-access.xml contained in $file") unless $policy;
+        print $policy;
+        return;
+    }
     my $ret = $handler->info;
     $logger->info("Type:    ","[em]",$ret->{type},"[/em]");
     $logger->info("Version: ","[em]",$ret->{version},"[/em]");
+    my $policy = $handler->has_policy;
+    $logger->info("Policy:  ",$policy ? ("[em]","jolokia-access.xml","[/em]"," available") : "No security policy installed");
     my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
     if ($args->{verify}) {
         for my $repo (@$repositories) {
