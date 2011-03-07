@@ -25,8 +25,9 @@ sub verify {
     my $self = shift;
     my %args = @_;
     my $logger = $args{logger};
-    my $sig = $args{signature};    
+    my $sig = $args{signature};
     chomp $sig;
+    $sig =~ s/^([^\s]+).*$/$1/;
     my $digester = $self->create_digester;
     my $file = $args{path};
     if ($file) {

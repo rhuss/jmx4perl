@@ -39,9 +39,7 @@ sub new {
 sub info {
     my $self = shift;
     my $file = $self->{file};
-    my $jar = new Archive::Zip();
-    my $status = $jar->read($file);
-    $self->_fatal("Cannot read content of $file: ",$GLOBAL_ERROR) unless $status eq AZ_OK();
+    my $jar = $self->_read_archive();
     my @props = $jar->membersMatching('META-INF/maven/org.jolokia/.*?/pom.properties');
     $self->_fatal("Cannot extract pom.properties from $file") unless @props;
     for my $prop (@props) {
@@ -63,10 +61,62 @@ sub info {
     return {};
 }
 
+sub _read_archive {
+    my $self = shift;
+    my $file = $self->{file};
+    my $jar = new Archive::Zip();
+    my $status = $jar->read($file);
+    $self->_fatal("Cannot read content of $file: ",$GLOBAL_ERROR) unless $status eq AZ_OK();
+    return $jar;
+}
+
+sub add_policy {
+    my $self = shift;
+    my $policy = shift;
+    my $file = $self->{file};
+    $self->_fatal("No such file $file") unless -e $policy;
+    
+    my $jar = $self->_read_archive();
+
+    my $info = $self->info;
+    my $path = ($info->{type} eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
+    
+    my $existing = $jar->removeMember($path);
+    my $res = $jar->addFile($policy,$path);
+    $self->_fatal("Cannot add $policy to $file as ",$path,": ",$GLOBAL_ERROR) unless $res;
+    my $status = $jar->overwrite();
+    $self->_fatal("Cannot write $file: ",$GLOBAL_ERROR) unless $status eq AZ_OK();
+    $self->_info($existing ? "Replacing existing policy " : "Adding policy ","[em]",$path,"[/em]",$existing ? " in " : " to ","[em]",$file,"[/em]");
+}
+
+sub remove_policy {
+    my $self = shift;
+    my $policy = shift;
+    my $file = $self->{file};
+    
+    my $jar = $self->_read_archive();
+
+    my $info = $self->info;
+    my $path = ($info->{type} eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
+    
+    my $existing = $jar->removeMember($path);
+    if ($existing) {
+        my $status = $jar->overwrite();
+        $self->_fatal("Cannot write $file: ",$GLOBAL_ERROR) unless $status eq AZ_OK();    
+        $self->_info("Removing policy","[em]",$policy,"[/em]"," in ","[em]",$file,"[/em]");
+    } else {
+        $self->_info("No policy found, leaving ","[em]",$file,"[/em]"," untouched.");
+    }
+}
+
 sub _fatal {
     my $self = shift;
     $self->{logger}->error(@_);
     die "\n";
 }
 
+sub _info {
+    my $self = shift;
+    $self->{logger}->info(@_);
+}
 1;

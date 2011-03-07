@@ -89,6 +89,118 @@ sub get {
     return $self->{_meta}->{$key};    
 }
 
+
+=item $jolokia_version = $meta->latest_matching_version($jmx4perl_version)
+
+Get the latest matching Jolokia version for a given Jmx4Perl version
+
+=cut
+
+sub latest_matching_version {
+    my $self = shift;
+    my $jmx4perl_version = shift;
+    # Iterate over all existing versions, starting from the newest one, 
+    # and return the first matching
+    my $version_info = $self->get("versions");
+    for my $v (sort { $b <=> $a } keys %$version_info) {
+        my $range = $version_info->{$v}->{jmx4perl};
+        if ($range) {
+            my $match = $self->_check_version($jmx4perl_version,$range);
+            return $v if $match;
+        }
+    }
+    return undef;
+}
+
+sub _check_version {
+    my $self = shift;    
+    my $jmx4perl_version = shift;
+    my $range = shift;
+    
+    my ($l,$l_v,$u_v,$u) = ($1,$2,$3,$4) if $range =~ /^\s*([\[\(])\s*([\d\.]+)\s*,\s*([\d\.]+)\s*([\)\]])\s*$/;
+    if ($l_v) {
+        my $cond = "\$a " . ($l eq "[" ? ">=" : ">").  $l_v . " && \$a" . ($u eq "]" ? "<=" : "<") . $u_v;
+        my $a = $jmx4perl_version;
+        return eval $cond;
+    }
+    return undef;    
+}
+
+=item $meta->versions_compatible($jmx4perl_version,$jolokia_version)
+
+Check, whether the Jolokia and Jmx4Perl versions are compaptible, i.e.
+whether Jmx4Perl with the given version can interoperate with the given
+Jolokia version
+
+=cut
+
+sub versions_compatible {
+    my $self = shift;
+    my $jmx4perl_version = shift;
+    my $jolokia_version = shift;
+
+    my $version_info = $self->get("versions");
+    my $range = $version_info->{$jolokia_version}->{jmx4perl};
+    if ($range) {
+        return $self->_check_version($jmx4perl_version,$range);
+    } else {
+        return undef;
+    }
+}
+
+=item $type = $meta->extract_type($artifact_name)
+
+Extract the type for a given artifactId
+
+=cut
+
+sub extract_type { 
+    my $self = shift;
+    my $artifact = shift;
+    my $mapping = $self->get("mapping");
+    for my $k (keys %$mapping) {
+        return $k if $mapping->{$k}->[0] eq $artifact;
+    }
+    return undef;
+}
+
+=item $meta->template_url($template_name,$version)
+
+Download a template with the given name. The download URL is looked up 
+in the meta data. If a version is given, the template for this specific
+version is returned (if present, if not the default template is returned). 
+If no version is given, the default template is returned. The downloaded
+template is verified as any other downloaded artifact. 
+
+The template is returned as a string.
+
+=cut
+
+sub template_url {
+    my $self = shift;
+    my $template = shift;
+    my $version = shift;
+    
+    my $url;
+    if ($version)  {
+        my $version_info = $self->get("versions");
+        my $v_data = $version_info->{$version};
+        $self->_fatal("Cannot load template $template for version $version since $version is unknown") 
+          unless $v_data;
+        my $templs = $v_data->{templates};
+        if ($templs) {
+            $url = $templs->{$template};
+        }
+    }
+    unless ($url) {
+        my $templs = $self->get("templates");
+        $self->_fatal("No templates defined in jolokia.meta") unless $templs;
+        $url = $templs->{$template};
+    }
+    return $url;
+}
+
+
 =back
 
 =cut
@@ -152,49 +264,6 @@ sub _load_from_server {
     }
 }
 
-# Get the latest matching Jolokia version for a given Jmx4Perl version
-sub latest_matching_version {
-    my $self = shift;
-    my $jmx4perl_version = shift;
-    # Iterate over all existing versions, starting from the newest one, 
-    # and return the first matching
-    my $version_info = $self->get("versions");
-    for my $v (sort { $b <=> $a } keys %$version_info) {
-        my $range = $version_info->{$v}->{jmx4perl};
-        if ($range) {
-            my ($l,$l_v,$u_v,$u) = ($1,$2,$3,$4) if $range =~ /^\s*([\[\(])\s*([\d\.]+)\s*,\s*([\d\.]+)\s*([\)\]])\s*$/;
-            if ($l_v) {
-                my $cond = "\$a " . ($l eq "[" ? ">=" : ">").  $l_v . " && \$a" . ($u eq "]" ? "<=" : "<") . $u_v;
-                my $a = $jmx4perl_version;
-                if (eval $cond) { 
-                    return $v;
-                }
-            }
-        }
-    }
-    return undef;
-}
-
-# Check, whether the Jolokia and Jmx4Perl versions match
-sub versions_compatible {
-    my $self = shift;
-    my $jmx4perl_version = shift;
-    my $jolokia_version = shift;
-
-    return 1;
-}
-
-# Extract the type for a given artifactId
-sub extract_type { 
-    my $self = shift;
-    my $artifact = shift;
-    my $mapping = $self->get("mapping");
-    for my $k (keys %$mapping) {
-        return $k if $mapping->{$k}->[0] eq $artifact;
-    }
-    return undef;
-}
-
 # Do something with errors and info messages
 
 sub _debug {
@@ -224,17 +293,25 @@ sub _example_meta {
                              "http://labs.consol.de/maven/repository"
                             ],            
             versions => {
-                         "0.83" => { jmx4perl => "[0.73,1.0)" } ,
+                         "0.83" => { 
+                                    jmx4perl => "[0.73,1.0)", 
+                                    templates => {
+                                                  "jolokia-access.xml" => "http://www.jolokia.org/templates/jolokia-access.xml"
+                                                 }
+                                   },
                          "0.82" => { jmx4perl => "[0.73,1.0)" } ,
                          "0.81" => { jmx4perl => "[0.73,1.0)" } ,
                         },
             mapping => {
                         "war" => [ "jolokia-war", "jolokia-war-%v.war", "jolokia.war" ],
                         "osgi" => [ "jolokia-osgi", "jolokia-osgi-%v.jar", "jolokia.jar" ],
-                       "osgi-bundle" => [ "jolokia-osgi-bundle", "jolokia-osgi-bundle-%v.jar", "jolokia-bundle.jar" ],
+                        "osgi-bundle" => [ "jolokia-osgi-bundle", "jolokia-osgi-bundle-%v.jar", "jolokia-bundle.jar" ],
                         "mule" => [ "jolokia-mule", "jolokia-mule-%v.jar", "jolokia-mule.jar" ],
                         "jdk6" => [ "jolokia-jvm-jdk6", "jolokia-jvm-jdk6-%v-agent.jar", "jolokia.jar" ]
-                       }
+                       },
+            templates => {
+                          "jolokia-access.xml" => "http://www.jolokia.org/templates/jolokia-access.xml"
+                         }
            };
 }
 

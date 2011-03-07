@@ -29,6 +29,9 @@ use strict;
   # Print information about a downloaded agent (i.e. its version)
   j4p_agent_manager info jolokia.war
 
+  # Repackage the agent to include a security policy
+  j4p_agent_manager repack --policy jolokia.war
+
   # Current Jmx4Perl version
   j4p_agent_manager --version
 
@@ -38,16 +41,24 @@ use strict;
 Options:
 
   Command 'download':
-     --agent <type>[:<version>]  Agent to download. <type> must be one of "war", "osgi", 
-                                 "osgi-bundle", "mule" or "jdk6". An optional Jolokia version 
-                                 can be added after a colon.
-     --outdir <dir>              Output directory for the agent downloaded (default: ".")
-     --repository <repo-url>     Repository URL from where to fetch the Jolokia agent. 
-                                 (default is taken from meta data)
+     --agent <type>[:<version>]    Agent to download. <type> must be one of "war", "osgi", 
+                                   "osgi-bundle", "mule" or "jdk6". An optional Jolokia version 
+                                   can be added after a colon.
+     --outdir <dir>                Output directory for the agent downloaded (default: ".")
+     --repository <repo-url>       Repository URL from where to fetch the Jolokia agent. 
+                                   (default is taken from meta data)
+     --template <name>[:<version>] Download a template with given name and optional version. E.g.
+                                   "jolokia-access:0.83". If used with --agent, the same version
+                                   as for the agent is used by default
 
   Command 'info':
-     --verify                    Check signature of given file
-     
+     --verify                      Check signature of given file
+
+  Command 'repack':
+     --policy                      Adds a jolokia-access.xml policy file, which is in the current 
+                                   directory. C<--no-policy> removed the policy file
+     --policy-file <policy file>   Alternate policy file to use (implies --policy)
+
   General:
      --quiet            No output on the standard out
      --verbose          Print verbose
@@ -110,8 +121,11 @@ to add the key manually or to download it from an PGP key server.
 my %opts = ();
 GetOptions(\%opts,
            "agent|a=s",
+           "template=s",
            "outdir|o=s",
            "repository|r=s",
+           "policy!",
+           "policy-file:s",
            "quiet|q",
            "version|v",
            "verify!",
@@ -132,7 +146,8 @@ if ($opts{version}) {
 my %COMMANDS = 
   (
    download => \&command_download,
-   info => \&command_info
+   info => \&command_info,
+   repack => \&command_repack
   );
 
 my $mode = shift @ARGV || "download";
@@ -209,33 +224,85 @@ line also with the C<--agent> option, added after the agent type with a
 The output directory for the agent can be specified with the C<--outdir>
 option. By default, the agent is stored in the current working directory. 
 
+A template can be downloaded with C<--template>. This option uses the same
+syntax as C<--agent>, i.e. a version number can be optionally defined. If no
+version number is provided, either the default template is downloaded, or, if
+used together with C<--agent>, the template matching the agent's version is
+used. 
+
 =cut
 
 sub command_download {
     my ($meta,$args) = @_;
     
-    my $agent = $args->{agent} || "war";
-    my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
+    my ($agent,$agent_version) = &_parse_version($args->{agent});
+    my ($template,$template_version) = &_parse_version($args->{template});
 
-    my $version = $2 if $agent =~ s/(.*):([\d\.]+)\s*$/$1/;
+    $agent = "war" if (!$template && !$agent);
+    $agent_version = &_agent_version($meta,$agent_version);
+    $template_version = $agent_version if ($template && !$template_version);
+
+    &_download_agent($meta,$agent,$agent_version,$args) if $agent;
+    &_download_template($meta,$args,$template,$template_version) if $template;
+}
+
+sub _parse_version {
+    my $spec = shift;
+    return (undef,undef) unless $spec;
+    my ($base,$version) = ($1,$2) if $spec =~ /^(.*?):?([\d\.]*)\s*$/;
+    return ($base,$version);
+}
+
+sub _agent_version {
+    my $meta = shift;
+    my $version = shift;
+
     if ($version) {        
         &verify_version($meta,$version);
     } else {
         $version = $meta->latest_matching_version($JMX::Jmx4Perl::VERSION);
-        unless ($version) { 
-            $logger->error("Cannot find compatible Jolokia version for Jmx4Perl ",$JMX::Jmx4Perl::VERSION);
-            exit(1);
-        }
-    }
-    $logger->info("Using ","[em]","Jolokia $version","[/em]", 
-                  " for ","[em]","Jmx4Perl $JMX::Jmx4Perl::VERSION","[/em]");
+        &fatal("Cannot find compatible Jolokia version for Jmx4Perl ",$JMX::Jmx4Perl::VERSION)
+          unless $version;
+    }    
+}
+
+sub _download_template {
+    my $meta = shift;
+    my $args = shift;
+    my $template = shift;
+    my $version = shift;
     
+    my $url = $meta->template_url($template,$version);
+    &fatal("No template $template known") unless $url;
+    
+    my $file = &_path($args,$template);
+    $logger->info("Downloading ","[em]",$template,"[/em]", " version ",$version);
+    &download($url,$file,$args);
+    &verify_signature($file,$url);
+}
+
+sub _path {
+    my $args = shift;
+    my $file = shift;
+    my $dir = $args->{outdir} || ".";
+    return $dir . "/" . $file;
+}
+
+sub _download_agent {
+    my $meta = shift;
+    my $agent = shift;
+    my $version = shift;
+    my $args = shift;
+
+    my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
+
+    $logger->info("Using ","[em]","Jolokia $version","[/em]", 
+                  " for ","[em]","Jmx4Perl $JMX::Jmx4Perl::VERSION","[/em]");    
     for my $repository (@$repositories) {
         eval {
             my $mapping = $meta->get("mapping");
             my $download_url = &get_download_url($meta,$repository,$agent,$version);
-            my $dir = $args->{outdir} || ".";
-            my $file = $dir . "/" . $mapping->{$agent}->[2];
+            my $file = &_path($args,$mapping->{$agent}->[2]);
             $logger->info("Downloading ","[em]",$agent," agent","[/em]", " version ",$version," from repository " . $repository);
             &download($download_url,$file,$args);
             &verify_signature($file,$download_url);
@@ -246,7 +313,8 @@ sub command_download {
             return;
         }
     }
-    die "Couldn't download a $agent agent from any these repositories:\n   ",join("\n   ",@$repositories),"\n";
+    $logger->error("Couldn't download a $agent agent from any these repositories:\n   ",join("\n   ",@$repositories));
+    die "\n";
 }
 
 =head2 info
@@ -277,15 +345,46 @@ sub command_info {
     }
 }
 
+=head2 repack
+
+Repack an Jolokia agent. This is useful for adding/removing a
+F<jolokia-access.xml> policy file (which e.g. could be downloaded with the
+C<download> command) or switching on authentication for a war agent.
+
+=cut
+
+sub command_repack {
+    my ($meta,$args,$file) = @_;
+
+    my $handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
+    
+    if ($args->{'policy-file'}) {
+        $handler->add_policy($args->{'policy-file'});
+    } elsif (defined($args->{policy})) {
+        if (!$args->{policy}) {
+            $handler->remove_policy;
+        } else {
+            $handler->add_policy("jolokia-access.xml");
+        }
+    } else {
+        &fatal("No --policy or --policy-file provided");
+    }
+}
+
 # ======================================================================================= 
+
+sub _create_ua {
+    my $config = shift || {};
+    return new JMX::Jmx4Perl::Agent::Manager::DownloadAgent(quiet => $config->{quiet},%{$config->{ua_config}});
+}
 
 sub download {
     my ($url, $file, $args) = @_;
     my $config = $args || {};
-    my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent(quiet => $config->{quiet});
+    my $ua = &_create_ua($args);
     my $response = $ua->get($url,":content_file" => $file);
     if ($response->is_error) {
-        die "Could not download agent from " . $url . ": " . $response->status_line . "\n";
+        &fatal("Could not download agent from " . $url . ": " . $response->status_line);
     }
     $logger->info("Saved ", "[em]", $file, "[/em]"); 
 }
@@ -327,6 +426,11 @@ sub artifact_and_name {
     return ($name,$artifact);
 }
 
+
+sub fatal {
+    $logger->error(@_);
+    die "\n";
+}
 =head1 SEE ALSO
 
 L<check_jmx4perl> - a production ready Nagios check using L<JMX::Jmx4Perl>
