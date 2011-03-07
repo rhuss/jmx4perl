@@ -4,6 +4,7 @@ use Getopt::Long;
 use JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
 use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
 use JMX::Jmx4Perl::Agent::Manager::Logger;
+use JMX::Jmx4Perl::Agent::Manager::ArtifactHandler;
 use JMX::Jmx4Perl;
 use Digest::MD5;
 use Data::Dumper;
@@ -17,46 +18,73 @@ use strict;
 
 my %opts = ();
 GetOptions(\%opts,
-           "mode|m=s",
            "agent|a=s",
            "proxy=s",
            "outdir|o=s",
            "repository|r=s",
            "quiet|q",
            "version|v=s",
-           "help|h"
+           "help|h",
+           "verify",
+           "debug",
+           "color!",
+           "proxy=s",
+           "proxy-user=s",
+           "proxy-password=s",
+           "cache!",
           );
- 
+
 my %COMMANDS = 
   (
-   download => \&command_download
+   download => \&command_download,
+   info => \&command_info
   );
 
-my %AGENTS = 
-  (
-   "war" => [ "jolokia-war", "jolokia-war-%v.war", "jolokia.war" ],
-   "osgi" => [ "jolokia-osgi", "jolokia-osgi-%v.jar", "jolokia.jar" ],
-   "osgi-bundle" => [ "jolokia-osgi-bundle", "jolokia-osgi-bundle-%v.jar", "jolokia-bundle.jar" ],
-   "mule" => [ "jolokia-mule", "jolokia-mule-%v.jar", "jolokia-mule.jar" ],
-   "jdk6" => [ "jolokia-jvm-jdk6", "jolokia-jvm-jdk6-%v-agent.jar", "jolokia.jar" ]
-  );
-
-
-my $mode = $opts{mode} || "download";
+my $mode = shift @ARGV || "download";
 my $command = $COMMANDS{$mode} || die "Unknown mode " . $mode . "\n";
 
 # TODO: Add UserAgent Config here
-my $ua_config = {};
+my $ua_config = {
+                 $opts{proxy} ? (http_proxy => $opts{proxy}, https_proxy => $opts{proxy}) : (),
+                 $opts{'proxy-user'} ? (proxy_user => $opts{'proxy_user'}) : (),
+                 $opts{'proxy-password'} ? (proxy_password => $opts{'proxy_password'}) : (),
+                };
 
-my $logger = new JMX::Jmx4Perl::Agent::Manager::Logger(quiet => $opts{quiet});
-my $meta = JMX::Jmx4Perl::Agent::Manager::JolokiaMeta->new(logger => $logger,ua_config => $ua_config)->load();
-my $verifier = JMX::Jmx4Perl::Agent::Manager::Verifier->new(logger => $logger,ua_config => $ua_config);
-eval {
-    &$command($meta,\%opts);
-};
-die "Error while executing command '" . $mode . "' : " . $@ . "\n" if $@;
+my $logger = new JMX::Jmx4Perl::Agent::Manager::Logger
+  (
+   quiet => $opts{quiet},debug => $opts{debug},
+   color => defined($opts{color}) ? $opts{color} : 1
+  );
+my $meta = new JMX::Jmx4Perl::Agent::Manager::JolokiaMeta
+  (
+   logger => $logger,
+   ua_config => $ua_config
+  )->load(defined($opts{cache}) ? !$opts{cache} : 0);
+my $verifier = new JMX::Jmx4Perl::Agent::Manager::Verifier
+  (
+   logger => $logger,
+   ua_config => $ua_config
+  );
+
+&$command($meta,\%opts,@ARGV);
 
 # ===========================================================
+
+# Print information about a given artifact
+sub command_info {
+    my ($meta,$args,$file) = @_;
+    my $handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
+    my $ret = $handler->info;
+    $logger->info("Type:    ","[em]",$ret->{type},"[/em]");
+    $logger->info("Version: ","[em]",$ret->{version},"[/em]");
+    my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
+    if ($args->{verify}) {
+        for my $repo (@$repositories) {
+            my $url = &get_download_url($meta,$repo,$ret->{type},$ret->{version});
+            &verify_signature($file,$url);
+        }
+    }
+}
 
 # Download an agent
 sub command_download {
@@ -80,9 +108,10 @@ sub command_download {
     
     for my $repository (@$repositories) {
         eval {
-            my $download_url = &get_download_url($repository,$agent,$version);
+            my $mapping = $meta->get("mapping");
+            my $download_url = &get_download_url($meta,$repository,$agent,$version);
             my $dir = $args->{outdir} || ".";
-            my $file = $dir . "/" . $AGENTS{$agent}->[2];
+            my $file = $dir . "/" . $mapping->{$agent}->[2];
             $logger->info("Downloading ","[em]",$agent," agent","[/em]", " version ",$version," from repository " . $repository);
             &download($download_url,$file,$args);
             &verify_signature($file,$download_url);
@@ -123,18 +152,21 @@ sub verify_version {
 }
 
 sub get_download_url {
-    my ($repository,$agent,$version) = @_;
-    my ($name,$artifact) = artifact_and_name($agent,$version);
+    my ($meta,$repository,$agent,$version) = @_;
+    my ($name,$artifact) = artifact_and_name($meta,$agent,$version);
     $repository =~ s/\/+$//;            
     return $repository . "/org/jolokia/" . $name . "/" . $version . "/" . $artifact;
 }
 
 # Map agent to its artifact id and its full name (including any classifier)
 sub artifact_and_name {
+    my $meta = shift;
     my $agent = shift;
     my $version = shift;
 
-    my $parts = $AGENTS{$agent} || die "Unknown agent type $agent. Known agent types are: ",join(", ",sort keys %AGENTS),"\n";
+    my $mapping = $meta->get("mapping");
+    my $parts = $mapping->{$agent} 
+      || $logger->error("Unknown agent type $agent. Known agent types are: ",join(", ",sort keys %$mapping)) && exit(1);
     my $name = $parts->[0];
     my $artifact = $parts->[1];
     $artifact =~ s/\%v/$version/g;

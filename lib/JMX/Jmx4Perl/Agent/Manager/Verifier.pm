@@ -57,11 +57,11 @@ sub verify {
                 $verifier->verify(%args,signature => $content,logger => $log);
                 return;
             } else {
-                $log->warn($verifier->name . ": Couldn't load $url$ext, trying simpler validation");
+                $log->warn($verifier->name . ": Couldn't load $url$ext");
             }
         }
     }
-    $log->warn("No suitable verifier found. Verification is switched off");
+    $log->warn("No suitable validation mechanism found with $url");
 }
 
 1;

@@ -109,7 +109,7 @@ sub _from_cache {
         }
         my $ret = join "",<F>;
         close F;        
-        $self->_info("Loaded Jolokia meta data from cache");
+        $self->_debug("Loaded Jolokia meta data from cache");
         return from_json($ret,{utf8 => 1});
     } else {
         return undef;
@@ -132,33 +132,24 @@ sub _to_cache {
 # Load from server
 sub _load_from_server {
     my $self = shift;
+     
+    # Create sample meta-data
+    return $self->_example_meta if ($ENV{USE_SAMPLE_JOLOKIA_META});
 
     # Load with HTTP-Client, hardcoded for now
-    $self->_info("Loading Jolokia meta data from $JOLOKIA_META_URL");
-    if (1) {
-        my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent($self->{ua_config});
-        my $response = $ua->get($JOLOKIA_META_URL);
-        if ($response->is_success) {
-            my $content = $response->decoded_content;  # or whatever
-            $self->{verifier}->verify(ua_config => $self->{ua_config}, logger => $self->{logger},
-                                      url => $JOLOKIA_META_URL, data => $content);
-            return from_json($content, {utf8 => 1});
-        }
-        else {
-            $self->_fatal("Cannot load Jolokia Meta-Data from $JOLOKIA_META_URL: " . $response->status_line);
-        }
+    $self->_info("Loading Jolokia meta data from $JOLOKIA_META_URL");                                    
+
+    my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent($self->{ua_config});
+    my $response = $ua->get($JOLOKIA_META_URL);
+    if ($response->is_success) {
+        my $content = $response->decoded_content;  # or whatever
+        $self->{verifier}->verify(ua_config => $self->{ua_config}, logger => $self->{logger},
+                                  url => $JOLOKIA_META_URL, data => $content);
+        return from_json($content, {utf8 => 1});
     }
-    my $data = {
-            repositories => [
-                             "http://labs.consol.de/maven/repository"
-                            ],            
-            versions => {
-                         "0.83" => { jmx4perl => "[0.73,1.0)" } ,
-                         "0.82" => { jmx4perl => "[0.73,1.0)" } ,
-                         "0.81" => { jmx4perl => "[0.73,1.0)" } ,
-                        } 
-           };
-    return $data;
+    else {
+        $self->_fatal("Cannot load Jolokia Meta-Data from $JOLOKIA_META_URL: " . $response->status_line);
+    }
 }
 
 # Get the latest matching Jolokia version for a given Jmx4Perl version
@@ -185,7 +176,7 @@ sub latest_matching_version {
 }
 
 # Check, whether the Jolokia and Jmx4Perl versions match
-sub versions_comptabile {
+sub versions_compatible {
     my $self = shift;
     my $jmx4perl_version = shift;
     my $jolokia_version = shift;
@@ -193,7 +184,23 @@ sub versions_comptabile {
     return 1;
 }
 
+# Extract the type for a given artifactId
+sub extract_type { 
+    my $self = shift;
+    my $artifact = shift;
+    my $mapping = $self->get("mapping");
+    for my $k (keys %$mapping) {
+        return $k if $mapping->{$k}->[0] eq $artifact;
+    }
+    return undef;
+}
+
 # Do something with errors and info messages
+
+sub _debug {
+    shift->{logger}->debug(@_);
+}
+
 sub _error {
     my $self = shift;
     $self->{logger}->error(@_);
@@ -209,6 +216,28 @@ sub _info {
     my $self = shift;
     $self->{logger}->info(@_);
 }
+
+# Sample meta data, also used for creating site meta data.
+sub _example_meta {
+    return {
+            repositories => [
+                             "http://labs.consol.de/maven/repository"
+                            ],            
+            versions => {
+                         "0.83" => { jmx4perl => "[0.73,1.0)" } ,
+                         "0.82" => { jmx4perl => "[0.73,1.0)" } ,
+                         "0.81" => { jmx4perl => "[0.73,1.0)" } ,
+                        },
+            mapping => {
+                        "war" => [ "jolokia-war", "jolokia-war-%v.war", "jolokia.war" ],
+                        "osgi" => [ "jolokia-osgi", "jolokia-osgi-%v.jar", "jolokia.jar" ],
+                       "osgi-bundle" => [ "jolokia-osgi-bundle", "jolokia-osgi-bundle-%v.jar", "jolokia-bundle.jar" ],
+                        "mule" => [ "jolokia-mule", "jolokia-mule-%v.jar", "jolokia-mule.jar" ],
+                        "jdk6" => [ "jolokia-jvm-jdk6", "jolokia-jvm-jdk6-%v-agent.jar", "jolokia.jar" ]
+                       }
+           };
+}
+
 
 1; 
 
