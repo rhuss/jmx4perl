@@ -54,7 +54,7 @@ sub verify {
             }
         }
         $log->info($self->name,
-                   ": Good PGP signature",
+                   ":  Good PGP signature",
                    ($validate != 1 ? (", signed by ",$validate) : ""),
                    ($key ? " ($key)" :""));
         return 1;

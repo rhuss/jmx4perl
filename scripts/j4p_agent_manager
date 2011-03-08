@@ -11,6 +11,7 @@ use JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
 use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
 use JMX::Jmx4Perl::Agent::Manager::Logger;
 use JMX::Jmx4Perl::Agent::Manager::ArtifactHandler;
+use JMX::Jmx4Perl::Agent::Manager::WebXmlHandler;
 use JMX::Jmx4Perl;
 use Digest::MD5;
 use Data::Dumper;
@@ -60,6 +61,11 @@ Options:
      --policy                      Adds a jolokia-access.xml policy file, which is in the current 
                                    directory. C<--no-policy> removed the policy file
      --policy-file <policy file>   Alternate policy file to use (implies --policy)
+     --security                    Add security to the web.xml with role 'jolokia' by default. 
+                                   Use no-security in order to remove security section completely
+     --security-role <role>        Select a different role for WEB security
+     --no-jsr160-proxy             Remove the JSR-160 proxy declaration from web.xml. Re-add with 
+                                   --jsr160-proxy
 
   General:
      --quiet            No output on the standard out
@@ -137,6 +143,9 @@ GetOptions(\%opts,
            "proxy-user=s",
            "proxy-password=s",
            "cache!",
+           "security!",
+           "security-role=s",
+           "jsr160-proxy!",
            "help|h" => sub { &Getopt::Long::HelpMessage() },
           );
 
@@ -152,7 +161,14 @@ my %COMMANDS =
    repack => \&command_repack
   );
 
-my $mode = shift @ARGV || "download";
+my $mode;
+if (!@ARGV) {
+    $mode = "download";
+} elsif (!$COMMANDS{$ARGV[0]}) {
+    $mode = "info";
+} else {
+    $mode = shift @ARGV;
+}
 my $command = $COMMANDS{$mode} || die "Unknown mode " . $mode . "\n";
 
 # TODO: Add UserAgent Config here
@@ -343,10 +359,18 @@ sub command_info {
         return;
     }
     my $ret = $handler->info;
-    $logger->info("Type:    ","[em]",$ret->{type},"[/em]");
-    $logger->info("Version: ","[em]",$ret->{version},"[/em]");
+    $logger->info("Type:     ","[em]",$ret->{type},"[/em]");
+    $logger->info("Version:  ","[em]",$ret->{version},"[/em]");
     my $policy = $handler->has_policy;
-    $logger->info("Policy:  ",$policy ? ("[em]","jolokia-access.xml","[/em]"," available") : "No security policy installed");
+    $logger->info("Policy:   ",$policy ? ("[em]","jolokia-access.xml","[/em]"," contained") : "No security policy installed");
+
+    my $webxml_handler = new JMX::Jmx4Perl::Agent::Manager::WebXmlHandler(logger => $logger);
+    my $webxml = $handler->extract_webxml;
+    my $result = $webxml_handler->find
+      ($webxml,
+       "//j2ee:security-constraint[j2ee:web-resource-collection/j2ee:url-pattern='/*']/j2ee:auth-constraint/j2ee:role-name");
+    $logger->info("Security: ",$result ? ("Authentication enabled for role ","[em]",$result,"[/em]") : "No authentication enabled");
+
     my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
     if ($args->{verify}) {
         for my $repo (@$repositories) {
@@ -367,19 +391,38 @@ C<download> command) or switching on authentication for a war agent.
 sub command_repack {
     my ($meta,$args,$file) = @_;
 
-    my $handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
+    my $artifact_handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
     
+    my $done = undef;
     if ($args->{'policy-file'}) {
-        $handler->add_policy($args->{'policy-file'});
+        $artifact_handler->add_policy($args->{'policy-file'});
+        $done = 1;
     } elsif (defined($args->{policy})) {
-        if (!$args->{policy}) {
-            $handler->remove_policy;
+        if ($args->{policy}) {
+            $artifact_handler->add_policy("jolokia-access.xml");
         } else {
-            $handler->add_policy("jolokia-access.xml");
+            $artifact_handler->remove_policy;
         }
-    } else {
-        &fatal("No --policy or --policy-file provided");
+        $done = 1;
+    } 
+
+    # Security handling
+    if (defined($args->{security}) || $args->{'security-role'}) {
+        my $webxml_handler = new JMX::Jmx4Perl::Agent::Manager::WebXmlHandler(logger => $logger);
+
+        my $webxml = $artifact_handler->extract_webxml();
+        my $new_webxml;
+        if ( (defined($args->{security}) && $args->{security}) || $args->{'security-role'} ) {
+            my $role = $args->{'security-role'} || "Jolokia";
+            $new_webxml = $webxml_handler->add_security($webxml,{ role => $role });
+        } else {
+            $new_webxml = $webxml_handler->remove_security($webxml);
+        }
+        $artifact_handler->update_webxml($new_webxml);
+        $done = 1;
     }
+
+    &fatal("Nothing to repack (at least one of --policy/--policy-file/--security/--jsr160-proxy required)") unless $done;
 }
 
 # ======================================================================================= 
@@ -442,6 +485,7 @@ sub fatal {
     $logger->error(@_);
     die "\n";
 }
+
 =head1 SEE ALSO
 
 L<check_jmx4perl> - a production ready Nagios check using L<JMX::Jmx4Perl>

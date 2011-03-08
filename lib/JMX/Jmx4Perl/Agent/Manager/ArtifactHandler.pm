@@ -74,7 +74,7 @@ sub add_policy {
     my $self = shift;
     my $policy = shift;
     my $file = $self->{file};
-    $self->_fatal("No such file $file") unless -e $policy;
+    $self->_fatal("No such file $policy") unless -e $policy;
     
     my $jar = $self->_read_archive();
     my $path = $self->_policy_path;
@@ -113,6 +113,7 @@ sub has_policy {
     return $jar->memberNamed($path) ? $path : undef;
 }
 
+
 sub get_policy {
     my $self = shift;
 
@@ -121,10 +122,40 @@ sub get_policy {
     return $jar->contents($path);
 }
 
+sub extract_webxml {
+    my $self = shift;
+    my $type = $self->_type;
+    $self->_fatal("web.xml can only be read from 'war' archives (not ')",$type,"')") unless $type eq "war";
+
+    my $jar = $self->_read_archive();
+    return $jar->contents("WEB-INF/web.xml");
+}
+
+sub update_webxml {
+    my $self = shift;
+    my $webxml = shift;
+    my $type = $self->_type;
+    $self->_fatal("web.xml can only be updated in 'war' archives (not '",$type,"')") unless $type eq "war";
+
+    my $jar = $self->_read_archive();
+    $jar->removeMember("WEB-INF/web.xml");
+    my $res = $jar->addString($webxml,"WEB-INF/web.xml");
+    $self->_fatal("Cannot update WEB-INF/web.xml: ",$GLOBAL_ERROR) unless $res;
+        my $status = $jar->overwrite();
+    $self->_fatal("Cannot write ",$self->{file},": ",$GLOBAL_ERROR) unless $status eq AZ_OK();
+    $self->_info("Updated ","[em]","web.xml","[/em]"," for ",$self->{file});
+}
+
+
 sub _policy_path {
     my $self = shift;
+    return ($self->_type eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
+}
+
+sub _type {
+    my $self = shift;
     my $info = $self->info;
-    return ($info->{type} eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
+    return $info->{type};
 }
 
 sub _fatal {

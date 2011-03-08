@@ -34,7 +34,8 @@ my $build = Module::Build->new
                    "Crypt::OpenPGP" => 0,
                    "Digest::MD5" => 0,
                    "Digest::SHA1" => 0,
-                   "Archive::Zip" => 0
+                   "Archive::Zip" => 0,
+                   "XML::LibXML" => 0
                   },
    build_requires => {
                       "Module::Build" => "0.34",
