@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package JMX::Jmx4Perl::Agent::Manager::Verifier::OpenPGPVerifier;
+package JMX::Jmx4Perl::Agent::Jolokia::Verifier::OpenPGPVerifier;
 
 use Crypt::OpenPGP::KeyRing;
 use Crypt::OpenPGP;
@@ -13,7 +13,7 @@ use strict;
 sub new { 
     my $class = shift;
     my $self = {};
-    my $fh = \*{JMX::Jmx4Perl::Agent::Manager::Verifier::OpenPGPVerifier::DATA};    
+    my $fh = \*{JMX::Jmx4Perl::Agent::Jolokia::Verifier::OpenPGPVerifier::DATA};    
     $self->{keyring} =  join "",<$fh>;
     close $fh;
     bless $self,(ref($class) || $class);

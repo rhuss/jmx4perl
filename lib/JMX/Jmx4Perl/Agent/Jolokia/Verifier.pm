@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package JMX::Jmx4Perl::Agent::Manager::Verifier;
+package JMX::Jmx4Perl::Agent::Jolokia::Verifier;
 
 =head1 NAME
 
@@ -18,9 +18,9 @@ use strict;
 BEGIN { 
     @VERIFIERS = ();
     my @verifiers = (
-                     [ "Crypt::OpenPGP", "JMX::Jmx4Perl::Agent::Manager::Verifier::OpenPGPVerifier" ],
-                     [ "Digest::SHA1", "JMX::Jmx4Perl::Agent::Manager::Verifier::SHA1Verifier" ],                     
-                     [ "Digest::MD5", "JMX::Jmx4Perl::Agent::Manager::Verifier::MD5Verifier" ],                     
+                     [ "Crypt::OpenPGP", "JMX::Jmx4Perl::Agent::Jolokia::Verifier::OpenPGPVerifier" ],
+                     [ "Digest::SHA1", "JMX::Jmx4Perl::Agent::Jolokia::Verifier::SHA1Verifier" ],                     
+                     [ "Digest::MD5", "JMX::Jmx4Perl::Agent::Jolokia::Verifier::MD5Verifier" ],                     
                     );
     for my $v (@verifiers) {
         eval "require $v->[0]";
@@ -46,7 +46,7 @@ sub verify {
     my %args = @_;
     my $url = $args{url};
     
-    my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent($self->{ua_config});
+    my $ua = new JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent($self->{ua_config});
     my $log = $self->{logger};
     for my $verifier (@VERIFIERS) {
         my $ext = $verifier->extension;

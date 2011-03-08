@@ -3,11 +3,11 @@
 # Helper package for dealing with meta data from 
 # www.jolokia.org
 
-package JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
+package JMX::Jmx4Perl::Agent::Jolokia::Meta;
 
-use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
-use JMX::Jmx4Perl::Agent::Manager::Logger;
-use JMX::Jmx4Perl::Agent::Manager::Verifier;
+use JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent;
+use JMX::Jmx4Perl::Agent::Jolokia::Logger;
+use JMX::Jmx4Perl::Agent::Jolokia::Verifier;
 use JSON;
 use Data::Dumper;
 use base qw(LWP::UserAgent);
@@ -17,7 +17,7 @@ my $JOLOKIA_META_URL = "http://www.jolokia.org/jolokia.meta";
 
 =head1 NAME
 
-JMX::Jmx4Perl::Agent::Manager::JolokiaMeta - Fetches, caches and parses Meta data from
+JMX::Jmx4Perl::Agent::Jolokia::Meta - Fetches, caches and parses Meta data from
 www.jolokia.org
 
 =head1 DESCRIPTION
@@ -30,7 +30,7 @@ usage in the local file system.
 
 =over 4 
 
-=item $meta = JMX::Jmx4Perl::Agent::Manager::JolokiaMeta->new(....)
+=item $meta = JMX::Jmx4Perl::Agent::Jolokia::Meta->new(....)
 
 Create a new meta object which handles downloading of Jolokia meta information
 and caching this data.
@@ -41,8 +41,8 @@ sub new {
     my $class = shift;
     my $self = ref($_[0]) eq "HASH" ? $_[0] : {  @_ };
     # Dummy logging if none is provided
-    $self->{logger} = new JMX::Jmx4Perl::Agent::Manager::Logger::None unless $self->{logger};
-    $self->{verifier} = new JMX::Jmx4Perl::Agent::Manager::Verifier(logger => $self->{logger},ua_config => $self->{ua_config});
+    $self->{logger} = new JMX::Jmx4Perl::Agent::Jolokia::Logger::None unless $self->{logger};
+    $self->{verifier} = new JMX::Jmx4Perl::Agent::Jolokia::Verifier(logger => $self->{logger},ua_config => $self->{ua_config});
     return bless $self,(ref($class) || $class);
 }
 
@@ -251,7 +251,7 @@ sub _load_from_server {
     # Load with HTTP-Client, hardcoded for now
     $self->_info("Loading Jolokia meta data from $JOLOKIA_META_URL");                                    
 
-    my $ua = new JMX::Jmx4Perl::Agent::Manager::DownloadAgent($self->{ua_config});
+    my $ua = new JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent($self->{ua_config});
     my $response = $ua->get($JOLOKIA_META_URL);
     if ($response->is_success) {
         my $content = $response->decoded_content;  # or whatever

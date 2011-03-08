@@ -35,7 +35,7 @@ lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Manager/ArtifactHandler.pm
 lib/JMX/Jmx4Perl/Agent/Manager/DownloadAgent.pm
-lib/JMX/Jmx4Perl/Agent/Manager/JolokiaMeta.pm
+lib/JMX/Jmx4Perl/Agent/Manager/Meta.pm
 lib/JMX/Jmx4Perl/Agent/Manager/Logger.pm
 lib/JMX/Jmx4Perl/Agent/Manager/Verifier.pm
 lib/JMX/Jmx4Perl/Agent/Manager/Verifier/ChecksumVerifier.pm

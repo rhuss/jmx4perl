@@ -7,11 +7,11 @@ j4p_agent_manager - Utility for managing Jolokia agents used by jmx4perl
 =cut
 
 use Getopt::Long;
-use JMX::Jmx4Perl::Agent::Manager::JolokiaMeta;
-use JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
-use JMX::Jmx4Perl::Agent::Manager::Logger;
-use JMX::Jmx4Perl::Agent::Manager::ArtifactHandler;
-use JMX::Jmx4Perl::Agent::Manager::WebXmlHandler;
+use JMX::Jmx4Perl::Agent::Jolokia::Meta;
+use JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent;
+use JMX::Jmx4Perl::Agent::Jolokia::Logger;
+use JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler;
+use JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler;
 use JMX::Jmx4Perl;
 use Digest::MD5;
 use Data::Dumper;
@@ -114,7 +114,7 @@ available, validation falls back to simple checksum validation with a SHA1
 alogrithm, or, if this is not possible to an MD5 check. Since the checksums are
 also downloaded over an insecure channel, using PGP is highly recommended. The
 public key used for the signature check is contained locally in
-L<JMX::Jmx4Perl::Agent::Manager::Verifier::OpenPGPVerifier> so there is no need
+L<JMX::Jmx4Perl::Agent::Jolokia::Verifier::OpenPGPVerifier> so there is no need
 to add the key manually or to download it from an PGP key server.
 
 =head1 COMMANDS
@@ -178,17 +178,17 @@ my $ua_config = {
                  $opts{'proxy-password'} ? (proxy_password => $opts{'proxy_password'}) : (),
                 };
 
-my $logger = new JMX::Jmx4Perl::Agent::Manager::Logger
+my $logger = new JMX::Jmx4Perl::Agent::Jolokia::Logger
   (
    quiet => $opts{quiet},debug => $opts{verbose},
    color => defined($opts{color}) ? $opts{color} : 1
   );
-my $meta = new JMX::Jmx4Perl::Agent::Manager::JolokiaMeta
+my $meta = new JMX::Jmx4Perl::Agent::Jolokia::Meta
   (
    logger => $logger,
    ua_config => $ua_config
   )->load(defined($opts{cache}) ? !$opts{cache} : 0);
-my $verifier = new JMX::Jmx4Perl::Agent::Manager::Verifier
+my $verifier = new JMX::Jmx4Perl::Agent::Jolokia::Verifier
   (
    logger => $logger,
    ua_config => $ua_config
@@ -351,7 +351,7 @@ where the signature is fetched from the Jolokia repository.
 
 sub command_info {
     my ($meta,$args,$file) = @_;
-    my $handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
+    my $handler = new JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
     if ($args->{policy}) {
         my $policy = $handler->get_policy;
         &fatal("No jolokia-access.xml contained in $file") unless $policy;
@@ -364,7 +364,7 @@ sub command_info {
     my $policy = $handler->has_policy;
     $logger->info("Policy:   ",$policy ? ("[em]","jolokia-access.xml","[/em]"," contained") : "No security policy installed");
 
-    my $webxml_handler = new JMX::Jmx4Perl::Agent::Manager::WebXmlHandler(logger => $logger);
+    my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
     my $webxml = $handler->extract_webxml;
     my $result = $webxml_handler->find
       ($webxml,
@@ -391,7 +391,7 @@ C<download> command) or switching on authentication for a war agent.
 sub command_repack {
     my ($meta,$args,$file) = @_;
 
-    my $artifact_handler = new JMX::Jmx4Perl::Agent::Manager::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
+    my $artifact_handler = new JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
     
     my $done = undef;
     if ($args->{'policy-file'}) {
@@ -408,7 +408,7 @@ sub command_repack {
 
     # Security handling
     if (defined($args->{security}) || $args->{'security-role'}) {
-        my $webxml_handler = new JMX::Jmx4Perl::Agent::Manager::WebXmlHandler(logger => $logger);
+        my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
 
         my $webxml = $artifact_handler->extract_webxml();
         my $new_webxml;
@@ -429,7 +429,7 @@ sub command_repack {
 
 sub _create_ua {
     my $config = shift || {};
-    return new JMX::Jmx4Perl::Agent::Manager::DownloadAgent(quiet => $config->{quiet},%{$config->{ua_config}});
+    return new JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent(quiet => $config->{quiet},%{$config->{ua_config}});
 }
 
 sub download {

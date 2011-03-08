@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
-package JMX::Jmx4Perl::Agent::Manager::WebXmlHandler;
+package JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler;
 
 =head1 NAME
 
-JMX::Jmx4Perl::Agent::Manager::WebXmlHandler - Handler for web.xml 
+JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler - Handler for web.xml 
 transformation 
 
 =cut

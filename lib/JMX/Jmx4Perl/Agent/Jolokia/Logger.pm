@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::Agent::Manager::Logger;
+package JMX::Jmx4Perl::Agent::Jolokia::Logger;
 
 use vars qw($HAS_COLOR);
 use strict;
@@ -15,7 +15,7 @@ sub new {
     my $quiet = delete $self->{quiet};
     $HAS_COLOR &&= $self->{color};
     # No-op logger
-    return new JMX::Jmx4Perl::Agent::Manager::Logger::None
+    return new JMX::Jmx4Perl::Agent::Jolokia::Logger::None
       if $quiet;
 
     bless $self,(ref($class) || $class);    
@@ -62,8 +62,8 @@ sub _resolve_color {
 }
 
 
-package JMX::Jmx4Perl::Agent::Manager::Logger::None;
-use base qw(JMX::Jmx4Perl::Agent::Manager::Logger);
+package JMX::Jmx4Perl::Agent::Jolokia::Logger::None;
+use base qw(JMX::Jmx4Perl::Agent::Jolokia::Logger);
 
 sub info { }
 sub warn { }

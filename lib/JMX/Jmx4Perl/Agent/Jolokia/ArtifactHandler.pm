@@ -1,5 +1,5 @@
 #!/usr/bin/perl 
-package JMX::Jmx4Perl::Agent::Manager::ArtifactHandler;
+package JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler;
 
 =head1 NAME
 

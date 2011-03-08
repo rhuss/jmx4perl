@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Helper package in order to provide credentials
 # in the request
-package JMX::Jmx4Perl::Agent::Manager::DownloadAgent;
+package JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent;
 use base qw(LWP::UserAgent);
 use Data::Dumper;
 use vars qw($HAS_PROGRESS_BAR $HAS_TERM_READKEY);
@@ -19,7 +19,7 @@ BEGIN {
  
 =head1 NAME
 
-JMX::Jmx4Perl::Agent::Manager::DownloadAgent - Specialized L<LWP::UserAgent>
+JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent - Specialized L<LWP::UserAgent>
 adding some bells and whistles for downloading agents and other stuff.
 
 =cut 

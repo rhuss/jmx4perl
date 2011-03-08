@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package JMX::Jmx4Perl::Agent::Manager::Verifier::ChecksumVerifier;
+package JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier;
 
 use strict;
 
