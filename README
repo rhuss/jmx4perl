@@ -35,7 +35,7 @@ TOOLS
   check_jmx4perl    - Full featured Nagios Plugin
   j4psh             - Interactive, readline based JMX shell with context 
                       sensitive command completion
-  j4p_agent_manager - Utility for downloading and managing Jolokia 
+  jolokia - Utility for downloading and managing Jolokia 
                       agents.
 
 INSTALLATION
@@ -53,7 +53,7 @@ INSTALLATION
   In order to download the Jolokia WAR agent into the local directory
   as jolokia.war, use the following command
 
-  j4p_agent_manager
+  jolokia
 
   This agent "jolokia.war" needs to be deployed on the JEE Server to
   monitor. Please consult http://www.jolokia.org/agent.html for more

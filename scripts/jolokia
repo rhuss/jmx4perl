@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-j4p_agent_manager - Utility for managing Jolokia agents used by jmx4perl
+jolokia - Utility for managing Jolokia agents used by jmx4perl
 
 =cut
 
@@ -21,23 +21,23 @@ use strict;
 
   # Execute command 'command' with options and additional, command specific 
   # arguments
-  j4p_agent_manager [options] <command> <arg1> <arg2> ...
+  jolokia [options] <command> <arg1> <arg2> ...
 
   # Download the latest Jolokia WAR agent compatible with this jmx4perl release
   # into the local directory as 'jolokia.war'
-  j4p_agent_manager download
+  jolokia download
 
   # Print information about a downloaded agent (i.e. its version)
-  j4p_agent_manager info jolokia.war
+  jolokia info jolokia.war
 
   # Repackage the agent to include a security policy
-  j4p_agent_manager repack --policy jolokia.war
+  jolokia repack --policy jolokia.war
 
   # Current Jmx4Perl version
-  j4p_agent_manager --version
+  jolokia --version
 
   # Online help
-  j4p_agent_manager --help
+  jolokia --help
 
 Options:
 
@@ -80,7 +80,7 @@ Options:
 
 =head1 DESCRIPTION
 
-B<j4p_agent_manager> is a command line utility for managing the Jolokia agent,
+B<jolokia> is a command line utility for managing the Jolokia agent,
 which is used by jmx4perl for accessing remote JMX information. Several 
 commands are available
 
@@ -108,7 +108,7 @@ day. The meta download can be forced by using the option C<--no-cache>.
 
 =head1 VALIDATION
 
-B<j4p_agent_manager> uses PGP for validating all files downloaded. For this to
+B<jolokia> uses PGP for validating all files downloaded. For this to
 work, the CPAN module L<Crypt::OpenPGP> must be installed. If it is not
 available, validation falls back to simple checksum validation with a SHA1
 alogrithm, or, if this is not possible to an MD5 check. Since the checksums are
@@ -150,7 +150,7 @@ GetOptions(\%opts,
           );
 
 if ($opts{version}) {
-    print "j4p_agent_manager ",$JMX::Jmx4Perl::VERSION,"\n";
+    print "jolokia ",$JMX::Jmx4Perl::VERSION,"\n";
     exit(0);
 }
 
@@ -342,7 +342,7 @@ In order to determine the version number of an already downloaded agent, the
 C<info> command can be used. It takes as single argument the path to the agent,
 e.g. 
 
-   j4p_agent_manager info ./jolokia.war
+   jolokia info ./jolokia.war
 
 With the option C<--verify> an additional signature check can be performed,
 where the signature is fetched from the Jolokia repository.

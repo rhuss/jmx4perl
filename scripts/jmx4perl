@@ -641,7 +641,7 @@ this tool.
 
 L<check_jmx4perl> - a production ready Nagios check using L<JMX::Jmx4Perl>
 
-L<j4p_agent_manager> - utility for downloading and managing Jolokia agents
+L<jolokia> - utility for downloading and managing Jolokia agents
 
 L<j4psh> - readline based JMX shell with context sensitive command line
 completion. 

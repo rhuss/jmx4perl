@@ -269,7 +269,7 @@ will install the modules.
 In order to download the Jolokia WAR agent into the local directory as
 jolokia.war, use the following command
 
-  j4p_agent_manager
+  jolokia
 
 This agent "jolokia.war" needs to be deployed on the JEE Server to
 monitor. Please consult http://www.jolokia.org/agent.html for more information
