@@ -147,7 +147,7 @@ GetOptions(\%opts,
            "security-role=s",
            "jsr160-proxy!",
            "help|h" => sub { &Getopt::Long::HelpMessage() },
-          );
+          ) || die "Use --help for available options\n";
 
 if ($opts{version}) {
     print "jolokia ",$JMX::Jmx4Perl::VERSION,"\n";
@@ -411,6 +411,8 @@ sub command_repack {
 
     # Security handling
     if (defined($args->{security}) || $args->{'security-role'}) {
+        &fatal("--security can only be used with WAR agents") unless $artifact_handler->type eq "war";
+
         my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
 
         my $webxml = $artifact_handler->extract_webxml();
@@ -427,6 +429,8 @@ sub command_repack {
 
     # JSR-160 proxy
     if (defined($args->{'jsr160-proxy'})) {
+        &fatal("--jsr160-proxy can only be used with WAR agents") unless $artifact_handler->type eq "war";
+
         my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
 
         my $webxml = $artifact_handler->extract_webxml();

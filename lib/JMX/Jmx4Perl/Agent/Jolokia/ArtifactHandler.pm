@@ -124,8 +124,8 @@ sub get_policy {
 
 sub extract_webxml {
     my $self = shift;
-    my $type = $self->_type;
-    $self->_fatal("web.xml can only be read from 'war' archives (not ')",$type,"')") unless $type eq "war";
+    my $type = $self->type;
+    $self->_fatal("web.xml can only be read from 'war' archives (not '",$type,"')") unless $type eq "war";
 
     my $jar = $self->_read_archive();
     return $jar->contents("WEB-INF/web.xml");
@@ -134,7 +134,7 @@ sub extract_webxml {
 sub update_webxml {
     my $self = shift;
     my $webxml = shift;
-    my $type = $self->_type;
+    my $type = $self->type;
     $self->_fatal("web.xml can only be updated in 'war' archives (not '",$type,"')") unless $type eq "war";
 
     my $jar = $self->_read_archive();
@@ -149,10 +149,10 @@ sub update_webxml {
 
 sub _policy_path {
     my $self = shift;
-    return ($self->_type eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
+    return ($self->type eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
 }
 
-sub _type {
+sub type {
     my $self = shift;
     my $info = $self->info;
     return $info->{type};
