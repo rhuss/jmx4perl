@@ -354,7 +354,7 @@ sub command_info {
     my $handler = new JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
     if ($args->{policy}) {
         my $policy = $handler->get_policy;
-        &fatal("No jolokia-access.xml contained in $file") unless $policy;
+        &fatal("No jolokia-access.xml embedded in $file") unless $policy;
         print $policy;
         return;
     }
@@ -362,14 +362,17 @@ sub command_info {
     $logger->info("Type:     ","[em]",$ret->{type},"[/em]");
     $logger->info("Version:  ","[em]",$ret->{version},"[/em]");
     my $policy = $handler->has_policy;
-    $logger->info("Policy:   ",$policy ? ("[em]","jolokia-access.xml","[/em]"," contained") : "No security policy installed");
+    $logger->info("Policy:   ",$policy ? ("[em]","jolokia-access.xml","[/em]"," embedded") : "No security policy installed");
 
-    my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
-    my $webxml = $handler->extract_webxml;
-    my $result = $webxml_handler->find
-      ($webxml,
-       "//j2ee:security-constraint[j2ee:web-resource-collection/j2ee:url-pattern='/*']/j2ee:auth-constraint/j2ee:role-name");
-    $logger->info("Security: ",$result ? ("Authentication enabled for role ","[em]",$result,"[/em]") : "No authentication enabled");
+    if ($ret->{type} eq "war") {
+        my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
+        my $webxml = $handler->extract_webxml;
+        my $auth = $webxml_handler->has_authentication($webxml);
+        $logger->info("Security: ",$auth ? ("Authentication enabled for role ","[em]",$auth,"[/em]") : "No authentication enabled");
+        
+        my $jsr160 = $webxml_handler->has_jsr160_proxy($webxml);
+        $logger->info("Proxy:    ","JSR-160 proxy is ",$jsr160 ? ("[em]","enabled","[/em]") : "disabled");
+    }
 
     my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
     if ($args->{verify}) {
@@ -419,6 +422,19 @@ sub command_repack {
             $new_webxml = $webxml_handler->remove_security($webxml);
         }
         $artifact_handler->update_webxml($new_webxml);
+        $done = 1;
+    }
+
+    # JSR-160 proxy
+    if (defined($args->{'jsr160-proxy'})) {
+        my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
+
+        my $webxml = $artifact_handler->extract_webxml();
+        my $new_webxml = 
+          $args->{'jsr160-proxy'} ? 
+            $webxml_handler->add_jsr160_proxy($webxml) : 
+              $webxml_handler->remove_jsr160_proxy($webxml);
+        $artifact_handler->update_webxml($new_webxml) if $new_webxml;
         $done = 1;
     }
 

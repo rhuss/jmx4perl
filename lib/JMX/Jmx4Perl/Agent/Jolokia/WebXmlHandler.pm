@@ -10,17 +10,19 @@ transformation
 =cut
 
 use Data::Dumper;
-use vars qw($HAS_LIBXML $HAS_XML_TIDY $ADD_SECURITY_XSL);
+use vars qw($HAS_LIBXML $HAS_XML_TIDY);
 use strict;
 
+# Trigger for <login-config>
 my $REALM = "Jolokia";
+
+# Class used as proxy dispatcher
+my $JSR_160_PROXY_CLASS = "org.jolokia.jsr160.Jsr160RequestDispatcher";
 
 BEGIN {
     $HAS_LIBXML = eval "require XML::LibXML; use XML::LibXML::XPathContext; 1";
     $HAS_XML_TIDY = eval "require XML::Tidy; 1";
 }
-
-&init_xsl();
 
 sub new { 
     my $class = shift;
@@ -28,29 +30,16 @@ sub new {
     my $file = $args{file};
     my $self = {logger => $args{logger}, meta => $args{meta}};
     bless $self,(ref($class) || $class);
+
+    $self->_fatal("No XML::LibXML found. Please install it to allow changes and queries on web.xml") unless $HAS_LIBXML;
+
     return $self;
-}
-
-sub transform {
-    my $self = shift;
-    my $xsl = shift;    
-    my $to_transform = shift;
-    my $args = shift;
-
-    my $xslt = XML::LibXSLT->new();
-    
-    my $source = XML::LibXML->load_xml(string => $to_transform);       
-    my $stylesheet = $xslt->parse_stylesheet(XML::LibXML->load_xml(string => $xsl));
-    
-    my $results = $stylesheet->transform($source, XML::LibXSLT::xpath_to_string(%$args));
-    return $results->toString(1);        
 }
 
 sub add_security {
     my $self = shift;
     my $webxml = shift;
     my $args = shift;
-    $self->_info("Added security mapping for role ","[em]",$args->{role},"[/em]");
 
     my $doc = XML::LibXML->load_xml(string => $webxml);
     
@@ -60,7 +49,7 @@ sub add_security {
     $self->_create_login_config($doc,$parent);
     $self->_create_security_constraint($doc,$parent,$args->{role});
     $self->_create_security_role($doc,$parent,$args->{role});
-    
+    $self->_info("Added security mapping for role ","[em]",$args->{role},"[/em]");    
     return $self->_cleanup_doc($doc);
 }
 
@@ -69,11 +58,107 @@ sub remove_security {
     my $webxml = shift;
 
     my $doc = XML::LibXML->load_xml(string => $webxml);
+
     $self->_remove_security_elements($doc);
     $self->_info("Removed security mapping");
     
     return $self->_cleanup_doc($doc);
 }
+
+sub add_jsr160_proxy {
+    my $self = shift;
+    my $webxml = shift;
+
+    my $doc = XML::LibXML->load_xml(string => $webxml);
+    my @init_params = $self->_init_params($doc,"dispatcherClasses");
+    if (!@init_params) {
+        $self->_add_jsr160_proxy($doc);
+        $self->_info("Added JSR-160 proxy");
+    } elsif (@init_params == 1) {
+        my $param = $init_params[0];
+        my ($value,$classes) = $self->_extract_dispatcher_classes($init_params[0]);
+        unless (grep { $_ eq $JSR_160_PROXY_CLASS } @$classes) {
+            $self->_update_text($value,join(",",@$classes,$JSR_160_PROXY_CLASS));
+            $self->_info("Added JSR-160 proxy");
+        } else {
+            $self->_info("JSR-160 proxy already active");
+            return undef;
+        }
+    } else {
+        # Error
+        $self->_fatal("More than one init-param 'dispatcherClasses' found");
+    }
+
+    return $self->_cleanup_doc($doc);
+}
+
+sub remove_jsr160_proxy {
+    my $self = shift;
+    my $webxml = shift;
+    
+    my $doc = XML::LibXML->load_xml(string => $webxml);
+    my @init_params = $self->_init_params($doc,"dispatcherClasses");
+    if (!@init_params) {
+        $self->info("No JSR-160 proxy active");
+        return undef;
+    } elsif (@init_params == 1) {
+        my ($value,$classes) = $self->_extract_dispatcher_classes($init_params[0]);
+        if (grep { $_ eq $JSR_160_PROXY_CLASS } @$classes) {
+            $self->_update_text($value,join(",",grep { $_ ne $JSR_160_PROXY_CLASS } @$classes));
+            $self->_info("Removed JSR-160 proxy");
+        } else {
+            $self->_info("No JSR-160 proxy active");
+            return undef;
+        }
+    } else {
+        $self->_fatal("More than one init-param 'dispatcherClasses' found");
+    }
+
+    return $self->_cleanup_doc($doc);
+}
+
+# Check via XPath for an element and return its text value or undef if not 
+# found
+sub find {
+    my $self = shift;
+    my $webxml = shift;
+    my $query = shift;
+
+    my $doc = XML::LibXML->load_xml(string => $webxml);
+    
+    my @nodes = $self->_find_nodes($doc,$query);
+    $self->_fatal("More than one element found matching $query") if @nodes > 1;
+    return @nodes == 0 ? undef : $nodes[0]->textContent;
+}
+
+sub has_authentication {
+    my $self = shift;
+    my $webxml = shift;
+    
+    $self->find
+      ($webxml,
+       "//j2ee:security-constraint[j2ee:web-resource-collection/j2ee:url-pattern='/*']/j2ee:auth-constraint/j2ee:role-name");
+}
+
+sub has_jsr160_proxy {
+    my $self = shift;
+    my $webxml = shift;
+
+    my $doc = XML::LibXML->load_xml(string => $webxml);
+
+    my @init_params = $self->_init_params($doc,"dispatcherClasses");
+    if (@init_params > 1) {
+        $self->_fatal("More than one dispatcherClasses init-param found");
+    } elsif (@init_params == 1) {
+        my $param = $init_params[0];
+        my ($value,$classes) = $self->_extract_dispatcher_classes($init_params[0]);
+        return grep { $_ eq $JSR_160_PROXY_CLASS } @$classes;
+    } else {
+        return 0;
+    }
+}
+
+# =============================================================================== 
 
 sub _remove_security_elements {
     my $self = shift;
@@ -170,6 +255,61 @@ sub _remove_security_role {
     }        
 }
 
+sub _init_params {
+    my $self = shift;
+    my $doc = shift;
+    my $param_name = shift;
+
+    return $self->_find_nodes
+      ($doc,
+       "/j2ee:web-app/j2ee:servlet[j2ee:servlet-name='jolokia-agent']/j2ee:init-param[j2ee:param-name='$param_name']");
+}
+
+sub _extract_dispatcher_classes {
+    my $self = shift;
+    my $param = shift;
+
+    my @values = $self->_find_nodes($param,"j2ee:param-value");
+    $self->_fatal("No or more than one param-value found") if (!@values || @values > 1);
+    my $value = $values[0];
+    my $content = $value->textContent();
+    my @classes = split /\s*,\s*/,$content;
+    return ($value,\@classes);
+}
+
+sub _update_text {
+    my $self = shift;
+    my $el = shift;
+    my $value = shift;
+
+    my $parent = $el->parentNode;
+    $parent->removeChild($el);
+    $parent->appendTextChild($el->nodeName,$value);
+}
+
+sub _add_jsr160_proxy {
+    my $self = shift;
+    my $doc = shift;
+    my @init_params = $self->_find_nodes
+      ($doc,
+       "/j2ee:web-app/j2ee:servlet[j2ee:servlet-name='jolokia-agent']/j2ee:init-param");
+    my $first = $init_params[0] || $self->_fatal("No init-params found");
+    my $new_init = $doc->createElement("init-param");
+    _e($doc,$new_init,"param-name","dispatcherClasses");
+    _e($doc,$new_init,"param-value",$JSR_160_PROXY_CLASS);        
+    $first->parentNode->insertBefore($new_init,$first);
+}
+
+sub _find_nodes {
+    my $self = shift;
+    my $doc = shift;
+    my $query = shift;
+
+    my $xpc = XML::LibXML::XPathContext->new;
+    $xpc->registerNs('j2ee', 'http://java.sun.com/xml/ns/j2ee');
+    return $xpc->findnodes($query,$doc);
+}
+
 sub _e {
     my $doc = shift;
     my $parent = shift;
@@ -187,27 +327,11 @@ sub _cleanup_doc {
     my $doc = shift;
     if ($HAS_XML_TIDY) {
         my $ret = new XML::Tidy(xml => $doc->toString())->tidy->toString();
+        #print $ret;
         return $ret;
     } else {
         return $doc->toString(1);
     }
-}
-
-# Check via XPath for an element and return its text value or undef if not 
-# found
-sub find {
-    my $self = shift;
-    my $webxml = shift;
-    my $query = shift;
-
-    $self->_fatal("No XML::LibXML found. Please install it to allow queries on web.xml") unless $HAS_LIBXML;
-
-    my $doc = XML::LibXML->load_xml(string => $webxml);
-    my $xpc = XML::LibXML::XPathContext->new;
-    $xpc->registerNs('j2ee', 'http://java.sun.com/xml/ns/j2ee');
-    my @nodes = $xpc->findnodes($query,$doc);
-    $self->_fatal("More than one element found matching $query") if @nodes > 1;
-    return @nodes == 0 ? undef : $nodes[0]->textContent;
 }
 
 sub _fatal {
@@ -221,53 +345,5 @@ sub _info {
     $self->{logger}->info(@_);
 }
 
-
-sub init_xsl {
-    $ADD_SECURITY_XSL =<<'EOT';
-<?xml version="1.0"?>
-<xsl:stylesheet version="2.0"
-  xmlns="http://java.sun.com/xml/ns/j2ee"
-  xmlns:j2ee="http://java.sun.com/xml/ns/j2ee"
-  xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-
-  <xsl:output method="xml" indent="yes" />
-  <xsl:template match="j2ee:servlet-mapping[last()]">
-    <xsl:param name="role"/>
-
-    <xsl:copy>
-      <xsl:apply-templates select="@*|node()"/>
-    </xsl:copy>
-
-
-    <xsl:comment><xsl:value-of select="$role"/></xsl:comment>
-    <login-config>
-      <auth-method>BASIC</auth-method>
-      <realm-name>Jolokia</realm-name>
-    </login-config>
-
-    <security-constraint>
-      <web-resource-collection>
-        <web-resource-name>Jolokia-Agent Access</web-resource-name>
-        <url-pattern>/*</url-pattern>
-      </web-resource-collection>
-      <auth-constraint>
-        <role-name></role-name>
-      </auth-constraint>
-    </security-constraint>
-
-    <security-role>
-      <role-name></role-name>
-    </security-role>
-  </xsl:template>
-  
-  <xsl:template match="@*|node()">
-    <xsl:copy>
-      <xsl:apply-templates select="@*|node()"/>
-    </xsl:copy>
-  </xsl:template>
-
-</xsl:stylesheet>
-EOT
-}
 
 1;
