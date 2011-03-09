@@ -4,12 +4,11 @@ author:
   - 'Roland Huss (roland@cpan.org)'
 build_requires:
   Module::Build: 0.34
-  Test: 0
-  Test::Deep: 0
   Test::More: 0
 configure_requires:
-  Module::Build: 0.36
-generated_by: 'Module::Build version 0.3607'
+  Module::Build: 0.34
+dynamic_config: 1
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.110580'
 license: gpl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -18,96 +17,139 @@ name: jmx4perl
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.90_1
+    version: 0.90_2
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
   JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/ArtifactHandler.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/DownloadAgent.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Logger:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Logger.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Logger::None:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Logger.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Meta:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Meta.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Verifier:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/ChecksumVerifier.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Verifier::MD5Verifier:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/MD5Verifier.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Verifier::OpenPGPVerifier:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/OpenPGPVerifier.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Verifier::SHA1Verifier:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/SHA1Verifier.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/WebXmlHandler.pm
+    version: 0
   JMX::Jmx4Perl::Agent::UserAgent:
     file: lib/JMX/Jmx4Perl/Agent/UserAgent.pm
+    version: 0
   JMX::Jmx4Perl::Alias:
     file: lib/JMX/Jmx4Perl/Alias.pm
+    version: 0
   JMX::Jmx4Perl::Alias::Object:
     file: lib/JMX/Jmx4Perl/Alias/Object.pm
+    version: 0
   JMX::Jmx4Perl::Config:
     file: lib/JMX/Jmx4Perl/Config.pm
+    version: 0
   JMX::Jmx4Perl::J4psh:
     file: lib/JMX/Jmx4Perl/J4psh.pm
+    version: 0
   JMX::Jmx4Perl::J4psh::Command:
     file: lib/JMX/Jmx4Perl/J4psh/Command.pm
+    version: 0
   JMX::Jmx4Perl::J4psh::Command::Global:
     file: lib/JMX/Jmx4Perl/J4psh/Command/Global.pm
+    version: 0
   JMX::Jmx4Perl::J4psh::Command::MBean:
     file: lib/JMX/Jmx4Perl/J4psh/Command/MBean.pm
+    version: 0
   JMX::Jmx4Perl::J4psh::Command::Server:
     file: lib/JMX/Jmx4Perl/J4psh/Command/Server.pm
+    version: 0
   JMX::Jmx4Perl::J4psh::CommandHandler:
     file: lib/JMX/Jmx4Perl/J4psh/CommandHandler.pm
+    version: 0
   JMX::Jmx4Perl::J4psh::CompletionHandler:
     file: lib/JMX/Jmx4Perl/J4psh/CompletionHandler.pm
+    version: 0
   JMX::Jmx4Perl::J4psh::ServerHandler:
     file: lib/JMX/Jmx4Perl/J4psh/ServerHandler.pm
+    version: 0
   JMX::Jmx4Perl::J4psh::Shell:
     file: lib/JMX/Jmx4Perl/J4psh/Shell.pm
+    version: 0
   JMX::Jmx4Perl::Nagios::CheckJmx4Perl:
     file: lib/JMX/Jmx4Perl/Nagios/CheckJmx4Perl.pm
+    version: 0
   JMX::Jmx4Perl::Nagios::SingleCheck:
     file: lib/JMX/Jmx4Perl/Nagios/SingleCheck.pm
+    version: 0
   JMX::Jmx4Perl::Product::ActiveMQ:
     file: lib/JMX/Jmx4Perl/Product/ActiveMQ.pm
+    version: 0
   JMX::Jmx4Perl::Product::BaseHandler:
     file: lib/JMX/Jmx4Perl/Product/BaseHandler.pm
+    version: 0
   JMX::Jmx4Perl::Product::Geronimo:
     file: lib/JMX/Jmx4Perl/Product/Geronimo.pm
+    version: 0
   JMX::Jmx4Perl::Product::Glassfish:
     file: lib/JMX/Jmx4Perl/Product/Glassfish.pm
+    version: 0
   JMX::Jmx4Perl::Product::Hadoop:
     file: lib/JMX/Jmx4Perl/Product/Hadoop.pm
+    version: 0
   JMX::Jmx4Perl::Product::JBoss:
     file: lib/JMX/Jmx4Perl/Product/JBoss.pm
+    version: 0
   JMX::Jmx4Perl::Product::Jetty:
     file: lib/JMX/Jmx4Perl/Product/Jetty.pm
+    version: 0
   JMX::Jmx4Perl::Product::Jonas:
     file: lib/JMX/Jmx4Perl/Product/Jonas.pm
+    version: 0
   JMX::Jmx4Perl::Product::Resin:
     file: lib/JMX/Jmx4Perl/Product/Resin.pm
+    version: 0
   JMX::Jmx4Perl::Product::SpringDM:
     file: lib/JMX/Jmx4Perl/Product/SpringDM.pm
+    version: 0
   JMX::Jmx4Perl::Product::Terracotta:
     file: lib/JMX/Jmx4Perl/Product/Terracotta.pm
+    version: 0
   JMX::Jmx4Perl::Product::Tomcat:
     file: lib/JMX/Jmx4Perl/Product/Tomcat.pm
+    version: 0
   JMX::Jmx4Perl::Product::Unknown:
     file: lib/JMX/Jmx4Perl/Product/Unknown.pm
+    version: 0
   JMX::Jmx4Perl::Product::Weblogic:
     file: lib/JMX/Jmx4Perl/Product/Weblogic.pm
+    version: 0
   JMX::Jmx4Perl::Product::Websphere:
     file: lib/JMX/Jmx4Perl/Product/Websphere.pm
+    version: 0
   JMX::Jmx4Perl::Request:
     file: lib/JMX/Jmx4Perl/Request.pm
+    version: 0
   JMX::Jmx4Perl::Response:
     file: lib/JMX/Jmx4Perl/Response.pm
+    version: 0
 recommends:
   Archive::Zip: 0
   Config::General: 0
@@ -116,11 +158,14 @@ recommends:
   Digest::SHA1: 0
   File::SearchPath: 0
   Nagios::Plugin: 0.27
+  Pod::Usage: 0
   Term::Clui: 0
+  Term::ProgressBar: 0
   Term::ShellUI: 0
   Term::Size: 0.207
   Text::ParseWords: 0
   XML::LibXML: 0
+  XML::Tidy: 0
 requires:
   Carp: 0
   Data::Dumper: 0
@@ -128,10 +173,9 @@ requires:
   JSON: 2.12
   LWP::UserAgent: 0
   Module::Find: 0
-  Pod::Usage: 0
   Scalar::Util: 0
   URI: 1.35
   base: 0
 resources:
   license: http://opensource.org/licenses/gpl-license.php
-version: 0.90_1
+version: 0.90_2

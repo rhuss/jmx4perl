@@ -12,7 +12,6 @@ use Nagios::Plugin::Functions qw(:codes %STATUS_TEXT);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Carp;
 use Text::ParseWords;
-use Pod::Usage;
 
 our $AUTOLOAD;
 
@@ -56,22 +55,7 @@ sub new {
                 cmd_args => [ @ARGV ]
                };
     bless $self,(ref($class) || $class);
-    if (defined $self->{np}->opts->{doc}) {
-        my $section = $self->{np}->opts->{doc};
-        if ($section) {
-            my $real_section = { 
-                                tutorial => "TUTORIAL",
-                                reference => "REFERENCE",
-                                options => "COMMAND LINE",
-                                config => "CONFIGURATION",
-                           }->{lc $section};
-            if ($real_section) {
-                pod2usage(-verbose => 99, -sections =>  $real_section );
-            }
-        } else {
-            pod2usage(-verbose => 99);
-        }
-    }
+    $self->_print_doc_and_exit($self->{np}->opts->{doc}) if defined $self->{np}->opts->{doc};
     $self->_verify_and_initialize();
     return $self;
 }
@@ -205,6 +189,34 @@ sub _send_requests {
     #print Dumper(\@responses);
     return \@responses;
 }
+
+# Print online manual and exit (somewhat crude, I know)
+sub _print_doc_and_exit {
+    my $self = shift;
+    my $section = shift;
+    if (!eval "require Pod::Usage; Pod::Usage->import(qw(pod2usage)); 1;") {
+        print "Please install Pod::Usage for creating the online help\n";
+        exit 1;
+    }
+    if ($section) {
+        my %sects = ( 
+                     tutorial => "TUTORIAL",
+                     reference => "REFERENCE",
+                     options => "COMMAND LINE",
+                     config => "CONFIGURATION",
+                    );
+        my $real_section = $sects{lc $section};
+        if ($real_section) {
+            pod2usage(-verbose => 99, -sections =>  $real_section );
+        } else {
+            print "Unknown documentation section '$section' (known: ",join (",",sort keys %sects),")\n";
+            exit 1;
+        }
+    } else {
+        pod2usage(-verbose => 99);
+    }
+}
+
 
 # Initialize this object and validate the mandatory parameters (obtained from
 # the command line or a configuration file). It will also build up 

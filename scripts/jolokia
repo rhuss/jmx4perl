@@ -344,14 +344,25 @@ e.g.
 
    jolokia info ./jolokia.war
 
+The output contains information about the agent's type and version, whether a
+security policy file is installed, if authentication is switched on and if the
+JSR160 proxy is active.
+
 With the option C<--verify> an additional signature check can be performed,
 where the signature is fetched from the Jolokia repository.
+
+C<info> is the default command if a single file argument is given (i.e. the
+example above could be abreviated to C<jolokia ./jolokia.war>).
+
+If the option <--policy> is provided, an included Jolokia policy file will be
+printed out (if any).
 
 =cut
 
 sub command_info {
     my ($meta,$args,$file) = @_;
-    my $handler = new JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler(logger => $logger, meta => $meta,file => $file);
+    my $handler = new JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler(logger => $logger, 
+                                                                     meta => $meta,file => $file);
     if ($args->{policy}) {
         my $policy = $handler->get_policy;
         &fatal("No jolokia-access.xml embedded in $file") unless $policy;
@@ -385,9 +396,44 @@ sub command_info {
 
 =head2 repack
 
-Repack an Jolokia agent. This is useful for adding/removing a
-F<jolokia-access.xml> policy file (which e.g. could be downloaded with the
-C<download> command) or switching on authentication for a war agent.
+Repack an Jolokia agent in order to switch on/off certain features. 
+
+=over
+
+=item --policy / --no-policy
+
+Adds a Jolokia policy file to the agent given as argument. By default a policy
+file F<jolokia-access.xml> from the current directory is used, but this file
+can be directly specified with the C<--policy-file> option. For example,
+
+   jolokia repack --policy jolokia.war
+
+add the local policy file F<jolokia-access.xml> to the WAR agent specified as
+argument. A sample F<jolokia-access.xml> can be downloaded with C<jolokia
+--policy> which will then be saved locally. The policy contained in agent can
+be viewed with C<jolokia --policy jolokia.war>. L<JMX::Jmx4Perl::Manual/"ACCESS
+POLICY"> contains more information about Jolokia policy files.
+
+=item --security / --no-security
+
+For WAR agents, the included F<web.xml> descriptor can contain authentication
+configuration. This configuration (which is absent by default), associates an
+URL pattern with a role. With C<jolokia repack --security jolokia.war> the
+authenticatin mechanism is switched on with an associated role "Jolokia". You
+need to configure your servlet container accordingly to connect a user to this
+role. The role can be specified with C<--security-role> (which implies 
+C<--security>):
+  
+    jolokia repack --security-role JMX jolokia.war
+
+=item --jsr160-proxy / --no-jsr160-proxy
+
+By default, the WAR agent allows for JSR-160 proxy requests. This can be
+switched by repacking the agent with C<--no-jsr160-proxy>:
+
+    jolokia repack --no-jsr160 jolokia.war
+
+=back
 
 =cut
 

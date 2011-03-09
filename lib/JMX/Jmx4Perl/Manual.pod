@@ -393,21 +393,19 @@ secure the agent via standard mechanism (e.g via Basic or Digest
 authentication) to allow only access to certain users. But even then, you might
 not want your monitoring guys to access the heart of the JEE Server. Therefore,
 you can restrict access to certain MBeans only by using a so called I<policy>
-file. You have to rebuild the agent if you want to use this feature, though. To
-do this, here's the recipe:
+file. You have to repack the agent if you want to use this feature, though. To
+do this, here's the recipe (assuming the agent is stored as F<jolokia.war> in
+the current directory):
 
 =over
 
 =item 1.
 
-Change into the directory F<agent>. There you will find a template policy file
-called F<jolokia-access.xml.template>
+Download a sample F<jolokia-access.xml> to a local directory:
+
+   jolokia --policy
 
 =item 2. 
-
-Copy this template to F<jolokia-access.xml> (all within the agent directory). 
-
-=item 3. 
 
 Edit F<jolokia-access.xml> to your needs. In the section C<commands> you can
 restrict the request types, only those present here are allowed to be
@@ -420,34 +418,17 @@ to the C<attribute> tag in which case the attribute can be accessed
 read-only. Via the C<remote> section access to certain IP adresses and subnets
 can be restricted.
 
+=item 3. 
+
+Repack the agent:
+
+   jolokia repack --policy jolokia.war
+
 =item 4.
-
-Call C<ant>. Ah, yes, you need C<ant> installed (L<http://ant.apache.org>). To
-be on the save side do an C<ant clean> before calling C<ant> without argument.
-
-=item 5.
 
 Deploy the F<jolokia.war> which was created in Step 4.   
 
 =back
-
-A typical workflow looks like
-
- $ cd agent/
- $ cp jolokia-access.xml.template jolokia-access.xml
- $ vi jolokia-access.xml
- $ ant clean
- $ ant
- $ jar tvf jolokia.war
-      0 Thu Jul 30 10:42:24 CEST 2009 META-INF/
-     95 Thu Jul 30 10:42:22 CEST 2009 META-INF/MANIFEST.MF
-      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/
-   1872 Tue Jul 28 09:09:32 CEST 2009 WEB-INF/web.xml
-      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/lib/
-  16046 Wed Jul 01 22:26:42 CEST 2009 WEB-INF/lib/json_simple-1.1.jar
-  85124 Thu Jul 30 10:42:22 CEST 2009 WEB-INF/lib/jolokia-agent.jar
-      0 Thu Jul 30 10:42:24 CEST 2009 WEB-INF/classes/jolokia-access.xml
- $ cp jolokia.war $DEPLOYMENT_DIR/
 
 =head1 LICENSE
 

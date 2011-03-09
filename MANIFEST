@@ -7,6 +7,9 @@ config/memory.cfg
 config/threads.cfg
 config/tomcat.cfg
 examples/jsr77.pl
+examples/memory.pl
+examples/memory.sh
+examples/remote.pl
 examples/threadDump.pl
 it/check_jmx4perl/base.cfg
 it/check_jmx4perl/base.pl
@@ -78,6 +81,7 @@ lib/JMX/Jmx4Perl/Request.pm
 lib/JMX/Jmx4Perl/Response.pm
 LICENSE
 MANIFEST			This list of files
+META.json
 META.yml
 README
 scripts/check_jmx4perl

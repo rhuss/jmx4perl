@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl 
 use Module::Build 0.34;
 
 my $build = Module::Build->new
@@ -16,7 +16,6 @@ my $build = Module::Build->new
                 "LWP::UserAgent" => 0,
                 "URI" => "1.35",
                 "Data::Dumper" => 0,
-                "Pod::Usage" => 0,
                 "Getopt::Long" => 0,
                 "Carp" => 0,
                 "Module::Find" => 0,
@@ -24,26 +23,31 @@ my $build = Module::Build->new
                 "base" => 0,
                },
    recommends => {
-                   "Nagios::Plugin" => "0.27",
-                   "Text::ParseWords" => 0,
-                   "Config::General" => 0,
-                   "Term::ShellUI" => 0,
-                   "Term::Size" => "0.207",
-                   "Term::Clui" => 0,
-                   "File::SearchPath" => 0,
-                   "Crypt::OpenPGP" => 0,
-                   "Digest::MD5" => 0,
-                   "Digest::SHA1" => 0,
-                   "Archive::Zip" => 0,
-                   "XML::LibXML" => 0
-                  },
+                  # check_jmx4perl
+                  "Nagios::Plugin" => "0.27", # req
+                  "Text::ParseWords" => 0,    # req
+                  "Config::General" => 0,     # req
+                  "Pod::Usage" => 0,          # opt
+                  # j4psh
+                  "Term::ShellUI" => 0,       # req
+                  "Term::Clui" => 0,          # req
+                  "Term::Size" => "0.207",    # opt
+                  "File::SearchPath" => 0,    # opt
+                  # jolokia
+                  "Archive::Zip" => 0,        # req
+                  "XML::LibXML" => 0,         # req
+                  "Crypt::OpenPGP" => 0,      # opt
+                  "Digest::MD5" => 0,         # opt
+                  "Digest::SHA1" => 0,        # opt
+                  "XML::Tidy" => 0,           # opt
+                  "Term::ProgressBar" => 0    # opt
+                 },
    build_requires => {
                       "Module::Build" => "0.34",
                       "Test::More" => "0",
-                      "Test::Deep" => 0,
-                      "Test" => "0"
                      },                       
-   keywords => [  "JMX", "JEE", "Management", "Nagios" ],
+   configure_requires => { 'Module::Build' => 0.34 },
+   keywords => [  "JMX", "JEE", "Management", "Nagios", "Java" ],
   );
 
 $build->create_build_script;

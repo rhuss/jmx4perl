@@ -35,7 +35,7 @@ TOOLS
   check_jmx4perl    - Full featured Nagios Plugin
   j4psh             - Interactive, readline based JMX shell with context 
                       sensitive command completion
-  jolokia - Utility for downloading and managing Jolokia 
+  jolokia           - Utility for downloading and managing Jolokia 
                       agents.
 
 INSTALLATION
@@ -44,27 +44,36 @@ INSTALLATION
   you need to have installed. Using
 
   perl Build.PL
+  ./Build installdeps             # If there are dependencies missing
   ./Build
   ./Build test
   ./Build install
 
-  will install the modules. 
+  will install the modules. It is highly recommended to install the
+  recommended dependent modules, too to get the full jmx4perl
+  power. The set of 'required' modules is kept small and guarantees
+  only that 'jmx4perl' and the modules around JMX::Jmx4Perl are
+  working properly. The other tools (check_jmx4perl, j4psh and
+  jolokia) require the recommended modules for proper working. Look
+  into Build.PL for which tool requires which module.
 
   In order to download the Jolokia WAR agent into the local directory
   as jolokia.war, use the following command
 
-  jolokia
+      jolokia
 
   This agent "jolokia.war" needs to be deployed on the JEE Server to
   monitor. Please consult http://www.jolokia.org/agent.html for more
-  information how to install the agent.
+  information how to install the agent. E.g. for Tomcat this war file
+  needs to be copied into the webapps directory.
 
   To test it, you can use 'jmx4perl' with the URL of the deployed
   agent:
 
       jmx4perl http://<jeeserver>:<port>/jolokia
       
-  Consult 'man jmx4perl' for details. 
+  Consult 'man jmx4perl' for more information about this command
+  utility.  
  
 RESOURCES
 
@@ -77,6 +86,13 @@ RESOURCES
 
   * www.jmx4perl.org is the canonical entry point for jmx4perl related
     information. 
+
+NOTE 
+
+  For you convenience, the latest Module::Build is included in this
+  distribution, so there is no need of a locally install Module::Build
+  for installing this suite. More information about Module::Build can
+  be found http://search.cpan.org/~dagolden/Module-Build/
 
 LICENSE
   

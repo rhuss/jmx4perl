@@ -4,7 +4,7 @@
     but as Long, Double, true/false. Null is returned as JSON-null.
     If you have trouble with boolean checks in check_jmx4perl, please
     update to this jmx4perl version.
-  - Added j4p_agent_manager for downloading and managing Jolokia agents
+  - Added 'jolokia' for downloading and managing Jolokia agents
   - Removed jmx4perl Java agent source and agent since jmx4perl now uses
     Jolokia as agents (www.jolokia.org)
 
