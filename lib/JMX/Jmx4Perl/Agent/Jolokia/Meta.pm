@@ -1,8 +1,5 @@
 #!/usr/bin/perl
 
-# Helper package for dealing with meta data from 
-# www.jolokia.org
-
 package JMX::Jmx4Perl::Agent::Jolokia::Meta;
 
 use JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent;

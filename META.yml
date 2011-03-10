@@ -93,6 +93,9 @@ provides:
   JMX::Jmx4Perl::J4psh::Shell:
     file: lib/JMX/Jmx4Perl/J4psh/Shell.pm
     version: 0
+  JMX::Jmx4Perl::Nagios::CactiJmx4Perl:
+    file: lib/JMX/Jmx4Perl/Nagios/CactiJmx4Perl.pm
+    version: 0
   JMX::Jmx4Perl::Nagios::CheckJmx4Perl:
     file: lib/JMX/Jmx4Perl/Nagios/CheckJmx4Perl.pm
     version: 0

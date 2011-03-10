@@ -1,26 +1,43 @@
 #!/usr/bin/perl
-# Helper package in order to provide credentials
-# in the request
 package JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent;
 use base qw(LWP::UserAgent);
 use Data::Dumper;
 use vars qw($HAS_PROGRESS_BAR $HAS_TERM_READKEY);
 use strict;
+
 BEGIN {
-    eval {
-        require "Term/ProgressBar.pm";
-        $HAS_PROGRESS_BAR = 1;
-    };
-    eval {
-        require "Term/ReadKey.pm";
-        $HAS_TERM_READKEY = 1;
-    };
+    $HAS_PROGRESS_BAR = eval "require Term::ProgressBar; 1";
+    $HAS_TERM_READKEY = eval "require Term::ReadKey; 1";
 }
  
 =head1 NAME
 
 JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent - Specialized L<LWP::UserAgent>
 adding some bells and whistles for downloading agents and other stuff.
+
+=head1 DESCRIPTION
+
+User agent for Jolokia artifact downloading. It decorates a regular User Agent
+with a download bar and allows for proxy handling and authentication. For a
+progress bar, the optional module L<Term::ProgressBar> must be installed.
+
+=head1 METHODS
+
+=over 4 
+
+=item $ua  = JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent->new(%args)
+
+Create a new user agent, a subclass fro L<LWP::UserAgent>
+
+Options:
+
+   "http_proxy"      HTTP Proxy to use
+   "https_proxy"     HTTPS Proxy to use 
+   "quiet"           If true, dont show progressbar
+   "proxy_user"      Proxy user for proxy authentication
+   "proxy_password"  Proxy password for proxy authentication
+
+=back 
 
 =cut 
 

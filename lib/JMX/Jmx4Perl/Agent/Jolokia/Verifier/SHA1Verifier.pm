@@ -6,6 +6,18 @@ use JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier;
 use base qw(JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier);
 use strict;
 
+=head1 NAME
+
+JMX::Jmx4Perl::Agent::Jolokia::Verifier::SHA1Verifier - Verifies a
+SHA1 checksum
+
+=head1 DESCRIPTION
+
+Verifies against a SHA1 checksum for an artifact. The SHA1 sum needs to be
+available parallel to the download artifact with a ".sha1" extension.
+
+=cut 
+
 sub extension { 
     return ".sha1";
 }

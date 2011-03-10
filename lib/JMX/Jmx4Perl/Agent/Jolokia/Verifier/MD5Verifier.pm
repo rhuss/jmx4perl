@@ -6,6 +6,19 @@ use JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier;
 use base qw(JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier);
 use strict;
 
+=head1 NAME
+
+JMX::Jmx4Perl::Agent::Jolokia::Verifier::MD5Verifier - Verifies a
+MD5 checksum
+
+=head1 DESCRIPTION
+
+Verifies against a MD5 checksum for an artifact. The MD5 sum needs to be
+available parallel to the download artifact with a ".md5" extension.
+
+=cut 
+
+
 sub extension { 
     return ".md5";
 }

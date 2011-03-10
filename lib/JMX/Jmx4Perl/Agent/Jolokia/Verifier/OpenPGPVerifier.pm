@@ -10,6 +10,23 @@ use Cwd 'abs_path';
 
 use strict;
 
+=head1 NAME
+
+JMX::Jmx4Perl::Agent::Jolokia::Verifier::OpenPGPVerifier - Verifies PGP
+signature with L<Crypt::OpenPGP>
+
+=head1 DESCRIPTION
+
+This verifier uses L<Crypt::OpenPGP> for validating a PGP signature obtained
+from the download site. Ie. each URL used for download should have (and does
+have) and associated signature ending with F<.asc>. This contains a signature
+which is verified with the public key contained in the __DATA__ section of this
+module (i.e. my personal key with ID EF101165). This verifier is the most
+robust one, however installing L<Crypt::OpenPGP> is a bit clumsy, so you might
+omit this one.
+
+=cut 
+
 sub new { 
     my $class = shift;
     my $self = {};

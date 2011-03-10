@@ -7,6 +7,37 @@ package JMX::Jmx4Perl::Agent::Jolokia::Verifier;
 JMX::Jmx4Perl::Agent::Verifier - Handler for various verifiers which picks
 the most secure one first.
 
+=head1 DESCRIPTION
+
+Entry module for verification of downloaded artifacts. Depending on modules
+installed, various validation mechanisms are tried in decreasing order fo
+vialibility: 
+
+=over 
+
+=item L<Crypt::OpenPGP>
+
+The strongest validation is provided by PGP signatures with which Jolokia
+artifact is signed. The verifier uses L<Crypt::OpenPGP> for verifying PGP
+signatures. 
+
+=item L<Digest::SHA1>
+
+If OpenPGP is not available or when no signature is provided from the Jolokia
+site (unlikely), a simple SHA1 checksum is fetched and compared to the artifact
+downloaded. This is not secure, but guarantees some degree of consistency.
+
+=item L<Digest::MD5>
+
+As last resort, when this module is availabl, a MD5 checksum is calculated and
+compared to the checksum also downloaded from www.jolokia.org. 
+
+=back 
+
+=head1 METHODS
+
+=over 4 
+
 =cut 
 
 use Data::Dumper;
@@ -39,11 +70,39 @@ BEGIN {
     }
 }
 
+
+=item $verifier = JMX::Jmx4Perl::Agent::Jolokia::Verifier->new(%args)
+
+Creates a new verifier. It takes an expanded hash als argument, where the
+following keys are respected:
+
+    "ua_config"         UserAgent configuration used for accessing 
+                        remote signatures/checksums
+    "logger"            Logger
+
+=cut 
+
 sub new { 
     my $class = shift;
     my $self = {@_};
     bless $self,(ref($class) || $class);
 }
+
+=item $verifier->verify(url => $url,path => $file)
+
+=item $verifier->verify(url => $url,data => $data)
+
+Verifies the given file (C<path>) or scalar data (C<data>) by trying various
+validators in turn. Technically, each validator is asked for an extension
+(e.g. ".asc" for a PGP signature), which is appended to URL and this URL is
+tried for downloading the signature/checksum. If found, the content of the
+signature/checksum is passed to specific verifier along with the data/file to
+validate. A verifier will die, if validation fails, so one should put this in
+an eval if required. If validation passes, the method returns silently. 
+
+=back 
+
+=cut 
 
 sub verify {
     my $self = shift;

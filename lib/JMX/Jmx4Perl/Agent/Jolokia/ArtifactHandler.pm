@@ -6,6 +6,29 @@ package JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler;
 JMX::Jmx4Perl::Agent::ArtifactHandler - Handler for extracting and manipulating
 Jolokia artifacts
 
+=head1 DESCRIPTION
+
+This module is responsible for mangaging a singe JAR or WAR Archive. It
+requires L<Archive::Zip> for proper operation.
+
+I.e. this module can
+
+=over 
+
+=item *
+
+Extract jolokia-access.xml and web.xml from WAR/JAR archives
+
+=item *
+
+Check for the esistance of jolokia-access.xml
+
+=item *
+
+Update web.xml for WAR files
+
+=back
+
 =cut
 
 use Data::Dumper;
@@ -23,6 +46,20 @@ BEGIN {
     }
 }
 
+=head1 METHODS
+
+=over 4 
+
+=item $handler = JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler->new(...)
+
+Create a new handler with the following options:
+
+  file => $file      : Path to archive to handle
+  logger => $logger  : Logger to use
+  meta => $meta      : Jolokia-Meta handler to extract the type of an archive
+
+=cut
+
 sub new { 
     my $class = shift;
     my %args = @_;
@@ -35,6 +72,18 @@ sub new {
     return $self;
 }
 
+
+=item $info = $handler->info() 
+
+Extract information about an archive. Return value is a has with the following 
+keys:
+
+  "version"      Agent's version
+  "type"         Agent type (war, osgi, osgi-bundle, mule, jdk6)
+  "artifactId"   Maven artifact id 
+  "groupId"      Maven group Id 
+
+=cut
 
 sub info {
     my $self = shift;
@@ -61,14 +110,15 @@ sub info {
     return {};
 }
 
-sub _read_archive {
-    my $self = shift;
-    my $file = $self->{file};
-    my $jar = new Archive::Zip();
-    my $status = $jar->read($file);
-    $self->_fatal("Cannot read content of $file: ",$GLOBAL_ERROR) unless $status eq AZ_OK();
-    return $jar;
-}
+=item $handler->add_policy($policy)
+
+Add or update the policy given as string to this archive. Dependening on
+whether it is a WAR or another agent, it is put into the proper place
+
+For "war" agents, this is F<WEB-INF/classes/jolokia-access.xml>, for all others
+it is F</jolokia-access.xml>
+
+=cut 
 
 sub add_policy {
     my $self = shift;
@@ -87,9 +137,15 @@ sub add_policy {
     $self->_info($existing ? "Replacing existing policy " : "Adding policy ","[em]",$path,"[/em]",$existing ? " in " : " to ","[em]",$file,"[/em]");
 }
 
+=item $handler->remove_policy()
+
+Remove a policy file (no-op, when no policy is present)
+
+=cut
+
 sub remove_policy {
     my $self = shift;
-    my $policy = shift;
+
     my $file = $self->{file};
     
     my $jar = $self->_read_archive();
@@ -105,6 +161,13 @@ sub remove_policy {
     }
 }
 
+=item $handler->has_policy()
+
+Returns true (i.e. the path to the policy file) if a policy file is contained,
+C<undef> otherwise.
+
+=cut
+
 sub has_policy {
     my $self = shift;
 
@@ -113,6 +176,11 @@ sub has_policy {
     return $jar->memberNamed($path) ? $path : undef;
 }
 
+=item $handler->get_policy()
+
+Get the policy file as string or C<undef> if no policy is contained. 
+
+=cut
 
 sub get_policy {
     my $self = shift;
@@ -122,6 +190,13 @@ sub get_policy {
     return $jar->contents($path);
 }
 
+=item $handler->extract_webxml()
+
+Extract F<web.xml> from WAR agents, for other types, a fatal error is
+raised. Return value is a string containing the web.xml.
+
+=cut
+
 sub extract_webxml {
     my $self = shift;
     my $type = $self->type;
@@ -130,6 +205,14 @@ sub extract_webxml {
     my $jar = $self->_read_archive();
     return $jar->contents("WEB-INF/web.xml");
 }
+
+=item $handler->update_webxml($webxml)
+
+Update F<web.xml> in WAR agents, for other types, a fatal error is
+raised. Return value is a string containing the web.xml. C<$webxml> is the
+descriptor as a string.
+
+=cut
 
 sub update_webxml {
     my $self = shift;
@@ -146,17 +229,40 @@ sub update_webxml {
     $self->_info("Updated ","[em]","web.xml","[/em]"," for ",$self->{file});
 }
 
+=item $handler->type()
 
-sub _policy_path {
-    my $self = shift;
-    return ($self->type eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
-}
+Return the agent's type, which is one of "war", "osgi", "osgi-bundle", "mule"
+or "jdk6"
+
+=cut
 
 sub type {
     my $self = shift;
     my $info = $self->info;
     return $info->{type};
 }
+
+=back
+
+=cut
+
+# ========================================================================
+
+sub _read_archive {
+    my $self = shift;
+    my $file = $self->{file};
+    my $jar = new Archive::Zip();
+    my $status = $jar->read($file);
+    $self->_fatal("Cannot read content of $file: ",$GLOBAL_ERROR) unless $status eq AZ_OK();
+    return $jar;
+}
+
+
+sub _policy_path {
+    my $self = shift;
+    return ($self->type eq "war" ? "WEB-INF/classes/" : "") . "jolokia-access.xml";
+}
+
 
 sub _fatal {
     my $self = shift;

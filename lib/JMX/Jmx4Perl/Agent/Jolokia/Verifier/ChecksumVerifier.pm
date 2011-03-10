@@ -1,6 +1,20 @@
 #!/usr/bin/perl
 package JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier;
 
+=head1 NAME
+
+JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier - Verifies a
+checksum for a downloaded artifact.
+
+=head1 DESCRIPTION
+
+This verifier provides the base for simple checksum checking. It needs to be
+subclassed to provide the proper extension (e.g. ".sha1") and creating of a
+digester. 
+
+=cut 
+
+
 use strict;
 
 sub new { 

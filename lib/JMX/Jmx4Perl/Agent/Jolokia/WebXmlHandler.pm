@@ -7,6 +7,17 @@ package JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler;
 JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler - Handler for web.xml 
 transformation 
 
+=head1 DESCRIPTION
+
+This module is repsonsible for various manipulations on a F<web.xml> descriptor
+as found in JEE WAR archives. It uses L<XML::LibXML> for the dirty work, and
+L<XML::Tidy> to clean up after the manipulation. The later module is optional,
+but recommended. 
+
+=head1 METHODS
+
+=over 4 
+
 =cut
 
 use Data::Dumper;
@@ -24,17 +35,36 @@ BEGIN {
     $HAS_XML_TIDY = eval "require XML::Tidy; 1";
 }
 
+=item $handler = JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler->new(%args)
+
+Creates a new handler. The following arguments can be used:
+
+  "logger"     Logger to use
+
+=cut
+
 sub new { 
     my $class = shift;
     my %args = @_;
-    my $file = $args{file};
-    my $self = {logger => $args{logger}, meta => $args{meta}};
+    my $self = {logger => $args{logger}};
     bless $self,(ref($class) || $class);
 
     $self->_fatal("No XML::LibXML found. Please install it to allow changes and queries on web.xml") unless $HAS_LIBXML;
 
     return $self;
 }
+
+=item $handler->add_security($webxml,{ role => $role })
+
+Add a security constraint to the given web.xml. This triggers on the realm
+"Jolokia" on the loging-config and the URL-Pattern "/*" for the security
+mapping. Any previous sections are removed and replaced.
+
+C<$role> is the role to insert.
+
+This method returns the updated web.xml as a string.
+
+=cut
 
 sub add_security {
     my $self = shift;
@@ -53,6 +83,14 @@ sub add_security {
     return $self->_cleanup_doc($doc);
 }
 
+=item $handler->remove_security($webxml)
+
+Remove login-config with Realm "Jolokia" and security constraint to 
+"/*" along with the associated role definit. Return the updated web.xml 
+as string.
+
+=cut
+
 sub remove_security {
     my $self = shift;
     my $webxml = shift;
@@ -64,6 +102,17 @@ sub remove_security {
     
     return $self->_cleanup_doc($doc);
 }
+
+=item $handler->add_jsr160_proxy($webxml)
+
+Adds a JSR-160 proxy declaration which is contained as init-param of the
+servlet definition ("dispatcherClasses"). If the init-param is missing, a new
+is created otherwise an existing is updated. Does nothing, if the init-param
+"dispatcherClasses" already contains the JSR 160 dispacher.
+
+Returns the updated web.xml as string.
+
+=cut
 
 sub add_jsr160_proxy {
     my $self = shift;
@@ -92,6 +141,16 @@ sub add_jsr160_proxy {
     return $self->_cleanup_doc($doc);
 }
 
+=item $handler->remove_jsr160_proxy($webxml)
+
+Removes a JSR-160 proxy declaration which is contained as init-param of the
+servlet definition ("dispatcherClasses"). Does nothing, if the init-param
+"dispatcherClasses" already doese not contain the JSR 160 dispacher.
+
+Returns the updated web.xml as string.
+
+=cut
+
 sub remove_jsr160_proxy {
     my $self = shift;
     my $webxml = shift;
@@ -117,8 +176,14 @@ sub remove_jsr160_proxy {
     return $self->_cleanup_doc($doc);
 }
 
-# Check via XPath for an element and return its text value or undef if not 
-# found
+=item $handler->find($webxml,$xquery)
+
+Find a single element with a given XQuery query. Croaks if more than one
+element is found. Returns either C<undef> (nothing found) or the matched
+node's text content.
+
+=cut
+
 sub find {
     my $self = shift;
     my $webxml = shift;
@@ -131,6 +196,12 @@ sub find {
     return @nodes == 0 ? undef : $nodes[0]->textContent;
 }
 
+=item $handler->has_authentication($webxml)
+
+Checks, whether authentication is switched on.
+
+=cut
+
 sub has_authentication {
     my $self = shift;
     my $webxml = shift;
@@ -139,6 +210,12 @@ sub has_authentication {
       ($webxml,
        "//j2ee:security-constraint[j2ee:web-resource-collection/j2ee:url-pattern='/*']/j2ee:auth-constraint/j2ee:role-name");
 }
+
+=item $handler->has_jsr160_proxy($webxml)
+
+Checks, whether a JSR-160 proxy is configured.
+
+=cut
 
 sub has_jsr160_proxy {
     my $self = shift;
@@ -344,6 +421,8 @@ sub _info {
     my $self = shift;
     $self->{logger}->info(@_);
 }
+
+=back 
 
 =head1 LICENSE
 
