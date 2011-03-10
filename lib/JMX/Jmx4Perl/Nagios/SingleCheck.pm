@@ -608,7 +608,8 @@ sub _format_label {
                 }
             } elsif ($what eq "t") {
                 my $code = $args->{code};
-                $ret .= sprintf $format . "s",$code == CRITICAL ? $self->critical : ($code == WARNING ? $self->warning : "");
+                my $val = $code == CRITICAL ? $self->critical : ($code == WARNING ? $self->warning : "");
+                $ret .= sprintf $format . "s",defined($val) ? $val : "";
             } elsif ($what eq "c") {
                 $ret .= sprintf $format . "s",$STATUS_TEXT{$args->{code}};
             } elsif ($what eq "n") {

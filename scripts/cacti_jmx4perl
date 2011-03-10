@@ -1,0 +1,110 @@
+#!/usr/bin/perl 
+# nagios: +epn
+
+use FindBin qw ($Bin);
+
+use JMX::Jmx4Perl::Nagios::CactiJmx4Perl;
+
+# Create modue and immediately execute it
+JMX::Jmx4Perl::Nagios::CactiJmx4Perl->new(@ARGV)->execute();
+
+=head1 NAME 
+
+cacti_jmx4perl - Script for a Cacti Data Input Method
+
+=head1 SYNOPSIS 
+
+ # Print out used heap memory (absolute values)
+ cacti_jmx4perl --url http://localhost:8888/jolokia \
+                --name memory_used \
+                --mbean java.lang:type=Memory \
+                --attribute HeapMemoryUsage \ 
+                --path used 
+
+ # Print out relative value
+ cacti_jmx4perl --url http://localhost:8888/jolokia \
+                --alias MEMORY_HEAP_USED \
+                --base MEMORY_HEAP_MAX 
+
+ # Use predefined checks in a configuration file with a server alias Server
+ # alias is 'webshop', output is the number of requests per minute for the servlet
+ # 'socks_shop'
+ cacti_jmx4perl --config /etc/nagios/check_jmx4perl/tomcat.cfg
+                --server webshop \
+                --check tc_servlet_requests \
+                socks_shop
+ 
+ # Number of threads started within a minute
+ cacti_jmx4perl --url http://localhost:8888/jolokia \
+                --alias THREAD_COUNT_STARTED \
+                --delta 60 
+
+ # Proxy-mode usage
+ cacti_jmx4perl --url http://localhost:8888/jolokia \
+                --alias MEMORY_HEAP_USED \
+                --critical 10000000 \
+                --target service:jmx:rmi:///jndi/rmi://bhut:9999/jmxrmi
+
+=head1 DESCRIPTION
+
+This script is a simplified version of C<check_jmx4perl> which does not check
+for thresshold and prints out the measured data in a simplified format, which
+can be used by Cacti (L<www.cacti.net>). For single checks, it simply returns
+the number measured, for multi checks, the numbers are returned with labels and
+space separated. Seek L<check_jmx4perl/"Multichecks"> for more about
+multichecks. 
+
+Example:
+
+  $ cacti_jmx4perl --url http://localhost:8080/jolokia --alias MEMORY_HEAP_USED
+  15308376
+
+  $ cacti_jmx4perl -u http://localhost:8080/jolokia --config config/memory.cfg --check memory
+  Heap:15341168 Non-Heap:19450312
+
+For the possible options and the configuration syntax, please refer to the
+documentation of L<check_jmx4perl>. Certain options are I<not> available for this
+Cacti Script, since they make no sense here:
+
+=over
+
+=item --warning 
+
+=item --critical
+
+=item --unit
+
+=item --null
+
+=item --string
+
+=item --numeric
+
+=item --label
+
+=back
+
+=head1 LICENSE
+
+This file is part of jmx4perl.
+
+Jmx4perl is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+jmx4perl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jmx4perl.  If not, see <http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+roland@cpan.org
+
+=cut
+
+1;

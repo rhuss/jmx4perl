@@ -3,11 +3,6 @@
 
 use FindBin qw ($Bin);
 
-# Used for running directly out of the distrib dir,
-# but we put the lib at last to avoid security issues
-# on a proper installed system
-#BEGIN { push(@INC, qq($Bin/../lib)); }
-use lib qq($Bin/../lib);
 use Nagios::Plugin::Functions;
 use JMX::Jmx4Perl::Nagios::CheckJmx4Perl;
 

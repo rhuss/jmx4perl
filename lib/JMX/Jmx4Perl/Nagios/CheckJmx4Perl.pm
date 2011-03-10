@@ -50,11 +50,11 @@ arguments and any configuation file given.
 
 sub new {
     my $class = shift;
-    my $self = { 
-                np => &_create_nagios_plugin(),
-                cmd_args => [ @ARGV ]
-               };
+    my $self = { };
     bless $self,(ref($class) || $class);
+    $self->{np} = $self->create_nagios_plugin();
+    $self->{cmd_args} = [ @ARGV ];
+
     $self->_print_doc_and_exit($self->{np}->opts->{doc}) if defined $self->{np}->opts->{doc};
     $self->_verify_and_initialize();
     return $self;
@@ -72,7 +72,6 @@ sub execute {
     my $self = shift;
     my $np = $self->{np};
     eval {
-
         # Request
         my @optional = ();
         my $error_stat = { };
@@ -111,32 +110,7 @@ sub execute {
         }
 
         # Different outputs for multi checks/single checks
-        my ($code,$message) = $self->_exit_message($np);
-        if ($nr_checks > 1) {
-            my $summary;
-            if ($code eq OK) {
-                $summary = "All " . $nr_checks . " checks OK";            
-            } else {
-                my $nr_warnings = scalar(@{$np->messages->{warning} || []});
-                my $nr_errors = scalar(@{$np->messages->{critical} || []});
-                my @parts;
-                my $extra = "";
-                my $nr = 0;
-                for my $code (CRITICAL,WARNING,UNKNOWN) {
-                    if (my $errs = $error_stat->{$code}) {
-                        $extra .= scalar(@$errs) . " " . $STATUS_TEXT{$code} . " (" . join (",",@$errs) . "), ";
-                        $nr += scalar(@$errs);
-                    }
-                }
-                if ($nr > 0) {
-                    # Cut off extra chars at the end
-                    $extra = substr($extra,-2);
-                }
-                $summary = $nr . " of " . $nr_checks . " failed: " . $extra;
-            }
-            $message = $summary . "\n" . $message;
-        }
-        $np->nagios_exit($code, $message);
+        $self->do_exit($error_stat);
     };
     if ($@) {
         # p1.pl, the executing script of the embedded nagios perl interpreter
@@ -150,6 +124,56 @@ sub execute {
     }
 }
 
+=head1 $check->exit()
+
+Write out result and exit. This method can be overridden to provide a custom
+output, which can be extracted from NagiosPlugin object.
+
+=cut 
+
+sub do_exit {
+    my $self = shift;
+    my $error_stat = shift;
+    my $np = $self->{np};
+
+    my ($code,$message) = $np->check_messages(join => "\n", join_all => "\n");
+    ($code,$message) = $self->_prepare_multicheck_message($np,$code,$message,$error_stat) if scalar(@{$self->{checks}}) > 1;
+    
+    $np->nagios_exit($code, $message);
+}
+
+sub _prepare_multicheck_message {
+    my $self = shift;
+    my $np = shift;
+    my $code = shift;
+    my $message = shift;
+    my $error_stat = shift;
+
+    my $summary;
+    my $nr_checks = scalar(@{$self->{checks}});
+    if ($code eq OK) {
+        $summary = "All " . $nr_checks . " checks OK";            
+    } else {
+        my $nr_warnings = scalar(@{$np->messages->{warning} || []});
+        my $nr_errors = scalar(@{$np->messages->{critical} || []});
+        my @parts;
+        my $extra = "";
+        my $nr = 0;
+        for my $code (CRITICAL,WARNING,UNKNOWN) {
+            if (my $errs = $error_stat->{$code}) {
+                $extra .= scalar(@$errs) . " " . $STATUS_TEXT{$code} . " (" . join (",",@$errs) . "), ";
+                $nr += scalar(@$errs);
+            }
+                }
+        if ($nr > 0) {
+            # Cut off extra chars at the end
+            $extra = substr($extra,-2);
+        }
+        $summary = $nr . " of " . $nr_checks . " failed: " . $extra;
+    }
+    return ($code,$summary . "\n" . $message);    
+}
+
 # Create a formatted prefix for multicheck output
 sub _multi_check_prefix {
     my $self = shift;
@@ -161,12 +185,6 @@ sub _multi_check_prefix {
     return sprintf("[%$l.${l}s] %%c %s: ",$idx,$label);
 }
 
-# Create exit message 
-sub _exit_message {
-    my $self = shift;
-    my $np = shift;
-    return $np->check_messages(join => "\n", join_all => "\n");
-}
 
 # Send the requests via the build up agent
 sub _send_requests {
@@ -254,12 +272,19 @@ sub _verify_and_initialize {
 
     for my $check (@{$self->{checks}}) {
         my $name = $check->name ? " [Check: " . $check->name . "]" : "";
-        $np->nagios_die("An MBean name and a attribute/operation must be provided" . $name)
+        $np->nagios_die("An MBean name and a attribute/operation must be provided " . $name)
           if ((!$check->mbean || (!$check->attribute && !$check->operation)) && !$check->alias && !$check->value);
-        
-        $np->nagios_die("At least a critical or warning threshold must be given" . $name) 
-          if ((!defined($check->critical) && !defined($check->warning)));    
+        $self->verify_check($check,$name);
     }
+}
+
+sub verify_check {
+    my $self = shift;
+    my $check = shift;
+    my $name = shift;
+    my $np = $self->{np};
+    $np->nagios_die("At least a critical or warning threshold must be given " . $name) 
+      if ((!defined($check->critical) && !defined($check->warning)));        
 }
 
 # Extract one or more check configurations which can be 
@@ -513,8 +538,8 @@ sub _server_config {
 }
 
 # Create the nagios plugin used for preparing the nagious output
-sub _create_nagios_plugin {
-    my $args = shift;
+sub create_nagios_plugin {
+    my $self = shift;
     my $np = Nagios::Plugin->
       new(
           usage => 
@@ -529,14 +554,24 @@ sub _create_nagios_plugin {
           url => "http://www.jmx4perl.org",
           plugin => "check_jmx4perl",
           blurb => "This plugin checks for JMX attribute values on a remote Java application server",
-          extra => "\n\nYou need to deploy j4p.war on the target application server or as an intermediate proxy.\n" .
+          extra => "\n\nYou need to deploy jolokia.war on the target application server or an intermediate proxy.\n" .
           "Please refer to the documentation for JMX::Jmx4Perl for further details.\n\n" .
           "For a complete documentation please consult the man page of check_jmx4perl or use the option --doc"
          );
     $np->shortname(undef);
+    $self->add_common_np_args($np);
+    $self->add_nagios_np_args($np);
+    $np->getopts();
+    return $np;
+}
+
+sub add_common_np_args {
+    my $self = shift;
+    my $np = shift;
+
     $np->add_arg(
                  spec => "url|u=s",
-                 help => "URL to agent web application (e.g. http://server:8080/j4p/)",
+                 help => "URL to agent web application (e.g. http://server:8080/jolokia/)",
                 );
     $np->add_arg(
                  spec => "product=s",
@@ -563,38 +598,12 @@ sub _create_nagios_plugin {
                  help => "Shortcut for specifying mbean/attribute/path. Slashes within names must be escaped with \\",
                 );
     $np->add_arg(
-                 spec => "base|base-alias|b=s",
-                 help => "Base alias name, which when given, interprets critical and warning values as relative in the range 0 .. 100%",
-                );
-    $np->add_arg(
                  spec => "delta|d:s",
                  help => "Switches on incremental mode. Optional argument are seconds used for normalizing.",
                 );
     $np->add_arg(
                  spec => "path|p=s",
                  help => "Inner path for extracting a single value from a complex attribute or return value (e.g. \"used\")",
-                );
-    $np->add_arg(
-                 spec => "null=s",
-                 help => "Value which should be used in case of a null return value of an operation or attribute. Is \"null\" by default"
-                );
-    $np->add_arg(
-                 spec => "string",
-                 help => "Force string comparison for critical and warning checks"
-                );
-    $np->add_arg(
-                 spec => "numeric",
-                 help => "Force numeric comparison for critical and warning checks"
-                );
-    $np->add_arg(
-                 spec => "critical|c=s",
-                 help => "Critical Threshold for value. " . 
-                 "See http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT " .
-                 "for the threshold format.",
-                );
-    $np->add_arg(
-                 spec => "warning|w=s",
-                 help => "Warning Threshold for value.",
                 );
     $np->add_arg(
                  spec => "target=s",
@@ -626,14 +635,6 @@ sub _create_nagios_plugin {
                  "and attribute will be used"
                 );
     $np->add_arg(
-                 spec => "unit=s",
-                 help => "Unit of measurement of the data retreived. Recognized values are [B|KB|MN|GB|TB] for memory values and [us|ms|s|m|h|d] for time values"
-                );
-    $np->add_arg(
-                 spec => "label|l=s",
-                 help => "Label to be used for printing out the result of the check. Placeholders can be used."
-                );
-    $np->add_arg(
                  spec => "config=s",
                  help => "Path to configuration file. Default: ~/.j4p"
                 );
@@ -646,16 +647,53 @@ sub _create_nagios_plugin {
                  help => "Name of a check configuration as defined in the configuration file"
                 );
     $np->add_arg(
-                 spec => "doc:s",
-                 help => "Print the documentation of check_jmx4perl, optionally specifying the section (tutorial, args, config)"
-                );
-    $np->add_arg(
                  spec => "method=s",
                  help => "HTTP method to use. Either \"get\" or \"post\""
                 );
-    
-    $np->getopts();
-    return $np;
+    $np->add_arg(
+                 spec => "doc:s",
+                 help => "Print the documentation of check_jmx4perl, optionally specifying the section (tutorial, args, config)"
+                );
+}
+
+sub add_nagios_np_args {
+    my $self = shift;
+    my $np = shift;
+
+    $np->add_arg(
+                 spec => "base|base-alias|b=s",
+                 help => "Base alias name, which when given, interprets critical and warning values as relative in the range 0 .. 100%",
+                );
+    $np->add_arg(
+                 spec => "unit=s",
+                 help => "Unit of measurement of the data retreived. Recognized values are [B|KB|MN|GB|TB] for memory values and [us|ms|s|m|h|d] for time values"
+                );    
+    $np->add_arg(
+                 spec => "null=s",
+                 help => "Value which should be used in case of a null return value of an operation or attribute. Is \"null\" by default"
+                );
+    $np->add_arg(
+                 spec => "string",
+                 help => "Force string comparison for critical and warning checks"
+                );
+    $np->add_arg(
+                 spec => "numeric",
+                 help => "Force numeric comparison for critical and warning checks"
+                );
+    $np->add_arg(
+                 spec => "critical|c=s",
+                 help => "Critical Threshold for value. " . 
+                 "See http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT " .
+                 "for the threshold format.",
+                );
+    $np->add_arg(
+                 spec => "warning|w=s",
+                 help => "Warning Threshold for value.",
+                );
+    $np->add_arg(
+                 spec => "label|l=s",
+                 help => "Label to be used for printing out the result of the check. Placeholders can be used."
+                );
 }
 
 # Access to configuration informations

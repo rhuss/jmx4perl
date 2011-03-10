@@ -7,7 +7,9 @@
   - Added 'jolokia' for downloading and managing Jolokia agents
   - Removed jmx4perl Java agent source and agent since jmx4perl now uses
     Jolokia as agents (www.jolokia.org)
-
+  - Added 'cacti_jmx4perl', a tool for gathering Cacti data (www.cacti.net) 
+    It is heavily based on 'check_jmx4perl' (without threshold handling). 
+ 
 0.75 (2011-2-4)
   - Fixed typo in POD documentation which prevented a successful 
     build in some situations
