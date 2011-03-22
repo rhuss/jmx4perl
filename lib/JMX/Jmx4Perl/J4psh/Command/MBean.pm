@@ -5,7 +5,7 @@ use strict;
 use base qw(JMX::Jmx4Perl::J4psh::Command);
 use JMX::Jmx4Perl::Request;
 use Data::Dumper;
-
+use JSON;
 
 =head1 NAME 
 
@@ -159,7 +159,7 @@ sub cmd_show_attributes {
             # Print as list
             for my $attr (@attrs) {
                 my $value = $values->{$attr};
-                if (ref($value)) {
+                if ($self->_is_object($value)) {
                     $p .= sprintf(" $c_a%-31.31s$c_r\n",$attr);
                     $p .= $self->_dump($value);
                 } else {
@@ -169,7 +169,7 @@ sub cmd_show_attributes {
         } else {
             # Print single attribute
             my $value =  $values->{$attrs[0]};
-            if (ref($value)) {
+            if ($self->_is_object($value)) {
                 $p .= $self->_dump($value);
             } else {
                 $p .= $value."\n";
@@ -197,7 +197,7 @@ sub cmd_set_attribute {
         my ($c_l,$c_r) = $self->color("label","reset");
 
         my $p = "";
-        if (ref($old_value)) {
+        if ($self->_is_object($old_value)) {
             $p .= sprintf(" $c_l%-5.5ss$c_r\n","Old:");
             $p .= $self->_dump($old_value);
         } else {
@@ -225,7 +225,7 @@ sub cmd_execute_operation {
         my ($c_l,$c_r) = $self->color("label","reset");
 
         my $p = "";
-        if (ref($value)) {
+        if ($self->_is_object($value)) {
             $p .= sprintf(" $c_l%-7.7s$c_r\n","Return:");
             $p .= $self->_dump($value);
         } else {
@@ -233,6 +233,12 @@ sub cmd_execute_operation {
         }
         $self->print_paged($p);
     }
+}
+
+sub _is_object {
+    my $self = shift;
+    my $value = shift;
+    return ref($value) && !JSON::is_bool($value);
 }
 
 sub _dump {

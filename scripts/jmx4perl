@@ -71,7 +71,7 @@ if ($opts{version}) {
         exit(0);
     }
 }
-my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance";
+my $sub = $COMMANDS{$command} || croak "No command '",$command,"' known. See --help for assistance\n";
 my $jmx_args = &_get_args_for_jmx4perl($url,\%opts);
 my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
 &{$sub}($jmx4perl,@args);

@@ -155,7 +155,7 @@ sub remove_policy {
     if ($existing) {
         my $status = $jar->overwrite();
         $self->_fatal("Cannot write $file: ",$GLOBAL_ERROR) unless $status eq AZ_OK();    
-        $self->_info("Removing policy","[em]",$policy,"[/em]"," in ","[em]",$file,"[/em]");
+        $self->_info("Removing policy","[em]",$path,"[/em]"," in ","[em]",$file,"[/em]");
     } else {
         $self->_info("No policy found, leaving ","[em]",$file,"[/em]"," untouched.");
     }
