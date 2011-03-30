@@ -99,7 +99,7 @@ sub latest_matching_version {
     # Iterate over all existing versions, starting from the newest one, 
     # and return the first matching
     my $version_info = $self->get("versions");
-    for my $v (sort { $b <=> $a } keys %$version_info) {
+    for my $v (sort { $b <=> $a } grep { $_ !~ /-SNAPSHOT$/ } keys %$version_info) {
         my $range = $version_info->{$v}->{jmx4perl};
         if ($range) {
             my $match = $self->_check_version($jmx4perl_version,$range);
@@ -289,13 +289,12 @@ sub _example_meta {
             repositories => [
                              "http://labs.consol.de/maven/repository"
                             ],            
+            'snapshots-repositories' => [
+                             "http://labs.consol.de/maven/snapshots-repository"
+                            ],            
             versions => {
-                         "0.83" => { 
-                                    jmx4perl => "[0.73,1.0)", 
-                                    templates => {
-                                                  "jolokia-access.xml" => "http://www.jolokia.org/templates/jolokia-access.xml"
-                                                 }
-                                   },
+                         "0.90-SNAPSHOT" => { jmx4perl => "[0.90,1.0)" },
+                         "0.83" => { jmx4perl => "[0.73,1.0)" },
                          "0.82" => { jmx4perl => "[0.73,1.0)" } ,
                          "0.81" => { jmx4perl => "[0.73,1.0)" } ,
                         },

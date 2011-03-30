@@ -295,6 +295,7 @@ sub _base_value {
     }
     my $resp = shift @{$responses};
     my $req = shift @{$requests};
+    $np->nagios_die($resp->{error}) if $resp->{error};
     return $self->_extract_value($req,$resp);
 }
 
@@ -329,11 +330,11 @@ sub _normalize_value {
             next unless $units->[$i] eq $unit;
             my $ret = $value;
             my $u = $unit;
-            if ($ret > 1) {
+            if (abs($ret) > 1) {
                 # Go up the scale ...
                 return ($value,$unit) if $i == $#{$units};
                 for my $j ($i+1 .. $#{$units}) {
-                    if ($ret / $UNITS{$units->[$j]} >= 1) {                    
+                    if (abs($ret / $UNITS{$units->[$j]}) >= 1) {                    
                         $ret /= $UNITS{$units->[$j]};
                         $u = $units->[$j];
                     } else {

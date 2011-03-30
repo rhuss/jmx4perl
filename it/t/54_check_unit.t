@@ -42,3 +42,9 @@ ok($content =~ /2 d/,"SecondsLong: Output");
 is($ret,0,"SmallMinutes: OK");
 ok($content =~ /10.00 ms/,"SmallMinutes: Output");
 
+($ret,$content) = &exec_check_perl4jmx
+  ("--value jolokia.it:type=attribute/MemoryUsed --base jolokia.it:type=attribute/MemoryMax --critical 80 --unit B");
+#print Dumper($ret,$content);
+is($ret,0,"Relative Memory: OK");
+ok($content =~ /1\.99 GB/,"Relative Memory: Output");
+

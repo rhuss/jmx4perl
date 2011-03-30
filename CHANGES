@@ -1,4 +1,5 @@
 0.90
+  - Fixed normalization issue with negative delta check values.
   - Support for new JSON serialization style of Jolokia 0.84 added. 
     (i.e numbers and booleans are not returned as plain strings anymore
     but as Long, Double, true/false. Null is returned as JSON-null.

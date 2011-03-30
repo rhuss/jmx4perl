@@ -253,31 +253,32 @@ used.
 sub command_download {
     my ($meta,$args) = @_;
     
-    my ($agent,$agent_version) = &_parse_version($args->{agent});
+    my ($agent,$agent_version) = &parse_version($args->{agent});
     my $t = $args->{template} || ($args->{policy} ? "jolokia-access.xml" : undef);
-    my ($template,$template_version) = &_parse_version($t);
+    my ($template,$template_version) = &parse_version($t);
 
     $agent = "war" if (!$template && !$agent);
-    $agent_version = &_agent_version($meta,$agent_version);
+    $agent_version = &agent_version($meta,$agent_version);
     $template_version = $agent_version if ($template && !$template_version);
 
-    &_download_agent($meta,$agent,$agent_version,$args) if $agent;
-    &_download_template($meta,$args,$template,$template_version) if $template;
+    &download_agent($meta,$agent,$agent_version,$args) if $agent;
+    &download_template($meta,$args,$template,$template_version) if $template;
 }
 
-sub _parse_version {
+sub parse_version {
     my $spec = shift;
     return (undef,undef) unless $spec;
-    my ($base,$version) = ($1,$2) if $spec =~ /^(.*?):?([\d\.]*)\s*$/;
+    my ($base,$version) = ($1,$2) if $spec =~ /^(.*?):?([\d\.]*(-SNAPSHOT)?)\s*$/;
     return ($base,$version);
 }
 
-sub _agent_version {
+sub agent_version {
     my $meta = shift;
     my $version = shift;
 
     if ($version) {        
         &verify_version($meta,$version);
+        return $version;
     } else {
         $version = $meta->latest_matching_version($JMX::Jmx4Perl::VERSION);
         &fatal("Cannot find compatible Jolokia version for Jmx4Perl ",$JMX::Jmx4Perl::VERSION)
@@ -285,7 +286,7 @@ sub _agent_version {
     }    
 }
 
-sub _download_template {
+sub download_template {
     my $meta = shift;
     my $args = shift;
     my $template = shift;
@@ -294,34 +295,42 @@ sub _download_template {
     my $url = $meta->template_url($template,$version);
     &fatal("No template $template known") unless $url;
     
-    my $file = &_path($args,$template);
+    my $file = &path($args,$template);
     $logger->info("Downloading ","[em]",$template,"[/em]", " version ",$version);
     &download($url,$file,$args);
     &verify_signature($file,$url);
 }
 
-sub _path {
+sub path {
     my $args = shift;
     my $file = shift;
     my $dir = $args->{outdir} || ".";
     return $dir . "/" . $file;
 }
 
-sub _download_agent {
+sub download_agent {
     my $meta = shift;
     my $agent = shift;
     my $version = shift;
     my $args = shift;
 
-    my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
+    my $is_snapshot = $version =~ /(.*?)-SNAPSHOT$/;
+    my $repositories;
+    if ($args->{repository}) {
+        $repositories = [ $args->{repository} ];
+    } else {
+        $repositories = $is_snapshot ? $meta->get('snapshots-repositories') : $meta->get('repositories');
+    }
 
     $logger->info("Using ","[em]","Jolokia $version","[/em]", 
                   " for ","[em]","Jmx4Perl $JMX::Jmx4Perl::VERSION","[/em]");    
     for my $repository (@$repositories) {
         eval {
             my $mapping = $meta->get("mapping");
-            my $download_url = &get_download_url($meta,$repository,$agent,$version);
-            my $file = &_path($args,$mapping->{$agent}->[2]);
+
+            my $full_version = $is_snapshot ? &get_snapshot_version($meta,$repository,$agent,$version,$args) : $version;
+            my $download_url = &get_download_url($meta,$repository,$agent,$full_version);
+            my $file = &path($args,$mapping->{$agent}->[2]);
             $logger->info("Downloading ","[em]",$agent," agent","[/em]", " version ",$version," from repository " . $repository);
             &download($download_url,$file,$args);
             &verify_signature($file,$download_url);
@@ -493,7 +502,7 @@ sub command_repack {
 
 # ======================================================================================= 
 
-sub _create_ua {
+sub create_ua {
     my $config = shift || {};
     return new JMX::Jmx4Perl::Agent::Jolokia::DownloadAgent(quiet => $config->{quiet},%{$config->{ua_config}});
 }
@@ -501,7 +510,7 @@ sub _create_ua {
 sub download {
     my ($url, $file, $args) = @_;
     my $config = $args || {};
-    my $ua = &_create_ua($args);
+    my $ua = &create_ua($args);
     my $response = $ua->get($url,":content_file" => $file);
     if ($response->is_error) {
         &fatal("Could not download agent from " . $url . ": " . $response->status_line);
@@ -526,9 +535,32 @@ sub verify_version {
 
 sub get_download_url {
     my ($meta,$repository,$agent,$version) = @_;
-    my ($name,$artifact) = artifact_and_name($meta,$agent,$version);
-    $repository =~ s/\/+$//;            
-    return $repository . "/org/jolokia/" . $name . "/" . $version . "/" . $artifact;
+    my ($name,$artifact) = &artifact_and_name($meta,$agent,$version);
+    $repository =~ s/\/+$//;
+    my $version_path = $version;
+    $version_path = $1 . "-SNAPSHOT" if $version =~ /(.*)-\d+\.\d+-\d+/;
+    return $repository . "/org/jolokia/" . $name . "/" . $version_path . "/" . $artifact;    
+}
+
+sub get_snapshot_version {
+    my ($meta,$repository,$agent,$version,$args) = @_;
+    my ($name,$artifact) = &artifact_and_name($meta,$agent,$version);    
+    my $meta_url = $repository . "/org/jolokia/" . $name . "/" . $version . "/maven-metadata.xml";
+    
+    my $ua  = &create_ua($args);
+    my $response = $ua->get($meta_url);
+
+    if ($response->is_error) {
+        &fatal("Could not download maven meta from " . $meta_url . " for getting snapshot version: " . $response->status_line);
+    }
+    
+    my $content = $response->decoded_content;
+    my $timestamp = $1 if $content =~ m|<timestamp>\s*(.*?)\s*</timestamp>|si;
+    my $build_nr = $1 if $content =~ m|<buildNumber>\s*(.*?)\s*</buildNumber>|si;
+    my $base_version = $1 if $version =~ /(.*)-SNAPSHOT$/;
+    
+    &fatal("Couldn't parse timestamp or buildNumber from $meta_url") unless defined($timestamp) && defined($build_nr);
+    return $base_version . "-" . $timestamp . "-" . $build_nr;
 }
 
 # Map agent to its artifact id and its full name (including any classifier)
