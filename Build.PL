@@ -9,7 +9,7 @@ my $build = Module::Build->new
    dist_abstract => 'Easy JMX access to Java JEE applications',
    installdirs => 'site',
    script_files => 'scripts',
-   license => 'gpl_2',
+   license => 'gpl',
    
    requires => {
                 "JSON" => "2.12",

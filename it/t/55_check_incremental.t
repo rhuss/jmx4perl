@@ -31,6 +31,7 @@ for (0 .. 2) {
 #   print Dumper($ret,$content);
     is($ret,0,"Second history fetch returns OK for -c $c");
     ok($content =~ /mem=([\-\d]+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
+#$jmx->execute("java.lang:type=Memory","gc");
 }
 #print "$c: $content\n";
 

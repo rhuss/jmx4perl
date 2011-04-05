@@ -1,8 +1,31 @@
+Jolokia 0.90 + Jmx4perl 0.90
+    OSGi-Agents:
+      Felix 3.0.8 (bundle,pure) & 2.0.5 (bundle)
+      Equinox 3.6.1 (bundle,pure) & 3.7M5 (bundle)
+      Virgo 2.1 (kernel: bundle, pure -- web: war) & 3.0 M5 (war)
+      Knopflerfish 3.1.0 (pure)
+
+    JEE-Server
+      Tomcat 5.5.31 & 6.0.30 & 7.0.6 
+      Jetty 5.1.15 & 6.1.26 & 7.2.2 & 8.0.0.M2
+      Geronimo 2.1.6 & 3.0 M1
+      JBoss 4.2.3 & 5.1.0 & 6.0.0
+      Glassfish 2.1.1 & 3.0.1
+      Jonas 5.2.0-M3
+      Weblogic 9.2 & 10.0
+      Websphere 6.1.0.33 & 7.0.0.11
+
+    JVM-JDK6
+      Felix 3.0.8 started with JVM agent
+
+    Mule-Agent
+      Mule 3.1.1 (no IT)
+
 2011-02-18 - Jolokia 0.83
     OSGi-Agents:
       Felix 3.0.8 (bundle,pure) & 2.0.5 (bundle)
       Equinox 3.6.1 (bundle,pure) & 3.7M5 (bundle)
-      Virgo 2.1 (kernel: bundle, pure -- web: bundle)
+      Virgo 2.1 (kernel: bundle, pure -- web: war)
 
     JEE-Server
       Tomcat 5.5.31 & 6.0.30 & 7.0.6 
@@ -11,7 +34,6 @@
       JBoss 5.1.0 & 6.0.0
       Glassfish 2.1.1 & 3.0.1
       Jonas 5.2.0-M3
-
 
 2011-01-16 - Jmx4Perl 0.74 & Jolokia 0.82
     JEE-Server
