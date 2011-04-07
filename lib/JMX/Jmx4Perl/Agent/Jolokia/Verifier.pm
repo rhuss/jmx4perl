@@ -49,27 +49,29 @@ use strict;
 BEGIN { 
     @VERIFIERS = ();
     @WARNINGS = ();    
-    my @verifiers = (
-                     [ "Crypt::OpenPGP", "JMX::Jmx4Perl::Agent::Jolokia::Verifier::OpenPGPVerifier", 
-                       "No signature verification available. Please install Crypt::OpenPGP." ],
-                     [ "Digest::SHA1", "JMX::Jmx4Perl::Agent::Jolokia::Verifier::SHA1Verifier" ],
-                     [ "Digest::MD5", "JMX::Jmx4Perl::Agent::Jolokia::Verifier::MD5Verifier" ],                     
-                    );
-    for my $v (@verifiers) {
-        eval "require $v->[0]";
-        if (!$@) {
-            eval "require $v->[1]";
-            die $@ if $@;
-            my $verifier;
-            eval "\$verifier = new $v->[1]()";
-            die $@ if $@;
-            push @VERIFIERS,$verifier;
-        } else {
-            push @WARNINGS,$v->[2] if $v->[2];
-        }
-    }
-}
 
+    my $create = sub {
+        my $module = shift;
+        eval "require $module";
+        die $@ if $@;
+        my $verifier;
+        eval "\$verifier = new $module()";
+        die $@ if $@;
+        return $verifier;        
+    };
+
+    my $prefix = "JMX::Jmx4Perl::Agent::Jolokia::Verifier::";
+    if (eval "require Crypt::OpenPGP; 1") {
+        push @VERIFIERS,&$create($prefix . "OpenPGPVerifier");                    
+    } elsif (`gpg --version` =~ /GnuPG/m) {
+        push @VERIFIERS,&$create($prefix . "GnuPGVerifier");        
+    } else {
+        push @WARNINGS,"No signature verification available. Please install GnupPG or Crypt::OpenPGP.";
+    }
+
+    push @VERIFIERS,&$create($prefix . "SHA1Verifier") if eval "require Digest::SHA1; 1";
+    push @VERIFIERS,&$create($prefix . "MD5Verifier") if eval "require Digest::MD5; 1";
+}
 
 =item $verifier = JMX::Jmx4Perl::Agent::Jolokia::Verifier->new(%args)
 
@@ -127,6 +129,7 @@ sub verify {
     }
     $log->warn("No suitable validation mechanism found with $url");
 }
+
 
 =head1 LICENSE
 

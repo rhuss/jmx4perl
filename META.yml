@@ -42,6 +42,9 @@ provides:
   JMX::Jmx4Perl::Agent::Jolokia::Verifier::ChecksumVerifier:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/ChecksumVerifier.pm
     version: 0
+  JMX::Jmx4Perl::Agent::Jolokia::Verifier::GnuPGVerifier:
+    file: lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/GnuPGVerifier.pm
+    version: 0
   JMX::Jmx4Perl::Agent::Jolokia::Verifier::MD5Verifier:
     file: lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/MD5Verifier.pm
     version: 0
@@ -153,31 +156,30 @@ provides:
   JMX::Jmx4Perl::Response:
     file: lib/JMX/Jmx4Perl/Response.pm
     version: 0
-recommends:
+requires:
   Archive::Zip: 0
+  Carp: 0
   Config::General: 0
-  Crypt::OpenPGP: 0
+  Data::Dumper: 0
   Digest::MD5: 0
   Digest::SHA1: 0
   File::SearchPath: 0
+  File::Temp: 0
+  Getopt::Long: 0
+  JSON: 2.12
+  LWP::UserAgent: 0
+  Module::Find: 0
   Nagios::Plugin: 0.27
   Pod::Usage: 0
+  Scalar::Util: 0
   Term::Clui: 0
   Term::ProgressBar: 0
   Term::ShellUI: 0
   Term::Size: 0.207
   Text::ParseWords: 0
+  URI: 1.35
   XML::LibXML: 0
   XML::Tidy: 0
-requires:
-  Carp: 0
-  Data::Dumper: 0
-  Getopt::Long: 0
-  JSON: 2.12
-  LWP::UserAgent: 0
-  Module::Find: 0
-  Scalar::Util: 0
-  URI: 1.35
   base: 0
 resources:
   license: http://opensource.org/licenses/gpl-license.php

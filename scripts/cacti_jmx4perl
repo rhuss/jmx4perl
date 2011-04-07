@@ -51,7 +51,7 @@ This script is a simplified version of C<check_jmx4perl> which does not check
 for thresshold and prints out the measured data in a simplified format, which
 can be used by Cacti (L<www.cacti.net>). For single checks, it simply returns
 the number measured, for multi checks, the numbers are returned with labels and
-space separated. Seek L<check_jmx4perl/"Multichecks"> for more about
+space separated. See L<check_jmx4perl/"Multichecks"> for more about
 multichecks. 
 
 Example:

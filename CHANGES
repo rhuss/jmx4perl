@@ -1,4 +1,5 @@
-0.90
+0.90 (2011-9-4)
+  - Tuned Build.PL so that scripts can be added conditionally
   - Fixed normalization issue with negative delta check values.
   - Support for new JSON serialization style of Jolokia 0.84 added. 
     (i.e numbers and booleans are not returned as plain strings anymore
