@@ -1,5 +1,5 @@
 ---
-abstract: 'Easy JMX access to Java JEE applications'
+abstract: 'Easy JMX access to Java EE applications'
 author:
   - 'Roland Huss (roland@cpan.org)'
 build_requires:
