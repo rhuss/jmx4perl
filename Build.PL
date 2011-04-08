@@ -47,7 +47,7 @@ print <<EOT;
 
 Jmx4Perl comes with a set of supporting scripts, which 
 are not necessarily required for using JMX::Jmx4Perl 
-programmatically
+programmatically.
 EOT
 
 my $msg = <<EOT;
@@ -78,8 +78,8 @@ $msg = <<EOT;
 cacti_jmx4perl
 ==============
 
-cacti_jmx4perl is a script which can be used as a 
-Cacti (www.cacti.net) plugin.
+cacti_jmx4perl is a script which can be used as a Cacti 
+(www.cacti.net) plugin.
 
 Install 'cacti_jmx4perl' ? (y/n)
 EOT
@@ -102,7 +102,7 @@ j4psh
 
 j4psh is an interactive JMX shell with context sensitive command line
 completion. It uses JMX::Jmx4Perl for connecting to the JMX backend
-and has some Perl module dependencies.
+and has quite some Perl module dependencies.
 
 Install 'j4psh' ? (y/n)
 EOT
@@ -124,9 +124,9 @@ if ($answer) {
     if (!$has_gnu_readline) {
         $msg = <<EOT;
 
-Term::ReadLine::Gnu is the recommended readline module, but is 
-not necessarily required (Term::ReadLine::Perl). It requires
-the libreadline installed with header files, though.
+Term::ReadLine::Gnu is the recommended readline module, but it is not
+necessarily required. It needs a development variant of libreadline
+installed along with header files.
 
 Use Term::ReadLine::Gnu ? (y/n)
 EOT
@@ -174,10 +174,10 @@ if ($answer) {
             if ($?) {
                 $msg = <<EOT;
                 
-jolokia uses PGP verification of the files downloaded, but neither
+jolokia uses PGP verification for the files downloaded, but neither
 Crypt::OpenPGP nor GnuPG is installed. It is highly recommended to 
-install one of them. Installing Crypt::OpenPGP can be a pain due to its
-large set of dependencies. 
+install at least one of them. Installing Crypt::OpenPGP however can 
+be a pain due to its large set of dependencies.
 
 Use Crypt::OpenPGP ? (y/n)
 EOT

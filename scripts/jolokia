@@ -86,7 +86,7 @@ commands are available
 
 =over 
 
-=item download (default)
+=item download
 
 This mode allows for downloading the latest Jolokia agent version compatible
 with this Jmx4Perl installation or any other agent version. PGP is used
@@ -97,7 +97,16 @@ optionally for verifying the integrity of the downloaded artifacts.
 For a given Jolokia agent, this manager gives you information about the version
 of the agent and also allows for PGP validation.
 
+=item repack
+
+A Jolokia agent can be repacked in order to add a policy file or to manipulate
+the internal web.xml with this mode. 
+
 =back
+
+C<download> ist the default mode when no non-opt argument is given, if a single
+argument is given and this single argument is not one of the modes above, C<info> is
+used as the default command and the single argument is the file to examine.
 
 =head1 META-DATA
 
@@ -108,14 +117,15 @@ day. The meta download can be forced by using the option C<--no-cache>.
 
 =head1 VALIDATION
 
-B<jolokia> uses PGP for validating all files downloaded. For this to
-work, the CPAN module L<Crypt::OpenPGP> must be installed. If it is not
-available, validation falls back to simple checksum validation with a SHA1
-alogrithm, or, if this is not possible to an MD5 check. Since the checksums are
-also downloaded over an insecure channel, using PGP is highly recommended. The
-public key used for the signature check is contained locally in
-L<JMX::Jmx4Perl::Agent::Jolokia::Verifier::OpenPGPVerifier> so there is no need
-to add the key manually or to download it from an PGP key server.
+B<jolokia> uses PGP for validating all files downloaded. For this to work,
+either the CPAN module L<Crypt::OpenPGP> or GnuPG (L<http://www.gnupg.org/>)
+must be installed. If it is not available, validation falls back to simple
+checksum validation with a SHA1 alogrithm, or, if this is not possible to an
+MD5 check. Since the checksums are also downloaded over an insecure channel,
+using PGP is highly recommended. The public key used for the signature check is
+contained locally in the modules so there is no need to add the key manually or
+to download it from an PGP key server. I.e. if GnuPG is used, the key will be
+added to the local keystore for the first validation. 
 
 =head1 COMMANDS
 

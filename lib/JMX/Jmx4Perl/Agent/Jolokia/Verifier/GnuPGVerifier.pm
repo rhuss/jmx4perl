@@ -59,7 +59,7 @@ sub verify {
         push @cmd, $signature_path,$args{path};
         my $cmd = join ' ', @cmd;
         my $output = `$cmd`;
-        if ($output =~ /public key/i) {
+        if ($output =~ /public\s*key/i) {
             # Import key and retry
             $self->_import_key(\%args);
             $output = `$cmd`;
@@ -102,13 +102,13 @@ sub _import_key {
 
     my @cmd = ($gpg,qw(--import --verbose --batch --no-tty  --logger-fd=1),$key_path);
     my $cmd = join ' ', @cmd;
-    my $output = `$cmd`;
+    my $output = `$cmd 2>&1`;
     if ($?) {
         $log->error("Cannot add public PGP used for verification to local keystore: $output");
         die "\n";
     } else {
-        $log->info($output);
-        my $info = $1 if $output =~ /([\dA-F]{8}.*)$/mi;
+        #$log->info($output);
+        my $info = $1 if $output =~ /([\dA-F]{8}.*import.*)$/mi;
         $log->info($info ? $info : "Added jmx4perl key");
     }
     unlink $key_path;
@@ -125,7 +125,7 @@ sub _gpg_version {
             die "Cannot find gpg or gpg2: $out\n";
         }
     }
-    $out =~ /GnuPG.*?(\S+)\s*$/m or die "Cannot execute gpg: $out";
+    $out =~ /GnuPG.*?(\S+)\s*$/m;
     return ($gpg,$1);
 }
 

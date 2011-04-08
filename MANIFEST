@@ -45,6 +45,7 @@ lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/ChecksumVerifier.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/GnuPGVerifier.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/MD5Verifier.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/OpenPGPVerifier.pm
+lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/PGPKey.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/Verifier/SHA1Verifier.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/WebXmlHandler.pm
 lib/JMX/Jmx4Perl/Agent/UserAgent.pm
