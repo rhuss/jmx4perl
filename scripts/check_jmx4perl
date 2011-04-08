@@ -499,14 +499,14 @@ numbers or booleans ("true"/"false") can be used.
 Example:
 
  $ check_jmx4perl --url http://localhost:8888/jolokia \
-                  --mbean jmx4perl:type=Runtime \
+                  --mbean jolokia:type=Runtime \
                   --operation getNrQueriesFor \
                   --critical 10 \
                   "operation" \
                   "java.lang:type=Memory" \
                   "gc" 
 
-This example contacts a MBean C<jmx4perl:type=Runtime> registered by the jolokia
+This example contacts a MBean C<jolokia:type=Runtime> registered by the jolokia
 agent in order to check for the number of queries for a certain MBean via this
 agent. For this purpose an JMX operation C<getNrQueriesFor> is exposed which
 takes three arguments: The type ("operation"/"attribute"), the MBean's
@@ -817,7 +817,7 @@ Example:
    
   <allow>
     <mbean>
-      <name>jmx4perl:*</name>
+      <name>jolokia:*</name>
       <operation>*</operation>
       <attribute>*</attribute>
     </mbean>
@@ -833,7 +833,7 @@ Example:
   </allow>
 
 This will allow access to all operation and attributes of all MBeans in 
-the C<jmx4perl:> domain and to the operation C<findDeadlockedThreads> on the
+the C<jolokia:> domain and to the operation C<findDeadlockedThreads> on the
 MBean C<java.lang:type=Threading> regardless whether the C<read> or C<exec>
 command is enabled globally. The attribute C<Verbose> on
 C<java.lang:type=Memory> is allowed to be read, but cannot be written (if the

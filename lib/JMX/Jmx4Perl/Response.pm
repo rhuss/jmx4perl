@@ -70,7 +70,7 @@ sub timestamp {
 =item $history = $response->history() 
 
 Get the history if history tracking is switched on. History tracking is
-switchen on by executing a certain JMX operation on the C<jmx4perl:type=Config>
+switchen on by executing a certain JMX operation on the C<jolokia:type=Config>
 MBean. See the alias C<JMX4PERL_HISTORY_MAX_ATTRIBUTE> and L<jmx4perl/"HISTORY
 TRACKING"> for details.
 

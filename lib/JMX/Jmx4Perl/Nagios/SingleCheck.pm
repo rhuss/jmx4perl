@@ -273,7 +273,7 @@ sub _delta_value {
 
 sub _switch_on_history {
     my ($self,$orig_request,$target) = @_;
-    my ($mbean,$operation) = ("jmx4perl:type=Config","setHistoryEntriesForAttribute");
+    my ($mbean,$operation) = ("jolokia:type=Config","setHistoryEntriesForAttribute");
     # Set history to 1 (we need only the last)
     return new JMX::Jmx4Perl::Request
       (EXEC,$mbean,$operation,

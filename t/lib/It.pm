@@ -10,7 +10,7 @@ use Data::Dumper;
 
 @EXPORT = qw($IT_BEAN);
 
-my $IT_BEAN = "jmx4perl:type=it,name=testbean";
+my $IT_BEAN = "jolokia:type=it,name=testbean";
 
 
 sub new { 
