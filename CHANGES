@@ -1,7 +1,11 @@
-0.90 (2011-9-4)
-  - Tuned Build.PL so that scripts can be added conditionally
+0.91
+  - Fixed bug RT#67815 which was caused by an invalid replacement of placeholder
+    for certain cases (i.e. is during parent check definition resolving
+    ($0,$1) needs to be replaced by ($1,$2) which ended up falsely as ($2,$2)).
+0.90 (2011-4-11)
+  - Tuned Build.PL so that scripts can be added conditionally.
   - Fixed normalization issue with negative delta check values.
-  - Support for new JSON serialization style of Jolokia 0.84 added. 
+  - Support for new JSON serialization style of Jolokia 0.90 added. 
     (i.e numbers and booleans are not returned as plain strings anymore
     but as Long, Double, true/false. Null is returned as JSON-null.
     If you have trouble with boolean checks in check_jmx4perl, please

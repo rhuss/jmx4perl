@@ -319,7 +319,7 @@ sub _extract_checks {
             for my $k (keys(%$c)) {
                 $c->{$k} = $self->_replace_placeholder($c->{$k},undef) unless ref($c->{$k});
             }
-            #print "[C] ",Dumper($c);
+            # print "[C] ",Dumper($c);
         }
         return $check_configs;
     } else {
@@ -347,8 +347,9 @@ sub _resolve_multicheck {
                     my $args_merged = $self->_merge_multicheck_args($c_args,$args);
                     # We need a copy of the check hash to avoid mangling it up
                     # if it is referenced multiple times
-                    my $check = { %{$config->{check}->{$c_name}} } ||
-                      $np->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check);
+                    $np->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check) 
+                      unless defined($config->{check}->{$c_name});
+                    my $check = { %{$config->{check}->{$c_name}} };
                     $check->{key} = $c_name;
                     $check->{args} = $args_merged;
                     push @{$check_config},$check;
@@ -412,6 +413,8 @@ sub _resolve_check_config {
             # Clone it to avoid side effects when replacing checks inline
             my $p_check = { %{$config->{check}->{$p_name}} };
             $p_check->{key} = $p_name;
+#            print "::::: ",Dumper($p_check,$p_args);
+
             $self->_resolve_check_config($p_check,$config,$p_args);
 
             #$self->_replace_args($p_check,$config,$p_args);
@@ -428,6 +431,7 @@ sub _resolve_check_config {
         }
     }
     $self->_replace_args($check,$config,$args);
+    #print Dumper($check);
     return $check;
 }
 
@@ -437,57 +441,54 @@ sub _replace_args {
     my $check = shift;
     my $config = shift;
     my $args = shift;
-
     for my $k (keys(%$check)) {
         next if $k =~ /^(key|args)$/; # Internal keys
-        my $val = $check->{$k};
-        if ($args && @$args) {
-            for my $i (0 ... $#$args) {
-                my $repl = $args->[$i];
-                $val = $self->_replace_placeholder($val,$repl,$i) unless ref($val);
-            }
-        } 
-        $check->{$k} = $val;
+        $check->{$k} = 
+          $self->_replace_placeholder($check->{$k},$args)
+            if ($args && @$args && !ref($check->{$k}));
     }
 }
 
 sub _replace_placeholder {
     my $self = shift;
     my $val = shift;
-    my $repl = shift;
-    my $index = shift;
-    my $force = 0;
-    if (!defined($index)) {
-        # We have to replace any left over placeholder either with its 
-        # default value or with an empty value
-        $index = "\\d+";
-        $force = 1;
-    }
+    my $args = shift;
+
+    my $index = defined($args) ? join "|",0 ... $#$args : "\\d+";
+
     my $regexp;
-    eval '$regexp = qr/^(.*?)\$(' . $index . '|\{\s*' . $index . '\s*:([^\}]+)\})(.*|$)/';
+    eval '$regexp = qr/^(.*?)\$((' . $index . ')|\{\s*(' . $index . ')\s*:([^\}]+)\})(.*|$)/';
     die "Cannot create placeholder regexp" if $@;
     my $rest = $val;
     my $ret = "";
     while (defined($rest) && length($rest) && $rest =~ /$regexp/) {        
-        my $default = $3;
         my $start = defined($1) ? $1 : "";
         my $orig_val = '$' . $2;
-        my $end = defined($4) ? $4 : "";
-        #print Dumper({start => $start, orig => $orig_val,end => $end, default => $default, rest => $rest});
-        if (defined($repl)) {
-            if ($repl =~ /^\$(\d+)$/) {
-                my $new_index = $1;
-                #print "============== $val $new_index\n";
-                # Val is a placeholder itself
-                if (defined($default)) {
-                    $ret .= $start . '${' . $new_index . ':' . $default . '}';
-                } else {
-                    $ret .= $start . '$' . $new_index;
+        my $i = defined($3) ? $3 : $4;
+        my $default = $5;
+        my $end = defined($6) ? $6 : "";
+        #print Dumper({start => $start, orig => $orig_val,end => $end, default=> $default, rest => $rest, i => $i}); 
+        if (defined($args)) {
+            my $repl = $args->[$i];            
+            if (defined($repl)) { 
+                if ($repl =~ /^\$(\d+)$/) {
+                    my $new_index = $1;
+                    #print "============== $val $new_index\n";
+                    # Val is a placeholder itself
+                    if (defined($default)) {
+                        $ret .= $start . '${' . $new_index . ':' . $default . '}';
+                    } else {
+                        $ret .= $start . '$' . $new_index;
+                    }
+                } else {   
+                    $ret .= $start . $repl;
                 }
-            } else {   
-                $ret .= $start . $repl;
+            } else {
+                $ret .= $start . $orig_val;
             }
-        } elsif ($force) {
+        } else {
+            # We have to replace any left over placeholder either with its 
+            # default value or with an empty value
             if (defined($default)) {
                 $ret .= $start . $default;
             } elsif (length($start) || length($end)) {
@@ -499,8 +500,6 @@ sub _replace_placeholder {
                     return undef;
                 }
             }
-        } else {
-            $ret .= $start . $orig_val;
         }
         $rest = $end;
         #print "... $ret$rest\n";

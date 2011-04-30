@@ -493,7 +493,6 @@ sub _set_attribute {
     if (ref($mbean) eq "CODE") {
         return $jmx->delegate_to_handler($mbean,@args);
     }
-
     my $req = new JMX::Jmx4Perl::Request(WRITE,$mbean,$attribute,$value,$path);
     return $jmx->request($req);
 }

@@ -102,7 +102,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "0.90_5";
+$VERSION = "0.90";
 
 my $REGISTRY = {
                 # Agent based
@@ -432,14 +432,12 @@ sub set_attribute {
     my ($object,$attribute,$path,$value) = 
       $self->_extract_get_set_parameters(with_value => 1,params => [@_]);
     croak "No object name provided" unless $object;
-
     my $response;
     if (ref($object) eq "CODE") {
         $response =  $self->delegate_to_handler($object,$value);        
     } else {
         croak "No attribute provided for object $object" unless $attribute;
         croak "No value to set provided for object $object and attribute $attribute" unless defined($value);
-        
         my $request = JMX::Jmx4Perl::Request->new(WRITE,$object,$attribute,$value,$path);
         $response = $self->request($request);
     }
