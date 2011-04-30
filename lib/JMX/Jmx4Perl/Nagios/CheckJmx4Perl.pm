@@ -74,12 +74,14 @@ sub execute {
     eval {
         # Request
         my @optional = ();
+
         my $error_stat = { };
         my $target_config = $self->target_config;
         my $jmx = JMX::Jmx4Perl->new(mode => "agent", url => $self->url, user => $self->user, 
                                      password => $self->password,
                                      product => $self->product, 
                                      proxy => $self->proxy_config,
+                                     timeout => $np->opts->{timeout} || 180,
                                      target => $target_config);
         my @requests;
         for my $check (@{$self->{checks}}) {

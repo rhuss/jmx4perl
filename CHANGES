@@ -2,6 +2,9 @@
   - Fixed bug RT#67815 which was caused by an invalid replacement of placeholder
     for certain cases (i.e. is during parent check definition resolving
     ($0,$1) needs to be replaced by ($1,$2) which ended up falsely as ($2,$2)).
+  - Implemented --timeout option for check_jmx4perl, which is a pure HTTP timeout 
+    for the communication between the Nagios checks and the Jolokia agent (RT#67821)
+ 
 0.90 (2011-4-11)
   - Tuned Build.PL so that scripts can be added conditionally.
   - Fixed normalization issue with negative delta check values.
