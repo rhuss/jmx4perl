@@ -1,4 +1,6 @@
 0.91
+  - Added --unknown-is-critical option to map all UNKNOWN to CRITICAL values (RT#67899)
+  - Added jmx4perl back to the build process, which was forgotten in 0.90
   - Fixed bug RT#67815 which was caused by an invalid replacement of placeholder
     for certain cases (i.e. is during parent check definition resolving
     ($0,$1) needs to be replaced by ($1,$2) which ended up falsely as ($2,$2)).

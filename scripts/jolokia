@@ -59,11 +59,11 @@ Options:
 
   Command 'repack':
      --policy                      Adds a jolokia-access.xml policy file, which is in the current 
-                                   directory. C<--no-policy> removed the policy file
+                                   directory. --no-policy removes the policy file.
      --policy-file <policy file>   Alternate policy file to use (implies --policy)
      --security                    Add security to the web.xml with role 'jolokia' by default. 
                                    Use no-security in order to remove security section completely
-     --security-role <role>        Select a different role for WEB security
+     --security-role <role>        Select a different role for WEB security. Implies --security
      --no-jsr160-proxy             Remove the JSR-160 proxy declaration from web.xml. Re-add with 
                                    --jsr160-proxy
 

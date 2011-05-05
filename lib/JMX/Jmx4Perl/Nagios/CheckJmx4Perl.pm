@@ -119,7 +119,7 @@ sub execute {
         # uses this tag to catch an exit code of a plugin. We rethrow this
         # exception if we detect this pattern.
         if ($@ !~ /^ExitTrap:/) {
-            $np->nagios_die("Error: $@");
+            $self->nagios_die("Error: $@");
         } else {
             die $@;
         }
@@ -266,15 +266,15 @@ sub _verify_and_initialize {
     # If a server name is given, we use that for the connection parameters
     if ($o->server) {
         $self->{server_config} = $config->get_server_config($o->server)
-          || $np->nagios_die("No server configuration for " . $o->server . " found");
+          || $self->nagios_die("No server configuration for " . $o->server . " found");
     } 
 
     # Sanity checks
-    $np->nagios_die("No Server URL given") unless $self->url;
+    $self->nagios_die("No Server URL given") unless $self->url;
 
     for my $check (@{$self->{checks}}) {
         my $name = $check->name ? " [Check: " . $check->name . "]" : "";
-        $np->nagios_die("An MBean name and a attribute/operation must be provided " . $name)
+        $self->nagios_die("An MBean name and a attribute/operation must be provided " . $name)
           if ((!$check->mbean || (!$check->attribute && !$check->operation)) && !$check->alias && !$check->value);
         $self->verify_check($check,$name);
     }
@@ -285,7 +285,7 @@ sub verify_check {
     my $check = shift;
     my $name = shift;
     my $np = $self->{np};
-    $np->nagios_die("At least a critical or warning threshold must be given " . $name) 
+    $self->nagios_die("At least a critical or warning threshold must be given " . $name) 
       if ((!defined($check->critical) && !defined($check->warning)));        
 }
 
@@ -298,8 +298,8 @@ sub _extract_checks {
     
     my $np = $self->{np};
     if ($check) {
-        $np->nagios_die("No configuration given") unless $config;
-        $np->nagios_die("No checks defined in configuration") unless $config->{check};
+        $self->nagios_die("No configuration given") unless $config;
+        $self->nagios_die("No checks defined in configuration") unless $config->{check};
         
         my $check_configs;
         unless ($config->{check}->{$check}) {
@@ -309,7 +309,7 @@ sub _extract_checks {
             $check_configs = ref($check_config) eq "ARRAY" ? $check_config : [ $check_config ];
             $check_configs->[0]->{key} = $check;
         }
-        $np->nagios_die("No check configuration with name " . $check . " found") unless (@{$check_configs});
+        $self->nagios_die("No check configuration with name " . $check . " found") unless (@{$check_configs});
 
         # Resolve parent values
         for my $c (@{$check_configs}) {
@@ -349,7 +349,7 @@ sub _resolve_multicheck {
                     my $args_merged = $self->_merge_multicheck_args($c_args,$args);
                     # We need a copy of the check hash to avoid mangling it up
                     # if it is referenced multiple times
-                    $np->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check) 
+                    $self->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check) 
                       unless defined($config->{check}->{$c_name});
                     my $check = { %{$config->{check}->{$c_name}} };
                     $check->{key} = $c_name;
@@ -362,7 +362,7 @@ sub _resolve_multicheck {
                 for my $name (@$mc_names) {                    
                     my ($mc_name,$mc_args) = $self->_parse_check_ref($name);
                     my $args_merged = $self->_merge_multicheck_args($mc_args,$args);
-                    $np->nagios_die("Unknown multi check '" . $mc_name . "'")
+                    $self->nagios_die("Unknown multi check '" . $mc_name . "'")
                       unless $multi_checks->{$mc_name};
                     push @{$check_config},@{$self->_resolve_multicheck($config,$mc_name,$args_merged)};
                 }
@@ -409,7 +409,7 @@ sub _resolve_check_config {
         my $parent_merged = {};
         for my $p (@$parents) {
             my ($p_name,$p_args) = $self->_parse_check_ref($p);
-            $np->nagios_die("Unknown parent check '" . $p_name . "' for check '" . 
+            $self->nagios_die("Unknown parent check '" . $p_name . "' for check '" . 
                             ($check->{key} ? $check->{key} : $check->{name}) . "'") 
               unless $config->{check}->{$p_name};
             # Clone it to avoid side effects when replacing checks inline
@@ -528,7 +528,7 @@ sub _get_config {
     my $self = shift;
     my $path = shift;
     my $np = $self->{np};
-    $np->nagios_die("No configuration file " . $path . " found")
+    $self->nagios_die("No configuration file " . $path . " found")
       if ($path && ! -e $path);
     return new JMX::Jmx4Perl::Config($path);
 }
@@ -695,6 +695,10 @@ sub add_nagios_np_args {
                  spec => "label|l=s",
                  help => "Label to be used for printing out the result of the check. Placeholders can be used."
                 );
+    $np->add_arg(
+                 spec => "unknown-is-critical",
+                 help => "Map UNKNOWN errors to errors with a CRITICAL status"
+                );
 }
 
 # Access to configuration informations
@@ -769,8 +773,16 @@ sub AUTOLOAD {
             return undef;
         }
     } else {
-        $np->nagios_die("No config attribute \"" . $name . "\" known");
+        $self->nagios_die("No config attribute \"" . $name . "\" known");
     }
+}
+
+sub nagios_die {
+    my $self = shift;
+    my @args = @_;
+    
+    my $np = $self->{np};
+    $np->nagios_die(join("",@args),$np->opts->{'unknown-is-critical'} ? CRITICAL : UNKNOWN)
 }
 
 # Declared here to avoid AUTOLOAD confusions

@@ -29,6 +29,24 @@ EOT
 
 my $msg = <<EOT;
 
+jmx4perl
+========
+
+jmx4perl is a command line utility for accessing Jolokia agents
+(www.jolokia.org). It can be used for script based exploration 
+and easy inspection of the JMX space.
+
+Install 'jmx4perl' ? (y/n)
+EOT
+
+chomp $msg;
+my $answer = &y_n($msg,"y");
+if ($answer) {
+    &add_script("scripts/jmx4perl" => 1);   
+}
+
+my $msg = <<EOT;
+
 check_jmx4perl
 ==============
 
