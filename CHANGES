@@ -1,4 +1,4 @@
-0.91
+0.91 (2011-5-6)
   - Added --unknown-is-critical option to map all UNKNOWN to CRITICAL values (RT#67899)
   - Added jmx4perl back to the build process, which was forgotten in 0.90
   - Fixed bug RT#67815 which was caused by an invalid replacement of placeholder
@@ -8,10 +8,9 @@
     for the communication between the Nagios checks and the Jolokia agent (RT#67821)
   - Added a possibility to store encrypted passwords in the configuration file.
     Please note, that this is *not* secure and only prevents casual attacks, since
-    the password needs to be symmetrically decrypted by the perl modules before
-    passing it to the server. In order to create an encrypted password, 
-    use 'jmx4perl encrypt <passwd>'.
-  - Fixed RT#67772 which prevent the proper count of failed checks for non-relative 
+    the password needs to be symmetrically decrypted before passing it to the server. 
+    In order to create an encrypted password, use 'jmx4perl encrypt <passwd>'.
+  - Fixed RT#67772 which prevented the proper count of failed checks for non-relative 
     checks within multi checks
 
 0.90 (2011-4-11)
