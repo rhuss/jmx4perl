@@ -166,10 +166,10 @@ sub _prepare_multicheck_message {
                 $extra .= scalar(@$errs) . " " . $STATUS_TEXT{$code} . " (" . join (",",@$errs) . "), ";
                 $nr += scalar(@$errs);
             }
-                }
+        }
         if ($nr > 0) {
             # Cut off extra chars at the end
-            $extra = substr($extra,-2);
+            $extra = substr($extra,0,-2);
         }
         $summary = $nr . " of " . $nr_checks . " failed: " . $extra;
     }

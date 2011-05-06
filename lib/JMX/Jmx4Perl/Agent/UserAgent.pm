@@ -4,6 +4,15 @@
 # in the request
 package JMX::Jmx4Perl::Agent::UserAgent;
 use base qw(LWP::UserAgent);
+use vars qw($HAS_BLOWFISH_PP $BF);
+use strict;
+
+BEGIN {
+    $HAS_BLOWFISH_PP = eval "require Crypt::Blowfish_PP; 1";
+    if ($HAS_BLOWFISH_PP) {
+        $BF = new Crypt::Blowfish_PP(pack("W10",0x16,0x51,0xAE,0x13,0xF2,0xFA,0x11,0x20,0x6E,0x6A));
+    }
+}
 
 =head1 NAME
 
@@ -30,7 +39,7 @@ sub get_basic_credentials {
     my $user = $isproxy ? $self->proxy_cfg($cfg,"user") : $cfg->{user};
     my $password = $isproxy ? $self->proxy_cfg($cfg,"password") : $cfg->{password};
     if ($user && $password) {
-        return ($user,$password);
+        return ($user,$self->conditionally_decrypt($password));
     } else {
         return (undef,undef);
     }
@@ -44,6 +53,47 @@ sub proxy_cfg {
     } else {
         return $cfg->{"proxy_" . $what};
     }
+}
+
+sub conditionally_decrypt { 
+    my $self = shift;
+    my $password = shift;
+    if ($password =~ /^\[\[\s*(.*)\s*\]\]$/) {
+        # It's a encrypted password, lets decrypt it here
+        return &decrypt($1);
+    } else {
+        return $password;
+    }
+}
+
+sub decrypt {
+    my $encrypted = shift;
+    die "No encryption available. Please install Crypt::Blowfish_PP" unless $HAS_BLOWFISH_PP;
+    my $rest = $encrypted; 
+    my $ret = "";
+    while (length($rest) > 0) {
+        my $block = substr($rest,0,16);
+        $rest = substr($rest,16);
+        $ret .= $BF->decrypt(pack("H*",$block));
+    }
+    $ret =~ s/\s*$//;
+    return $ret;
+}
+
+sub encrypt {
+    my $plain = shift;    
+    die "No encryption available. Please install Crypt::Blowfish_PP" unless $HAS_BLOWFISH_PP;
+    my $rest = $plain; 
+    my $ret = "";
+    while (length($rest) > 0) {
+        my $block = substr($rest,0,8);
+        if (length($block) < 8) { 
+            $block .= " " x (8 - length($block));
+        }
+        $rest = substr($rest,8);
+        $ret .= unpack("H*",$BF->encrypt($block));
+    }
+    return $ret;
 }
 
 =head1 LICENSE
@@ -72,3 +122,5 @@ roland@cpan.org
 =cut
 
 1;
+
+__DATA__

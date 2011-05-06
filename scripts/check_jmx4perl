@@ -327,7 +327,7 @@ The service definition itself then looks like:
                             !--warning 80 --critical 90
   }  
 
-Add this section to your service definitions (depending on you Nagios
+Add this section to your service definitions (depending on your Nagios
 installation). This example adds a service to host C<localhost> for checking the
 heap memory, raising a C<WARNING> if 80% of the available heap is used and a
 C<CRITICAL> if more than 90% of the heap memory is occupied.
@@ -455,10 +455,10 @@ For more complex types, C<check_jmx4perl> provides the concept of so called
 I<pathes> for specifying an inner attribute of a more complex value. A path
 contains parts separated by slashes (/). It is similar to an XPath expression
 for accessing parts of an XML document. Each part points to an inner level of
-complex object.
+a complex object.
 
 For example, the MBean C<java.lang:type=Memory> exposes an attribute called
-C<HeapMemoryUsage>. This attribute is a compound data type, which contains
+C<HeapMemoryUsage>. This attribute is a compound data type which contains
 multiple entries. Looking with C<jmx4perl> at this attribute
 
  $ jmx4perl http://localhost:8080/jolokia read java.lang:type=Memory HeapMemoryUsage

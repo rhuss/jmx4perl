@@ -54,6 +54,9 @@ my @args;
 if (lc $ARGV[0] eq "aliases") {
     &command_aliases;
     exit(0);
+} elsif (lc $ARGV[0] eq "encrypt") {
+    &command_encrypt($ARGV[1]);
+    exit(0);
 } elsif (@ARGV == 1) {
     $command = "info";
     $url = $ARGV[0];
@@ -94,6 +97,8 @@ my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
 
   jmx4perl .... aliases
 
+  jmx4perl .... encrypt <password>
+
   jmx4perl --help
 
   jmx4perl --version [<agent-url>]
@@ -112,7 +117,7 @@ Options:
    --config                Path to an optional configuration file (default: ~/.j4p)
    --history               Print out the history of return values (if switched on and present)
    --verbose               Print out more information
-
+   
 =head1 DESCRIPTION
 
 B<jmx4perl> is a command line utility for an easy access of an instrumented
@@ -369,6 +374,26 @@ sub command_search {
         print $l,"\n";
     }
 }
+
+=head2 encrypt 
+
+Encrypt a given password so that it can be stored in its encrypted form in a
+configuration file. Please note, that this is by no means secure and only usual
+to avoid casual discovery of the password. Since jmx4perl acts as a client it
+needs to be able to decrypt the password on its own when contacting the agent,
+so it is a simple symmetric encryptions. The password printed out can be used
+as C<Password> value for HTTP authentication and HTTP proxy authentication in
+configuration files or at the command line.
+
+=cut 
+
+sub command_encrypt {
+    require JMX::Jmx4Perl::Agent;
+    my $val = shift;
+    my $enc = JMX::Jmx4Perl::Agent::encrypt($val);
+    print $enc,"\n";
+}
+
 
 =head1 HISTORY TRACKING
 

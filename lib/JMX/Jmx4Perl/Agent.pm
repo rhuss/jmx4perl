@@ -216,6 +216,17 @@ sub request {
     }
 }
 
+=item $encrypted = $agent->encrypt($plain)
+
+Encrypt a password which can be used in configuration files in order to 
+obfuscate the clear text password.
+
+=cut
+
+sub encrypt {
+    return "[[" . &JMX::Jmx4Perl::Agent::UserAgent::encrypt(shift) . "]]";
+}
+
 
 # Create an HTTP-Request for calling the server
 sub _to_http_request {

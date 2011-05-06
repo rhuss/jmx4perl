@@ -165,14 +165,7 @@ sub extract_responses {
         # Do the real check.
         my ($code,$mode) = $self->_check_threshhold($rel_value);
         # For Multichecks, we remember the label of a currently failed check
-        if ($code != OK && $opts->{error_stat}) {
-            my $label = $self->{config}->{key} || $self->{config}->{name};
-            if ($label) {
-                my $arr = $opts->{error_stat}->{$code} || [];
-                push @$arr,$label;
-                $opts->{error_stat}->{$code} = $arr;
-            }
-        }
+        $self->_update_error_stats($opts->{error_stat},$code) unless $code == OK;
         my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
                                                     value => $value_conv, unit => $unit,base => $base_conv, 
@@ -185,10 +178,24 @@ sub extract_responses {
         
         # Do the real check.
         my ($code,$mode) = $self->_check_threshhold($value);
+        $self->_update_error_stats($opts->{error_stat},$code) unless $code == OK;
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit,
                                                     prefix => $opts->{prefix}));                    
     }
     return @extra_requests;
+}
+
+sub _update_error_stats {
+    my $self = shift;
+    my $error_stat = shift || return;
+    my $code = shift;
+
+    my $label = $self->{config}->{key} || $self->{config}->{name};
+    if ($label) {
+        my $arr = $error_stat->{$code} || [];
+        push @$arr,$label;
+        $error_stat->{$code} = $arr;
+    }
 }
 
 # Extract a single value, which is different, if the request was a pattern read

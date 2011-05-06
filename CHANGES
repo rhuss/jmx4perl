@@ -6,7 +6,14 @@
     ($0,$1) needs to be replaced by ($1,$2) which ended up falsely as ($2,$2)).
   - Implemented --timeout option for check_jmx4perl, which is a pure HTTP timeout 
     for the communication between the Nagios checks and the Jolokia agent (RT#67821)
- 
+  - Added a possibility to store encrypted passwords in the configuration file.
+    Please note, that this is *not* secure and only prevents casual attacks, since
+    the password needs to be symmetrically decrypted by the perl modules before
+    passing it to the server. In order to create an encrypted password, 
+    use 'jmx4perl encrypt <passwd>'.
+  - Fixed RT#67772 which prevent the proper count of failed checks for non-relative 
+    checks within multi checks
+
 0.90 (2011-4-11)
   - Tuned Build.PL so that scripts can be added conditionally.
   - Fixed normalization issue with negative delta check values.
