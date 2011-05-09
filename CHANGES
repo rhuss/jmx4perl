@@ -1,3 +1,7 @@
+0.92 (20050-5-9)
+  - Fixed bug in pack specification (encryption) which is not available for 
+    Perl 5.8 (and which broke Jmx4Perl for Perl 5.8)
+
 0.91 (2011-5-6)
   - Added --unknown-is-critical option to map all UNKNOWN to CRITICAL values (RT#67899)
   - Added jmx4perl back to the build process, which was forgotten in 0.90
