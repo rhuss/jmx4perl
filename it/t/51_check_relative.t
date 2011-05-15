@@ -21,7 +21,7 @@ my %s = (
 
 for my $base (qw(MEMORY_HEAP_MAX java.lang:type=Memory/HeapMemoryUsage/max 1000000000)) {
     for my $k (keys %s) {
-        ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --base $base -w $k");
+        ($ret,$content) = exec_check_perl4jmx("--alias MEMORY_HEAP_USED --base $base -w $k");
         is($ret,$s{$k}->[0],"Relative to $base -w $k : $ret");
         ok($content =~ /^$s{$k}->[1]/,"Relative to $base $k : " . $s{$k}->[1]);
     }

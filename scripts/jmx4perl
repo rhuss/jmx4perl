@@ -43,7 +43,7 @@ my $result = GetOptions(\%opts,
                         "shell|s=s",
                         "version!",
                         "history!",
-                        "help|h!" => sub { &Getopt::Long::HelpMessage() }
+                        "help|h!" => sub { Getopt::Long::HelpMessage() }
                        );
 
 
@@ -52,10 +52,10 @@ my $command;
 my @args;
 
 if (lc $ARGV[0] eq "aliases") {
-    &command_aliases;
+    command_aliases;
     exit(0);
 } elsif (lc $ARGV[0] eq "encrypt") {
-    &command_encrypt($ARGV[1]);
+    command_encrypt($ARGV[1]);
     exit(0);
 } elsif (@ARGV == 1) {
     $command = "info";
@@ -607,7 +607,7 @@ sub _get_args_for_jmx4perl {
     }
 
     # Basic options to take over literally
-    for my $arg qw(product user password verbose method) {
+    for my $arg (qw(product user password verbose method)) {
         if (defined($opts->{$arg})) {
             $ret->{$arg} = $opts->{$arg};
         }

@@ -32,4 +32,4 @@ is($res[0],"server","Check for alias resolving by closure");
 is($res[1],"name","Check for alias resolving by closure");
 my $code = $jmx4perl->resolve_alias(SERVER_ADDRESS);
 is(ref($code),"CODE","Check for code based resolving");
-is(&$code,"127.0.0.1","Check for code based resolving");
+is($code->(),"127.0.0.1","Check for code based resolving");

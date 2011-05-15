@@ -13,7 +13,7 @@ my $url = $ARGV[0] || die "No url given\n";
 
 my $jmx = JMX::Jmx4Perl->new(url => $url,verbose => 0);
 
-my $MODULE_HANDLER = &init_handler($jmx);
+my $MODULE_HANDLER = init_handler($jmx);
 my %VISITED = ();
 
 my $product = $jmx->product;
@@ -26,21 +26,21 @@ $domains = [ "(none)" ] unless $domains;
 # the domain name
 #push @$domains,"Geronimo:j2eeType=J2EEDomain,name=Geronimo" if grep { /^geronimo:/ } @$domains;
 for my $d (@{$domains || []}) {    
-    my $dn = $d eq "(none)" ? "*" : &print(1,$d,"Domain");
+    my $dn = $d eq "(none)" ? "*" : _print(1,$d,"Domain");
     my $servers = $jmx->search("$dn:j2eeType=J2EEServer,*");
     if (!$servers && $d eq "(none)") {
         # That's probably not a real jsr77 container
         # We are looking up all J2EEObject on our own without server and domain
         my $objects = [ grep { /j2eeType/ } @{$jmx->search("*:*")} ];
-        &print_modules(1,$objects);
+        print_modules(1,$objects);
     } elsif (!$servers) {
         print "          == No servers defined for domain $dn ==\n";
     } else {
         for my $s (@{$servers || []}) {
-            my $sn = &print(2,$s,"Server");
+            my $sn = _print(2,$s,"Server");
             for my $o (qw(deployedObjects resources javaVMs)) {
                 my $objects = $jmx->get_attribute($s,$o);
-                &print_modules(3,$objects);
+                print_modules(3,$objects);
             }
         }
 
@@ -56,7 +56,7 @@ if ($product->id eq "jboss" || $product->id eq "weblogic") {
     if ($web_modules) {
         print "\n=============================================\nJBoss WebModules:\n";
         my $new = [ grep { !$VISITED{$_} } @$web_modules ];
-        &print_modules(1,$new);
+        print_modules(1,$new);
     }
 }
 
@@ -103,9 +103,9 @@ sub print_modules {
         if (@mods) {
             my $handler = $MODULE_HANDLER->{$k};
             for my $mod (@mods) {
-                &print($l,$mod);
+                _print($l,$mod);
                 if (ref($handler) eq "CODE") {
-                    &$handler($l,$mod);
+                    $handler->($l,$mod);
                 } elsif ($handler && !ref($handler)) {
                     my $modules = $jmx->get_attribute($mod,$handler);
                     if ($modules) {
@@ -113,7 +113,7 @@ sub print_modules {
                         # Fix for Jonas 4.1.2 with jetty, which includes the
                         # WebModule itself in the list of contained Servlets
                         $modules = [ grep { $_ !~ /j2eeType=$k/} @$modules ];
-                        &print_modules($l+1,$modules) if scalar(@$modules);
+                        print_modules($l+1,$modules) if scalar(@$modules);
                     }
                 }
             }
@@ -123,14 +123,14 @@ sub print_modules {
 
 
 
-sub print {
+sub _print {
    my ($i,$s,$t) = @_;
    $VISITED{$s} = $s;
-   my $n = &extract_name($s);
+   my $n = extract_name($s);
    unless ($t) { 
        $t = $1 if $s =~ /j2eeType=(\w+)/;
    }
-   my $can_stat = &check_for_statistics($s);
+   my $can_stat = check_for_statistics($s);
    print "  " x $i,$t,": ",$n,($can_stat ? " [S] " : ""),"\n";
    print "  " x $i," " x length($t),"  ",$s,"\n";
    if ($opts{s} && $can_stat) {

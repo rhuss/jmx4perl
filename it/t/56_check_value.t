@@ -13,19 +13,19 @@ my ($ret,$content);
 # ====================================================
 # Check for --value
 
-($ret,$content) = &exec_check_perl4jmx("--value java.lang:type=Memory/HeapMemoryUsage/used " . 
+($ret,$content) = exec_check_perl4jmx("--value java.lang:type=Memory/HeapMemoryUsage/used " . 
                                        "--base java.lang:type=Memory/HeapMemoryUsage/max " . 
                                        "--critical 90 ");
 is($ret,0,"Memory with value OK");
 ok($content =~ /^OK/,"Content contains OK");
 
 # TODO: Check escaping
-($ret,$content) = &exec_check_perl4jmx("--value jmx4perl.it:name=\\/\\/server\\/client,type=naming/Ok " . 
+($ret,$content) = exec_check_perl4jmx("--value jmx4perl.it:name=\\/\\/server\\/client,type=naming/Ok " . 
                                        "--critical OK");
 is($ret,2,"CRITICAL expected");
 ok($content =~ /jmx4perl.it:name=\\\/\\\/server\\\/client,type=naming\/Ok/,"Content contains MBean name");
 
-($ret,$content) = &exec_check_perl4jmx("--value jmx4perl.it:type=naming,name=\\\"jdbc/testDB\\\"/Ok " . 
+($ret,$content) = exec_check_perl4jmx("--value jmx4perl.it:type=naming,name=\\\"jdbc/testDB\\\"/Ok " . 
                                        "--critical OK");
 is($ret,2,"CRITICAL expected");
 ok($content =~ m|jmx4perl.it:type=naming,name="jdbc/testDB"/Ok|,"Content contains weired MBean name");
