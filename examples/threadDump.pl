@@ -40,7 +40,7 @@ my $result = GetOptions(\%opts,
                         "proxy-user=s","proxy-password=s",
                         "filter|f=s",
                         "verbose|v!",
-                        "help|h!" => sub { &Getopt::Long::HelpMessage() }
+                        "help|h!" => sub { Getopt::Long::HelpMessage() }
                        );
 
 my $url = $ARGV[0] || die "No URL to j4p agent given\n";
@@ -55,12 +55,12 @@ die "Cannot execute thread dump. Remember, $0 works only with Java >= 1.6\n$@\n"
 
 my @filters = split ",",$opts{filter} if $opts{filter};
 for my $thread (@$dump) {
-    print "-" x 75,"\n" if &print_thread($thread);;
+    print "-" x 75,"\n" if print_thread($thread);;
 }
 
 sub print_thread {
     my $thread = shift;
-    my $st = &get_stacktrace($thread->{stackTrace});
+    my $st = get_stacktrace($thread->{stackTrace});
     if ($st) {
         print $thread->{threadName}," (",$thread->{threadState},"):\n";
         print $st;
@@ -80,13 +80,13 @@ sub get_stacktrace {
         my $class = $l->{className};
         if (!@filters || grep { $class =~ /^\Q$_\E/ } @filters) {
             $ret .= $last_line if ($last_line && !$found);
-            $ret .= &format_stack_line($l);
+            $ret .= format_stack_line($l);
             $found = 1;
             $flag = 1;
         } elsif ($flag) {
             $flag = 0;
             $ret .= "     ....\n";
-            $last_line = &format_stack_line($l);
+            $last_line = format_stack_line($l);
         }
     }
     return $found ? $ret : undef;

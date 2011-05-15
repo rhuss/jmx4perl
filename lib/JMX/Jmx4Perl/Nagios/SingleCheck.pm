@@ -472,7 +472,7 @@ sub _split_attr_spec {
     my @ret = ();
     # Text:ParseWords is used for split on "/" taking into account
     # quoting and escaping
-    for my $p (&parse_line("/",1,$name)) {
+    for my $p (parse_line("/",1,$name)) {
         # We need to 'unescape' things ourselves
         # since we want quotes to remain in the names (using '0'
         # above would kill those quotes, too). 

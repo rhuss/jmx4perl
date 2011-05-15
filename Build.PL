@@ -40,12 +40,12 @@ Install 'jmx4perl' ? (y/n)
 EOT
 
 chomp $msg;
-my $answer = &y_n($msg,"y");
+my $answer = y_n($msg,"y");
 if ($answer) {
-    &add_reqs(
+    add_reqs(
               "Crypt::Blowfish_PP" => 0 # opt
              );
-    &add_script("scripts/jmx4perl" => 1);   
+    add_script("scripts/jmx4perl" => 1);   
 }
 
 my $msg = <<EOT;
@@ -60,16 +60,16 @@ Install 'check_jmx4perl' ? (y/n)
 EOT
 
 chomp $msg;
-my $answer = &y_n($msg,"y");
+my $answer = y_n($msg,"y");
 if ($answer) {
-    &add_reqs(
+    add_reqs(
               "Nagios::Plugin" => "0.27", # req
               "Text::ParseWords" => 0,    # req
               "Config::General" => 0,     # req
               "Pod::Usage" => 0,          # opt
               "Crypt::Blowfish_PP" => 0 # opt
              );
-    &add_script("scripts/check_jmx4perl" => 1);   
+    add_script("scripts/check_jmx4perl" => 1);   
 }
 
 $msg = <<EOT;
@@ -83,16 +83,16 @@ cacti_jmx4perl is a script which can be used as a Cacti
 Install 'cacti_jmx4perl' ? (y/n)
 EOT
 chomp $msg;
-$answer = &y_n($msg,"y");
+$answer = y_n($msg,"y");
 if ($answer) {
-    &add_reqs(
+    add_reqs(
               "Nagios::Plugin" => "0.27", # req
               "Text::ParseWords" => 0,    # req
               "Config::General" => 0,     # req
               "Pod::Usage" => 0,          # opt
               "Crypt::Blowfish_PP" => 0 # opt
              );
-    &add_script("scripts/cacti_jmx4perl" => 1);   
+    add_script("scripts/cacti_jmx4perl" => 1);   
 }
 
 $msg = <<EOT;
@@ -107,10 +107,10 @@ and has quite some Perl module dependencies.
 Install 'j4psh' ? (y/n)
 EOT
 chomp $msg;
-$answer = &y_n($msg,"y");
+$answer = y_n($msg,"y");
 
 if ($answer) {
-    &add_reqs(
+    add_reqs(
               "Term::ShellUI" => 0,      # req
               "Term::Clui" => 0,         # req 
               "Term::Size" => "0.207",   # opt 
@@ -118,7 +118,7 @@ if ($answer) {
               "File::SearchPath" => 0,   # opt 
               "Crypt::Blowfish_PP" => 0  # opt
              );
-    &add_script("scripts/j4psh" => 1);
+    add_script("scripts/j4psh" => 1);
     # check for Term::ReadLine::Gnu
     my $has_gnu_readline = eval "require Term::ReadLine; require Term::ReadLine::Gnu; 1";
     my $has_perl_readline = eval "require Term::ReadLine::Perl; 1";
@@ -132,11 +132,11 @@ installed along with header files.
 Use Term::ReadLine::Gnu ? (y/n)
 EOT
         chomp $msg;
-        $answer = &y_n($msg,"n");
+        $answer = y_n($msg,"n");
         if ($answer) {
-            &add_reqs("Term::ReadLine::Gnu" => 0);
+            add_reqs("Term::ReadLine::Gnu" => 0);
         } elsif (!$has_perl_readline) {
-            &add_reqs("Term::ReadLine::Perl" => 0,
+            add_reqs("Term::ReadLine::Perl" => 0,
                       "Term::ReadKey" => 0);
         }
     }
@@ -154,9 +154,9 @@ are required on the server side for using jmx4perl.
 Install 'jolokia' ? (y/n)
 EOT
 chomp $msg;
-$answer = &y_n($msg,"y");
+$answer = y_n($msg,"y");
 if ($answer) {
-    &add_reqs(
+    add_reqs(
               "Archive::Zip" => 0,        # req
               "XML::LibXML" => 0,         # req
               "File::Temp" => 0,          # req
@@ -165,7 +165,7 @@ if ($answer) {
               "XML::Tidy" => 0,           # opt
               "Term::ProgressBar" => 0    # opt
              );
-    &add_script("scripts/jolokia" => 1);
+    add_script("scripts/jolokia" => 1);
     my $has_openpgp = eval "require Crypt::OpenPGP; 1";
     if (!$has_openpgp) {
         my $check = `gpg --version`;
@@ -182,9 +182,9 @@ be a pain due to its large set of dependencies.
 Use Crypt::OpenPGP ? (y/n)
 EOT
                 chomp $msg;
-                $answer = &y_n($msg,"y");
+                $answer = y_n($msg,"y");
                 if ($answer) {
-                    &add_reqs("Crypt::OpenPGP" => 0);
+                    add_reqs("Crypt::OpenPGP" => 0);
                 }
             }
         }

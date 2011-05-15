@@ -62,15 +62,15 @@ BEGIN {
 
     my $prefix = "JMX::Jmx4Perl::Agent::Jolokia::Verifier::";
     if (eval "require Crypt::OpenPGP; 1") {
-        push @VERIFIERS,&$create($prefix . "OpenPGPVerifier");                    
+        push @VERIFIERS,$create->($prefix . "OpenPGPVerifier");                    
     } elsif (`gpg --version` =~ /GnuPG/m) {
-        push @VERIFIERS,&$create($prefix . "GnuPGVerifier");        
+        push @VERIFIERS,$create->($prefix . "GnuPGVerifier");        
     } else {
         push @WARNINGS,"No signature verification available. Please install GnupPG or Crypt::OpenPGP.";
     }
 
-    push @VERIFIERS,&$create($prefix . "SHA1Verifier") if eval "require Digest::SHA1; 1";
-    push @VERIFIERS,&$create($prefix . "MD5Verifier") if eval "require Digest::MD5; 1";
+    push @VERIFIERS,$create->($prefix . "SHA1Verifier") if eval "require Digest::SHA1; 1";
+    push @VERIFIERS,$create->($prefix . "MD5Verifier") if eval "require Digest::MD5; 1";
 }
 
 =item $verifier = JMX::Jmx4Perl::Agent::Jolokia::Verifier->new(%args)

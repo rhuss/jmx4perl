@@ -16,7 +16,7 @@ my ($ret,$content);
 my $config_file = $FindBin::Bin . "/../check_jmx4perl/multi_check.cfg";
 
 # Simple multicheck
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --check memory"); 
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check memory"); 
 #print ($ret,$content);
 is($ret,0,"Memory with value OK");
 ok($content =~ /\(base\)/,"First level inheritance");
@@ -26,7 +26,7 @@ ok($content =~ /NonHeap Memory/,"NonHeap Memory included");
 #print Dumper($ret,$content);
 
 # Nested multichecks
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --check nested"); 
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check nested"); 
 is($ret,0,"Multicheck with value OK");
 ok($content =~ /\(base\)/,"First level inheritance");
 ok($content =~ /\(grandpa\)/,"Second level inheritance");
@@ -36,31 +36,31 @@ ok($content =~ /Heap Memory/,"Heap Memory Included");
 ok($content =~ /NonHeap Memory/,"Non Heap Memory included");
 
 # Multicheck with reference to checks with parameters
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --check with_inner_args"); 
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check with_inner_args"); 
 is($ret,0,"Multicheck with value OK");
 ok($content =~ /HelloLabel/,"First param");
 ok($content =~ /WithInnerArgs/,"WithInnerArgs");
 
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --check with_outer_args WithOuterArgs"); 
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check with_outer_args WithOuterArgs"); 
 is($ret,0,"Multicheck with value OK");
 ok($content =~ /HelloLabel/,"First param");
 ok($content =~ /WithOuterArgs/,"WithOuterArgs");
 
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --check nested_with_args"); 
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check nested_with_args"); 
 is($ret,0,"Multicheck with value OK");
 ok($content =~ /HelloLabel/,"First param");
 ok($content =~ /NestedWithArgs/,"NestedWithArgs");
 
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --check nested_with_outer_args NestedWithOuterArgs"); 
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check nested_with_outer_args NestedWithOuterArgs"); 
 is($ret,0,"Multicheck with value OK");
 ok($content =~ /HelloLabel/,"First param");
 ok($content =~ /NestedWithOuterArgs/,"NestedWithOuterArgs");
 
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --check overloaded_multi_check"); 
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check overloaded_multi_check"); 
 is($ret,0,"Multicheck with argument for operation");
 ok($content =~ /Value 1 in range/,"OperationWithArgument");
 
-($ret,$content) = &exec_check_perl4jmx("--config $config_file --check failing_multi_check"); 
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check failing_multi_check"); 
 #print Dumper($ret,$content);
 is($ret,2,"Failing memory multicheck is CRITICAL");
 ok($content =~ /memory_non_heap/,"Failed check name is contained in summary");

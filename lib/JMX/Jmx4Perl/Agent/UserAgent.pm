@@ -60,7 +60,7 @@ sub conditionally_decrypt {
     my $password = shift;
     if ($password =~ /^\[\[\s*(.*)\s*\]\]$/) {
         # It's a encrypted password, lets decrypt it here
-        return &decrypt($1);
+        return decrypt($1);
     } else {
         return $password;
     }

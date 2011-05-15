@@ -516,7 +516,7 @@ sub _parse_check_ref {
     if ($check_ref =~/^\s*([^(]+)\(([^)]*)\)\s*$/) {
         my $name = $1;
         my $args_s = $2;
-        my $args = [ &parse_line('\s*,\s*',0,$args_s) ];
+        my $args = [ parse_line('\s*,\s*',0,$args_s) ];
         return ($name,$args);
     } else {
         return $check_ref;

@@ -156,7 +156,7 @@ GetOptions(\%opts,
            "security!",
            "security-role=s",
            "jsr160-proxy!",
-           "help|h" => sub { &Getopt::Long::HelpMessage() },
+           "help|h" => sub { Getopt::Long::HelpMessage() },
           ) || die "Use --help for available options\n";
 
 if ($opts{version}) {
@@ -204,7 +204,7 @@ my $verifier = new JMX::Jmx4Perl::Agent::Jolokia::Verifier
    ua_config => $ua_config
   );
 
-&$command($meta,\%opts,@ARGV);
+$command->($meta,\%opts,@ARGV);
 
 # ===========================================================
 
@@ -263,16 +263,16 @@ used.
 sub command_download {
     my ($meta,$args) = @_;
     
-    my ($agent,$agent_version) = &parse_version($args->{agent});
+    my ($agent,$agent_version) = parse_version($args->{agent});
     my $t = $args->{template} || ($args->{policy} ? "jolokia-access.xml" : undef);
-    my ($template,$template_version) = &parse_version($t);
+    my ($template,$template_version) = parse_version($t);
 
     $agent = "war" if (!$template && !$agent);
-    $agent_version = &agent_version($meta,$agent_version);
+    $agent_version = agent_version($meta,$agent_version);
     $template_version = $agent_version if ($template && !$template_version);
 
-    &download_agent($meta,$agent,$agent_version,$args) if $agent;
-    &download_template($meta,$args,$template,$template_version) if $template;
+    download_agent($meta,$agent,$agent_version,$args) if $agent;
+    download_template($meta,$args,$template,$template_version) if $template;
 }
 
 sub parse_version {
@@ -287,11 +287,11 @@ sub agent_version {
     my $version = shift;
 
     if ($version) {        
-        &verify_version($meta,$version);
+        verify_version($meta,$version);
         return $version;
     } else {
         $version = $meta->latest_matching_version($JMX::Jmx4Perl::VERSION);
-        &fatal("Cannot find compatible Jolokia version for Jmx4Perl ",$JMX::Jmx4Perl::VERSION)
+        fatal("Cannot find compatible Jolokia version for Jmx4Perl ",$JMX::Jmx4Perl::VERSION)
           unless $version;
     }    
 }
@@ -303,12 +303,12 @@ sub download_template {
     my $version = shift;
     
     my $url = $meta->template_url($template,$version);
-    &fatal("No template $template known") unless $url;
+    fatal("No template $template known") unless $url;
     
-    my $file = &path($args,$template);
+    my $file = path($args,$template);
     $logger->info("Downloading ","[em]",$template,"[/em]", " version ",$version);
-    &download($url,$file,$args);
-    &verify_signature($file,$url);
+    download($url,$file,$args);
+    verify_signature($file,$url);
 }
 
 sub path {
@@ -338,12 +338,12 @@ sub download_agent {
         eval {
             my $mapping = $meta->get("mapping");
 
-            my $full_version = $is_snapshot ? &get_snapshot_version($meta,$repository,$agent,$version,$args) : $version;
-            my $download_url = &get_download_url($meta,$repository,$agent,$full_version);
-            my $file = &path($args,$mapping->{$agent}->[2]);
+            my $full_version = $is_snapshot ? get_snapshot_version($meta,$repository,$agent,$version,$args) : $version;
+            my $download_url = get_download_url($meta,$repository,$agent,$full_version);
+            my $file = path($args,$mapping->{$agent}->[2]);
             $logger->info("Downloading ","[em]",$agent," agent","[/em]", " version ",$version," from repository " . $repository);
-            &download($download_url,$file,$args);
-            &verify_signature($file,$download_url);
+            download($download_url,$file,$args);
+            verify_signature($file,$download_url);
         };
         if ($@) {
             print "Cannot fetch from $repository: " . $@ . "Trying next ...\n";
@@ -384,7 +384,7 @@ sub command_info {
                                                                      meta => $meta,file => $file);
     if ($args->{policy}) {
         my $policy = $handler->get_policy;
-        &fatal("No jolokia-access.xml embedded in $file") unless $policy;
+        fatal("No jolokia-access.xml embedded in $file") unless $policy;
         print $policy;
         return;
     }
@@ -407,8 +407,8 @@ sub command_info {
     my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
     if ($args->{verify}) {
         for my $repo (@$repositories) {
-            my $url = &get_download_url($meta,$repo,$ret->{type},$ret->{version});
-            &verify_signature($file,$url);
+            my $url = get_download_url($meta,$repo,$ret->{type},$ret->{version});
+            verify_signature($file,$url);
         }
     }
 }
@@ -476,7 +476,7 @@ sub command_repack {
 
     # Security handling
     if (defined($args->{security}) || $args->{'security-role'}) {
-        &fatal("--security can only be used with WAR agents") unless $artifact_handler->type eq "war";
+        fatal("--security can only be used with WAR agents") unless $artifact_handler->type eq "war";
 
         my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
 
@@ -494,7 +494,7 @@ sub command_repack {
 
     # JSR-160 proxy
     if (defined($args->{'jsr160-proxy'})) {
-        &fatal("--jsr160-proxy can only be used with WAR agents") unless $artifact_handler->type eq "war";
+        fatal("--jsr160-proxy can only be used with WAR agents") unless $artifact_handler->type eq "war";
 
         my $webxml_handler = new JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler(logger => $logger);
 
@@ -507,7 +507,7 @@ sub command_repack {
         $done = 1;
     }
 
-    &fatal("Nothing to repack (at least one of --policy/--policy-file/--security/--jsr160-proxy required)") unless $done;
+    fatal("Nothing to repack (at least one of --policy/--policy-file/--security/--jsr160-proxy required)") unless $done;
 }
 
 # ======================================================================================= 
@@ -520,10 +520,10 @@ sub create_ua {
 sub download {
     my ($url, $file, $args) = @_;
     my $config = $args || {};
-    my $ua = &create_ua($args);
+    my $ua = create_ua($args);
     my $response = $ua->get($url,":content_file" => $file);
     if ($response->is_error) {
-        &fatal("Could not download agent from " . $url . ": " . $response->status_line);
+        fatal("Could not download agent from " . $url . ": " . $response->status_line);
     }
     $logger->info("Saved ", "[em]", $file, "[/em]"); 
 }
@@ -545,7 +545,7 @@ sub verify_version {
 
 sub get_download_url {
     my ($meta,$repository,$agent,$version) = @_;
-    my ($name,$artifact) = &artifact_and_name($meta,$agent,$version);
+    my ($name,$artifact) = artifact_and_name($meta,$agent,$version);
     $repository =~ s/\/+$//;
     my $version_path = $version;
     $version_path = $1 . "-SNAPSHOT" if $version =~ /(.*)-\d+\.\d+-\d+/;
@@ -554,14 +554,14 @@ sub get_download_url {
 
 sub get_snapshot_version {
     my ($meta,$repository,$agent,$version,$args) = @_;
-    my ($name,$artifact) = &artifact_and_name($meta,$agent,$version);    
+    my ($name,$artifact) = artifact_and_name($meta,$agent,$version);    
     my $meta_url = $repository . "/org/jolokia/" . $name . "/" . $version . "/maven-metadata.xml";
     
-    my $ua  = &create_ua($args);
+    my $ua  = create_ua($args);
     my $response = $ua->get($meta_url);
 
     if ($response->is_error) {
-        &fatal("Could not download maven meta from " . $meta_url . " for getting snapshot version: " . $response->status_line);
+        fatal("Could not download maven meta from " . $meta_url . " for getting snapshot version: " . $response->status_line);
     }
     
     my $content = $response->decoded_content;
@@ -569,7 +569,7 @@ sub get_snapshot_version {
     my $build_nr = $1 if $content =~ m|<buildNumber>\s*(.*?)\s*</buildNumber>|si;
     my $base_version = $1 if $version =~ /(.*)-SNAPSHOT$/;
     
-    &fatal("Couldn't parse timestamp or buildNumber from $meta_url") unless defined($timestamp) && defined($build_nr);
+    fatal("Couldn't parse timestamp or buildNumber from $meta_url") unless defined($timestamp) && defined($build_nr);
     return $base_version . "-" . $timestamp . "-" . $build_nr;
 }
 
