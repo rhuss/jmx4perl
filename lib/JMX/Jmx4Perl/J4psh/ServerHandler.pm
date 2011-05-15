@@ -146,7 +146,7 @@ sub _j4p_args {
     my $o = shift;
     my $ret = { };
     
-    for my $arg qw(user password) {
+    for my $arg (qw(user password)) {
         if (defined($o->{$arg})) {
             $ret->{$arg} = $o->{$arg};
         }

@@ -30,7 +30,7 @@ my @searches =
 
 # Basic check:
 for my $name (@names) {
-    my $mbean = &search($jmx,sprintf($name_p,$name));
+    my $mbean = search($jmx,sprintf($name_p,$name));
     my $scalar = $jmx->get_attribute($mbean,"Ok");
     is($scalar,"OK",$name);
 }

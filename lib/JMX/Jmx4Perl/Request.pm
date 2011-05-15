@@ -251,7 +251,7 @@ sub new {
                 map { $self->{$_} = $opts->{$_} } keys %$opts;
                 if ($self->{method}) {
                     # Canonicalize and verify
-                    &method($self,$self->{method});                    
+                    method($self,$self->{method});                    
                 }
             } 
             if ($type eq READ) {
@@ -260,13 +260,13 @@ sub new {
                 $self->{path} = shift;
                 # Use post for complex read requests
                 if (ref($self->{attribute}) eq "ARRAY") {
-                    my $method = &method($self);
+                    my $method = method($self);
                     if (defined($method) && $method eq "GET") {
                         # Was already explicitely set
                         die "Cannot query for multiple attributes " . join(",",@{$self->{attributes}}) . " with a GET request"
                           if ref($self->{attribute}) eq "ARRAY";
                     }
-                    &method($self,"POST");
+                    method($self,"POST");
                 }
             } elsif ($type eq WRITE) {
                 $self->{mbean} = shift;
@@ -282,7 +282,7 @@ sub new {
             } elsif ($type eq SEARCH) {
                 $self->{mbean} = shift;
                 #No check here until now, is done on the server side as well.
-                #die "MBean name ",$self->{mbean}," is not a pattern" unless &is_mbean_pattern($self);
+                #die "MBean name ",$self->{mbean}," is not a pattern" unless is_mbean_pattern($self);
             } elsif ($type eq AGENT_VERSION) {
                 # No extra parameters required
             }  else {

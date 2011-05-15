@@ -199,7 +199,7 @@ sub new {
         }
     }
     
-    my $mode = delete $cfg->{mode} || &autodiscover_mode();
+    my $mode = delete $cfg->{mode} || autodiscover_mode();
     my $product = $cfg->{product} ? lc delete $cfg->{product} : undef;
 
     $class = $REGISTRY->{$mode} || croak "Unknown runtime mode " . $mode;
@@ -1041,7 +1041,7 @@ sub _format_attr_or_op {
         $p = shift @$path;
         if ($p) {
             $ret .= " ".$p."\n";
-            return &$format_sub($ret,$p,$map->{$p},$level);
+            return $format_sub->($ret,$p,$map->{$p},$level);
         } else {
             $ret .= " $label:\n";
         }
@@ -1049,7 +1049,7 @@ sub _format_attr_or_op {
         $ret .= &_get_space($level)."$label:\n";
     }
     for my $key (keys %$map) {
-        $ret = &$format_sub($ret,$key,$map->{$key},$level+1);
+        $ret = $format_sub->($ret,$key,$map->{$key},$level+1);
     }
     return $ret;
 }

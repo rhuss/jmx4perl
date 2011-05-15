@@ -13,9 +13,9 @@ my ($ret,$content);
 # ====================================================
 # Incremental value checks
 
-&reset_history($jmx);
+reset_history($jmx);
 
-($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c 10 --name mem");
+($ret,$content) = exec_check_perl4jmx("--alias MEMORY_HEAP_USED --delta -c 10 --name mem");
 is($ret,0,"Initial history fetch returns OK");
 ok($content =~ /mem=(\d+)/ && $1 eq "0","Initial history fetch returns 0 mem delta");
 
@@ -28,7 +28,7 @@ my $c = abs(0.50 * $mem);
 #$jmx->execute("java.lang:type=Memory","gc");
 
 for (0 .. 2) {
-    ($ret,$content) = &exec_check_perl4jmx("--alias MEMORY_HEAP_USED --unit B --delta -c -$c:$c --name mem");
+    ($ret,$content) = exec_check_perl4jmx("--alias MEMORY_HEAP_USED --unit B --delta -c -$c:$c --name mem");
 #    print Dumper($ret,$content);
     is($ret,0,"Second history fetch returns OK for -c $c");
     ok($content =~ /mem=([\-\d]+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
@@ -36,5 +36,5 @@ for (0 .. 2) {
 }
 #print "$c: $content\n";
 
-&reset_history($jmx);
+reset_history($jmx);
 

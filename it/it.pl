@@ -21,10 +21,10 @@ die "No gateway url given. Please use option '--url' for pointing to the server 
 
 my @testfiles;
 if (@ARGV) {
-    @testfiles = &prepare_filenames(@ARGV);
+    @testfiles = prepare_filenames(@ARGV);
 } else {
     opendir(D,$dir) || die "Cannot open test dir $dir : $!";
-    @testfiles = &prepare_filenames(grep { /\.t$/ } map { $dir . "/" . $_ } readdir(D));
+    @testfiles = prepare_filenames(grep { /\.t$/ } map { $dir . "/" . $_ } readdir(D));
     closedir D;   
 }
 
