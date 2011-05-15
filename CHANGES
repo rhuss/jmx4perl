@@ -1,3 +1,6 @@
+0.93 
+  - Fixed Cacti output when labels contains spaces
+
 0.92 (20050-5-9)
   - Fixed bug in pack specification (encryption) which is not available for 
     Perl 5.8 (and which broke Jmx4Perl for Perl 5.8)

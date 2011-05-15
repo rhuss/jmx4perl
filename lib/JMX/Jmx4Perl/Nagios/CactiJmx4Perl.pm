@@ -60,7 +60,9 @@ sub do_exit {
     my $perf = $np->perfdata;
     my @res;
     for my $p (@$perf) {
-        push @res,@$perf > 1 ? $p->label . ":" . $p->value : $p->value;
+        my $label = $p->label;
+        $label =~ s/\s/_/g;
+        push @res,@$perf > 1 ? $label . ":" . $p->value : $p->value;
     }
     print join(" ",@res),"\n";
     exit 0;
