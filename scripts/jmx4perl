@@ -607,7 +607,7 @@ sub _get_args_for_jmx4perl {
     }
 
     # Basic options to take over literally
-    for my $arg qw(product user password verbose method) {
+    for my $arg (qw(product user password verbose method)) {
         if (defined($opts->{$arg})) {
             $ret->{$arg} = $opts->{$arg};
         }
