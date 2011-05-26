@@ -57,6 +57,9 @@ sub verify {
               );
     eval {
         push @cmd, $signature_path,$args{path};
+        # Unset language for proper parsing of the output independent
+        # of the locale
+        local $ENV{LANG} = undef;
         my $cmd = join ' ', @cmd;
         my $output = `$cmd`;
         if ($output =~ /public\s*key/i) {

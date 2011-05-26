@@ -1372,8 +1372,7 @@ missing there, so the agent-mode is the recommended way. A sample JMX-Proxy
 configuration looks like:
 
   <Target>
-     # TODO: "Real" URL
-     Url = http://target:8080/jolokia
+     Url = service:jmx:rmi:///jndi/rmi://tessin:6666/jmxrmi
      User = max
      Password = frisch 
   </Target>
