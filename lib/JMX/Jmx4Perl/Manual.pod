@@ -455,7 +455,7 @@ roland@cpan.org for further information.
 
 Just in case you need professional support for jmx4perl (or Nagios or JMX in
 general), you might want to have a look at
-L<http://www.consol.com/opensource/nagios/>. Contact roland.huss@consol.de for
+L<http://www.consol.com/open-source-monitoring/>. Contact roland.huss@consol.de for
 further information (or use the contact form at L<http://www.consol.com/contact/>)
 
 =head1 AUTHOR
