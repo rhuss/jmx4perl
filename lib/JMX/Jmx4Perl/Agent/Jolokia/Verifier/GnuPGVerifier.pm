@@ -56,7 +56,7 @@ sub verify {
                qw(--verify --batch --no-tty -q --logger-fd=1),
               );
     eval {
-        push @cmd, $signature_path,$args{path};
+        push @cmd, $signature_path,$path;
         # Unset language for proper parsing of the output independent
         # of the locale
         local $ENV{LANG} = undef;
