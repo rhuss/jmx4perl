@@ -28,11 +28,11 @@ my $c = abs(0.50 * $mem);
 #$jmx->execute("java.lang:type=Memory","gc");
 
 for (0 .. 2) {
+    $jmx->execute("java.lang:type=Memory","gc");
     ($ret,$content) = exec_check_perl4jmx("--alias MEMORY_HEAP_USED --unit B --delta -c -$c:$c --name mem");
-#    print Dumper($ret,$content);
+    #print Dumper($ret,$content);
     is($ret,0,"Second history fetch returns OK for -c $c");
     ok($content =~ /mem=([\-\d]+)/ && $1 ne "0","Second History fetch return non null Mem-Delta ($1)");
-#$jmx->execute("java.lang:type=Memory","gc");
 }
 #print "$c: $content\n";
 

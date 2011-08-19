@@ -3,6 +3,9 @@
   - Tuned ancient Perl coding style (thanks, datamuc)
   - Fixed problem with jolokia and PGP verification in non-english
     environments.
+  - Fixed 'search' command which now really returns undef if nothing 
+    is found (and not a ref to an empty array). That will also fix some
+    detectors when the 'info' command is used. 
 
 0.92 (20050-5-9)
   - Fixed bug in pack specification (encryption) which is not available for 

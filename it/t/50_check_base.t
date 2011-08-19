@@ -22,7 +22,7 @@ for my $k (keys %s) {
                                            "--path used -c $k");
     #print Dumper($ret,$content);
     is($ret,$s{$k}->[0],"Memory -c $k : $ret");
-    ok($content =~ /^$s{$k}->[1]/,"Memory -c $k : " . $s{$k}->[1]);
+    ok($content =~ /^$s{$k}->[1]/m,"Memory -c $k : " . $s{$k}->[1]);
 }
 
 # ====================================================
@@ -32,6 +32,6 @@ for my $k (keys %s) {
     ($ret,$content) = exec_check_perl4jmx("--alias MEMORY_HEAP_USED -c $k --method post");
     #print Dumper($ret,$content);
     is($ret,$s{$k}->[0],"MEMORY_HEAP_USED -c $k : $ret");
-    ok($content =~ /^$s{$k}->[1]/,"MEMORY_HEAP_USED $k : " . $s{$k}->[1]);
+    ok($content =~ /^$s{$k}->[1]/m,"MEMORY_HEAP_USED $k : " . $s{$k}->[1]);
 }
 
