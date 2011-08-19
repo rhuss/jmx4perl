@@ -52,7 +52,7 @@ my $command;
 my @args;
 
 if (lc $ARGV[0] eq "aliases") {
-    command_aliases;
+    command_aliases();
     exit(0);
 } elsif (lc $ARGV[0] eq "encrypt") {
     command_encrypt($ARGV[1]);
