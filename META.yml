@@ -17,7 +17,7 @@ name: jmx4perl
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 0.92
+    version: 0.95_1
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
@@ -186,5 +186,5 @@ requires:
   XML::Tidy: 0
   base: 0
 resources:
-  license: http://opensource.org/licenses/gpl-license.php
-version: 0.92
+  license: http://www.gnu.org/licenses/old-licenses/gpl-1.0.txt
+version: 0.95_1

@@ -27,6 +27,7 @@ ok($content =~ /NonHeap Memory/,"NonHeap Memory included");
 
 # Nested multichecks
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check nested"); 
+#print Dumper($ret,$content);
 is($ret,0,"Multicheck with value OK");
 ok($content =~ /\(base\)/,"First level inheritance");
 ok($content =~ /\(grandpa\)/,"Second level inheritance");

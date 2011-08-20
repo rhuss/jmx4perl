@@ -246,7 +246,7 @@ sub _dump {
     my $value = shift;
     local $Data::Dumper::Terse = 1;
     local $Data::Dumper::Indent = 1;
-    local $Data::Dumper::Useqq = 1;
+#   local $Data::Dumper::Useqq = 1;
     local $Data::Dumper::Deparse = 1;
     local $Data::Dumper::Quotekeys = 0;
     local $Data::Dumper::Sortkeys = 1;

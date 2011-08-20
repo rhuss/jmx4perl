@@ -465,8 +465,8 @@ sub _dump {
     my $value = shift;
     local $Data::Dumper::Terse = 1;
     local $Data::Dumper::Indent = 1;
-    local $Data::Dumper::Useqq = 1;
-    local $Data::Dumper::Deparse = 1;
+#    local $Data::Dumper::Useqq = 1;
+    local $Data::Dumper::Deparse = 0;
     local $Data::Dumper::Quotekeys = 0;
     local $Data::Dumper::Sortkeys = 1;
     return Dumper($value);
@@ -479,6 +479,7 @@ sub _has_tty {
 sub _print_response {
     my $resp = shift;
     my $val = $resp->value;
+
     if (ref($val)) {
         print _dump($val);
     } else {
