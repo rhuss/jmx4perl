@@ -1,4 +1,4 @@
-0.93 
+0.95 (2011-8-21)
   - Fixed Cacti output when labels contains spaces
   - Tuned ancient Perl coding style (thanks, datamuc)
   - Fixed problem with jolokia and PGP verification in non-english
@@ -7,7 +7,7 @@
     is found (and not a ref to an empty array). That will also fix some
     detectors when the 'info' command is used. 
 
-0.92 (20050-5-9)
+0.92 (2011-5-9)
   - Fixed bug in pack specification (encryption) which is not available for 
     Perl 5.8 (and which broke Jmx4Perl for Perl 5.8)
 
