@@ -111,6 +111,7 @@ $answer = y_n($msg,"y");
 
 if ($answer) {
     add_reqs(
+              "Getopt::Long" => "2.38",  # req, GetOptionsFromArray must be exported
               "Term::ShellUI" => 0,      # req
               "Term::Clui" => 0,         # req 
               "Term::Size" => "0.207",   # opt 
