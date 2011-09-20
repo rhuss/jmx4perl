@@ -366,6 +366,7 @@ sub request_url {
 # =============================================================================
 
 # Extract path by splitting it up at "/", escape the parts, and join them again
+# Note, that 
 sub _extract_path {
     my $self = shift;
     my $path = shift;
@@ -373,19 +374,18 @@ sub _extract_path {
     return "/" . join("/",map { $self->_escape($_) } split(m|/|,$path));
 }
 
-# Escape '/' which are used as separators by using "/-/" as an escape sequence
-# URI Encoding doesn't work for slashes, since some Appserver tend to mangle
-# them up with pathinfo-slashes to early in the request cycle.
-# E.g. Tomcat/Jboss croaks with a "HTTP/1.x 400 Invalid URI: noSlash" if one
-# uses an encoded slash somewhere in the path-info part.
+
+# Escaping is simple:
+# ! --> !!
+# / --> !/
+# It is not done by backslashes '\' since often they get magically get
+# translated into / when part of an URL
 sub _escape {
     my $self = shift;
     my $input = shift;
-    my $opts = { @_ };
-    $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
-    $input =~ s|^/-|/^|; # The first slash needs to be escaped (first)
-    $input =~ s|-/$|+/|; # as well as last slash. They need a special escape.
-
+    $input =~ s/!/!!/g;
+    $input =~ s/\//!\//g;
+    
     return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
                                                               # default
                                                               # set. See L<URI>

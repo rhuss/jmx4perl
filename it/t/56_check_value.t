@@ -22,6 +22,7 @@ ok($content =~ /^OK/,"Content contains OK");
 # TODO: Check escaping
 ($ret,$content) = exec_check_perl4jmx("--value jmx4perl.it:name=\\/\\/server\\/client,type=naming/Ok " . 
                                        "--critical OK");
+#print Dumper($ret,$content);
 is($ret,2,"CRITICAL expected");
 ok($content =~ /jmx4perl.it:name=\\\/\\\/server\\\/client,type=naming\/Ok/,"Content contains MBean name");
 
