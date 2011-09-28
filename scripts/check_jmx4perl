@@ -1190,6 +1190,13 @@ Example:
 
   --proxy http://proxyhost:8001/
 
+=item --legacy-escape
+
+When the deployed Jolokia agent's version is less than 1.0, then this option
+should be used since the escape scheme as changed since version 1.0. This
+option is only important for MBeans whose names contain slashes. It is
+recommended to upgrade the agent to a post 1.0 version, though. 
+
 =item --target, --target-user, --target-password
 
 Switches on jolokia-proxy mode and specifies the URL for accessing the target

@@ -29,6 +29,7 @@ sub create_nagios_plugin {
           "                  [--name <name>] [--product <product>]\n".
           "                  [--user <user>] [--password <password>] [--proxy <proxy>]\n" .
           "                  [--target <target-url>] [--target-user <user>] [--target-password <password>]\n" .
+          "                  [--legacy-escape]\n" . 
           "                  [--config <config-file>] [--check <check-name>] [--server <server-alias>] [-v] [--help]\n" .
           "                  arg1 arg2 ....",
           version => $JMX::Jmx4Perl::VERSION,

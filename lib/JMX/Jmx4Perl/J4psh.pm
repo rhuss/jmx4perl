@@ -104,6 +104,7 @@ sub create_agent {
     my $args = shift;
     my $j4p = new JMX::Jmx4Perl($args);
     $self->load_list($j4p);
+    $self->_legacy_check($j4p);
     $self->agent($j4p);
     return $j4p;
 }
@@ -124,7 +125,20 @@ sub load_list {
     }      
 };
 
+sub _legacy_check {
+    my $self = shift;
+    my $j4p = shift;
+    my $resp = $j4p->version;
+    my $version = $resp->{agent};
+    $version =~ s/^(\d+(\.\d+)).*$/$1/;
+    if ($version < 1.0) {
+        print "L\n";
+        $j4p->cfg('legacy-escape',1);
+    }
+}
+
 sub list {
+
     return shift->{list};
 }
 

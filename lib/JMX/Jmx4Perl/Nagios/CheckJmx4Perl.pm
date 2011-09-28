@@ -82,7 +82,9 @@ sub execute {
                                      product => $self->product, 
                                      proxy => $self->proxy_config,
                                      timeout => $np->opts->{timeout} || 180,
-                                     target => $target_config);
+                                     target => $target_config,
+                                     # For Jolokia agents < 1.0
+                                     'legacy-escape' => $self->legacy_escape);
         my @requests;
         for my $check (@{$self->{checks}}) {
             push @requests,@{$check->get_requests($jmx,\@ARGV)};            
@@ -549,6 +551,7 @@ sub create_nagios_plugin {
           "                      [--name <perf-data label>] [--label <output-label>] [--product <product>]\n".
           "                      [--user <user>] [--password <password>] [--proxy <proxy>]\n" .
           "                      [--target <target-url>] [--target-user <user>] [--target-password <password>]\n" .
+          "                      [--legacy-escape]\n" .
           "                      [--config <config-file>] [--check <check-name>] [--server <server-alias>] [-v] [--help]\n" .
           "                      arg1 arg2 ....",
           version => $JMX::Jmx4Perl::VERSION,
@@ -636,6 +639,10 @@ sub add_common_np_args {
                  "and attribute will be used"
                 );
     $np->add_arg(
+                 spec => "legacy-escape!",
+                 help => "Use legacy escape mechanism for Jolokia agents < 1.0"
+                );
+    $np->add_arg(
                  spec => "config=s",
                  help => "Path to configuration file. Default: ~/.j4p"
                 );
@@ -708,6 +715,7 @@ my $SERVER_CONFIG_KEYS = {
                           "user" => "user",
                           "password" => "password",
                           "product" => "product",
+                          "legacy_escape" => "legacyconfig"
                          };
 
 # Get target configuration or undef if no jmx-proxy mode

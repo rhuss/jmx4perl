@@ -99,6 +99,12 @@ configuration if you are using the agent servlet as a proxy, e.g.
 
   ... target => { url => "service:jmx:...", user => "...", password => "..." }
 
+=item legacy-escape
+
+Before version 1.0 a quite strange escaping scheme is used, when the part of a
+GET requests contains a slash (/). Starting with 1.0 this scheme has changed,
+but in order to allow post 1.0 Jmx4perl clients acess pre 1.0 Jolokia agents,
+this option can be set to true to switch to the old escape mechanism. 
 
 =back 
 
@@ -363,15 +369,15 @@ sub request_url {
     return $url . $req;
 }
 
+
 # =============================================================================
 
-# Extract path by splitting it up at "/", escape the parts, and join them again
-# Note, that 
+
+# Return an (optional) path which must already be escaped
 sub _extract_path {
     my $self = shift;
     my $path = shift;
-    return "" unless $path;
-    return "/" . join("/",map { $self->_escape($_) } split(m|/|,$path));
+    return $path ? "/" . $path : "";
 }
 
 
@@ -383,8 +389,16 @@ sub _extract_path {
 sub _escape {
     my $self = shift;
     my $input = shift;
-    $input =~ s/!/!!/g;
-    $input =~ s/\//!\//g;
+    if ($self->cfg('legacy-escape')) {
+        # Pre 1.0 escaping:
+        $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
+        $input =~ s|^/-|/^|; # The first slash needs to be escaped (first)
+        $input =~ s|-/$|+/|; # as well as last slash. They need a special escape.        
+    } else {
+        # Simpler escaping since 1.0:
+        $input =~ s/!/!!/g;
+        $input =~ s/\//!\//g;
+    }
     
     return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to
                                                               # default
