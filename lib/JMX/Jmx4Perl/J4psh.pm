@@ -132,7 +132,6 @@ sub _legacy_check {
     my $version = $resp->{agent};
     $version =~ s/^(\d+(\.\d+)).*$/$1/;
     if ($version < 1.0) {
-        print "L\n";
         $j4p->cfg('legacy-escape',1);
     }
 }
