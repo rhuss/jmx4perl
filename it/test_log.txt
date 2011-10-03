@@ -26,7 +26,9 @@ Jolokia 1.0.0 + Jmx4Perl 1.00
    JVM-JDK6 Agent
       Camel 2.8.1
       ActiveMQ 5.5.0
-
+   =====
+   Sum: 38 + variants.
+ 
 Jolokia 0.95 + Jmx4perl 0.95
     JEE-Server
       Tomcat 5.5.33 & 6.0.33 & 7.0.20
