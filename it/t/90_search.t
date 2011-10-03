@@ -10,7 +10,7 @@ use Data::Dumper;
 # Check for escaped pattern:
 
 my $jmx = It->new(verbose => 0)->jmx4perl;
-my $mbeans = $jmx->search("jmx4perl.it:type=escape,*");
+my $mbeans = $jmx->search("jolokia.it:type=escape,*");
 for my $m (@$mbeans) {
     my $value = $jmx->get_attribute($m,"Ok");
     is($value,"OK",$m);

@@ -20,13 +20,13 @@ is($ret,0,"Memory with value OK");
 ok($content =~ /^OK/,"Content contains OK");
 
 # TODO: Check escaping
-($ret,$content) = exec_check_perl4jmx("--value jmx4perl.it:name=\\/\\/server\\/client,type=naming/Ok " . 
+($ret,$content) = exec_check_perl4jmx("--value jolokia.it:name=\\/\\/server\\/client,type=naming/Ok " . 
                                        "--critical OK");
 #print Dumper($ret,$content);
 is($ret,2,"CRITICAL expected");
-ok($content =~ /jmx4perl.it:name=\\\/\\\/server\\\/client,type=naming\/Ok/,"Content contains MBean name");
+ok($content =~ /jolokia.it:name=\\\/\\\/server\\\/client,type=naming\/Ok/,"Content contains MBean name");
 
-($ret,$content) = exec_check_perl4jmx("--value jmx4perl.it:type=naming,name=\\\"jdbc/testDB\\\"/Ok " . 
+($ret,$content) = exec_check_perl4jmx("--value jolokia.it:type=naming,name=\\\"jdbc/testDB\\\"/Ok " . 
                                        "--critical OK");
 is($ret,2,"CRITICAL expected");
-ok($content =~ m|jmx4perl.it:type=naming,name="jdbc/testDB"/Ok|,"Content contains weired MBean name");
+ok($content =~ m|jolokia.it:type=naming,name="jdbc/testDB"/Ok|,"Content contains weired MBean name");

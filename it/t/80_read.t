@@ -10,7 +10,7 @@ use Data::Dumper;
 
 # Fetch all attributes 
 my $jmx = new It(verbose => 0)->jmx4perl;
-my $req = new JMX::Jmx4Perl::Request(READ,"jmx4perl.it:type=attribute");
+my $req = new JMX::Jmx4Perl::Request(READ,"jolokia.it:type=attribute");
 my $resp = $jmx->request($req);
 my $value = $resp->{value};
 ok($value->{LongSeconds} == 60*60*24*2,"LongSeconds");
@@ -18,41 +18,41 @@ ok($value->{Bytes} == 3 * 1024 * 1024 +  1024 * 512,"Bytes");
 ok(exists($value->{Null}) && !$value->{Null},"Null");
 
 # Fetch an array ref of attributes
-$jmx->execute("jmx4perl.it:type=attribute","reset");
-my $req = new JMX::Jmx4Perl::Request(READ,"jmx4perl.it:type=attribute",["LongSeconds","State"],{method => "post"});
+$jmx->execute("jolokia.it:type=attribute","reset");
+my $req = new JMX::Jmx4Perl::Request(READ,"jolokia.it:type=attribute",["LongSeconds","State"],{method => "post"});
 my $resp = $jmx->request($req);
 my $value = $resp->{value};
 #print Dumper($resp);
 is(scalar(keys(%$value)),2,"2 Return values");
 ok($value->{LongSeconds} == 60*60*24*2,"LongSeconds");
 ok($value->{State} eq "true","State");
-$jmx->execute("jmx4perl.it:type=attribute","reset");
+$jmx->execute("jolokia.it:type=attribute","reset");
 
-my $value = $jmx->get_attribute("jmx4perl.it:type=attribute",["LongSeconds","State"]);
+my $value = $jmx->get_attribute("jolokia.it:type=attribute",["LongSeconds","State"]);
 ok($value->{LongSeconds} == 60*60*24*2,"LongSeconds");
 ok($value->{State} eq "true","State");
-$jmx->execute("jmx4perl.it:type=attribute","reset");
+$jmx->execute("jolokia.it:type=attribute","reset");
 
 # Fetch a pattern with a single attribute
-my $value = $jmx->get_attribute("jmx4perl.it:*","LongSeconds");
-ok($value->{"jmx4perl.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeconds");
-$jmx->execute("jmx4perl.it:type=attribute","reset");
+my $value = $jmx->get_attribute("jolokia.it:*","LongSeconds");
+ok($value->{"jolokia.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeconds");
+$jmx->execute("jolokia.it:type=attribute","reset");
 
 # Fetch a pattern with all attributes
-my $value = $jmx->get_attribute("jmx4perl.it:*",undef);
-ok($value->{"jmx4perl.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeconds");
-$jmx->execute("jmx4perl.it:type=attribute","reset");
-is($value->{"jmx4perl.it:type=operation"},undef,"Operation missing");
-is($value->{"jmx4perl.it:type=attribute"}->{Bytes},3670016,"Bytes with pattern");
+my $value = $jmx->get_attribute("jolokia.it:*",undef);
+ok($value->{"jolokia.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeconds");
+$jmx->execute("jolokia.it:type=attribute","reset");
+is($value->{"jolokia.it:type=operation"},undef,"Operation missing");
+is($value->{"jolokia.it:type=attribute"}->{Bytes},3670016,"Bytes with pattern");
 
 # Fetch a pattern with multiple attributes
-my $value = $jmx->get_attribute("jmx4perl.it:*",["LongSeconds","State"]);
-ok($value->{"jmx4perl.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeconds");
-ok($value->{"jmx4perl.it:type=attribute"}->{State} eq "true","State");
-$jmx->execute("jmx4perl.it:type=attribute","reset");
+my $value = $jmx->get_attribute("jolokia.it:*",["LongSeconds","State"]);
+ok($value->{"jolokia.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeconds");
+ok($value->{"jolokia.it:type=attribute"}->{State} eq "true","State");
+$jmx->execute("jolokia.it:type=attribute","reset");
 
 
-my $value = $jmx->get_attribute("jmx4perl.it:type=attribute","ObjectName");
+my $value = $jmx->get_attribute("jolokia.it:type=attribute","ObjectName");
 ok($value->{objectName} eq "bla:type=blub","object name simplified");
 ok(!defined($value->{canonicalName}),"no superfluos parameters");
 

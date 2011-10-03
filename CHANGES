@@ -1,4 +1,4 @@
-1.00 
+1.00 (2011-10-3)
   - Changed escaping as introduced by Jolokia 1.0. If talking with
     Jolokia < 1.0, use the option '--legacy-escape' must be used if
     using GET requests with MBeans containing / in the
@@ -6,6 +6,7 @@
     ('legacy-escape'). j4psh does the detection automatically,
     jmx4perl, check_jmx4perl and cacti_jmx4perl know about the new
     configuration option.  
+  - That's 1.0
 
 0.95 (2011-8-21)
   - Fixed Cacti output when labels contains spaces
