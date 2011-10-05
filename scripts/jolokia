@@ -43,7 +43,7 @@ Options:
 
   Command 'download':
      --agent <type>[:<version>]    Agent to download. <type> must be one of "war", "osgi", 
-                                   "osgi-bundle", "mule" or "jdk6". An optional Jolokia version 
+                                   "osgi-bundle", "mule" or "jvm". An optional Jolokia version 
                                    can be added after a colon.
      --outdir <dir>                Output directory for the agent downloaded (default: ".")
      --repository <repo-url>       Repository URL from where to fetch the Jolokia agent. 
@@ -230,7 +230,7 @@ The OSGi agents can be used to access OSGi containers
 
 For accessing a Mule ESB, this agent is the proper choice
 
-=item * jdk6
+=item * jvm
 
 For all other Java server, which don't contain a servlet container, this agent
 can be used. The only prerequisite is, that the application must run with an
@@ -242,7 +242,7 @@ Much more information about those agents can be found at
 L<http://www.jolokia.org/agent.html>.
 
 By default, the war agent is downloaded. The agent type ("war", "osgi",
-"osgi-bundle", "mule" or "jdk6" can be specified with the C<--agent> option. 
+"osgi-bundle", "mule" or "jvm" can be specified with the C<--agent> option. 
 
 Also by default, the latest agent version compatible with the installed
 Jmx4Perl release is downloaded. A specific version can be given on the command
@@ -263,12 +263,17 @@ used.
 sub command_download {
     my ($meta,$args) = @_;
     
-    my ($agent,$agent_version) = parse_version($args->{agent});
+    my ($agent,$agent_version) = parse_version("agent",[keys %{$meta->get("mapping")}],$args->{agent});
     my $t = $args->{template} || ($args->{policy} ? "jolokia-access.xml" : undef);
-    my ($template,$template_version) = parse_version($t);
+    my ($template,$template_version) = parse_version("template",[keys %{$meta->get("templates")}],$t);
 
     $agent = "war" if (!$template && !$agent);
     $agent_version = agent_version($meta,$agent_version);
+    
+    # Dynamic switching for pre-1.0 clients
+    if ($agent =~ /^(jvm|jdk6)$/) {
+        $agent = $agent_version < "1.0.0" ? "jdk6" : "jvm";
+    }
     $template_version = $agent_version if ($template && !$template_version);
 
     download_agent($meta,$agent,$agent_version,$args) if $agent;
@@ -276,10 +281,16 @@ sub command_download {
 }
 
 sub parse_version {
+    my $type = shift;
+    my $keys = shift;
     my $spec = shift;
     return (undef,undef) unless $spec;
-    my ($base,$version) = ($1,$2) if $spec =~ /^(war|osgi|osgi-bundle|mule|jdk6):?([\d\.]*(-SNAPSHOT)?)\s*$/;
-    return ($base,$version);
+    my $regexp = '^(' . join("|",@$keys) . '):?([\d\.]*(-SNAPSHOT)?)\s*$';
+    if ($spec =~ $regexp) {
+        return ($1,$2);
+    } else {
+        $logger->error("Invalid $type specification \"$spec\". Known ${type}s are: ",join(", ",sort @$keys)) && exit(1);
+    }
 }
 
 sub agent_version {
