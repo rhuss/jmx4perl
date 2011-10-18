@@ -51,7 +51,6 @@ ok($value->{"jolokia.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSecon
 ok($value->{"jolokia.it:type=attribute"}->{State} eq "true","State");
 $jmx->execute("jolokia.it:type=attribute","reset");
 
-
 my $value = $jmx->get_attribute("jolokia.it:type=attribute","ObjectName");
 ok($value->{objectName} eq "bla:type=blub","object name simplified");
 ok(!defined($value->{canonicalName}),"no superfluos parameters");

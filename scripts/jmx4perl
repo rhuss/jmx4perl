@@ -13,6 +13,7 @@ use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Alias;
 use strict;
 use Carp;
+use JSON;
 use Data::Dumper;
 
 my %COMMANDS = 
@@ -483,7 +484,8 @@ sub _print_response {
     my $resp = shift;
     my $val = $resp->value;
 
-    if (ref($val)) {
+
+    if (_is_object($val)) {
         print _dump($val);
     } else {
         print $val;
@@ -494,7 +496,7 @@ sub _print_response {
         for my $entry (@{$resp->history}) {
             my $time = localtime($entry->{timestamp});
             my $value = $entry->{value};
-            if (ref($value)) {
+            if (_is_object($value)) {
                 print $time,"\n";
                 print _dump($value);
                 print "\n";
@@ -503,6 +505,11 @@ sub _print_response {
             }
         }
     }
+}
+
+sub _is_object {
+    my $val = shift;
+    return ref($val) && !JSON::is_bool($val);
 }
 
 sub _get_attribute {

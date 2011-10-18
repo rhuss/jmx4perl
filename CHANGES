@@ -1,5 +1,6 @@
 1.01
   - Fixed 'jolokia' to load the new renamed jvm agent.
+  - Fixed issue when printing boolean values with jmx4perl
 
 1.00 (2011-10-3)
   - Changed escaping as introduced by Jolokia 1.0. If talking with
