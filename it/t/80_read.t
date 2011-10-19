@@ -55,4 +55,9 @@ my $value = $jmx->get_attribute("jolokia.it:type=attribute","ObjectName");
 ok($value->{objectName} eq "bla:type=blub","object name simplified");
 ok(!defined($value->{canonicalName}),"no superfluos parameters");
 
+my $value = $jmx->get_attribute("jolokia.it:type=attribute","Set");
+is(ref($value),"ARRAY","Set as array returned");
+ok(scalar(grep("jolokia",@$value)),"contains 'jolokia'");
+ok(scalar(grep("habanero",@$value)),"contains 'habanero'");
+
 #print Dumper(\@resps);
