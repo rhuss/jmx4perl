@@ -1,6 +1,9 @@
 1.01
   - Fixed 'jolokia' to load the new renamed jvm agent.
   - Fixed issue when printing boolean values with jmx4perl
+  - Fixed issue with LWP as old as 5.805
+  - Bumped required version of Module::Build to 0.38 in order to cope
+    with messed up version number of XML::Tidy.
 
 1.00 (2011-10-3)
   - Changed escaping as introduced by Jolokia 1.0. If talking with
