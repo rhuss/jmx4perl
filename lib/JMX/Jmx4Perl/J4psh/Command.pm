@@ -5,7 +5,7 @@ use strict;
 use POSIX qw(strftime);
 use Term::Clui;
 
-use Getopt::Long qw(GetOptionsFromArray);
+use Getopt::Long;
 
 =head1 NAME 
 
@@ -170,7 +170,11 @@ extracted options and an array of remaining arguments
 sub extract_command_options {
     my ($self,$spec,@args) = @_;
     my $opts = {};
-    GetOptionsFromArray(\@args, $opts,@{$spec});
+    {
+       local @ARGV = @args;
+       GetOptions($opts,@{$spec});
+       @args = @ARGV;
+    }
     return ($opts,@args);
 }
 

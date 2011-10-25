@@ -6,7 +6,7 @@ j4psh - A JMX Shell
 
 =cut
 
-use Getopt::Long qw(GetOptionsFromArray);
+use Getopt::Long;
 use strict;
 use JMX::Jmx4Perl::Config;
 use JMX::Jmx4Perl::J4psh;
