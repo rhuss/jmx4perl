@@ -51,14 +51,14 @@ sub new {
     $self->env_proxy;
     $self->proxy("http",$cfg{http_proxy}) if $cfg{http_proxy};
     $self->proxy("https",$cfg{https_proxy}) if $cfg{https_proxy};
-    $self->show_progress(!$cfg{quiet});
+    $self->{show_progress} = !$cfg{quiet};
     return $self;
 }
 
 # Overwriting progress in order to show a progressbar or not
 sub progress {
     my($self, $status, $m) = @_;
-    return unless $self->show_progress;
+    return unless $self->{show_progress};
     # Use default progress bar if no progress is given
     unless ($HAS_PROGRESS_BAR) {
         $self->SUPER::progress($status,$m);
