@@ -496,8 +496,8 @@ sub _check_threshhold {
         # Verify numeric thresholds
         my @ths = 
           (
-           $self->critical ? (critical => $self->critical) : (),
-           $self->warning ? (warning => $self->warning) : ()
+           defined($self->critical) ? (critical => $self->critical) : (),
+           defined($self->warning) ? (warning => $self->warning) : ()
           );            
         return ($np->check_threshold(check => $value,@ths),"numeric");    
     } else {
