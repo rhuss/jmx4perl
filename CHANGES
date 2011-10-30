@@ -1,3 +1,6 @@
+1.02
+  - Fix for threshold with 0 value in check_jmx4perl
+
 1.01 (2011-10-25)
   - Fixed 'jolokia' to load the new renamed jvm agent.
   - Fixed issue when printing boolean values with jmx4perl

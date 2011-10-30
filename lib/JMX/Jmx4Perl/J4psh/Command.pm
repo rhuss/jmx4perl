@@ -161,6 +161,7 @@ sub reset_stack {
 
 =item ($opts,@args) = $cmd->extract_command_options($spec,@args);
 
+
 Extract any options from a command specified via C<$spec>. This method uses
 L<Getopt::Long> for extrating the options. It returns a hashref with the
 extracted options and an array of remaining arguments
