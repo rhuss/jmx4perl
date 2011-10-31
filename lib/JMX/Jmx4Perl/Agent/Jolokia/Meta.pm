@@ -99,14 +99,36 @@ sub latest_matching_version {
     # Iterate over all existing versions, starting from the newest one, 
     # and return the first matching
     my $version_info = $self->get("versions");
-    for my $v (sort { $b <=> $a } grep { $_ !~ /-SNAPSHOT$/ } keys %$version_info) {
+    for my $v (sort { $self->compare_versions($b,$a) } grep { $_ !~ /-SNAPSHOT$/ } keys %$version_info) {
         my $range = $version_info->{$v}->{jmx4perl};
         if ($range) {
             my $match = $self->_check_version($jmx4perl_version,$range);
+            print "Match: $match for $range (j4p: $jmx4perl_version)\n";
             return $v if $match;
         }
     }
     return undef;
+}
+
+# Compare two version which can contain one, two or more digits. Returns <0,0 or
+# >0 if the first version is smaller, equal or larger than the second version.
+# It doesn't take into account snapshot 
+sub compare_versions {
+    my $self = shift;
+    my @first = _split_version(shift);
+    my @second = _split_version(shift);
+    my $len = $#first < $#second ? $#first : $#second;
+    for my $i (0 ... $len) {
+        next if $first[$i] == $second[$i];
+        return $first[$i] - $second[$i];
+    }
+    return $#first - $#second;
+}
+
+sub _split_version {
+    my $v = shift;
+    $v =~ s/-.*$//;
+    return split /\./,$v;
 }
 
 sub _check_version {
