@@ -15,7 +15,6 @@ use strict;
 use Carp;
 use JSON;
 use Data::Dumper;
-
 my %COMMANDS = 
   (
    info => \&command_info,
@@ -45,6 +44,7 @@ my $result = GetOptions(\%opts,
                         "version!",
                         "history!",
                         "legacy-escape!",
+                        "format|f=s",
                         "help|h!" => sub { Getopt::Long::HelpMessage() }
                        );
 
@@ -120,6 +120,7 @@ Options:
    --history               Print out the history of return values (if switched on and present)
    --legacy-escape         Used for contacting pre 1.0 Jolokia agent for MBeans containing 
                            slashes in their name. 
+   --format <format>       "json": Print out values as JSON, "data": Perl data (default)
    --verbose               Print out more information
    
 =head1 DESCRIPTION
@@ -465,15 +466,18 @@ sub _check_for_error {
     }
 }
 
+sub _is_object {
+    return JMX::Jmx4Perl->is_object_to_dump(shift);
+}
+
+sub _dump_scalar {
+    return JMX::Jmx4Perl->dump_scalar(shift,0);
+}
+
 sub _dump {
     my $value = shift;
-    local $Data::Dumper::Terse = 1;
-    local $Data::Dumper::Indent = 1;
-#    local $Data::Dumper::Useqq = 1;
-    local $Data::Dumper::Deparse = 0;
-    local $Data::Dumper::Quotekeys = 0;
-    local $Data::Dumper::Sortkeys = 1;
-    return Dumper($value);
+    my $format = $opts{format} || "data";
+    return JMX::Jmx4Perl->dump_value($value,{format => $format,boolean_string => 0});
 }
 
 sub _has_tty {
@@ -484,13 +488,13 @@ sub _print_response {
     my $resp = shift;
     my $val = $resp->value;
 
-
     if (_is_object($val)) {
         print _dump($val);
     } else {
         print $val;
         print "\n" if &_has_tty;
     }
+
     if ($opts{history} && $resp->history) {
         print "\nHistory:\n";
         for my $entry (@{$resp->history}) {
@@ -501,15 +505,10 @@ sub _print_response {
                 print _dump($value);
                 print "\n";
             } else {
-                printf " %s : %s\n",$time,$value;
+                printf " %s : %s\n",$time,_dump_scalar($value);
             }
         }
     }
-}
-
-sub _is_object {
-    my $val = shift;
-    return ref($val) && !JSON::is_bool($val);
 }
 
 sub _get_attribute {

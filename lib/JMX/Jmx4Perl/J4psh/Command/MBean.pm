@@ -3,6 +3,7 @@
 package JMX::Jmx4Perl::J4psh::Command::MBean;
 use strict;
 use base qw(JMX::Jmx4Perl::J4psh::Command);
+use JMX::Jmx4Perl;
 use JMX::Jmx4Perl::Request;
 use Data::Dumper;
 use JSON;
@@ -163,7 +164,7 @@ sub cmd_show_attributes {
                     $p .= sprintf(" $c_a%-31.31s$c_r\n",$attr);
                     $p .= $self->_dump($value);
                 } else {
-                    $p .= sprintf(" $c_a%-31.31s$c_r %s\n",$attr,$value);
+                    $p .= sprintf(" $c_a%-31.31s$c_r %s\n",$attr,$self->_dump_scalar($value));
                 }
             }
         } else {
@@ -172,7 +173,7 @@ sub cmd_show_attributes {
             if ($self->_is_object($value)) {
                 $p .= $self->_dump($value);
             } else {
-                $p .= $value."\n";
+                $p .= $self->_dump_scalar($value)."\n";
             }
         }
         $self->print_paged($p);
@@ -201,7 +202,7 @@ sub cmd_set_attribute {
             $p .= sprintf(" $c_l%-5.5ss$c_r\n","Old:");
             $p .= $self->_dump($old_value);
         } else {
-            $p .= sprintf(" $c_l%-5.5s$c_r %s\n","Old:",$old_value);
+            $p .= sprintf(" $c_l%-5.5s$c_r %s\n","Old:",$self->_dump_scalar($old_value));
         }
         $p .= sprintf(" $c_l%-5.5s$c_r %s\n","New:",$args[1]);;
         $self->print_paged($p);
@@ -229,7 +230,7 @@ sub cmd_execute_operation {
             $p .= sprintf(" $c_l%-7.7s$c_r\n","Return:");
             $p .= $self->_dump($value);
         } else {
-            $p .= sprintf(" $c_l%-7.7s$c_r %s\n","Return:",$value);
+            $p .= sprintf(" $c_l%-7.7s$c_r %s\n","Return:",$self->_dump_scalar($value));
         }
         $self->print_paged($p);
     }
@@ -238,22 +239,22 @@ sub cmd_execute_operation {
 sub _is_object {
     my $self = shift;
     my $value = shift;
-    return ref($value) && !JSON::is_bool($value);
+    return JMX::Jmx4Perl->is_object_to_dump($value);
 }
 
 sub _dump {
     my $self = shift;
     my $value = shift;
-    local $Data::Dumper::Terse = 1;
-    local $Data::Dumper::Indent = 1;
-#   local $Data::Dumper::Useqq = 1;
-    local $Data::Dumper::Deparse = 1;
-    local $Data::Dumper::Quotekeys = 0;
-    local $Data::Dumper::Sortkeys = 1;
-    my $ret = Dumper($value);
-    $ret =~ s/^/   /gm;
-    return $ret;
+    my $args = $self->context->args || {};
+    my $format = $args->{format} || "data";
+    return JMX::Jmx4Perl->dump_value($value,{format => $format,boolean_string => 0});
 }
+
+sub _dump_scalar {
+    my $self = shift;
+    return JMX::Jmx4Perl->dump_scalar(shift,0);
+}
+
 # =================================================================================================== 
 
 =item cmd_list

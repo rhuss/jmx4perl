@@ -6,7 +6,8 @@ j4psh - A JMX Shell
 
 =cut
 
-use Getopt::Long;
+use Getopt::Long
+;
 use strict;
 use JMX::Jmx4Perl::Config;
 use JMX::Jmx4Perl::J4psh;
@@ -26,6 +27,10 @@ use Config::General;
    --proxy <url>           URL to use as proxy proxy
    --proxy-user <user>     Authentication information for a proxy
    --proxy-password <pwd>
+   --target <jmx-url>      JSR-160 JMX Service URL to be used as the target server
+   --target-user <user>    Credential for the target server if --target is given
+   --target-password <pwd> 
+   --format <format>       "json": Print out values as JSON, "data": Perl data (default)
    --config <cfg-file>     Path to an optional configuration file (default: ~/.j4p)
    --color [yes|no]        Color option (default: yes)
 
@@ -74,6 +79,8 @@ my $result = GetOptions(\%opts,
                         "config=s",
                         "version!",
                         "color=s",
+                        "format|f=s",
+                        "target|t=s","target-user=s","target-password=s",
                         "help|h!" => sub { &Getopt::Long::HelpMessage() }
                        );
 
