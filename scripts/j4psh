@@ -30,7 +30,11 @@ use Config::General;
    --target <jmx-url>      JSR-160 JMX Service URL to be used as the target server
    --target-user <user>    Credential for the target server if --target is given
    --target-password <pwd> 
-   --format <format>       "json": Print out values as JSON, "data": Perl data (default)
+   --option key=val        Options for tuning the output of jmx4perl. Known keys are
+                              format   : Either 'json' or 'data'
+                              booleans : Pair of strings separated by slash to use for printing 
+                                         boolean values (Default: [true]/[false])
+                              indent   : Space indent when printing complex data structures 
    --config <cfg-file>     Path to an optional configuration file (default: ~/.j4p)
    --color [yes|no]        Color option (default: yes)
 
@@ -79,7 +83,7 @@ my $result = GetOptions(\%opts,
                         "config=s",
                         "version!",
                         "color=s",
-                        "format|f=s",
+                        "option|opts|o=s%",
                         "target|t=s","target-user=s","target-password=s",
                         "help|h!" => sub { &Getopt::Long::HelpMessage() }
                        );

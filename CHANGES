@@ -2,9 +2,10 @@
   - Fix for threshold with 0 value in check_jmx4perl
   - Fix automatic detection of the largest version number for Jolokia
     agents in with the format 1.0.1 when downloading with 'jolokia' 
-  - Fixed printing of boolean values for jmx4perl and j4psh
-  - Added option '--format json' to jmx4perl and j4psh for printing 
-    out values in JSON format
+  - Fixed printing of boolean values for jmx4perl and j4psh for 
+    complex data structures (finally)
+  - Added option '--option key=val' to jmx4perl and j4psh for tuning the 
+    output format of these tools (known keys: format,booleans,indent)
   - Added '--target' to j4psh so that it can operate against a JSR-160 
     proxy
 

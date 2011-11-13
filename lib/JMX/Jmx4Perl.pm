@@ -101,7 +101,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "1.02_1";
+$VERSION = "1.02_2";
 
 my $REGISTRY = {
                 # Agent based
@@ -843,98 +843,6 @@ sub formatted_list {
     my $ret = &_format_map("",$list,\@path,0);
 }
 
-=item $is_object = JMX::Jmx4Perl->is_object_to_dump($val) 
-
-For dumping out, checks whether C<$val> is an object (i.e. it is a ref but not a
-JSON::XS::Boolean) or not.
-
-=cut 
-
-sub is_object_to_dump {
-    my $self = shift;
-    my $val = shift;
-    return ref($val) && !JSON::is_bool($val);
-}
-
-=item $text = JMX::Jmx4Perl->dump_value($value,{ format => "json", boolean_string =>1})
-
-Return a formatted text representation useful for tools printing out complex
-response values. Two modes are available: C<data> which is the default and uses
-L<Data::Dumper> for creating a textual description and C<json> which return the
-result as JSON value. When C<data> is used as format, booleans are returned as 0
-for false and 1 for true exception when the option C<boolean_string> is given in
-which case it returns C<true> or C<false>. 
-
-=cut
-
-sub dump_value {
-    my $self = shift;
-    my $value = shift; 
-    my $opts = shift || {};
-    if ($opts && ref($opts) ne "HASH") {
-        $opts = { $opts,@_ };
-    }
-    my $format = $opts->{format} || "data";
-    my $ret;
-    if ($format eq "json") {
-        # Return a JSON representation of the data structure
-        my $json = JSON->new->allow_nonref;
-        $ret = $json->pretty->encode($value);
-    } else {
-        # Use data dumper, but resolve all JSON::XS::Booleans to either 0/1 or
-        # true/false 
-        local $Data::Dumper::Terse = 1;
-        local $Data::Dumper::Indent = 1;
-        # local $Data::Dumper::Useqq = 1;
-        local $Data::Dumper::Deparse = 0;
-        local $Data::Dumper::Quotekeys = 0;
-        local $Data::Dumper::Sortkeys = 1;
-        $ret = Dumper($self->_canonicalize_value($value,$opts->{boolean_string}));
-    }
-    $ret =~ s/^/   /gm;
-    return $ret;
-}
-
-=item $dump = JMX::Jmx4Perl->dump_scalar($val,$as_string)
-
-Dumps a scalar value with special handling for booleans.  If C<$val> is a
-L<JSON::XS::Boolean> it is returned as string "true"/"false" if C<$as_string>
-is true or as 0/1 otherwise. Otherwise the value itself is returned
-
-=cut 
-
-sub dump_scalar {
-    my $self = shift;
-    my $value = shift;
-    if (shift) {
-        # String operator is overloaded
-        return "$value";
-    } else {
-        return $value eq "true" ? 1 : 0;
-    }
-}
-
-# Replace all boolean values in 
-sub _canonicalize_value {
-    my $self = shift;
-    my $value = shift;
-    my $as_string = shift;
-    if (ref($value) eq "HASH") {
-        for my $k (keys %$value) {
-            $value->{$k} = $self->_canonicalize_value($value->{$k},$as_string);
-        }
-        return $value;
-    } elsif (ref($value) eq "ARRAY") {
-        for my $i (0 .. $#$value) {
-            $value->[$i] = $self->_canonicalize_value($value->[$i],$as_string);
-        }
-        return $value;
-    } elsif (JSON::is_bool($value)) {
-        $self->dump_scalar($value,$as_string);
-    } else {
-        return $value;
-    }
-}
 
 # =============================================================================================== 
 

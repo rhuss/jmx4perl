@@ -9,6 +9,7 @@ jmx4perl - JMX access tools and modules
 use Getopt::Long;
 use FindBin;
 use JMX::Jmx4Perl;
+use JMX::Jmx4Perl::Util;
 use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Alias;
 use strict;
@@ -44,7 +45,7 @@ my $result = GetOptions(\%opts,
                         "version!",
                         "history!",
                         "legacy-escape!",
-                        "format|f=s",
+                        "option|opts|o=s%",
                         "help|h!" => sub { Getopt::Long::HelpMessage() }
                        );
 
@@ -76,8 +77,10 @@ if ($opts{version}) {
         exit(0);
     }
 }
+
 my $sub = $COMMANDS{$command} || die "No command '",$command,"' known. See --help for assistance\n";
-my $jmx_args = &_get_args_for_jmx4perl($url,\%opts);
+my $config = new JMX::Jmx4Perl::Config($opts{config});
+my $jmx_args = &_get_args_for_jmx4perl($url,$config,\%opts);
 my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
 &{$sub}($jmx4perl,@args);
 
@@ -120,6 +123,11 @@ Options:
    --history               Print out the history of return values (if switched on and present)
    --legacy-escape         Used for contacting pre 1.0 Jolokia agent for MBeans containing 
                            slashes in their name. 
+   --option key=val        Options for tuning the output of jmx4perl. Known keys are
+                              format   : Either 'json' or 'data'
+                              booleans : Pair of strings separated by slash to use for printing 
+                                         boolean values (Default: [true]/[false])
+                              indent   : Space indent when printing complex data structures 
    --format <format>       "json": Print out values as JSON, "data": Perl data (default)
    --verbose               Print out more information
    
@@ -130,6 +138,45 @@ application server. Before you can use this tool, you need to deploy a small
 agent application. In the following C<agent-url> is the URL for accessing this
 agent. If you use a configuration file, you can use also a symbolic name as
 stored in the configuration file. See L<JMX::Jmx4Perl::Manual> for details.
+
+With the C<--option> (or C<-o> for short) the output of B<jmx4perl> can be
+tuned. I.e. the way boolean values are printed can be tuned as well as the 
+data format to use for complex data structure. The known options are 
+
+=over 
+
+=item format 
+
+the value an be either C<json> or <data> for printing out complex data as JSON
+or as a Perl data structure. Default is "data".
+
+=item booleans
+
+Specify the pair of strings to use for boolean values for the C<data> output
+format. The value of this option should be given as a string separated with a
+C</>. The default value is C<[true]/[false]>. 
+
+=item indent
+
+Number of spaces to use for indenting the output of complex data
+structures. Default are 4 spaces. 
+
+=back
+
+The options can be also put into the configuration file in a section called
+C<Jmx4Perl>. For example:
+
+    <Jmx4Perl>
+      # 'json' or 'data'
+      Format json
+ 
+      # Boolean values: Default is [true]/[false]
+      Booleans 0/1
+
+      # Number of spaces to indent for complex 
+      # data structures
+      Indent 4
+    </Jmx4Perl>
 
 B<jmx4perl> serves also an example of how to use the L<JMX::Jmx4Perl> package.
 See its documentation for more details on how to embed JMX access into your
@@ -251,10 +298,12 @@ sub command_attributes {
                     for my $a (keys %$values) {
                         print "$mbean -- $a";
                         my $val = $values->{$a};
-                        if (ref($val)) {
-                            print " = ",_dump($val);
+                        if (_is_object($val)) {
+                            my $v = _dump($val);
+                            $v =~ s/^\s*//;
+                            print " = ",$v;
                         } else {
-                            print " = ",$val,"\n";
+                            print " = ",_dump_scalar($val),"\n";
                         }
                     }                                
                 }
@@ -467,17 +516,30 @@ sub _check_for_error {
 }
 
 sub _is_object {
-    return JMX::Jmx4Perl->is_object_to_dump(shift);
+    return JMX::Jmx4Perl::Util->is_object_to_dump(shift);
 }
 
 sub _dump_scalar {
-    return JMX::Jmx4Perl->dump_scalar(shift,0);
+    return JMX::Jmx4Perl::Util->dump_scalar(shift,_get_opt_or_config("Booleans"));
 }
 
 sub _dump {
     my $value = shift;
     my $format = $opts{format} || "data";
-    return JMX::Jmx4Perl->dump_value($value,{format => $format,boolean_string => 0});
+    return JMX::Jmx4Perl::Util->dump_value($value,{format => _get_opt_or_config("Format"),
+                                                   booleans => _get_opt_or_config("Booleans"),
+                                                   indent => _get_opt_or_config("Indent")
+                                                  });
+}
+
+sub _get_opt_or_config {
+    my $key = shift;
+    if (defined($opts{option}) && defined($opts{option}->{lc $key})) {
+        return $opts{option}->{lc $key};
+    } else {
+        my $j4pconfig = $config->{jmx4perl} || {};
+        return $j4pconfig->{lc $key};
+    }
 }
 
 sub _has_tty {
@@ -491,7 +553,7 @@ sub _print_response {
     if (_is_object($val)) {
         print _dump($val);
     } else {
-        print $val;
+        print _dump_scalar($val);
         print "\n" if &_has_tty;
     }
 
@@ -600,11 +662,11 @@ sub _validate_mbean_name {
 
 sub _get_args_for_jmx4perl {
     my $url = shift;
+    my $config = shift;
     my $opts = shift;
     # Try provided first argument as server name first in a 
     # given configuration
     my $ret;
-    my $config = new JMX::Jmx4Perl::Config($opts->{config});
     my $server_config = $config->get_server_config($url);
     if ($server_config && $server_config->{url}) {
         print "Taking ",$server_config->{url}, " from configuration for $url\n" if $opts->{verbose};

@@ -3,7 +3,7 @@
 package JMX::Jmx4Perl::J4psh::Command::MBean;
 use strict;
 use base qw(JMX::Jmx4Perl::J4psh::Command);
-use JMX::Jmx4Perl;
+use JMX::Jmx4Perl::Util;
 use JMX::Jmx4Perl::Request;
 use Data::Dumper;
 use JSON;
@@ -239,21 +239,37 @@ sub cmd_execute_operation {
 sub _is_object {
     my $self = shift;
     my $value = shift;
-    return JMX::Jmx4Perl->is_object_to_dump($value);
+    return JMX::Jmx4Perl::Util->is_object_to_dump($value);
 }
 
 sub _dump {
     my $self = shift;
     my $value = shift;
-    my $args = $self->context->args || {};
-    my $format = $args->{format} || "data";
-    return JMX::Jmx4Perl->dump_value($value,{format => $format,boolean_string => 0});
+    return JMX::Jmx4Perl::Util->dump_value($value,{format => $self->_get_opt_or_config("format"),
+                                                   booleans => $self->_get_opt_or_config("booleans"),
+                                                   indent => $self->_get_opt_or_config("indent")});
 }
 
 sub _dump_scalar {
     my $self = shift;
-    return JMX::Jmx4Perl->dump_scalar(shift,0);
+    return JMX::Jmx4Perl::Util->dump_scalar(shift,$self->_get_opt_or_config("booleans"));
 }
+
+
+sub _get_opt_or_config {
+    my $self = shift;
+    my $key = shift;
+
+    my $args = $self->context->args || {};
+    my $config = $self->context->config || {};
+    if (defined($args->{option}) && defined($args->{option}->{lc $key})) {
+        return $args->{option}->{lc $key};
+    } else {
+        my $shell_config = $config->{shell} || {};
+        return $shell_config->{lc $key};
+    }
+}
+
 
 # =================================================================================================== 
 
@@ -280,7 +296,7 @@ sub cmd_list_domains {
     return sub {
         my $context = $self->context;
         my $agent = $context->agent;
-        print "Not connected to a server\n" and return unless $agent;        
+        print "Not connected to a server\n" and return unless $agent;      
         my ($opts,@filters) = $self->extract_command_options(["l!"],@_);
         if ($domain) {
             if (@filters) {
