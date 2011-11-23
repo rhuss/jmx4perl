@@ -1,4 +1,4 @@
-1.02
+1.02 (2011-11-23)
   - Fix for threshold with 0 value in check_jmx4perl
   - Fix automatic detection of the largest version number for Jolokia
     agents in with the format 1.0.1 when downloading with 'jolokia' 

@@ -36,6 +36,7 @@ it/t/85_path_escaping.t
 it/t/90_search.t
 it/t/59_check_timeout.t
 lib/JMX/Jmx4Perl.pm
+lib/JMX/Jmx4Perl/Util.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/ArtifactHandler.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/DownloadAgent.pm
