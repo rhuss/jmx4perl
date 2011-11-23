@@ -14,6 +14,8 @@ methods which needs to be called like in
 
 There is no constructor.
 
+=over 
+
 =cut
 
 package JMX::Jmx4Perl::Util;
@@ -115,5 +117,7 @@ sub _canonicalize_value {
         return $value;
     }
 }
+
+=back 
 
 1;
