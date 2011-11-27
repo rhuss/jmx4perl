@@ -76,11 +76,13 @@ sub dump_value {
     return $ret;
 }
 
-=item $dump = JMX::Jmx4Perl::Util->dump_scalar($val,$as_string)
+=item $dump = JMX::Jmx4Perl::Util->dump_scalar($val,$format)
 
 Dumps a scalar value with special handling for booleans.  If C<$val> is a
-L<JSON::XS::Boolean> it is returned as string "true"/"false" if C<$as_string>
-is true or as 0/1 otherwise. Otherwise the value itself is returned
+L<JSON::XS::Boolean> it is returned as string formatted according to
+C<$format>. C<$format> must contain two values separated bu C</>. The first
+part is taken for a C<true> value, the second for a C<false> value. If no
+C<$format> is given, C<[true]/[false]> is used.
 
 =cut 
 
@@ -88,11 +90,16 @@ sub dump_scalar {
     my $self = shift;
     my $value = shift;
     my $format = shift || "[true]/[false]";
-    my ($true,$false) = split /\//,$format;
-    if ($value eq "true") {
-        return $true; 
+
+    if (JSON::is_bool($value)) {
+        my ($true,$false) = split /\//,$format;
+        if ($value eq "true") {
+            return $true; 
+        } else {
+            return $false;
+        }
     } else {
-        return $false;
+        return $value;
     }
 }
 
@@ -119,5 +126,7 @@ sub _canonicalize_value {
 }
 
 =back 
+
+=cut
 
 1;

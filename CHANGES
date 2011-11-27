@@ -1,3 +1,10 @@
+1.04 (2011-11-27)
+  - Fixed serious (and stupid) bug for jmx4perl and j4psh when printing 
+    out scalar values. 
+
+1.03 (2011-11-23)
+  - Fixed stupid last minute bug.
+
 1.02 (2011-11-23)
   - Fix for threshold with 0 value in check_jmx4perl
   - Fix automatic detection of the largest version number for Jolokia

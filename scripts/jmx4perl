@@ -549,7 +549,6 @@ sub _has_tty {
 sub _print_response {
     my $resp = shift;
     my $val = $resp->value;
-
     if (_is_object($val)) {
         print _dump($val);
     } else {

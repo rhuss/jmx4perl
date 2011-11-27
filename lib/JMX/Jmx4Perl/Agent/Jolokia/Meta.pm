@@ -103,7 +103,7 @@ sub latest_matching_version {
         my $range = $version_info->{$v}->{jmx4perl};
         if ($range) {
             my $match = $self->_check_version($jmx4perl_version,$range);
-            print "Match: $match for $range (j4p: $jmx4perl_version)\n";
+            #print "Match: $match for $range (j4p: $jmx4perl_version)\n";
             return $v if $match;
         }
     }
