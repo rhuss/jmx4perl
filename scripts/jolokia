@@ -33,7 +33,7 @@ use strict;
   # Repackage the agent to include a security policy
   jolokia repack --policy jolokia.war
 
-  # Current Jmx4Perl version
+  # Jmx4Perl version
   jolokia --version
 
   # Online help
@@ -76,7 +76,7 @@ Options:
      --proxy-user       Proxy user for proxy authentication
      --proxy-password   Proxy password for proxy authentication
      --help             Print online help (and exit)
-     --version          Current Jmx4Perl version
+     --version          Jmx4Perl version 
 
 =head1 DESCRIPTION
 
@@ -550,7 +550,7 @@ sub verify_version {
     my @versions = keys %{$meta->get('versions')};
     $logger->error("No version $version known. Known versions: [",join(", ",sort @versions),"]") && die "\n"
       unless grep { $version eq $_ } @versions;
-    $logger->warn("Current Jmx4Perl version $JMX::Jmx4Perl::VERSION is not supported by Jolokia version $version")
+    $logger->warn("This Jmx4Perl version $JMX::Jmx4Perl::VERSION is not supported by Jolokia version $version")
                   unless $meta->versions_compatible($JMX::Jmx4Perl::VERSION,$version);
 }
 

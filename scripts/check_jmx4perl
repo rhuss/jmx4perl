@@ -94,7 +94,7 @@ too. Please refer to the C<README> for installation instructions and the
 supported platforms.
 
 C<check_jmx4perl>s can also be used in an agentless mode (i.e. no agent needs
-to be installed on the target platform). Ssee L</"Proxy mode"> for details.
+to be installed on the target platform). See L</"Proxy mode"> for details.
 
 This plugin can be configured in two ways: Either, all required parameters for
 identifying the JMX information can be given via the command line. Or, a
@@ -701,41 +701,31 @@ In detail, the following steps are required:
 
 =item * 
 
-Extract F<jolokia.war> to a temporary directory:
+Download F<jolokia.war> and a sample policy file F<jolokia-access.xml> into a
+temporary directory:
 
    $ jolokia
-   $ mkdir jolokia
-   $ cd jolokia
-   $ jar xvf ../jolokia.war
-
-C<$J4P> is the jmx4perl distribution directory.
-
-=item * 
-
-Copy over the template policy file into the right place.
-
-   $ wget .../jolokia-access.xml.template
-   $ mv jolokia-access.xml.template WEB-INF/classes/jolokia-access.xml
+   $ jolokia --policy
 
 =item * 
 
 Edit the policy according to your needs.
    
-   $ vi WEB-INF/classes/jolokia-access.xml
+   $ vi jolokia-access.xml
    
 =item * 
 
 Repackage the war file
 
-   $ jar cvf $J4P/agent/jolokia.war *
+   $ jolokia repack --policy jolokia.war
 
 =item *
 
-Deploy the agent F<$J4P/agent/jolokia.war> as usual
+Deploy the agent F<jolokia.war> as usual
 
 =back
 
-The template policy file F<jolokia-access.xml.template> contains inline
+The downloaded sample policy file F<jolokia-access.xml> contains inline
 documentation and examples, so you can easily adapt it to your environment.
 
 Restrictions can be set to on various parameters :
