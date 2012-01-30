@@ -262,7 +262,7 @@ sub _delta_value {
         }
         if (!@$hist_val) {
             # Can happen in some scenarios when requesting the first history entry,
-            # we are return 0 here
+            # we return 0 here
             return 0;
         }
         my $old_value = $hist_val->[0]->{value};
@@ -297,7 +297,7 @@ sub _base_value {
     my $requests = shift;
 
     if (looks_like_number($name)) {
-        # It looks like a number, so we suppose its  the base value itself
+        # It looks like a number, so we suppose its the base value itself
         return $name;
     }
     my $resp = shift @{$responses};
