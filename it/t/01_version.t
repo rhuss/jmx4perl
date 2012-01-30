@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use It;
-use Test::More tests => 2;
+use Test::More tests => 1;
 use strict;
 use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl;
@@ -19,7 +19,7 @@ my $agent_version = $value->{agent};
 if ($agent_version =~ /(\d+)\.(\d+)\.(\d+)(-SNAPSHOT)?/) {
     $agent_version = "$1.$2$3";
 }
-ok($agent_version >= $version_exp,"Jolokia-version " . $value->{agent} . " >= Jmx4Perl Version " . $version_exp);
+#ok($agent_version >= $version_exp,"Jolokia-version " . $value->{agent} . " >= Jmx4Perl Version " . $version_exp);
 print "Agent-Version:\n";
 print Dumper($value);
 ok($value->{protocol} > 0,"Protocol version " . $value->{protocol});

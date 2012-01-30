@@ -25,7 +25,7 @@ for my $method ("post","get") {
     }
     $req = new JMX::Jmx4Perl::Request(LIST,"/java.lang/",{method => $method});
     $resp = $jmx->request($req);
-    print Dumper($resp);    
+    #print Dumper($resp);    
 }
 
 $list = $jmx->list("jolokia.it/name=!/!/server!/client,type=naming/attr");
