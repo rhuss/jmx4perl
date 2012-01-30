@@ -13,7 +13,8 @@ JMX::Jmx4Perl::Product::Glassfish - Handler for Glassfish
 
 =head1 DESCRIPTION
 
-This handler supports glassfish version 2. (L<https://glassfish.dev.java.net/>)
+This handler supports glassfish up to version 3.1
+(L<https://glassfish.dev.java.net/>)
 
 =cut
 
@@ -43,7 +44,7 @@ sub version {
 }
 
 sub vendor {
-    return "Sun Microsystems";
+    return "Oracle";
 }
 
 sub autodetect_pattern {
