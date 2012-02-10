@@ -164,7 +164,7 @@ if ($answer) {
               "File::Temp" => 0,          # req
               "Digest::MD5" => 0,         # opt
               "Digest::SHA1" => 0,        # opt
-              "XML::Tidy" => 0,           # opt
+              "XML::Twig" => 0,           # opt
               "Term::ProgressBar" => 0    # opt
              );
     add_script("scripts/jolokia" => 1);
