@@ -21,7 +21,7 @@ but recommended.
 =cut
 
 use Data::Dumper;
-use vars qw($HAS_LIBXML $HAS_XML_TIDY);
+use vars qw($HAS_LIBXML $HAS_XML_TWIG);
 use strict;
 
 # Trigger for <login-config>
@@ -32,7 +32,7 @@ my $JSR_160_PROXY_CLASS = "org.jolokia.jsr160.Jsr160RequestDispatcher";
 
 BEGIN {
     $HAS_LIBXML = eval "require XML::LibXML; use XML::LibXML::XPathContext; 1";
-    $HAS_XML_TIDY = eval "require XML::Tidy; 1";
+    $HAS_XML_TWIG = eval "require XML::Twig; 1";
 }
 
 =item $handler = JMX::Jmx4Perl::Agent::Jolokia::WebXmlHandler->new(%args)
@@ -402,8 +402,8 @@ sub _e {
 sub _cleanup_doc {
     my $self = shift;
     my $doc = shift;
-    if ($HAS_XML_TIDY) {
-        my $ret = new XML::Tidy(xml => $doc->toString())->tidy->toString();
+    if ($HAS_XML_TWIG) {
+        my $ret = XML::Twig->nparse_pp($doc->toString)->toString(1);
         #print $ret;
         return $ret;
     } else {
