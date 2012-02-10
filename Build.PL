@@ -65,9 +65,10 @@ if ($answer) {
     add_reqs(
               "Nagios::Plugin" => "0.27", # req
               "Text::ParseWords" => 0,    # req
+              "Time::HiRes" => 0,         # req
               "Config::General" => 0,     # req
               "Pod::Usage" => 0,          # opt
-              "Crypt::Blowfish_PP" => 0 # opt
+              "Crypt::Blowfish_PP" => 0  # opt
              );
     add_script("scripts/check_jmx4perl" => 1);   
 }
