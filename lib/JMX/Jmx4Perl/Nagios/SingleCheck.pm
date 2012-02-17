@@ -665,13 +665,14 @@ my $CHECK_CONFIG_KEYS = {
                          "numeric" => "numeric",
                          "string" => "string",
                          "label" => "label",
-                         # New:
+
                          "value" => "value",
                          "null" => "null",
                         };
 
 
 # Get the proper configuration values
+
 sub AUTOLOAD {
     my $self = shift;
     my $np = $self->{np};

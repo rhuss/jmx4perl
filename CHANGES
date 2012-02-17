@@ -1,5 +1,8 @@
 1.05 
   - Added Time::HiRes as dependency to check_jmx4perl
+  - Replaced XML::Tidy with XML::Twig and relaxed version number requirement 
+    on Module::Build
+  - RT#72413: Fixed configuration in threads.cfg
 
 1.04 (2011-11-27)
   - Fixed serious (and stupid) bug for jmx4perl and j4psh when printing 

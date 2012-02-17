@@ -1,5 +1,5 @@
 #!/usr/bin/perl 
-use Module::Build 0.38;
+use Module::Build;
 use strict;
 use Data::Dumper;
 

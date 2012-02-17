@@ -470,6 +470,7 @@ sub _replace_placeholder {
         my $orig_val = '$' . $2;
         my $i = defined($3) ? $3 : $4;
         my $default = $5;
+        $default =~ s/^\s*(.*)+?\s*$/$1/ if $default; # Trim whitespace
         my $end = defined($6) ? $6 : "";
         #print Dumper({start => $start, orig => $orig_val,end => $end, default=> $default, rest => $rest, i => $i}); 
         if (defined($args)) {

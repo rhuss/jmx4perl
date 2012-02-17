@@ -1,3 +1,9 @@
+1.05 
+====
+
+- Relative and delta checks combined (see mail from Reinhard)
+- Optional hide performance data (RT#)
+
 04 Deployment instructions for various application servers
 06 WS-Management integration ?
 07 Path handling for operation return values
