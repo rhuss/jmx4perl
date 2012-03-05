@@ -122,7 +122,8 @@ Options:
    --config                Path to an optional configuration file (default: ~/.j4p)
    --history               Print out the history of return values (if switched on and present)
    --legacy-escape         Used for contacting pre 1.0 Jolokia agent for MBeans containing 
-                           slashes in their name. 
+                           slashes in their name.
+   --method <get|post>     Method to be used for HTTP request ("get" or "post")
    --option key=val        Options for tuning the output of jmx4perl. Known keys are
                               format   : Either 'json' or 'data'
                               booleans : Pair of strings separated by slash to use for printing 
@@ -155,6 +156,19 @@ or as a Perl data structure. Default is "data".
 Specify the pair of strings to use for boolean values for the C<data> output
 format. The value of this option should be given as a string separated with a
 C</>. The default value is C<[true]/[false]>. 
+
+=item method
+
+Specify the HTTP method to use for requesting the server. This can either be
+C<get> or C<post>. By default "get" is used.
+
+=item legacy-escape
+
+Prior to version 1.0 Jolokia used a different escaping scheme for GET requests
+which contains slashes. This option must be used, when the server-side agent
+has a version < 1.0 and the MBean name contains slashes ("/"). Alternatively,
+C<--method post> can be used, since the post method doesn't suffer from any
+escaping issues.
 
 =item indent
 

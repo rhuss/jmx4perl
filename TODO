@@ -2,7 +2,10 @@
 ====
 
 - Relative and delta checks combined (see mail from Reinhard)
-- Optional hide performance data (RT#)
+- Optional hide performance data (RT#75062)
+- RT#69167 - Alias resolution
+- RT#70892 - ePN
+
 
 04 Deployment instructions for various application servers
 06 WS-Management integration ?
