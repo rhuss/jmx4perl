@@ -1,8 +1,21 @@
 #!/usr/bin/perl 
-use Module::Build;
+
+# Check for Module::Build at the right version or use or own bundled one
+# if the available one does not fit.
+my $Minimal_MB = 0.34; 
+
+my $Installed_MB =
+  `$^X -e "eval q{require Module::Build; print Module::Build->VERSION} or exit 1"`;
+chomp $Installed_MB;
+
+$Installed_MB = 0 if $?;
+
+# Use our bundled copy of Module::Build if it's newer than the installed.
+unshift @INC, "inc/Module-Build" if $Minimal_MB > $Installed_MB;
+
+require Module::Build;
 use strict;
 use Data::Dumper;
-
 
 my %REQS = (
             "JSON" => "2.12",
