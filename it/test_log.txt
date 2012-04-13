@@ -1,3 +1,16 @@
+Jolokia 1.0.3 + Jmx4Perl 1.05 (2012-04-10)
+    JEE-Server 
+      Tomcat 7.0.21 & 6.0.33
+      JBoss 6.1.0
+      Glassfish 3.1.1
+      Jetty 8.0.1      
+
+    OSGi-Agents
+       Felix 3.0.8 (bundle + pure), 4.0.0 (bundle + pure)
+
+    JVM-JDK6 Agent
+       Felix 3.0.8
+
 Jolokia 1.0.2 + Jmx4Perl 1.04 (2012-01-06)
     JEE-Server
       Tomcat 7.0.21

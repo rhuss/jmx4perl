@@ -2,12 +2,13 @@
 
 use It;
 
-use Test::More (tests => 13);
+use Test::More (tests => 14);
 use LWP::UserAgent;
 use Data::Dumper;
 use strict;
 
 my $url = $ENV{JMX4PERL_GATEWAY} || $ARGV[0];
+$url .= "/" unless $url =~ /\/$/;
 my $origin = "http://localhost:8080";
 my $ua = new LWP::UserAgent();
 $ua->default_headers()->header("Origin" => $origin);
@@ -18,7 +19,6 @@ $ua->default_headers()->header("Origin" => $origin);
 # 1) Preflight Checks
 my $req = new HTTP::Request("OPTIONS",$url);
 my $resp = $ua->request($req);
-
 is($resp->header('Access-Control-Allow-Origin'),$origin,"Access-Control-Allow Origin properly set");
 ok($resp->header('Access-Control-Allow-Max-Age') > 0,"Max Age set");
 ok(!$resp->header('Access-Control-Allow-Request-Header'),"No Request headers set");
@@ -58,6 +58,15 @@ EOT
 $resp = $ua->request($req);
 
 verify_resp("POST-Error",$resp);
+
+# 5) Try request splitting attack
+
+my $ua2 = new LWP::UserAgent();
+$req = new HTTP::Request("GET",$url . "/read/java.lang:type=Memory/HeapMemoryUsage");
+$req->header("Origin","http://bla.com\r\n\r\nInjected content");
+$resp = $ua2->request($req);
+ok($resp->header('Access-Control-Allow-Origin') !~ /[\r\n]/,"No new lines included");
+#print Dumper($resp);
 
 # ---------------------------------------------
 
