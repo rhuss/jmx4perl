@@ -5,7 +5,7 @@
   - RT#72413: Fixed configuration in threads.cfg
   - Updated documentation for 'jmx4perl' (--method and --legacy-escape
     explained) 
-  - Bundled Module::Build 0.40 in order to improve the installation
+  - Bundled Module::Build 0.34 in order to improve the installation
     experience
 
 1.04 (2011-11-27)
