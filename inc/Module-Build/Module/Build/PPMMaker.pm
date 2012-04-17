@@ -1,11 +1,8 @@
 package Module::Build::PPMMaker;
 
 use strict;
-use Config;
 use vars qw($VERSION);
-use IO::File;
-
-$VERSION = '0.40';
+$VERSION = '0.34';
 $VERSION = eval $VERSION;
 
 # This code is mostly borrowed from ExtUtils::MM_Unix 6.10_03, with a
@@ -37,6 +34,7 @@ sub make_ppd {
     my $method = "dist_$info";
     $dist{$info} = $build->$method() or die "Can't determine distribution's $info\n";
   }
+  $dist{version} = $self->_ppd_version($dist{version});
 
   $self->_simple_xml_escape($_) foreach $dist{abstract}, @{$dist{author}};
 
@@ -44,17 +42,21 @@ sub make_ppd {
   # various licenses
   my $ppd = <<"PPD";
 <SOFTPKG NAME=\"$dist{name}\" VERSION=\"$dist{version}\">
+    <TITLE>$dist{name}</TITLE>
     <ABSTRACT>$dist{abstract}</ABSTRACT>
 @{[ join "\n", map "    <AUTHOR>$_</AUTHOR>", @{$dist{author}} ]}
     <IMPLEMENTATION>
 PPD
+
+  # TODO: We could set <IMPLTYPE VALUE="PERL" /> or maybe
+  # <IMPLTYPE VALUE="PERL/XS" /> ???
 
   # We don't include recommended dependencies because PPD has no way
   # to distinguish them from normal dependencies.  We don't include
   # build_requires dependencies because the PPM installer doesn't
   # build or test before installing.  And obviously we don't include
   # conflicts either.
-
+  
   foreach my $type (qw(requires)) {
     my $prereq = $build->$type();
     while (my ($modname, $spec) = each %$prereq) {
@@ -71,18 +73,27 @@ PPD
         }
       }
 
-      # PPM4 spec requires a '::' for top level modules
-      $modname .= '::' unless $modname =~ /::/;
+      # Another hack - dependencies are on modules, but PPD expects
+      # them to be on distributions (I think).
+      $modname =~ s/::/-/g;
 
-      $ppd .= qq!        <REQUIRE NAME="$modname" VERSION="$min_version" />\n!;
+      $ppd .= sprintf(<<'EOF', $modname, $self->_ppd_version($min_version));
+        <DEPENDENCY NAME="%s" VERSION="%s" />
+EOF
+
     }
   }
 
   # We only include these tags if this module involves XS, on the
-  # assumption that pure Perl modules will work on any OS.
+  # assumption that pure Perl modules will work on any OS.  PERLCORE,
+  # unfortunately, seems to indicate that a module works with _only_
+  # that version of Perl, and so is only appropriate when a module
+  # uses XS.
   if (keys %{$build->find_xs_files}) {
     my $perl_version = $self->_ppd_version($build->perl_version);
-    $ppd .= sprintf(<<'EOF', $self->_varchname($build->config) );
+    $ppd .= sprintf(<<'EOF', $perl_version, $^O, $self->_varchname($build->config) );
+        <PERLCORE VERSION="%s" />
+        <OS NAME="%s" />
         <ARCHITECTURE NAME="%s" />
 EOF
   }
@@ -102,10 +113,6 @@ EOF
   my $ppd_file = "$dist{name}.ppd";
   my $fh = IO::File->new(">$ppd_file")
     or die "Cannot write to $ppd_file: $!";
-
-  my $io_file_ok = eval { IO::File->VERSION(1.13); 1 };
-  $fh->binmode(":utf8")
-    if $io_file_ok && $fh->can('binmode') && $] >= 5.008 && $Config{useperlio};
   print $fh $ppd;
   close $fh;
 
@@ -140,7 +147,7 @@ sub _varchname {  # Copied from PPM.pm
 		 '<' => '&lt;',
 		);
   my $rx = join '|', keys %escapes;
-
+  
   sub _simple_xml_escape {
     $_[1] =~ s/($rx)/$escapes{$1}/go;
   }
@@ -153,6 +160,7 @@ __END__
 =head1 NAME
 
 Module::Build::PPMMaker - Perl Package Manager file creation
+
 
 =head1 SYNOPSIS
 
