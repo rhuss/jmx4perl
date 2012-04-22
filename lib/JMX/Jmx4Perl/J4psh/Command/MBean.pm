@@ -61,7 +61,7 @@ sub domain_commands {
                          } 
                      },
                      args => $self->complete->mbeans(all => 1),
-                    }
+                    },
            };
 }
 
@@ -83,8 +83,15 @@ sub property_commands {
                              $self->_cd_mbean($domain,$input);
                          }
                      },
-                     args => $self->complete->mbeans(domain => $domain),
-                    }
+                     args => $self->complete->mbeans(domain => $domain)
+                    },
+            "pwd" => {
+                      desc => "Print currently selected domain",
+                      proc => sub {
+                          my ($s,$r) = $self->color("domain_name","reset");
+                          print $s . $domain . $r,":\n";
+                      }
+                     }
            };
 }
 
@@ -93,7 +100,17 @@ sub mbean_commands {
     my $mbean_props = shift;
     return {
             "ls" => { 
-                     desc => "List MBeans for a domain",
+                     desc => "List MBeans for a domain.",
+                     doc => <<EOT,
+List all MBeans within a domain. 
+
+The following options are supported:
+
+   -a: Attributes only
+   -o: Operations only
+
+Wildcards are supported for filtering
+EOT
                      proc => $self->cmd_show_mbean($mbean_props),
                      #args => $self->complete->mbean_attribs($mbean_props),
                     },
@@ -120,7 +137,13 @@ sub mbean_commands {
                        proc => $self->cmd_execute_operation($mbean_props),
                        args => $self->complete->mbean_operations($mbean_props),
                       },
-             
+            "pwd" => { 
+                      desc => "Show the currently selected MBean",
+                      proc => sub {
+                          my ($d,$k,$v,$r) = $self->color("domain_name","property_key","property_value","reset");
+                          print $d . $mbean_props->{domain} . $r . ":" . $self->_color_props($mbean_props) . "\n";
+                      }
+                     }             
            };
 }
 
@@ -327,7 +350,8 @@ sub cmd_show_mbean {
         my $info = $m_info->{info};
         my ($c_m,$c_a,$c_o,$c_r) = $self->color("mbean_name","attribute_name","operation_name","reset");
         my $op_len = 50 + length($c_o) + length($c_r);
-        
+        my ($do_show_attrs,$do_show_ops,$filters) = $self->_show_what_from_mbean($info,@_);
+
         my $p = "";
         
         my $name = $m_info->{full};
@@ -335,44 +359,86 @@ sub cmd_show_mbean {
         $p .= "\n\n";
         
         #print Dumper($m_info);
-
         my $attrs = $info->{attr};
-        if ($attrs && keys %$attrs) {
-            $p .= "Attributes:\n";
+        if ($do_show_attrs) {
+            my @lines = ();
             for my $attr (keys %$attrs) {
-                if (length($attr) > 31) {
-                    $p .= sprintf("  $c_a%s$c_r\n",$attr);
-                    $p .= sprintf("  %-31.31s %-13.13s %-4.4s %s\n",
-                                  $self->_pretty_print_type($attrs->{$attr}->{type}),
-                                  $attrs->{$attr}->{rw} eq "false" ? "[ro]" : "",$attrs->{$attr}->{desc});
-                } else {
-                    $p .= sprintf("  $c_a%-31.31s$c_r %-13.13s %-4.4s %s\n",$attr,
-                                  $self->_pretty_print_type($attrs->{$attr}->{type}),
-                                  $attrs->{$attr}->{rw} eq "false" ? "[ro]" : "",$attrs->{$attr}->{desc});
+                my $line = "";                
+                if ($self->_pass_filter($attr,$filters)) {
+                    if (length($attr) > 31) {
+                        $line .= sprintf("  $c_a%s$c_r\n",$attr);
+                        $line .= sprintf("  %-31.31s %-13.13s %-4.4s %s\n",
+                                      $self->_pretty_print_type($attrs->{$attr}->{type}),
+                                      $attrs->{$attr}->{rw} eq "false" ? "[ro]" : "",$attrs->{$attr}->{desc});
+                    } else {
+                        $line .= sprintf("  $c_a%-31.31s$c_r %-13.13s %-4.4s %s\n",$attr,
+                                      $self->_pretty_print_type($attrs->{$attr}->{type}),
+                                      $attrs->{$attr}->{rw} eq "false" ? "[ro]" : "",$attrs->{$attr}->{desc});
+                    }
+                    push @lines,$line;
                 }
             }
-            $p .= "\n";
+            if (@lines) {
+                $p .= "Attributes:\n";
+                $p .= join "",@lines;
+                $p .= "\n";
+            }
         }
         my $ops = $info->{op};
-        if ($ops && keys %$ops) {
-            $p .= "Operations:\n";
+        if ($do_show_ops) {
+            my @lines = ();
             for my $op (keys %$ops) {
-                my $overloaded = ref($ops->{$op}) eq "ARRAY" ? $ops->{$op} : [ $ops->{$op} ];
-                for my $m_info (@$overloaded) {
-                    my $sig = $self->_signature_to_print($op,$m_info);
-                    if (length($sig) > $op_len) {
-                        $p .= sprintf("  %s\n",$sig);
-                        $p .= sprintf("  %-50.50s %s\n","",$m_info->{desc}) if $m_info->{desc};                        
-                    } else {
-                        $p .= sprintf("  %-${op_len}.${op_len}s %s\n",$sig,$m_info->{desc});
+                my $line = "";
+                if ($self->_pass_filter($op,$filters)) {
+                    my $overloaded = ref($ops->{$op}) eq "ARRAY" ? $ops->{$op} : [ $ops->{$op} ];
+                    for my $m_info (@$overloaded) {
+                        my $sig = $self->_signature_to_print($op,$m_info);
+                        if (length($sig) > $op_len) {
+                            $line .= sprintf("  %s\n",$sig);
+                            $line .= sprintf("  %-50.50s %s\n","",$m_info->{desc}) if $m_info->{desc};                        
+                        } else {
+                            $line .= sprintf("  %-${op_len}.${op_len}s %s\n",$sig,$m_info->{desc});
+                        }
                     }
+                    push @lines,$line;
                 }
             }
-            $p .= "\n";
+            if (@lines) {
+                $p .= "Operations:\n";
+                $p .= join "",@lines;
+                $p .= "\n";            
+            }
         }
         $self->print_paged($p);
         #print Dumper($info);
     }
+}
+
+sub _pass_filter {
+    my $self = shift;
+    my $check = shift;
+    my $regexps = shift;
+    return 1 unless @$regexps;
+    for my $regexp (@$regexps) {
+        return 1 if $check =~ $regexp;
+    }
+    return 0;
+}
+
+sub _show_what_from_mbean {
+    my $self = shift;
+    my ($info,@args) = @_;
+    my ($opts,@filter) = $self->extract_command_options(["attributes|a!","operations|ops|o!"],@args);
+    my $no_restrict = !defined($opts->{attributes}) && !defined($opts->{operations}); 
+    my $show_attrs = $info->{attr} && keys %{$info->{attr}} && ($opts->{attributes} || $no_restrict);
+    my $show_ops = $info->{op} && keys %{$info->{op}} && ($opts->{operations} || $no_restrict);
+    my @filter_regexp = map {
+        s/\*/.*/g;  
+        s/\?/./g; 
+        my $f = '^' . $_ . '$';
+        qr/$f/i
+    } @filter;
+    return ($show_attrs,$show_ops,\@filter_regexp);
 }
 
 sub _line_aligned {

@@ -1,4 +1,4 @@
-1.05 
+1.05 (2012-04-22)
   - Added Time::HiRes as dependency to check_jmx4perl
   - Replaced XML::Tidy with XML::Twig and relaxed version number
     requirement on Module::Build
@@ -7,6 +7,9 @@
     explained) 
   - Bundled Module::Build 0.34 in order to improve the installation
     experience
+  - j4psh: Added 'pwd' command
+  - j4psh: Added options -a (attributes) and -o (operatiosn) to the 'ls'
+    command which now also supports wildcards for filtering
 
 1.04 (2011-11-27)
   - Fixed serious (and stupid) bug for jmx4perl and j4psh when printing 
