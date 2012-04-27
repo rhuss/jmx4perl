@@ -59,6 +59,9 @@ are additonal arguments used for exec-operations,
 Multiple request object are returned e.g. if a relative check has to be
 performed in order to get the base value as well.
 
+The returned array can contain coderefs which should be executed directly and
+its return value should be used in order to perfoorm the check. 
+
 =cut
 
 sub get_requests {
@@ -66,7 +69,11 @@ sub get_requests {
     my $jmx = shift;
     my $args = shift;
 
+    # If a script is given, extract a subref and return it
+    return [ $self->_extract_script_as_subref($jmx) ] if $self->script;
+
     my $do_read = $self->attribute || $self->value;
+    my $do_exec = $self->operation;
     if ($self->alias) {
         my $alias = JMX::Jmx4Perl::Alias->by_name($self->alias);
         die "No alias '",$self->alias," known" unless $alias;
@@ -76,8 +83,10 @@ sub get_requests {
     my $request;
     if ($do_read) {
         $request = JMX::Jmx4Perl::Request->new(READ,$self->_prepare_read_args($jmx));
-    } else {
+    } elsif ($do_exec) {
         $request = JMX::Jmx4Perl::Request->new(EXEC,$self->_prepare_exec_args($jmx,@$args));
+    } else {
+        die "Neither an attribute/value, an operation or a script given";
     }
     my $method = $self->{np}->opts->{method} || $self->{config}->{method};
     if ($method) {
@@ -105,6 +114,25 @@ sub get_requests {
     }
     
     return \@requests;
+}
+
+# Create a subref where all params from the outside are available as closures.
+sub _extract_script_as_subref {
+    my $self = shift;
+    my $jmx = shift;
+    my $script = $self->script || die "No script given";
+    my $full_script = <<"EOT";
+sub {
+  my \$j4p = shift;
+  return sub { 
+     $script
+  }
+}
+EOT
+    #print $full_script,"\n";
+    my $sub = eval $full_script;
+    die "Cannot eval script for check ",$self->name,": $@" if $@;
+    return &$sub($jmx);
 }
 
 =item $single_check->exract_responses($responses,$requests,$target)
@@ -135,12 +163,20 @@ sub extract_responses {
     my $request = shift @{$requests};
     #print Dumper($resp);
     my @extra_requests = ();
-    $self->_verify_response($request,$resp);
-    my $value = $self->_extract_value($request,$resp);
+    my $value;
+    my $script_mode = undef;
+    if (ref($request) eq "CODE") {
+        # It's a script, so the 'response' is already the value
+        $script_mode = 1;
+        $value = $resp;
+    } else {
+        $self->_verify_response($request,$resp);
+        $value = $self->_extract_value($request,$resp);
+    }
    
     # Delta handling
     my $delta = $self->delta;
-    if (defined($delta)) {
+    if (defined($delta) && !$script_mode) {
         $value = $self->_delta_value($request,$resp,$delta);
         unless (defined($value)) {
             push @extra_requests,$self->_switch_on_history($request,$opts->{target});
@@ -151,7 +187,7 @@ sub extract_responses {
     # Normalize value 
     my ($value_conv,$unit) = $self->_normalize_value($value);
     my $label = $self->_get_name(cleanup => 1);
-    if ($self->base) {
+    if ($self->base && !$script_mode) {
         # Calc relative value 
         my $base_value = $self->_base_value($self->base,$responses,$requests);
         my $rel_value = sprintf "%2.2f",$base_value ? (int((($value / $base_value) * 10000) + 0.5) / 100) : 0;
@@ -668,6 +704,8 @@ my $CHECK_CONFIG_KEYS = {
 
                          "value" => "value",
                          "null" => "null",
+
+                         "script" => "script"
                         };
 
 

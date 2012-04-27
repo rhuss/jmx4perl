@@ -1,4 +1,4 @@
-1.05 
+1.06
 ====
 
 - Relative and delta checks combined (see mail from Reinhard)
@@ -6,6 +6,14 @@
 - RT#69167 - Alias resolution
 - RT#70892 - ePN
 
+- --unknown-is-critical in documentation of check_jmx4perl
+- wbelogic checks
+- Checks, if MBean is missing or existing
+- Scripting in checks !!!!
+  * Bsp: WLS: Checks mit query auf JMS queue und Anzahl. 
+- Matching auf value part or existance of keys in MBean names
+- Parameter durchreichen bei Pool-Checks
+- check_jmx4perl with pattern and path won't work on jolokia's side: java.lang:type=*/HeapMemoryUsage/used
 
 04 Deployment instructions for various application servers
 06 WS-Management integration ?
