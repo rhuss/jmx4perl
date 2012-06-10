@@ -93,3 +93,5 @@ is($ret,0);
 ok($content =~ /Perm/,"Multi-Script-Check: Perm contained");
 ok($content =~ /Eden/,"Multi-Script-Check: Eden contained");
 ok($content =~ /thread_count/,"Multi-Script-Check: Thread_count contained");
+
+#print Dumper($content);
