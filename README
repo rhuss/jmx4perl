@@ -44,7 +44,8 @@ INSTALLATION
   you need to have installed. Using
 
   perl Build.PL
-  ./Build installdeps             # If there are dependencies missing
+  ./Build installdeps             # If there are dependencies missing and you 
+                                  # have Module::Build >= 0.36 installed.
   ./Build
   ./Build test
   ./Build install
