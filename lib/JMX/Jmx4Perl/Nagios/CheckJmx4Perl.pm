@@ -190,7 +190,7 @@ sub _multi_check_prefix {
 }
 
 
-# Send the requests via the build up agent
+# Sendp the requests via the build up agent
 sub _send_requests {
     my ($self,$jmx,@requests) = @_;
     my $o = $self->{opts};
@@ -203,14 +203,66 @@ sub _send_requests {
         }
         $start_time = [gettimeofday];
     }
-    my @responses = $jmx->request(@requests);
+    # Detangle request for direct method calls and JMX requests to call:
+    my $req_map = $self->_detangle_requests(\@requests);
+    my @responses = ();
+    
+    $self->_execute_scripts(\@responses,$req_map);
+    $self->_execute_requests(\@responses,$req_map,$jmx);
+
     if ($o->verbose) {
         print "Result fetched in ",tv_interval($start_time) * 1000," ms:\n";
         print Dumper(\@responses);
     }
-    #print Dumper(\@responses);
     return \@responses;
 }
+
+# Split up request for code-requests (i.e. scripts given in the configuration)
+# and 'real' requests. Remember the index, too so that the response can be
+# weave together
+sub _detangle_requests {
+    my $self = shift;
+    my $requests = shift;
+    my $req_map = {};
+    my $idx = 0;
+    for my $r (@$requests) {
+        push @{$req_map->{ref($r) eq "CODE" ? "code" : "request"}},[$r,$idx];
+        $idx++;
+    }
+    return $req_map;
+}
+
+# Execute subrefs created out of scripts. Put it in the right place of the
+# result array according to the remembered index
+sub _execute_scripts {
+    my $self = shift;
+    my $responses = shift;
+    my $req_map = shift;
+    for my $e (@{$req_map->{"code"}}) {
+        # Will die on error which will bubble up
+        $responses->[$e->[1]] = &{$e->[0]}();;
+    }    
+}
+
+# Execute requests and put it in the received responses in the right place for
+# the returned array. The index has been extracted beforehand and stored in the 
+# given req_map
+sub _execute_requests {
+    my $self = shift;
+    my $responses = shift;
+    my $req_map = shift;
+    my $jmx = shift;
+
+    # Call remote JMX and weave in
+    my $reqs2send = $req_map->{"request"};
+    if ($reqs2send) {
+        my @resp_received = $jmx->request(map { $_->[0] } @$reqs2send);
+        for my $r (@$reqs2send) {
+            $responses->[$r->[1]] = shift @resp_received;
+        }
+    }    
+}
+
 
 # Print online manual and exit (somewhat crude, I know)
 sub _print_doc_and_exit {
@@ -277,7 +329,7 @@ sub _verify_and_initialize {
     for my $check (@{$self->{checks}}) {
         my $name = $check->name ? " [Check: " . $check->name . "]" : "";
         $self->nagios_die("An MBean name and a attribute/operation must be provided " . $name)
-          if ((!$check->mbean || (!$check->attribute && !$check->operation)) && !$check->alias && !$check->value);
+          if ((!$check->mbean || (!$check->attribute && !$check->operation)) && !$check->alias && !$check->value && !$check->script);
         $self->verify_check($check,$name);
     }
 }
@@ -292,7 +344,7 @@ sub verify_check {
 }
 
 # Extract one or more check configurations which can be 
-# simle <Check>s or <MultiCheck>s
+# simple <Check>s or <MultiCheck>s
 sub _extract_checks {
     my $self = shift;
     my $config = shift;
@@ -315,10 +367,10 @@ sub _extract_checks {
 
         # Resolve parent values
         for my $c (@{$check_configs}) {
-            #print "[A] ",Dumper($c);
+            # print "[A] ",Dumper($c);
             $self->_resolve_check_config($c,$config,$self->{cmd_args});
             
-            #print "[B] ",Dumper($c);
+            # print "[B] ",Dumper($c);
             # Finally, resolve any left over place holders
             for my $k (keys(%$c)) {
                 $c->{$k} = $self->_replace_placeholder($c->{$k},undef) unless ref($c->{$k});
@@ -457,15 +509,25 @@ sub _replace_placeholder {
     my $self = shift;
     my $val = shift;
     my $args = shift;
-
     my $index = defined($args) ? join "|",0 ... $#$args : "\\d+";
 
-    my $regexp;
-    eval '$regexp = qr/^(.*?)\$((' . $index . ')|\{\s*(' . $index . ')\s*:([^\}]+)\})(.*|$)/';
+    my $regexp_s = <<'EOP';
+^(.*?)                                 # Start containing no args
+
+\$(                                    # Variable starts with '$'
+   ($index)  |                         # $0         without default value
+   \{\s*($index)\s*                    # ${0:12300} with default value
+     (?:  :([^\}]+)  )*\}              # ?: --> clustering group, optional (${0} is also ok)
+  )
+
+(.*|$)                                 # The rest which will get parsed next
+EOP
+    $regexp_s =~ s/\$index/$index/g;
+    my $regexp = qr/$regexp_s/sx;
     die "Cannot create placeholder regexp" if $@;
     my $rest = $val;
     my $ret = "";
-    while (defined($rest) && length($rest) && $rest =~ /$regexp/) {        
+    while (defined($rest) && length($rest) && $rest =~ $regexp) {        
         my $start = defined($1) ? $1 : "";
         my $orig_val = '$' . $2;
         my $i = defined($3) ? $3 : $4;
@@ -541,7 +603,7 @@ sub _server_config {
     return shift->{server_config};
 }
 
-# Create the nagios plugin used for preparing the nagious output
+# Create the nagios plugin used for preparing the nagios output
 sub create_nagios_plugin {
     my $self = shift;
     my $np = Nagios::Plugin->

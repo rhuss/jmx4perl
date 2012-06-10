@@ -8,12 +8,13 @@ use It;
 
 require "check_jmx4perl/base.pl";
 
-my $jmx = It->new(verbose =>0)->jmx4perl;
+my $jmx = It->new(verbose =>1)->jmx4perl;
 my ($ret,$content);
 
 # ====================================================
 # Configuration check
 my $config_file = $FindBin::Bin . "/../check_jmx4perl/checks.cfg";
+
 
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check memory_heap"); 
 
@@ -78,3 +79,19 @@ ok($content =~ /Unknown.*method/,"Unknown request method");
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --method get --check thread_count 300 400"); 
 is($ret,0,"OK");
 ok($content =~ /in range/,"In range");
+
+# =============================================================================
+# With scripting
+
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check script_check Eden");
+is($ret,2);
+ok($content =~ /threshold/i,"Script-Check: Threshold contained");
+
+
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check script_multi_check Perm");
+is($ret,0);
+ok($content =~ /Perm/,"Multi-Script-Check: Perm contained");
+ok($content =~ /Eden/,"Multi-Script-Check: Eden contained");
+ok($content =~ /thread_count/,"Multi-Script-Check: Thread_count contained");
+
+#print Dumper($content);
