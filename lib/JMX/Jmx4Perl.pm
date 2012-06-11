@@ -101,7 +101,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "1.06_1";
+$VERSION = "1.06_2";
 
 my $REGISTRY = {
                 # Agent based

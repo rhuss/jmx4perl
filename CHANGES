@@ -1,6 +1,7 @@
 1.06 
   - A a scripting mode to check_jmx4perl which allows putting in arbitraty 
     Perl code for extracting the value to match against
+  - weblogic specific Nagios checks added
 
 1.05 (2012-04-22)
   - Added Time::HiRes as dependency to check_jmx4perl

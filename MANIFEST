@@ -6,6 +6,7 @@ config/jetty.cfg
 config/memory.cfg
 config/threads.cfg
 config/tomcat.cfg
+config/weblogic.cfg
 examples/jsr77.pl
 examples/memory.pl
 examples/memory.sh
