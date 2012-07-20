@@ -79,9 +79,9 @@ if ($answer) {
               "Nagios::Plugin" => "0.27", # req
               "Text::ParseWords" => 0,    # req
               "Time::HiRes" => 0,         # req
-              "Config::General" => 0,     # req
+              "Config::General" => "2.34",# req
               "Pod::Usage" => 0,          # opt
-              "Crypt::Blowfish_PP" => 0  # opt
+              "Crypt::Blowfish_PP" => 0   # opt
              );
     add_script("scripts/check_jmx4perl" => 1);   
 }
@@ -102,7 +102,7 @@ if ($answer) {
     add_reqs(
               "Nagios::Plugin" => "0.27", # req
               "Text::ParseWords" => 0,    # req
-              "Config::General" => 0,     # req
+              "Config::General" => "2.34",# req
               "Pod::Usage" => 0,          # opt
               "Crypt::Blowfish_PP" => 0 # opt
              );
@@ -129,7 +129,7 @@ if ($answer) {
               "Term::ShellUI" => 0,      # req
               "Term::Clui" => 0,         # req 
               "Term::Size" => "0.207",   # opt 
-              "Config::General" => 0,    # opt
+              "Config::General" => "2.34",# opt
               "File::SearchPath" => 0,   # opt 
               "Crypt::Blowfish_PP" => 0  # opt
              );
