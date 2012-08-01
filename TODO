@@ -1,6 +1,11 @@
 1.06
 ====
 
+- ${0} aufloesen (??? in den tests funktioniert .... hmmm)
+- jolokia: Auch ein sun-web.xml anlegen (ggfs.)
+- Agents nach OMD
+- 'refresh' in j4psh
+
 - Relative and delta checks combined (see mail from Reinhard)
 - Optional hide performance data (RT#75062)
 - RT#69167 - Alias resolution
@@ -9,8 +14,6 @@
 - --unknown-is-critical in documentation of check_jmx4perl
 - wbelogic checks
 - Checks, if MBean is missing or existing
-- Scripting in checks !!!!
-  * Bsp: WLS: Checks mit query auf JMS queue und Anzahl. 
 - Matching auf value part or existance of keys in MBean names
 - Parameter durchreichen bei Pool-Checks
 - check_jmx4perl with pattern and path won't work on jolokia's side: java.lang:type=*/HeapMemoryUsage/used

@@ -66,6 +66,13 @@ ok($content =~ /Value 1 in range/,"OperationWithArgument");
 is($ret,2,"Failing memory multicheck is CRITICAL");
 ok($content =~ /memory_non_heap/,"Failed check name is contained in summary");
 
+# Check labeling of failed tests
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check label_test"); 
+is($ret,2,"Should fail as critical");
+my @lines = split /\n/,$content;
+is($#lines,2,"3 lines has been returned");
+ok($lines[0] =~ /bla/ && $lines[0] =~ /blub/,"Name of checks should be returned as critical values");
+#print Dumper($ret,$content);
 
 # TODO:
 

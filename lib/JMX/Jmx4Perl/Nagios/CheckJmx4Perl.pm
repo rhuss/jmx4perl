@@ -527,7 +527,13 @@ EOP
     die "Cannot create placeholder regexp" if $@;
     my $rest = $val;
     my $ret = "";
-    while (defined($rest) && length($rest) && $rest =~ $regexp) {        
+    while (defined($rest) && length($rest) && $rest =~ $regexp) {  
+        # $1: start with no placeholder
+        # $2: literal variable as it is defined
+        # $3: variable name (0,1,2,3,...)
+        # $4: same as $3, but either $3 or $4 is defined
+        # $5: default value (if any)
+        # $6: rest which is processed next in the loop
         my $start = defined($1) ? $1 : "";
         my $orig_val = '$' . $2;
         my $i = defined($3) ? $3 : $4;
@@ -563,7 +569,7 @@ EOP
             } else {
                 if (!length($ret)) {
                     # No default value, nothing else for this value. We
-                    # consider at undefined
+                    # consider it undefined
                     return undef;
                 }
             }

@@ -94,4 +94,12 @@ ok($content =~ /Perm/,"Multi-Script-Check: Perm contained");
 ok($content =~ /Eden/,"Multi-Script-Check: Eden contained");
 ok($content =~ /thread_count/,"Multi-Script-Check: Thread_count contained");
 
+# ===========================================================================
+# Double values 
+
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check double_min"); 
+$content =~ /double_min=(.*?);/;
+my $min = $1;
+print Dumper($min,$ret,$content,$1);
+is($min,"0.000000","Small double numbers are converted to floasts");
 #print Dumper($content);

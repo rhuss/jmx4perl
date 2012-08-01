@@ -208,6 +208,7 @@ sub extract_responses {
                                                     base_unit => $base_unit, prefix => $opts->{prefix}));            
     } else {
         # Performance data
+        $value = $self->_sanitize_value($value);
         $np->add_perfdata(label => $label,
                           critical => $self->critical, warning => $self->warning, 
                           value => $value,$self->unit ? (uom => $self->unit) : ());
@@ -226,7 +227,7 @@ sub _update_error_stats {
     my $error_stat = shift || return;
     my $code = shift;
 
-    my $label = $self->{config}->{key} || $self->{config}->{name};
+    my $label = $self->{config}->{name} || $self->{config}->{key};
     if ($label) {
         my $arr = $error_stat->{$code} || [];
         push @$arr,$label;
@@ -401,6 +402,14 @@ sub _normalize_value {
         }
     }
     die "Unknown unit '$unit' for value $value";
+}
+
+sub _sanitize_value {
+    my ($self,$value) = @_;
+    if ($value =~ /\de/i) {
+        $value = sprintf("%f", $value);
+    }
+    return $value;
 }
 
 sub _verify_response {
