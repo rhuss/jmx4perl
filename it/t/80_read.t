@@ -60,4 +60,5 @@ is(ref($value),"ARRAY","Set as array returned");
 ok(scalar(grep("jolokia",@$value)),"contains 'jolokia'");
 ok(scalar(grep("habanero",@$value)),"contains 'habanero'");
 
-#print Dumper(\@resps);
+my $value = $jmx->get_attribute("jolokia.it:type=attribute","Utf8Content");
+is($value,"☯","UTF-8 ☯  check passed");
