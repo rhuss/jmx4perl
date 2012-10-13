@@ -10,8 +10,9 @@ use Data::Dumper;
 
 # Fetch all attributes 
 my $jmx = new It(verbose => 0)->jmx4perl;
-my $req = new JMX::Jmx4Perl::Request(EXEC,"jolokia.it:type=operation","mapArgument",{ name => "Kyotake"} );
+my $req = new JMX::Jmx4Perl::Request(EXEC,{ mbean => "jolokia.it:type=operation", operation => "mapArgument",arguments => [{ name => "Kyotake"}],method => "POST"} );
 my $resp = $jmx->request($req);
 my $value = $resp->{value};
-
-#print Dumper(\@resps);
+is(ref($resp->{value}),"HASH");
+is($resp->{value}->{name},"Kyotake");
+#print Dumper($resp);

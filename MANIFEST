@@ -7,6 +7,8 @@ config/memory.cfg
 config/threads.cfg
 config/tomcat.cfg
 config/weblogic.cfg
+config/glassfish.cfg
+config/metrics.cfg
 examples/jsr77.pl
 examples/memory.pl
 examples/memory.sh
@@ -66,6 +68,8 @@ it/t/80_read.t
 it/t/85_path_escaping.t
 it/t/90_search.t
 it/t/95_cors.t
+it/t/83_write.t
+it/t/84_exec.t
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/ArtifactHandler.pm
@@ -131,6 +135,7 @@ t/30_request.t
 t/40_check_jmx4perl.t
 t/50_config.t
 t/60_parse_name.t
+t/41_check_jmx4perl_no_threshold.t
 t/70_pod_syntax.t
 t/j4p_test.cfg
 t/lib/It.pm
