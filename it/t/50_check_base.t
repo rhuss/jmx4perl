@@ -35,3 +35,6 @@ for my $k (keys %s) {
     ok($content =~ /^$s{$k}->[1]/m,"MEMORY_HEAP_USED $k : " . $s{$k}->[1]);
 }
 
+($ret,$content) = exec_check_perl4jmx("--mbean java.lang:type=Memory --attribute HeapMemoryUsage --path used");
+is($ret,0,"No warning and no critical is always success");
+ok($content =~ /in range/,"Data has been povided");

@@ -6,7 +6,11 @@
   - Added name as optional parameter for Nagios checks in tomcat.cfg (thanks Wolfgang)
   - When a multi checks fails, then the name of the check is added instead of its definition 
     key. This allows for better direct usage of predefined checks in own multi checks.
-
+  - If neither a CRITICAL nor a WARNING threshold is provided, then
+    the check always returns OK. This is especially useful when the
+    motivation is to only collect performance data. 
+    
+ 
 1.05 (2012-04-22)
   - Added Time::HiRes as dependency to check_jmx4perl
   - Replaced XML::Tidy with XML::Twig and relaxed version number

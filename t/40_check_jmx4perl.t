@@ -9,7 +9,7 @@ use Test::More;
 use Data::Dumper;
 
 eval { require Nagios::Plugin };
-if( $@ ) {
+if ($@) {
     plan skip_all => 'Nagios::Plugin not installed';
 }
 else {
@@ -70,4 +70,7 @@ is($unit,"us");
 
 my $label = $scheck->_exit_message(code => &Nagios::Plugin::OK,mode => "numeric",value => "2.1", unit => "MB");
 is($label,"Memory : Value 2.10 MB in range");
+
+
+
 

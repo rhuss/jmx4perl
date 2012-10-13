@@ -156,7 +156,7 @@ sub _prepare_multicheck_message {
     my $summary;
     my $nr_checks = scalar(@{$self->{checks}});
     if ($code eq OK) {
-        $summary = "All " . $nr_checks . " checks OK";            
+        $summary = "All " . $nr_checks . " checks OK";
     } else {
         my $nr_warnings = scalar(@{$np->messages->{warning} || []});
         my $nr_errors = scalar(@{$np->messages->{critical} || []});
@@ -175,7 +175,7 @@ sub _prepare_multicheck_message {
         }
         $summary = $nr . " of " . $nr_checks . " failed: " . $extra;
     }
-    return ($code,$summary . "\n" . $message);    
+    return ($code,$summary . "\n" . $message);
 }
 
 # Create a formatted prefix for multicheck output
@@ -339,8 +339,6 @@ sub verify_check {
     my $check = shift;
     my $name = shift;
     my $np = $self->{np};
-    $self->nagios_die("At least a critical or warning threshold must be given " . $name) 
-      if ((!defined($check->critical) && !defined($check->warning)));        
 }
 
 # Extract one or more check configurations which can be 
@@ -833,7 +831,7 @@ sub AUTOLOAD {
     my $opts_name = $name;
     $opts_name =~ s/_/-/;
 
-    if ($SERVER_CONFIG_KEYS->{$name}) {        
+    if ($SERVER_CONFIG_KEYS->{$name}) {
         return $np->opts->{$opts_name} if $np->opts->{$opts_name};
         my $c = $SERVER_CONFIG_KEYS->{$name};
         if ($c) {
@@ -857,7 +855,7 @@ sub AUTOLOAD {
 sub nagios_die {
     my $self = shift;
     my @args = @_;
-    
+
     my $np = $self->{np};
     $np->nagios_die(join("",@args),$np->opts->{'unknown-is-critical'} ? CRITICAL : UNKNOWN)
 }

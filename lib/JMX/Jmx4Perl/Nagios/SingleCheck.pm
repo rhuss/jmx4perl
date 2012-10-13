@@ -199,7 +199,7 @@ sub extract_responses {
                           min => 0,max => $base_value,
                           $self->unit ? (uom => $self->unit) : ());
         # Do the real check.
-        my ($code,$mode) = $self->_check_threshhold($rel_value);
+        my ($code,$mode) = $self->_check_threshold($rel_value);
         # For Multichecks, we remember the label of a currently failed check
         $self->_update_error_stats($opts->{error_stat},$code) unless $code == OK;
         my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
@@ -214,7 +214,7 @@ sub extract_responses {
                           value => $value,$self->unit ? (uom => $self->unit) : ());
         
         # Do the real check.
-        my ($code,$mode) = $self->_check_threshhold($value);
+        my ($code,$mode) = $self->_check_threshold($value);
         $self->_update_error_stats($opts->{error_stat},$code) unless $code == OK;
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit,
                                                     prefix => $opts->{prefix}));                    
@@ -527,7 +527,7 @@ sub _split_attr_spec {
     return @ret;
 }
 
-sub _check_threshhold {
+sub _check_threshold {
     my $self = shift;
     my $value = shift;
     my $np = $self->{np};
@@ -544,7 +544,7 @@ sub _check_threshhold {
            defined($self->critical) ? (critical => $self->critical) : (),
            defined($self->warning) ? (warning => $self->warning) : ()
           );            
-        return ($np->check_threshold(check => $value,@ths),"numeric");    
+        return (@ths ? $np->check_threshold(check => $value,@ths) : OK,"numeric");    
     } else {
         return
           ($self->_check_string_threshold($value,CRITICAL,$self->critical) ||
