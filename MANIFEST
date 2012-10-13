@@ -135,7 +135,6 @@ t/30_request.t
 t/40_check_jmx4perl.t
 t/50_config.t
 t/60_parse_name.t
-t/41_check_jmx4perl_no_threshold.t
 t/70_pod_syntax.t
 t/j4p_test.cfg
 t/lib/It.pm

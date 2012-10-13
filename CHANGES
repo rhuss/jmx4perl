@@ -1,5 +1,5 @@
 
-1.06 
+1.06 (2012-10-13)
   - A a scripting mode to check_jmx4perl which allows putting in arbitraty 
     Perl code for extracting the value to match against
   - weblogic specific Nagios checks added
@@ -10,7 +10,6 @@
     the check always returns OK. This is especially useful when the
     motivation is to only collect performance data. 
     
- 
 1.05 (2012-04-22)
   - Added Time::HiRes as dependency to check_jmx4perl
   - Replaced XML::Tidy with XML::Twig and relaxed version number
