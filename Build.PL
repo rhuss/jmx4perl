@@ -26,7 +26,8 @@ my %REQS = (
             "Carp" => 0,
             "Module::Find" => 0,
             "Scalar::Util" => 0,
-            "base" => 0,                       
+            "base" => 0,
+            "Sys::SigAction" => 0,
            );
 
 my %SCRIPTS = ();

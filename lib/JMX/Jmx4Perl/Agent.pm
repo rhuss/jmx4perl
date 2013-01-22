@@ -122,10 +122,15 @@ sub init {
     my $self = shift;
         
     croak "No URL provided" unless $self->cfg('url');
-    my $ua = JMX::Jmx4Perl::Agent::UserAgent->new();
+    # We don't verify Hostnames by default, since the information we are
+    # sending is typically not critical. Also, we don't have yet a way to 
+    # configure a keystore, so this is the only chance for now. Ask me to add
+    # host certificate verification if wanted.
+    my $ua = JMX::Jmx4Perl::Agent::UserAgent->new(ssl_opts => { verify_hostname => 0 });
     $ua->jjagent_config($self->{cfg});
     #push @{ $ua->requests_redirectable }, 'POST';
     $ua->timeout($self->cfg('timeout')) if $self->cfg('timeout');
+    #print "TO: ",$ua->timeout(),"\n";
     $ua->agent("JMX::Jmx4Perl::Agent $VERSION");
     # $ua->env_proxy;
     my $proxy = $self->cfg('proxy');
@@ -334,6 +339,7 @@ sub request_url {
     my $type = $request->get("type");
     my $req = $type . "/";
     $req .= $self->_escape($request->get("mbean"));
+    
     if ($type eq READ) {
         $req .= "/" . $self->_escape($request->get("attribute"));
         $req .= $self->_extract_path($request->get("path"));
@@ -354,7 +360,7 @@ sub request_url {
         # Nothing further to append.
     }
     # Squeeze multiple slashes
-    $req =~ s|/{2,}|/|g;
+    $req =~ s|(!/)?/+|$1/|g;
     #print "R: $req\n";
 
     if ($req =~ $INVALID_PATH_CHARS || $request->{use_query}) {
@@ -393,11 +399,14 @@ sub _escape {
         # Pre 1.0 escaping:
         $input =~ s|(/+)|"/" . ('-' x length($1)) . "/"|eg;
         $input =~ s|^/-|/^|; # The first slash needs to be escaped (first)
-        $input =~ s|-/$|+/|; # as well as last slash. They need a special escape.        
+        $input =~ s|-/$|+/|; # as well as last slash. They need a special
+                             # escape, because two subsequent slashes get
+                             # squeezed to one on the server side
+
     } else {
         # Simpler escaping since 1.0:
         $input =~ s/!/!!/g;
-        $input =~ s/\//!\//g;
+        $input =~ s/\//!\//g;        
     }
     
     return URI::Escape::uri_escape_utf8($input,"^A-Za-z0-9\-_.!~*'()/");   # Added "/" to

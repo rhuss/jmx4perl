@@ -1,3 +1,20 @@
+Jolokia 1.0.6 + Jmx4Perl 1.06 (2012-11-24)
+    JEE-Server
+      Tomcat 7.0.33 & 6.0.35 & 5.5.35
+      Jetty 8.1.4 & 7.5.1 & 6.1.26 & 5.1.15
+      Geronimo 3.0.0
+      Glassfish 3.1.2 (web, osgi, jvm)  & 3.0.1 & 2.1.1
+      Jboss 7.1.1 & 6.1.0 & 5.1.0
+     
+    OSGi-Agents
+      Felix 4.0.3 (bundle + pure)
+      Equinox 3.7.1 (bundle + pure)
+      Knopflerfish 3.4.0 (bundle + pure)
+
+    JVM-JDK6 Agent
+       Equinox 3.8.2M2
+
+
 Jolokia 1.0.5 + Jmx4Perl 1.05 (2012-07-20)
     JEE-Server
       Tomcat 7.0.27 & 6.0.35 & 5.5.35
@@ -6,7 +23,7 @@ Jolokia 1.0.5 + Jmx4Perl 1.05 (2012-07-20)
       Glassfish 3.1.2 & 3.0.1 & 2.1.1
 
     OSGi-Agents
-      Felix 4.0.0 (bundle + pure)
+      Felix 4.0.0 (bundle + pure), 3.2.2 (bundle + pure), 
 
     JVM-JDK6 Agent
        Equinox 3.8.2M2

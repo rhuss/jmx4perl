@@ -1,3 +1,6 @@
+1.07 
+  - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
+  - SSL Host key verification switched off when connecting via SSL
 
 1.06 (2012-10-13)
   - A a scripting mode to check_jmx4perl which allows putting in arbitraty 

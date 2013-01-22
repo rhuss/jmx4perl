@@ -16,7 +16,7 @@ name: jmx4perl
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 1.06_2
+    version: 1.06
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
@@ -117,7 +117,7 @@ provides:
 requires:
   Archive::Zip: 0
   Carp: 0
-  Config::General: 0
+  Config::General: 2.34
   Crypt::Blowfish_PP: 0
   Data::Dumper: 0
   Digest::MD5: 0
@@ -143,4 +143,4 @@ requires:
   base: 0
 resources:
   license: http://www.gnu.org/licenses/old-licenses/gpl-1.0.txt
-version: 1.06_2
+version: 1.06

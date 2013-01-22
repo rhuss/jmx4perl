@@ -4,6 +4,9 @@
 # in the request
 package JMX::Jmx4Perl::Agent::UserAgent;
 use base qw(LWP::UserAgent);
+
+use Sys::SigAction;
+
 use vars qw($HAS_BLOWFISH_PP $BF);
 use strict;
 
@@ -13,6 +16,7 @@ BEGIN {
         $BF = new Crypt::Blowfish_PP(pack("C10",0x16,0x51,0xAE,0x13,0xF2,0xFA,0x11,0x20,0x6E,0x6A));
     }
 }
+
 
 =head1 NAME
 
@@ -26,6 +30,29 @@ of basic and proxy authentication. This is an internal class used by
 L<JMX::Jmx4Perl::Agent>. 
 
 =cut 
+
+
+# Request using a more robust timeout See
+# http://stackoverflow.com/questions/73308/true-timeout-on-lwpuseragent-request-method 
+# for details.
+sub request {
+    my $self = shift;
+    my $req = shift;
+
+    # Get whatever timeout is set for LWP and use that to 
+    # enforce a maximum timeout per request.
+    use Sys::SigAction qw(timeout_call);
+    our $res = undef;
+    if (timeout_call($self->timeout(), sub { $res = $self->SUPER::request($req); })) {
+        # 408 == HTTP timeout
+        my $ret = HTTP::Response->new(408,"Got timeout in " . $self->timeout() . "s "); 
+        $ret->request($req);
+        return $ret;
+    } else {
+        return $res;
+    }
+
+}
 
 sub jjagent_config { 
     my $self = shift;
