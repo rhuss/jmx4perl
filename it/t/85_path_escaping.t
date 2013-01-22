@@ -28,10 +28,10 @@ for my $method ("post","get") {
     #print Dumper($resp);    
 }
 
-$list = $jmx->list("jolokia.it/name=!/!/server!/client,type=naming/attr");
+$list = $jmx->list("jolokia.it/name=!/!/server!/client,type=naming!//attr");
 is($list->{Ok}->{type},"java.lang.String");
 #my $list = $jmx->list("jolokia.it");
-$req = new JMX::Jmx4Perl::Request(LIST,"jolokia.it/name=!/!/server!/client,type=naming/attr",{method => "POST"});
+$req = new JMX::Jmx4Perl::Request(LIST,"jolokia.it/name=!/!/server!/client,type=naming!//attr",{method => "POST"});
 $resp = $jmx->request($req);
 #print Dumper($resp);
 is($resp->{value}->{Ok}->{type},"java.lang.String");

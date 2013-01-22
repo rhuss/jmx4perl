@@ -32,6 +32,7 @@ ok($content =~ /blubber/,"Unknown check name contained");
 # With arguments
 
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check outer_arg OuterArg"); 
+print Dumper($ret,$content);
 is($ret,0,"OuterArg OK");
 ok($content =~ /OuterArg/,"OuterArg replaced");
 

@@ -11,11 +11,11 @@ BEGIN { use_ok("JMX::Jmx4Perl"); }
 
 my $jmx = It->new(verbose => 0)->jmx4perl;
 
-my $name_p = "jolokia.it:type=naming,name=%s";
+my $name_p = "jolokia.it:type=naming/,name=%s";
 my @names = 
   (
-   "simple",
    "/slash-simple/",
+   "simple",
    "/--/",
    "with%3acolon",
    "//server/client",
@@ -27,7 +27,7 @@ my @names =
 
 my @searches = 
   (
-   [ "*:name=//server/client,*", qr#(jmx4perl|jolokia)\.it:.*name=//server/client# ]
+   [ "*:name=//server/client,*", qr#(jmx4perl|jolokia)\.it(\.hidden)?:.*name=//server/client# ]
   );
 
 # Basic check:

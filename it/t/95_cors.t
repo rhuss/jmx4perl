@@ -18,6 +18,7 @@ $ua->default_headers()->header("Origin" => $origin);
 
 # 1) Preflight Checks
 my $req = new HTTP::Request("OPTIONS",$url);
+
 my $resp = $ua->request($req);
 is($resp->header('Access-Control-Allow-Origin'),$origin,"Access-Control-Allow Origin properly set");
 ok($resp->header('Access-Control-Allow-Max-Age') > 0,"Max Age set");
