@@ -101,7 +101,7 @@ use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
 
-$VERSION = "1.06";
+$VERSION = "1.07_1";
 
 my $REGISTRY = {
                 # Agent based
@@ -731,7 +731,7 @@ listE<gt>/("attribute"|"operation")/E<lt>indexE<gt>">
 (e.g. C<java.lang/name=Code Cache,type=MemoryPool/attribute/0>). A path can be
 provided partially, in which case the remaining map/array is returned. See also
 L<JMX::Jmx4Perl::Agent::Protocol> for a more detailed discussion of inner
-pathes. 
+paths. 
 
 This method throws an exception if an error occurs.
 

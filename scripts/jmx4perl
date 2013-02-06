@@ -229,7 +229,7 @@ includes attributes and operations along whith their descriptions and
 parameters (as far as they are provided by mbean's info).
 
 You can provide an inner path as an additional argument as well. See
-L<JMX::Jmx4Perl::Request> for an explanation about inner pathes (in short, it's
+L<JMX::Jmx4Perl::Request> for an explanation about inner paths (in short, it's
 some sort of XPath expression which selects only a subset of all MBeans and
 their values). See L<JMX::Jmx4Perl>, method "list()" for a more rigorous
 documentation abouting listing of MBeans.
@@ -335,7 +335,7 @@ sub command_attributes {
 Read an JMX attribute's value and print it out. The required arguments are the
 MBean's name and the attribute's name. Additionally, you can provide a I<path>
 within the return value to pick a sub-value. See L<JMX::Jmx4Perl::Request> for a
-detailed explanation of pathes.
+detailed explanation of paths.
 
 The MBean's name and the attribute can be substituted by an
 alias name, too.

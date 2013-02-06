@@ -206,7 +206,7 @@ is the attribute to monitor
 
 =item --path used
 
-is an inner path (see L</"Pathes">), which specifies an inner value within a
+is an inner path (see L</"Paths">), which specifies an inner value within a
 more complex structure. The value C<HeapMemoryUsage> is a composed value (Jav
 type: CompositeData) which combines multiple memory related data. The complete
 value can be viewed with I<jmx4perl>:
@@ -452,7 +452,7 @@ L<http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT>
 =head3 Paths
 
 For more complex types, C<check_jmx4perl> provides the concept of so called
-I<pathes> for specifying an inner attribute of a more complex value. A path
+I<paths> for specifying an inner attribute of a more complex value. A path
 contains parts separated by slashes (/). It is similar to an XPath expression
 for accessing parts of an XML document. Each part points to an inner level of
 a complex object.
@@ -1021,7 +1021,7 @@ which is given as extra argument.
 =item --path (-p)
 
 Path for extracting an inner element from an attribute or operation return
-value. See L</"Pathes"> for details about pathes.
+value. See L</"Paths"> for details about paths.
 
 Example:
   
@@ -1445,8 +1445,8 @@ request.
 
 =item Path
 
-Path to apply to the attribute or operation return value. See L</"Pathes"> for
-more information about pathes. 
+Path to apply to the attribute or operation return value. See L</"Paths"> for
+more information about paths. 
 
 =item Value
 
@@ -1571,7 +1571,7 @@ configuration file, the C<include> directive can be used:
   include memory.cfg
 
 If given as relative path, the configuration files are looked up in the same
-directory as the current configuration file. Absolute pathes can be given, too. 
+directory as the current configuration file. Absolute paths can be given, too. 
 
 =head2 Parent checks
 
