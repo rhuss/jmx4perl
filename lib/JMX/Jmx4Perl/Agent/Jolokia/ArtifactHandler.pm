@@ -101,7 +101,12 @@ sub info {
             $ret->{$k} = $v;
         }
         $self->_fatal("$file is not a Jolokia archive") unless $ret->{groupId} eq "org.jolokia" ;
-        my $type = $self->{meta}->extract_type($ret->{artifactId});
+        my $type;
+        if ($self->{meta}->initialized()) {
+            $type = $self->{meta}->extract_type($ret->{artifactId});
+        } else {
+            $type = $self->_detect_type_by_heuristic($ret->{artifactId});
+        }
         if ($type) {
             $ret->{type} = $type;
             return $ret;
@@ -247,6 +252,19 @@ sub type {
 =cut
 
 # ========================================================================
+
+sub _detect_type_by_heuristic {
+    my $self = shift;
+    my $artifact_id = shift;
+    return {
+            "jolokia-osgi" => "osgi",
+            "jolokia-mule" => "mule",
+            "jolokia-osgi-bundle" => "osgi-bundle",
+            "jolokia-jvm-jdk6"  => "jdk6",
+            "jolokia-jvm" => "jvm", 
+            "jolokia-war" => "war"
+           }->{$artifact_id};
+}
 
 sub _read_archive {
     my $self = shift;

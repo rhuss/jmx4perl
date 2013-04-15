@@ -196,8 +196,10 @@ my $logger = new JMX::Jmx4Perl::Agent::Jolokia::Logger
 my $meta = new JMX::Jmx4Perl::Agent::Jolokia::Meta
   (
    logger => $logger,
-   ua_config => $ua_config
-  )->load(defined($opts{cache}) ? !$opts{cache} : 0);
+   ua_config => $ua_config,
+   force_load => defined($opts{cache}) ? !$opts{cache} : 0
+  );
+
 my $verifier = new JMX::Jmx4Perl::Agent::Jolokia::Verifier
   (
    logger => $logger,
@@ -262,7 +264,8 @@ used.
 
 sub command_download {
     my ($meta,$args) = @_;
-    
+
+    fatal("Cannot load meta data for download ... Aborting") if !$meta->load;
     my ($agent,$agent_version) = parse_version("agent",[keys %{$meta->get("mapping")}],$args->{agent});
     my $t = $args->{template} || ($args->{policy} ? "jolokia-access.xml" : undef);
     my ($template,$template_version) = parse_version("template",[keys %{$meta->get("templates")}],$t);
@@ -393,6 +396,7 @@ sub command_info {
     my ($meta,$args,$file) = @_;
     my $handler = new JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler(logger => $logger, 
                                                                      meta => $meta,file => $file);
+    $meta->load;
     if ($args->{policy}) {
         my $policy = $handler->get_policy;
         fatal("No jolokia-access.xml embedded in $file") unless $policy;
@@ -415,11 +419,16 @@ sub command_info {
         $logger->info("Proxy:    ","JSR-160 proxy is ",$jsr160 ? ("[em]","enabled","[/em]") : "disabled");
     }
 
-    my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
     if ($args->{verify}) {
-        for my $repo (@$repositories) {
-            my $url = get_download_url($meta,$repo,$ret->{type},$ret->{version});
-            verify_signature($file,$url);
+        if ($meta->initialized()) {
+            my $repositories = $args->{repository} ? [ $args->{repository} ] : $meta->get('repositories');
+            for my $repo (@$repositories) {
+                my $url = get_download_url($meta,$repo,$ret->{type},$ret->{version});
+                $logger->info("Checking against $repo");
+                verify_signature($file,$url);
+            }
+        } else {
+            $logger->error("Cannot verify signature since Jolokia META data couldn't be downloaded");
         }
     }
 }

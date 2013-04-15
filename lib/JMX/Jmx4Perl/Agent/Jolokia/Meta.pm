@@ -58,6 +58,7 @@ loaded.
 
 sub load {
     my ($self,$force) = @_;
+    $force = $self->{force_load} unless defined($force);
     my $meta_json;
     my $cached = undef;
     if (!$force) {
@@ -71,6 +72,18 @@ sub load {
     $self->_to_cache($meta_json) unless $cached;
     $self->{_meta} = $meta_json;
     return $self;
+}
+
+=item $meta->initialized()
+
+Returns C<true> if the meta data has been initialized, either by loading it or 
+by using a cached data. If false the data can be loaded via L<load>
+
+=cut 
+
+sub initialized {
+    my $self = shift;
+    return defined($self->{_meta});
 }
 
 =item $value = $meta->get($key)
@@ -279,7 +292,9 @@ sub _load_from_server {
         return from_json($content, {utf8 => 1});
     }
     else {
-        $self->_fatal("Cannot load Jolokia Meta-Data from $JOLOKIA_META_URL: " . $response->status_line);
+        # Log an error, but do not exit ...
+        $self->{logger}->error("Cannot load Jolokia Meta-Data from $JOLOKIA_META_URL: " . $response->status_line);
+        return undef;
     }
 }
 
