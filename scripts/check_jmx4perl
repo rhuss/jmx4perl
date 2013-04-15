@@ -556,15 +556,26 @@ specification by using a C</> as separator, e.g.
 
   ... --base java.lang:type=Memory/HeapMemoryUsage/max ...
 
+
 If one of these parts (the path is optional) contains a slash within its name,
 the slash must be escaped with a backslash (\/). Backslashes in MBean names are
 escaped with a double backslash (\\). 
+
+Alternatively C<--base-mbean>, C<--base-attribute> and C<--base-path> can be
+used to specify the parts of the base value separately.
 
 Example: 
 
    check_jmx4perl --url http://localhost:8080/jolokia \ 
                   --value java.lang:type=Memory/HeapMemoryUsage/used \ 
                   --base java.lang:type=Memory/HeapMemoryUsage/max \ 
+                  --critical 90
+
+   check_jmx4perl --url http://localhost:8080/jolokia \ 
+                  --value java.lang:type=Memory/HeapMemoryUsage/used \ 
+                  --base-mbean java.lang:type=Memory \
+                  --base-attribute HeapMemoryUsage \
+                  --base-path max \ 
                   --critical 90
 
 This check will trigger a state change to CRITICAL if the used heap memory will
@@ -1474,6 +1485,19 @@ the same as for C<Value>:
 
 For relative checks, the C<Critical> and C<Warning> Threshold are interpreted
 as a value between 0% and 100%.
+
+=item BaseMBean, BaseAttribute and BasePath
+
+As an alternative to specifying a base value in a combined fashion the
+different parts can be given separately. C<BaseMBean> and C<BaseAttribute>
+switches on relative checks and specifies the base value. An optional
+C<BasePath> can be used to provide the path within this base value. 
+
+The example above can be also written as 
+ 
+  BaseMBean = java.lang:type=Memory
+  BaseAttribute = HeapMemoryUsage
+  BasePath = max
 
 =item Delta
 

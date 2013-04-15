@@ -15,13 +15,15 @@ my ($ret,$content);
 # Configuration check
 my $config_file = $FindBin::Bin . "/../check_jmx4perl/checks.cfg";
 
-($ret,$content) = exec_check_perl4jmx("--config $config_file --check memory_heap"); 
+for my $check (qw(memory_heap memory_heap2)) {
+    ($ret,$content) = exec_check_perl4jmx("--config $config_file --check memory_heap"); 
 
-is($ret,0,"Memory with value OK");
-ok($content =~ /\(base\)/,"First level inheritance");
-ok($content =~ /\(grandpa\)/,"Second level inheritance");
-ok($content !~ /\$\{1:default_name\}/,"Default replacement");
-ok($content =~ /default_name/,"Default replacement");
+    is($ret,0,"$check: Memory with value OK");
+    ok($content =~ /\(base\)/,"$check: First level inheritance");
+    ok($content =~ /\(grandpa\)/,"$check: Second level inheritance");
+    ok($content !~ /\$\{1:default_name\}/,"$check: Default replacement");
+    ok($content =~ /default_name/,"$check: Default replacement");
+}
 
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check blubber"); 
 is($ret,3,"Unknown check");
@@ -31,7 +33,7 @@ ok($content =~ /blubber/,"Unknown check name contained");
 # With arguments
 
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check outer_arg OuterArg"); 
-print Dumper($ret,$content);
+#print Dumper($ret,$content);
 is($ret,0,"OuterArg OK");
 ok($content =~ /OuterArg/,"OuterArg replaced");
 

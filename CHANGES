@@ -1,6 +1,10 @@
 1.07 
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
   - SSL Host key verification switched off when connecting via SSL
+  - Fixed issue with quoting in j4psh (#14)
+  - 'cat' in j4psh is now caseinsensitive when using wildcards (#18)
+  - Added BaseMBean, BaseAttribute and BasePath as alternative to Base f
+    or check_jmx4perl (#16)
 
 1.06 (2012-10-13)
   - A a scripting mode to check_jmx4perl which allows putting in arbitraty 

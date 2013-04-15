@@ -737,8 +737,20 @@ sub add_nagios_np_args {
 
     $np->add_arg(
                  spec => "base|base-alias|b=s",
-                 help => "Base alias name, which when given, interprets critical and warning values as relative in the range 0 .. 100%",
+                 help => "Base name, which when given, interprets critical and warning values as relative in the range 0 .. 100%. Must be given in the form mbean/attribute/path",
                 );
+    $np->add_arg(
+                 spec => "base-mbean=s",
+                 help => "Base MBean name, interprets critical and warning values as relative in the range 0 .. 100%. Requires a base-attribute, too",
+                );
+    $np->add_arg(
+                 spec => "base-attribute=s",
+                 help => "Base attribute for a relative check. Used together with base-mbean",
+                );
+    $np->add_arg(
+                 spec => "base-path=s",
+                 help => "Base path for relatie checks, where this path is used on the base attribute's value",
+                );    
     $np->add_arg(
                  spec => "unit=s",
                  help => "Unit of measurement of the data retreived. Recognized values are [B|KB|MN|GB|TB] for memory values and [us|ms|s|m|h|d] for time values"

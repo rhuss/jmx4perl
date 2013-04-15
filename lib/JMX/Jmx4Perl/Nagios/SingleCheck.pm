@@ -94,14 +94,16 @@ sub get_requests {
     }
     push @requests,$request;
 
-    if ($self->base) {
+    if ($self->base || $self->base_mbean) {
         if (!looks_like_number($self->base)) {
             # It looks like a number, so we will use the base literally
             my $alias = JMX::Jmx4Perl::Alias->by_name($self->base);
             if ($alias) {
                 push @requests,new JMX::Jmx4Perl::Request(READ,$jmx->resolve_alias($self->base));
             } else {
-                my ($mbean,$attr,$path) = $self->_split_attr_spec($self->base);
+                my ($mbean,$attr,$path) = $self->base_mbean ? 
+                  ($self->base_mbean, $self->base_attribute, $self->base_path) : 
+                    $self->_split_attr_spec($self->base);
                 die "No MBean given in base name ",$self->base unless $mbean;
                 die "No Attribute given in base name ",$self->base unless $attr;
                 
@@ -187,7 +189,7 @@ sub extract_responses {
     # Normalize value 
     my ($value_conv,$unit) = $self->_normalize_value($value);
     my $label = $self->_get_name(cleanup => 1);
-    if ($self->base && !$script_mode) {
+    if ( ($self->base || $self->base_mbean) && !$script_mode) {
         # Calc relative value 
         my $base_value = $self->_base_value($self->base,$responses,$requests);
         my $rel_value = sprintf "%2.2f",$base_value ? (int((($value / $base_value) * 10000) + 0.5) / 100) : 0;
@@ -706,6 +708,9 @@ my $CHECK_CONFIG_KEYS = {
                          "delta" => "delta",
                          "name" => "name",
                          "base" => "base",
+                         "base-mbean" => "basembean",
+                         "base-attribute" => "baseattribute",
+                         "base-path" => "basepath",
                          "unit" => "unit",
                          "numeric" => "numeric",
                          "string" => "string",
@@ -725,7 +730,7 @@ sub AUTOLOAD {
     my $np = $self->{np};
     my $name = $AUTOLOAD;
     $name =~ s/.*://;   # strip fully-qualified portion
-    $name =~ s/-/_/g;
+    $name =~ s/_/-/g;
 
     if ($CHECK_CONFIG_KEYS->{$name}) {
         return $np->opts->{$name} if defined($np->opts->{$name});
