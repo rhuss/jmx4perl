@@ -20,5 +20,7 @@ is($value->{objectName},"bla:type=blub","Set ObjectName: Old Name returned");
 $value = $jmx->get_attribute("jolokia.it:type=attribute","ObjectName");
 is($value->{objectName},"java.lang:type=Memory","Set ObjectName: New Name set");
 
+
+
 $jmx->execute("jolokia.it:type=attribute","reset");
 

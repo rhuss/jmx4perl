@@ -1,3 +1,38 @@
+Jolokia 1.1.1 + Jmx4Perl 1.07_1 (2013-03-26)
+    JEE-Server
+      Tomcat 7.0.33 & 6.0.35 & 5.5.35
+      Jetty 9.0.0.RC1 & 8.1.9 & 7.6.9 & 6.1.26 & 5.1.15
+      Felix 4.2.0 (bundle + pure) & 3.2.2 (bundle + pure) & 
+            3.0.8 (pure)
+      Jboss 7.1.1 & 6.1.0 & 5.1.0 & 4.2.3
+      Weblogic 10.3.6.0
+
+    OSGi-Container
+      Equinox 3.7.0 (bundle) & 3.6.1 (pure)
+      Karaf 2.3.0
+     
+
+Jolokia 1.1.0 + Jmx4Perl 1.07_1 (2013-02-22)
+    JEE-Server
+      Tomcat 7.0.33 & 6.0.35 & 5.5.35
+      Jetty 9.0.0.RC1 & 8.1.9 & 7.6.9 & 6.1.26 & 5.1.15
+      Geronimo 3.0.0
+      Glassfish 3.1.2 (web,osgi,jvm-agent) & 3.0.1 & 2.1.1
+      Jboss 7.1.1 & 6.1.0 (w/o custom enums) & 5.1.0 (w/o custom enums)
+      Jonas 5.2.1
+      Weblogic 10.3.6.0 (war, jvm-agent) & 10.0.2.0 (war & jvm) & 
+               9.2 MP3 (war)
+      Websphere 7.0.0.11
+ 
+    OSGi-Container
+      Felix 4.2.0 (bundle + pure) & 3.2.2 (bundle + pure) & 
+            3.0.8 (pure) & 2.0.5 (bundle)
+      Equinox 3.8.1 (bundle) & 3.7.0 (bundle)
+      Karaf 2.3.0 (pure + bundle + jvm)     
+      Knopflerfish 3.2.5 (Framework 5.3.3) (bundle + pure)
+      Virgo 3.6.0 (JVM agent)
+
+
 Jolokia 1.0.6 + Jmx4Perl 1.06 (2012-11-24)
     JEE-Server
       Tomcat 7.0.33 & 6.0.35 & 5.5.35
@@ -12,7 +47,7 @@ Jolokia 1.0.6 + Jmx4Perl 1.06 (2012-11-24)
       Knopflerfish 3.4.0 (bundle + pure)
 
     JVM-JDK6 Agent
-       Equinox 3.8.2M2
+      Equinox 3.8.2M2
 
 
 Jolokia 1.0.5 + Jmx4Perl 1.05 (2012-07-20)
@@ -54,7 +89,7 @@ Jolokia 1.0.3 + Jmx4Perl 1.05 (2012-04-10)
 
     OSGi-Agents
        Felix 3.0.8 (bundle + pure), 4.0.0 (bundle + pure)
-
+       
     JVM-JDK6 Agent
        Felix 3.0.8
 

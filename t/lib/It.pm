@@ -44,4 +44,10 @@ sub jmx4perl {
     return $self->{jmx4perl};
 }
 
+sub userAgent {
+    my $self = shift;
+    my $j4p = $self->jmx4perl;
+    return $j4p->{ua};
+}
+
 1;

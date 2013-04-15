@@ -7,7 +7,7 @@ use It;
 
 require "check_jmx4perl/base.pl";
 
-my $jmx = It->new(verbose =>0)->jmx4perl;
+my $jmx = It->new(verbose => 0)->jmx4perl;
 my ($ret,$content);
 
 # ====================================================

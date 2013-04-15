@@ -10,9 +10,11 @@ use Data::Dumper;
 
 # Fetch all attributes 
 my $jmx = new It(verbose => 0)->jmx4perl;
+
 my $req = new JMX::Jmx4Perl::Request(READ,"jolokia.it:type=attribute");
 my $resp = $jmx->request($req);
 my $value = $resp->{value};
+print Dumper($resp);
 ok($value->{LongSeconds} == 60*60*24*2,"LongSeconds");
 ok($value->{Bytes} == 3 * 1024 * 1024 +  1024 * 512,"Bytes");
 ok(exists($value->{Null}) && !$value->{Null},"Null");
@@ -61,4 +63,22 @@ ok(scalar(grep("jolokia",@$value)),"contains 'jolokia'");
 ok(scalar(grep("habanero",@$value)),"contains 'habanero'");
 
 my $value = $jmx->get_attribute("jolokia.it:type=attribute","Utf8Content");
-is($value,"☯","UTF-8 ☯  check passed");
+is($value,"☯","UTF-8 ☯ check passed");
+
+my $value = $jmx->get_attribute("jolokia.it:type=attribute","Chili");
+is($value,"AJI","Enum serialization passed");
+
+# Fetch all attributes 
+$req = new JMX::Jmx4Perl::Request(READ,"jolokia.it.jsonmbean:type=plain");
+$resp = $jmx->request($req);
+$value = $resp->{value};
+#print Dumper($resp);
+is($resp->status,200);
+
+# Check Tabular data
+$value = $jmx->get_attribute("jolokia.it:type=tabularData","Table2","Value0.0/Value0.1");
+is($value->{Column1},"Value0.0","First column");
+is($value->{Column2},"Value0.1","Second column");
+$value = $jmx->get_attribute("jolokia.it:type=tabularData","Table2","Value0.1/Value0.0");
+is($value,undef,"Path with no value");
+#print Dumper($resp);

@@ -15,7 +15,6 @@ my ($ret,$content);
 # Configuration check
 my $config_file = $FindBin::Bin . "/../check_jmx4perl/checks.cfg";
 
-
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check memory_heap"); 
 
 is($ret,0,"Memory with value OK");
@@ -98,7 +97,7 @@ ok($content =~ /thread_count/,"Multi-Script-Check: Thread_count contained");
 $content =~ /double_min=(.*?);/;
 my $min = $1;
 #print Dumper($min,$ret ,$content,$1);
-is($min,"0.000000","Small double numbers are converted to floasts");
+is($min,"0.000000","Small double numbers are converted to floats");
 
 # ===========================================================================
 # Without Thresholds
