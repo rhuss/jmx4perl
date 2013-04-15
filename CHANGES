@@ -5,6 +5,8 @@
   - 'cat' in j4psh is now caseinsensitive when using wildcards (#18)
   - Added BaseMBean, BaseAttribute and BasePath as alternative to Base f
     or check_jmx4perl (#16)
+  - "jolokia" can do 'repack' and 'info' also when not being connected 
+    to the internet (#20)
 
 1.06 (2012-10-13)
   - A a scripting mode to check_jmx4perl which allows putting in arbitraty 
