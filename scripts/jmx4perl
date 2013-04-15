@@ -129,7 +129,6 @@ Options:
                               booleans : Pair of strings separated by slash to use for printing 
                                          boolean values (Default: [true]/[false])
                               indent   : Space indent when printing complex data structures 
-   --format <format>       "json": Print out values as JSON, "data": Perl data (default)
    --verbose               Print out more information
    
 =head1 DESCRIPTION
