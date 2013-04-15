@@ -250,7 +250,7 @@ sub convert_wildcard_pattern_to_regexp {
     my $wildcard = shift;
     $wildcard =~ s/\?/./g;
     $wildcard =~ s/\*/.*/g;
-    return qr/^$wildcard$/;
+    return qr/^$wildcard$/i;
 }
 
 =back

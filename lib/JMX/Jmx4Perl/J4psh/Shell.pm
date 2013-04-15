@@ -22,8 +22,23 @@ my $USE_SEARCH_PATH;
 BEGIN {
     $USE_TERM_SIZE   = eval 'use Term::Size qw/chars/; 1';
     $USE_SEARCH_PATH = eval 'use File::SearchPath qw/searchpath/; 1';
-}
+    no warnings 'redefine';
+    *Text::Shellwords::Cursor::join_line = sub {
+        my $self = shift;
+        my $intoks = shift;
 
+        my $str = "";
+        my $nsp = "";
+        my $last_tok = "";
+        for (@$intoks) {
+            $nsp = /^(['"])(.*)\1/ || $last_tok =~ /^(['"])(.*)\1/ ? "" : " ";
+            $str .= $nsp . $_;
+            $last_tok = $_;
+        }
+        $str =~ s/^\s*(.*?)\s*$/$1/;
+        return $str;
+    };
+}
 
 sub new { 
     my $class = shift;
@@ -100,11 +115,14 @@ sub _init {
     # Create shell object
     my $term = new Term::ShellUI(
                                  history_file => "~/.j4psh_history",
-                                );    
+                                 keep_quotes => 1,
+                                );
+    $term->{parser}->{space_none} = "\"'";
     $self->{term} = $term;
     my $rl_attribs = $term->{term}->Attribs;
-    #$rl_attribs->{basic_word_break_characters} = " \t\n\"\\'`@$><;|&{(";
+    #$rl_attribs->{basic_word_break_characters} = " \t\n\\'`@$><;|&{(";
     $rl_attribs->{completer_word_break_characters} = " \t\n\\";
+    $term->{term}->Attribs($rl_attribs);
     $term->{term}->ornaments(0);
 
     my $config = $self->{config};

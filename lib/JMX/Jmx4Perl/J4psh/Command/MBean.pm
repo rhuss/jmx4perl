@@ -7,6 +7,7 @@ use JMX::Jmx4Perl::Util;
 use JMX::Jmx4Perl::Request;
 use Data::Dumper;
 use JSON;
+use Devel::StackTrace;
 
 =head1 NAME 
 
@@ -42,28 +43,14 @@ sub domain_commands {
             "cd" => { 
                      desc => "Enter a domain",
                      proc => sub { 
-                         my $domain = shift;
-                         my $prop;
-                         if ($domain) {
-                             $domain =~ s/:+$//;
-                             ($domain,$prop) = split(/:/,$domain,2) if $domain =~ /:/;
-                         }    
-                         $self->_cd_domain($domain);
-                         if ($prop) {
-                             eval {
-                                 $self->_cd_mbean($domain,$prop);
-                             };
-                             if ($@) {
-                                 # We already entered the domain successfully
-                                 $self->pop_off_stack;
-                                 die $@;
-                             }
-                         } 
+                         my $domain = join '',@_;
+                         $self->_cd_absolute($domain);
                      },
                      args => $self->complete->mbeans(all => 1),
                     },
            };
 }
+
 
 sub property_commands { 
     my $self = shift;
@@ -78,9 +65,15 @@ sub property_commands {
             "cd" => { 
                      desc => "Enter a MBean",
                      proc => sub {
-                         my $input = shift;
+                         #print Dumper([@_]);
+                         #print Devel::StackTrace->new->as_string;
+                         my $input = join '',@_;
                          if (!$self->_handle_navigation($input)) {
-                             $self->_cd_mbean($domain,$input);
+                             if ($input =~ /:/) {
+                                 $self->_cd_absolute($input);
+                             } else {
+                                 $self->_cd_mbean($domain,$input);
+                             }
                          }
                      },
                      args => $self->complete->mbeans(domain => $domain)
@@ -115,10 +108,17 @@ EOT
                      #args => $self->complete->mbean_attribs($mbean_props),
                     },
             "cd" => {
-                     desc => "Navigate up (..) or to the top (/)",
+                     desc => "Navigate up (..), to the top (/) or directly to another MBean",
                      proc => sub {
-                         my $input = shift;
-                         $self->_handle_navigation($input);
+                         my $input = join '',@_;
+                         if (!$self->_handle_navigation($input)) {
+                             if ($input =~ /:/) {
+                                 # "Absolute path"
+                                 $self->_cd_absolute($input);
+                             } else {
+                                 die "No MBean '",$input,"' known\n";
+                             }
+                         };
                      },
                     },
             "cat" => { 
@@ -592,6 +592,28 @@ sub _filter {
 
 =cut
 
+sub _cd_absolute {
+    my $self = shift;
+    my $domain = shift;
+    my $props;
+
+    if ($domain) {
+        $domain =~ s/:+$//;
+        ($domain,$props) = split(/:/,$domain,2) if $domain =~ /:/;
+    }    
+    die "No domain $domain\n" unless $self->_check_domain($domain);
+    $self->_check_mbean($domain,$props) if $props;
+    $self->reset_stack;
+    $self->_cd_domain($domain);
+    $self->_cd_mbean($domain,$props) if $props;
+}
+
+sub _check_mbean {
+    my $self = shift;
+    my $domain = shift;
+    my $props = shift;
+    $self->_get_mbean($domain,$props) || die "No MBean $domain:$props\n";
+}
 
 sub _cd_domain {
     my $self = shift;
@@ -605,9 +627,9 @@ sub _cd_mbean {
     my $self = shift;
     my $domain = shift;
     my $mbean = shift;
-
-    my $mbean_props = $self->_get_mbean($domain,$mbean);
-    die "No MBean $domain:$mbean\n" unless $mbean_props; 
+    
+    $self->_check_mbean($domain,$mbean);
+    my $mbean_props = $self->_check_mbean($domain,$mbean);
     my $mbean_cmds = $self->mbean_commands($mbean_props);
     &{$self->push_on_stack($mbean_props->{prompt},$mbean_cmds)};    
 }

@@ -96,6 +96,7 @@ sub mbeans {
     my $attr;
     return sub {
         my ($term,$cmpl) = @_;
+        $term->suppress_completion_escape();
         my $all = $args{all};
         my $domain = $args{domain};
         #$term->{debug_complete}=5;
@@ -148,6 +149,7 @@ sub _complete_attr_op {
     #print "> ",Dumper($m_info->{info}->{attr});
     return sub {
         my ($term,$cmpl) = @_;
+        $term->suppress_completion_escape();
         my $attrs = $m_info->{info}->{$what};
         #$term->{debug_complete}=5;
         my $context = $self->{context};
