@@ -7,6 +7,8 @@
     or check_jmx4perl (#16)
   - "jolokia" can do 'repack' and 'info' also when not being connected 
     to the internet (#20)
+  - Multi-Checks can now reference other Multi-Checks either via <MultiCheck>
+    or <Check> (#19)
 
 1.06 (2012-10-13)
   - A a scripting mode to check_jmx4perl which allows putting in arbitraty 
