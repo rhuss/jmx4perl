@@ -16,8 +16,7 @@ my ($ret,$content);
 my $config_file = $FindBin::Bin . "/../check_jmx4perl/checks.cfg";
 
 for my $check (qw(memory_heap memory_heap2)) {
-    ($ret,$content) = exec_check_perl4jmx("--config $config_file --check memory_heap"); 
-
+    ($ret,$content) = exec_check_perl4jmx("--config $config_file --check $check"); 
     is($ret,0,"$check: Memory with value OK");
     ok($content =~ /\(base\)/,"$check: First level inheritance");
     ok($content =~ /\(grandpa\)/,"$check: Second level inheritance");
@@ -36,6 +35,8 @@ ok($content =~ /blubber/,"Unknown check name contained");
 #print Dumper($ret,$content);
 is($ret,0,"OuterArg OK");
 ok($content =~ /OuterArg/,"OuterArg replaced");
+ok($content =~ /Warning: 80/,"Warning included in label");
+ok($content =~ /Critical: 90/,"Critical included in label");
 
 # No replacement
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check outer_arg"); 

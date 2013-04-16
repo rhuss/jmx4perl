@@ -659,6 +659,7 @@ sub _format_label {
     # %t : threshold failed ("" for OK or UNKNOWN)
     # %c : code ("OK", "WARNING", "CRITICAL", "UNKNOWN")
     # %d : delta
+    # 
     my @parts = split /(\%[\w\.\-]*\w)/,$label;
     my $ret = "";
     foreach my $p (@parts) {
@@ -674,11 +675,7 @@ sub _format_label {
             } elsif ($what eq "f") {
                 $ret .= sprintf $format . "f",$args->{value};
             } elsif ($what eq "v") {
-                if ($args->{mode} ne "numeric") {
-                    $ret .= sprintf $format . "s",$args->{value};
-                } else {
-                    $ret .= sprintf $format . &_format_char($args->{value}),$args->{value};
-                }
+                $ret .= &_format_value($format,$args->{mode},$args->{value});
             } elsif ($what eq "t") {
                 my $code = $args->{code};
                 my $val = $code == CRITICAL ? $self->critical : ($code == WARNING ? $self->warning : "");
@@ -689,6 +686,10 @@ sub _format_label {
                 $ret .= sprintf $format . "s",$self->_get_name();
             } elsif ($what eq "d") {
                 $ret .= sprintf $format . "d",$self->delta;
+            } elsif ($what eq "y") {
+                $ret .= &_format_value($format,$args->{mode},$self->warning);
+            } elsif ($what eq "z") {
+                $ret .= &_format_value($format,$args->{mode},$self->critical);                
             }
         } else {
             $ret .= $p;
@@ -703,6 +704,16 @@ sub _format_label {
     }
 }
 
+sub _format_value {
+    my $format = shift;
+    my $mode = shift;
+    my $value = shift;
+    if ($mode ne "numeric") {
+        return sprintf $format . "s",$value;
+    } else {
+        return sprintf $format . &_format_char($value),$value;
+    }    
+}
 sub _format_char {
     my $val = shift;
     $val =~ /\./ ? "f" : "d";

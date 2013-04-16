@@ -675,6 +675,8 @@ placeholders:
  %t   Threshold value which failed ("" when the check doesn't fail)
  %n   name, either calulated automatically or given with --name
  %d   the delta value used for normalization when using incremental mode
+ %y   WARNING threshold as configured
+ %z   CRITICAL threshold as configured
 
 Note that C<%u> and C<%w> are typically I<not> the same as the C<--unit>
 option. They specify the unit I<after> the conversion for the plugin output as
