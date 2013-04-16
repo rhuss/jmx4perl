@@ -194,12 +194,17 @@ sub extract_responses {
         my $rel_value = sprintf "%2.2f",$base_value ? (int((($value / $base_value) * 10000) + 0.5) / 100) : 0;
                 
         # Performance data. Convert to absolute values before
-        my ($critical,$warning) = $self->_convert_relative_to_absolute($base_value,$self->critical,$self->warning);
         if ($self->_include_perf_data) {
-            $np->add_perfdata(label => $label,value => $value,
-                              critical => $critical,warning => $warning,
-                              min => 0,max => $base_value,
-                              $self->unit ? (uom => $self->unit) : ());
+            if ($self->perfdata && $self->perfdata =~ /^\s*\%\s*/) {
+                $np->add_perfdata(label => $label, value => $rel_value, uom => '%',
+                                  critical => $self->critical, warning => $self->warning);
+            } else {
+                my ($critical,$warning) = $self->_convert_relative_to_absolute($base_value,$self->critical,$self->warning);
+                $np->add_perfdata(label => $label,value => $value,
+                                  critical => $critical,warning => $warning,
+                                  min => 0,max => $base_value,
+                                  $self->unit ? (uom => $self->unit) : ());
+            }
         }
         # Do the real check.
         my ($code,$mode) = $self->_check_threshold($rel_value);

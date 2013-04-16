@@ -22,15 +22,17 @@ my ($ret,$content);
 ok($content !~ /\s*\|\s*/,"1: Content contains no perfdata");
 ($ret,$content) = exec_check_perl4jmx("--value java.lang:type=Memory/HeapMemoryUsage/used " . 
                                        "--base java.lang:type=Memory/HeapMemoryUsage/max " . 
+                                       "--warn 80 " .
                                        "--critical 90 " .
-                                       "--perfdata yes");
-#print Dumper($ret,$content);
+                                       "--perfdata %");
 ok($content =~ /\s*\|\s*/,"2: Content contains perfdata");
+ok($content =~ /80;90/,"2a: Perfdata is relative");
+print Dumper($ret,$content);
 
 ($ret,$content) = exec_check_perl4jmx("--mbean java.lang:type=Threading " . 
                                        "--operation findDeadlockedThreads " . 
                                        "--null 'nodeadlock' " .
-                                       "--string " .
+                                       "--string " . 
                                        "--critical '!nodeadlock'");
 ok($content !~ /\s*\|\s*/,"3: Content contains no perfdata");
 
