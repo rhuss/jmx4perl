@@ -7,7 +7,6 @@ use JMX::Jmx4Perl::Util;
 use JMX::Jmx4Perl::Request;
 use Data::Dumper;
 use JSON;
-use Devel::StackTrace;
 
 =head1 NAME 
 
