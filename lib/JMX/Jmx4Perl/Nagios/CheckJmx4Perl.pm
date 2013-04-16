@@ -393,30 +393,28 @@ sub _resolve_multicheck {
     if ($multi_checks)  {
         my $m_check = $multi_checks->{$check};
         if ($m_check) {
-            if ($m_check->{check}) {
-                # Resolve all checks
-                my $c_names = ref($m_check->{check}) eq "ARRAY" ? $m_check->{check} : [ $m_check->{check} ];
-                for my $name (@$c_names) {
-                    my ($c_name,$c_args) = $self->_parse_check_ref($name);
-                    my $args_merged = $self->_merge_multicheck_args($c_args,$args);
+            # Resolve all checks
+            my $c_names = [];
+            for my $type( qw(check multicheck)) {
+                if ($m_check->{$type}) {
+                    push @$c_names, ref($m_check->{$type}) eq "ARRAY" ? @{$m_check->{$type}} : $m_check->{$type};
+                }
+            }
+            for my $name (@$c_names) {
+                my ($c_name,$c_args) = $self->_parse_check_ref($name);
+                my $args_merged = $self->_merge_multicheck_args($c_args,$args);
+                $self->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check) 
+                  unless defined($config->{check}->{$c_name}) or defined($multi_checks->{$c_name});
+                if ($config->{check}->{$c_name}) {
                     # We need a copy of the check hash to avoid mangling it up
                     # if it is referenced multiple times
-                    $self->nagios_die("Unknown check '" . $c_name . "' for multi check " . $check) 
-                      unless defined($config->{check}->{$c_name});
                     my $check = { %{$config->{check}->{$c_name}} };
                     $check->{key} = $c_name;
                     $check->{args} = $args_merged;
                     push @{$check_config},$check;
-                }
-            }
-            if ($m_check->{multicheck}) {
-                my $mc_names = ref($m_check->{multicheck}) eq "ARRAY" ? $m_check->{multicheck} : [ $m_check->{multicheck} ];
-                for my $name (@$mc_names) {                    
-                    my ($mc_name,$mc_args) = $self->_parse_check_ref($name);
-                    my $args_merged = $self->_merge_multicheck_args($mc_args,$args);
-                    $self->nagios_die("Unknown multi check '" . $mc_name . "'")
-                      unless $multi_checks->{$mc_name};
-                    push @{$check_config},@{$self->_resolve_multicheck($config,$mc_name,$args_merged)};
+                } else {
+                    # It's a multi check referenced via <Check> or <MultiCheck> ....
+                    push @{$check_config},@{$self->_resolve_multicheck($config,$c_name,$args_merged)};
                 }
             }
         }

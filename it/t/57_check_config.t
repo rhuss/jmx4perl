@@ -88,6 +88,7 @@ ok($content =~ /threshold/i,"Script-Check: Threshold contained");
 
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check script_multi_check Perm");
 is($ret,0);
+#print Dumper($ret,$content);
 ok($content =~ /Perm/,"Multi-Script-Check: Perm contained");
 ok($content =~ /Eden/,"Multi-Script-Check: Eden contained");
 ok($content =~ /thread_count/,"Multi-Script-Check: Thread_count contained");
