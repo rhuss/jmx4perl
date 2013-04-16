@@ -12,6 +12,8 @@
   - Added new option '--perfdata true|false' (PerData false in configuration) for 
     switching of performance data. Also, for string checks performance data is 
     switched off always. (#22)
+  - Added %y and %z as placeholder for configured CRITICAL and WARNING thresholds
+    for the output provided with "Label" in check_jmx4perl (#13)
 
 1.06 (2012-10-13)
   - A a scripting mode to check_jmx4perl which allows putting in arbitraty 
