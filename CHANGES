@@ -9,6 +9,9 @@
     to the internet (#20)
   - Multi-Checks can now reference other Multi-Checks either via <MultiCheck>
     or <Check> (#19)
+  - Added new option '--perfdata true|false' (PerData false in configuration) for 
+    switching of performance data. Also, for string checks performance data is 
+    switched off always. (#22)
 
 1.06 (2012-10-13)
   - A a scripting mode to check_jmx4perl which allows putting in arbitraty 

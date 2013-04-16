@@ -68,7 +68,6 @@ sub get_requests {
     my $self = shift;
     my $jmx = shift;
     my $args = shift;
-
     # If a script is given, extract a subref and return it
     return [ $self->_extract_script_as_subref($jmx) ] if $self->script;
 
@@ -196,10 +195,12 @@ sub extract_responses {
                 
         # Performance data. Convert to absolute values before
         my ($critical,$warning) = $self->_convert_relative_to_absolute($base_value,$self->critical,$self->warning);
-        $np->add_perfdata(label => $label,value => $value,
-                          critical => $critical,warning => $warning,
-                          min => 0,max => $base_value,
-                          $self->unit ? (uom => $self->unit) : ());
+        if ($self->_include_perf_data) {
+            $np->add_perfdata(label => $label,value => $value,
+                              critical => $critical,warning => $warning,
+                              min => 0,max => $base_value,
+                              $self->unit ? (uom => $self->unit) : ());
+        }
         # Do the real check.
         my ($code,$mode) = $self->_check_threshold($rel_value);
         # For Multichecks, we remember the label of a currently failed check
@@ -211,9 +212,11 @@ sub extract_responses {
     } else {
         # Performance data
         $value = $self->_sanitize_value($value);
-        $np->add_perfdata(label => $label,
-                          critical => $self->critical, warning => $self->warning, 
-                          value => $value,$self->unit ? (uom => $self->unit) : ());
+        if ($self->_include_perf_data) {
+            $np->add_perfdata(label => $label,
+                              critical => $self->critical, warning => $self->warning, 
+                              value => $value,$self->unit ? (uom => $self->unit) : ());
+        }
         
         # Do the real check.
         my ($code,$mode) = $self->_check_threshold($value);
@@ -222,6 +225,16 @@ sub extract_responses {
                                                     prefix => $opts->{prefix}));                    
     }
     return @extra_requests;
+}
+
+sub _include_perf_data {
+    my $self = shift;
+    # No perf dara for string based checks by default
+    my $default = not defined($self->string);
+    # If 'PerfData' is set explicitely to false/off/no/0 then no perfdata
+    # will be included
+    return $default unless defined($self->perfdata);
+    return $self->perfdata !~ /^\s*(false|off|no|0)\s*$/i;
 }
 
 sub _update_error_stats {
@@ -715,10 +728,9 @@ my $CHECK_CONFIG_KEYS = {
                          "numeric" => "numeric",
                          "string" => "string",
                          "label" => "label",
-
+                         "perfdata" => "perfdata",
                          "value" => "value",
                          "null" => "null",
-
                          "script" => "script"
                         };
 

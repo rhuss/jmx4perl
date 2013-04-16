@@ -780,6 +780,10 @@ sub add_nagios_np_args {
                  help => "Label to be used for printing out the result of the check. Placeholders can be used."
                 );
     $np->add_arg(
+                 spec => "perfdata=s",
+                 help => "Whether performance data should be omitted, which are included by default."
+                );
+    $np->add_arg(
                  spec => "unknown-is-critical",
                  help => "Map UNKNOWN errors to errors with a CRITICAL status"
                 );
