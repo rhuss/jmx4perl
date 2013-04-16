@@ -49,6 +49,7 @@ it/check_jmx4perl/checks.cfg
 it/check_jmx4perl/multi_check.cfg
 it/it.pl
 it/t/01_version.t
+it/t/02_http_header.t
 it/t/10_base.t
 it/t/30_naming.t
 it/t/40_alias.t
@@ -70,6 +71,7 @@ it/t/90_search.t
 it/t/95_cors.t
 it/t/83_write.t
 it/t/84_exec.t
+it/t/64_check_perfdata.t
 lib/JMX/Jmx4Perl.pm
 lib/JMX/Jmx4Perl/Agent.pm
 lib/JMX/Jmx4Perl/Agent/Jolokia/ArtifactHandler.pm
