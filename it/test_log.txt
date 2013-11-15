@@ -1,17 +1,42 @@
+Jolokia 1.1.4 + Jmx4Perl 1.07 (2013-09-28)
+    JEE-Server
+     Tomcat 8.0.0-RC3 (war & jvm) & 7.0.42 & 6.0.37 & 5.5.35
+     JBoss 7.1.1 & 5.1.0
+     Glassfish 4.0
+
+    OSGi-Container 
+     Felix 4.2.0 (pure + bundle)
+     Karaf 2.3.0
+
+Jolokia 1.1.3 + Jmx4Perl 1.07 (2013-07-30)
+    JEE-Server
+      Tomcat 7.0.33
+    OSGi-Container
+      Felix 4.2.0 (pure)
+
+Jolokia 1.1.2 + Jmx4Perl 1.07 (2013-05-28)
+    JEE-Server
+      Tomcat 7.0.33 & 6.0.35 & 5.5.35
+      Jboss 7.1.1
+    OSGi-Container
+      Felix 4.2.0 (bundle + pure) & 2.0.5 (bundle)
+      Karaf 2.3.0
+      Equinox 3.7.0 (bundle) & 3.6.1 (pure)
+
+
 Jolokia 1.1.1 + Jmx4Perl 1.07_1 (2013-03-26)
     JEE-Server
       Tomcat 7.0.33 & 6.0.35 & 5.5.35
       Jetty 9.0.0.RC1 & 8.1.9 & 7.6.9 & 6.1.26 & 5.1.15
-      Felix 4.2.0 (bundle + pure) & 3.2.2 (bundle + pure) & 
-            3.0.8 (pure)
       Jboss 7.1.1 & 6.1.0 & 5.1.0 & 4.2.3
       Weblogic 10.3.6.0
 
     OSGi-Container
+      Felix 4.2.0 (bundle + pure) & 3.2.2 (bundle + pure) & 
+            3.0.8 (pure)
       Equinox 3.7.0 (bundle) & 3.6.1 (pure)
       Karaf 2.3.0
      
-
 Jolokia 1.1.0 + Jmx4Perl 1.07_1 (2013-02-22)
     JEE-Server
       Tomcat 7.0.33 & 6.0.35 & 5.5.35

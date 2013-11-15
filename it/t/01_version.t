@@ -24,4 +24,6 @@ print "Agent-Version:\n";
 print Dumper($value);
 ok($value->{protocol} > 0,"Protocol version " . $value->{protocol});
 #print Dumper(\@resps);
-
+my $resp = $jmx->request(new JMX::Jmx4Perl::Request(READ,"java.lang:type=Runtime","SystemProperties"));
+$value = $resp->{value};
+print "Java: ",$value->{'java.version'}," (",$value->{'java.vendor'},")\n";

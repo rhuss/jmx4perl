@@ -82,3 +82,10 @@ is($value->{Column2},"Value0.1","Second column");
 $value = $jmx->get_attribute("jolokia.it:type=tabularData","Table2","Value0.1/Value0.0");
 is($value,undef,"Path with no value");
 #print Dumper($resp);
+
+$value = $jmx->get_attribute("jolokia.it:type=mxbean","MapWithComplexKey");
+is(scalar(keys %$value),2,"2 elements");
+ok($value->{indexNames}->[0],"key");
+is(@{$value->{values}},2,"2 values");
+ok($value->{values}->[0]->{key}->{number} =~ /^(1|2)$/,"key match");
+#print Dumper($value);

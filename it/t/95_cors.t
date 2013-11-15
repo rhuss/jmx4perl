@@ -11,6 +11,13 @@ my $url = $ENV{JMX4PERL_GATEWAY} || $ARGV[0];
 $url .= "/" unless $url =~ /\/$/;
 my $origin = "http://localhost:8080";
 my $ua = new LWP::UserAgent();
+
+if ($ENV{JMX4PERL_USER}) {
+    my $netloc = $url;
+    $netloc =~ s|^.*/([^:]+:\d+).*$|$1|;
+    $ua->credentials($netloc,"jolokia",$ENV{JMX4PERL_USER},$ENV{JMX4PERL_PASSWORD});
+}
+
 $ua->default_headers()->header("Origin" => $origin);
 
 # Test for CORS functionality. This is done without Jmx4Perl client library but
@@ -20,6 +27,7 @@ $ua->default_headers()->header("Origin" => $origin);
 my $req = new HTTP::Request("OPTIONS",$url);
 
 my $resp = $ua->request($req);
+#print Dumper($resp);
 is($resp->header('Access-Control-Allow-Origin'),$origin,"Access-Control-Allow Origin properly set");
 ok($resp->header('Access-Control-Allow-Max-Age') > 0,"Max Age set");
 ok(!$resp->header('Access-Control-Allow-Request-Header'),"No Request headers set");
