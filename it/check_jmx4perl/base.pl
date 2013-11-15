@@ -42,9 +42,9 @@ sub exec_check_perl4jmx {
 
 sub reset_history {
     my $jmx = shift;
-    my ($mbean,$operation) = $jmx->resolve_alias(JMX4PERL_HISTORY_RESET);
+    my ($mbean,$operation) = $jmx->resolve_alias(JMX4PERL_HISTORY_RESET);   
     my $req = new JMX::Jmx4Perl::Request(EXEC,$mbean,$operation,{target => undef});
-    $jmx->request($req);
+    my $resp = $jmx->request($req);
 }
 
 1;
