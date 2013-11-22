@@ -1,3 +1,6 @@
+1.08
+  - Fixed warning when using MBeanName (#31)
+
 1.07 (2013-04-16) 
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
   - SSL Host key verification switched off when connecting via SSL

@@ -96,7 +96,11 @@ sub get_requests {
     if ($self->base || $self->base_mbean) {
         if (!looks_like_number($self->base)) {
             # It looks like a number, so we will use the base literally
-            my $alias = JMX::Jmx4Perl::Alias->by_name($self->base);
+            my $alias;
+            
+            if ($self->base) {
+                $alias = JMX::Jmx4Perl::Alias->by_name($self->base);
+            }
             if ($alias) {
                 push @requests,new JMX::Jmx4Perl::Request(READ,$jmx->resolve_alias($self->base));
             } else {
