@@ -93,7 +93,7 @@ sub dump_scalar {
 
     if (JSON::is_bool($value)) {
         my ($true,$false) = split /\//,$format;
-        if ($value eq "true") {
+        if ($value eq JSON::true) {
             return $true; 
         } else {
             return $false;
