@@ -625,6 +625,7 @@ be used to construct a new L<JMX::Jmx4Perl> object.
 
 =cut
 
+
 sub discover_agents {
     my $self = shift;
     my $timeout = shift | 1;
@@ -646,7 +647,6 @@ sub discover_agents {
     $s->mcast_send('{"type" : "query"}',"239.192.48.84:24884");
     
     my @result = ();
-    my $timeout = 1;
     my $data;
   LOOP:
     while (1) {

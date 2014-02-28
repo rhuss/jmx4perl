@@ -17,7 +17,7 @@ name: jmx4perl
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 1.07_1
+    version: 1.07
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
@@ -173,6 +173,7 @@ requires:
   File::SearchPath: 0
   File::Temp: 0
   Getopt::Long: 0
+  IO::Socket::Multicast: 0
   JSON: 2.12
   LWP::UserAgent: 0
   Module::Find: 0
@@ -192,4 +193,4 @@ requires:
   base: 0
 resources:
   license: http://opensource.org/licenses/gpl-license.php
-version: 1.07_1
+version: 1.07
