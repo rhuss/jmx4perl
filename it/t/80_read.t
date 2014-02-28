@@ -14,7 +14,7 @@ my $jmx = new It(verbose => 0)->jmx4perl;
 my $req = new JMX::Jmx4Perl::Request(READ,"jolokia.it:type=attribute");
 my $resp = $jmx->request($req);
 my $value = $resp->{value};
-#print Dumper($resp);
+print Dumper($resp);
 ok($value->{LongSeconds} == 60*60*24*2,"LongSeconds");
 ok($value->{Bytes} == 3 * 1024 * 1024 +  1024 * 512,"Bytes");
 ok(exists($value->{Null}) && !$value->{Null},"Null");

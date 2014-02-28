@@ -100,6 +100,7 @@ use strict;
 use vars qw($VERSION $HANDLER_BASE_PACKAGE @PRODUCT_HANDLER_ORDERING);
 use Data::Dumper;
 use Module::Find;
+use JSON;
 
 $VERSION = "1.07";
 
@@ -594,6 +595,75 @@ L<JMX::Jmx4Perl::Response>.
 
 sub request {
     croak "Internal: Must be overwritten by a subclass";    
+}
+
+=item $agents = JMX::Jmx4Perl->discover_agents($timeout) 
+
+Discover agents by sending a multicast request on which Jolokia agents are
+listening. The optional C<$timeout> can be used to tune how long to wait for
+discovery answers (in seconds). By default 1 seconds is waited. This functionality
+requires L<IO::Socket::Multicast> to be installed.
+
+This methods returns an array ref, which looks like
+
+   [
+     {
+       'version' => '1.2.0-SNAPSHOT',
+       'server_version' => '7.0.50',
+       'server_product' => 'tomcat',
+       'secured' => 0,
+       'url' => 'http://10.9.11.2:8778/jolokia/',
+       'server_vendor' => 'Apache',
+       'confidence' => 100,
+       'type' => 'response'
+     }
+   ]
+
+Please refer to Jolokia's reference documentation for the meaning of the keys. 
+The most important part it C<url> which points to the agent's URL which can 
+be used to construct a new L<JMX::Jmx4Perl> object. 
+
+=cut
+
+sub discover_agents {
+    my $self = shift;
+    my $timeout = shift | 1;
+
+    my $s;
+    eval {
+        $s = IO::Socket::Multicast->new();
+    };
+    if ($@) {
+        eval {
+            require "IO/Socket/Multicast.pm";
+            $s = IO::Socket::Multicast->new();
+        };
+        if ($@) {
+            die "No IO::Socket::Multicast installed\n";
+        }
+    }
+
+    $s->mcast_send('{"type" : "query"}',"239.192.48.84:24884");
+    
+    my @result = ();
+    my $timeout = 1;
+    my $data;
+  LOOP:
+    while (1) {
+        eval {
+            local $SIG{ALRM} = sub { die "timeout\n" }; # NB: \n required
+            alarm $timeout;
+            $s->recv($data,8192);
+            push @result,from_json($data, {utf8 => 1} );
+            alarm 0;
+        };
+        if ($@) {
+            die unless $@ eq "timeout\n";   # propagate unexpected errors
+            # timed out
+            last LOOP;
+        }
+    }    
+    return \@result;
 }
 
 # ===========================================================================

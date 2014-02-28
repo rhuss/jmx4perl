@@ -19,12 +19,12 @@ sub exec_check_perl4jmx {
     push @args,("--url",$url);
     push @args,("--target",$target) if $target;
     push @args,("--target-user",$target_user,"--target-password",$target_password) if $target_user;
-#    push @args,"--legacy-escape";
-#    push @args,("--verbose");
+    #push @args,"--legacy-escape";
+    #push @args,("--verbose");
    
     my $cmd = "perl $FindBin::Bin/../../scripts/check_jmx4perl "
-          .join(" ",map { '"' . $_ . '"' } @args); 
-#    print $cmd,"\n";
+          .join(" ",map { '"' . $_ . '"' } @args);  
+    #print $cmd,"\n";
     open (F,"$cmd 2>&1 |") 
       || die "Cannot open check_jmx4perl: $!";
     my $content = join "",<F>;

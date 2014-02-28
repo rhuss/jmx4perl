@@ -28,6 +28,7 @@ my %REQS = (
             "Scalar::Util" => 0,
             "base" => 0,
             "Sys::SigAction" => 0,
+            "IO::Socket::Multicast" => 0 # opt
            );
 
 my %SCRIPTS = ();
