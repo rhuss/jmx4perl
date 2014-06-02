@@ -364,6 +364,7 @@ sub _base_value {
     my $resp = shift @{$responses};
     my $req = shift @{$requests};
     $self->nagios_die($resp->{error}) if $resp->{error};
+    #print Dumper($req,$resp);
     return $self->_extract_value($req,$resp);
 }
 
@@ -548,7 +549,7 @@ sub _split_attr_spec {
         $p =~ s|\\(.)|$1|sg;
         push @ret,$p;
     }    
-    return @ret;
+    return (shift(@ret),shift(@ret),join("/",@ret));
 }
 
 sub _check_threshold {
@@ -614,7 +615,7 @@ sub _exit_message {
     my $code = $args->{code};
     my $mode = $args->{mode};
     if ($code == CRITICAL || $code == WARNING) {
-        if ($self->base) {
+        if ($self->base || $self->base_mbean) {
             return $self->_format_label
               ('%n : Threshold \'%t\' failed for value %.2r% ('. &_placeholder($args,"v") .' %u / '.
                &_placeholder($args,"b") . ' %u)',$args);
@@ -627,7 +628,7 @@ sub _exit_message {
             }
         }
     } else {
-        if ($self->base) {
+        if ($self->base || $self->base_mbean) {
             return $self->_format_label('%n : In range %.2r% ('. &_placeholder($args,"v") .' %u / '.
                                         &_placeholder($args,"b") . ' %w)',$args);
         } else {
