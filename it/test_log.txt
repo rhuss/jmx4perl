@@ -1,3 +1,15 @@
+Jolokia 1.2.1
+   JEE-Server
+     Tomcat 8.0.3 & 7.0.52 & 6.0.37 & 5.5.35
+     Glassfish 4.0.0 & 3.1.2 
+     JBoss 8.0.0 & 4.2.3
+    
+   OSGi-Container 
+     Felix 4.2.0 (pure + bundle), 2.0.5 (bundle), 3.0.8 (jvm),  
+
+   JVM
+     ActiveMQ 5.8.0
+
 Jolokia 1.2.0 + Jmx4Perl 1.08 (2014-02-15)
     JEE-Server
      Tomcat 8.0.3 & 7.0.52 & 6.0.37 & 5.5.35
