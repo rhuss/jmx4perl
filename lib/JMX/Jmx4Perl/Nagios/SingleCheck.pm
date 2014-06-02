@@ -467,7 +467,7 @@ sub _get_name {
             } else {
                 my $val = $self->value;
                 if ($val) {
-                    $name = "[" . $self->value . "]";
+                    $name = "[" . $val . "]";
                 } else {
                     my $a_or_o = $self->attribute || $self->operation || "";
                     my $p = $self->path ? "," . $self->path : "";
