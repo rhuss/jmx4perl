@@ -7,7 +7,7 @@ use It;
 
 require "check_jmx4perl/base.pl";
 
-my $jmx = It->new(verbose => 0)->jmx4perl;
+my $jmx = It->new(verbose => 1)->jmx4perl;
 my ($ret,$content);
 
 # ====================================================
@@ -31,7 +31,7 @@ my $mem = $jmx->get_attribute("java.lang:type=Memory", "HeapMemoryUsage","used")
 #print "Used Memory: $mem\n";
 
 # Trigger Garbage collection
-#$jmx->execute("java.lang:type=Memory","gc");
+$jmx->execute("java.lang:type=Memory","gc");
 
 for my $i (0 .. 2) {
     $jmx->execute("java.lang:type=Memory","gc");
@@ -39,7 +39,7 @@ for my $i (0 .. 2) {
     is($ret,0,($i+1) . ". history fetch returns OK for -c $c");
     ok($content =~ /mem=([\-\d]+)/ && $1 ne "0",($i+1) . ". history fetch return non null Mem-Delta ($1)");
     #print Dumper($ret,$content);
-    #print "Heap: ",$jmx->get_attribute("java.lang:type=Memory","HeapMemoryUsage","used"),"\n";
+    print "Heap: ",$jmx->get_attribute("java.lang:type=Memory","HeapMemoryUsage","used"),"\n";
 }
 #print "$c: $content\n";
 

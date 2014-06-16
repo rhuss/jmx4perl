@@ -14,7 +14,7 @@ my $jmx = new It(verbose => 0)->jmx4perl;
 my $req = new JMX::Jmx4Perl::Request(READ,"jolokia.it:type=attribute");
 my $resp = $jmx->request($req);
 my $value = $resp->{value};
-print Dumper($resp);
+#print Dumper($resp);
 ok($value->{LongSeconds} == 60*60*24*2,"LongSeconds");
 ok($value->{Bytes} == 3 * 1024 * 1024 +  1024 * 512,"Bytes");
 ok(exists($value->{Null}) && !$value->{Null},"Null");
@@ -79,9 +79,13 @@ is($resp->status,200);
 $value = $jmx->get_attribute("jolokia.it:type=tabularData","Table2","Value0.0/Value0.1");
 is($value->{Column1},"Value0.0","First column");
 is($value->{Column2},"Value0.1","Second column");
-$value = $jmx->get_attribute("jolokia.it:type=tabularData","Table2","Value0.1/Value0.0");
-is($value,undef,"Path with no value");
+
+
+$req = new JMX::Jmx4Perl::Request(READ,"jolokia.it:type=tabularData","Table2","Value0.1/Value0.0");
+$resp = $jmx->request($req);
 #print Dumper($resp);
+$value = $resp->{value};
+is($value,undef,"Path with no value");
 
 $value = $jmx->get_attribute("jolokia.it:type=mxbean","MapWithComplexKey");
 is(scalar(keys %$value),2,"2 elements");
