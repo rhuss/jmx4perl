@@ -20,11 +20,15 @@ signature with L<Crypt::OpenPGP>
 
 This verifier uses L<Crypt::OpenPGP> for validating a PGP signature obtained
 from the download site. Ie. each URL used for download should have (and does
-have) and associated signature ending with F<.asc>. This contains a signature
-which is verified with the public key contained in the __DATA__ section of this
-module (i.e. my personal key with ID EF101165). This verifier is the most
-robust one, however installing L<Crypt::OpenPGP> is a bit clumsy, so you might
-omit this one.
+have) and associated signature ending with F<.asc>. This verifier typically
+quite robust, however installing L<Crypt::OpenPGP> is a bit clumsy, so you
+might omit this one.
+
+=head1 IMPORTANT
+
+It is not used currently since the new agents has been signed with 'digest
+algortihm 10' which is not supported by OpenPGP. Use a native GnuPG instead
+(i.e. a 'gpg' which is in the path)
 
 =cut 
 
@@ -73,8 +77,8 @@ sub verify {
                    ($validate != 1 ? (", signed by ",$validate) : ""),
                    ($key ? " ($key)" :""));
         return 1;
-    } elsif ($validate == 0) {
-        $log->error("Invalid signature",$path ? " for $path" : "");
+    } elsif ($validate == 0) {        
+        $log->error("Invalid signature",$path ? " for $path" : "",": " . $pgp->errstr);
         die "\n";
     } else {
         $log->error("Error occured while verifying signature: ",$pgp->errstr);

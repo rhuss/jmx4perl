@@ -61,13 +61,16 @@ BEGIN {
     };
 
     my $prefix = "JMX::Jmx4Perl::Agent::Jolokia::Verifier::";
-    if (eval "require Crypt::OpenPGP; 1") {
-        push @VERIFIERS,$create->($prefix . "OpenPGPVerifier");                    
-    } elsif (`gpg --version` =~ /GnuPG/m) {
+    if (`agpg --version` =~ /GnuPG/m) {
         push @VERIFIERS,$create->($prefix . "GnuPGVerifier");        
     } else {
-        push @WARNINGS,"No signature verification available. Please install GnupPG or Crypt::OpenPGP.";
+        push @WARNINGS,"No signature verification available. Please install GnupPG.";
     }
+
+    # Disabled support for OpenPGP since it doesn't support the digest
+    # algorithm used for signging the jolokia artefacts 
+    # } elsif (eval "requireCrypt::OpenPGP; 1") { 
+    #    push @VERIFIERS,$create->($prefix . "OpenPGPVerifier");
 
     push @VERIFIERS,$create->($prefix . "SHA1Verifier") if eval "require Digest::SHA1; 1";
     push @VERIFIERS,$create->($prefix . "MD5Verifier") if eval "require Digest::MD5; 1";
