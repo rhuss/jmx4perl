@@ -138,6 +138,7 @@ t/40_check_jmx4perl.t
 t/50_config.t
 t/60_parse_name.t
 t/70_pod_syntax.t
+it/t/99_discovery.t
 t/j4p_test.cfg
 t/lib/It.pm
 t/lib/ProductTest/Test1Handler.pm

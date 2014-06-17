@@ -233,7 +233,7 @@ my $build = Module::Build->new
    dist_version_from => "lib/JMX/Jmx4Perl.pm",
    dist_author => 'Roland Huss (roland@cpan.org)',
    dist_abstract => 'Easy JMX access to Java EE applications',
-#   sign => 1,
+   #sign => 1,
    installdirs => 'site',
    license => 'gpl',
    

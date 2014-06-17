@@ -657,7 +657,8 @@ sub _format_label {
     my $self = shift;
     my $label = shift;
     my $args = shift;
-    # %r : relative value
+    # %r : relative value (as percent)
+    # %f : relative value (as floating point)
     # %v : value
     # %u : unit
     # %b : base value
@@ -670,8 +671,10 @@ sub _format_label {
     foreach my $p (@parts) {
         if ($p =~ /^(\%[\w\.\-]*)(\w)$/) {
             my ($format,$what) = ($1,$2);
-            if ($what eq "r") {
-                $ret .= sprintf $format . "f",($args->{rel_value} || 0);
+            if ($what eq "r" || $what eq "f") {
+                my $val = $args->{rel_value} || 0;
+                $val = $what eq "r" ? $val : $val / 100; 
+                $ret .= sprintf $format . "f",$val;
             } elsif ($what eq "b") {
                 $ret .= sprintf $format . &_format_char($args->{base}),($args->{base} || 0);
             } elsif ($what eq "u" || $what eq "w") {

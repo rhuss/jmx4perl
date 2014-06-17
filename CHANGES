@@ -2,7 +2,8 @@
   - Fixed warning when using MBeanName (#31)
   - Fixed BaseMBean and formatting
   - Fixed relative checks when using MBean patterns
-  
+  - Added formatter '%f' to include a ratio of value to base without
+    multiplying by 100 like for '%r'
 
 1.07 (2013-04-16) 
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
