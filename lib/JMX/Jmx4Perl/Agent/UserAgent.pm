@@ -32,6 +32,20 @@ L<JMX::Jmx4Perl::Agent>.
 =cut 
 
 
+# Constructor setting the proper SSL options (if possible)
+sub new {
+    my $class = shift;
+    my @opts = @_ || ();
+    if (LWP::UserAgent->VERSION >= 6.00) {
+        # We don't verify Hostnames by default, since the information we are
+        # sending is typically not critical. Also, we don't have yet a way to 
+        # configure a keystore, so this is the only chance for now. Ask me to add
+        # host certificate verification if wanted. It disabled only for LWP >= 6.00        
+        push @opts,(ssl_opts => { verify_hostname => 0 });
+    };
+    return $class->SUPER::new(@opts);
+}
+
 # Request using a more robust timeout See
 # http://stackoverflow.com/questions/73308/true-timeout-on-lwpuseragent-request-method 
 # for details.
