@@ -4,6 +4,9 @@
   - Fixed relative checks when using MBean patterns
   - Added formatter '%f' to include a ratio of value to base without
     multiplying by 100 like for '%r'
+  - Disabled OpenPGPVerifier since it doesn't support the new digest
+    algorithms used for signing the Jolokia artefacts (#32)
+  - Don't set ssl_opts if on LWP < 6 (#28)
 
 1.07 (2013-04-16) 
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
