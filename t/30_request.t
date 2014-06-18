@@ -5,7 +5,7 @@ use warnings;
 use FindBin qw($Bin);
 use lib qq($Bin/lib);
 
-use Test::More tests => 22;
+use Test::More tests => 30;
 
 BEGIN { use_ok("JMX::Jmx4Perl::Request"); }
 
@@ -49,5 +49,27 @@ eval {
     $req = new JMX::Jmx4Perl::Request(READ,$name,["a1","a2"],{method => "GET"});    
 };
 ok($@,"No attributes with GET");
+
+# Regexp for squeezing trailing slashes (RT#89108)
+my $regexps = {
+               new => 's|((?:!/)?/)/*|$1|g',
+               old => 's|(!/)?/+|$1/|g'
+              };
+my $data = {
+            '!////' => '!//',
+            '////'  => '/',
+            '/' => '/',
+            '!/' => '!/'            
+           };
+for my $d (keys %$data) {
+    no warnings;
+    for my $re (keys %$regexps) {
+        my $test = $d;
+        my $expected = $data->{$d};
+        eval '$^W = 0; $test =~ ' . $regexps->{$re};        
+        is($test,$expected,"Squeezing regexp '" . $re ."' : ".$d." --> ".$test);
+    }
+}
+
 
 

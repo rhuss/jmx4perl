@@ -356,7 +356,7 @@ sub request_url {
         # Nothing further to append.
     }
     # Squeeze multiple slashes
-    $req =~ s|(!/)?/+|$1/|g;
+    $req =~ s|((?:!/)?/)/*|$1|g;
     #print "R: $req\n";
 
     if ($req =~ $INVALID_PATH_CHARS || $request->{use_query}) {
