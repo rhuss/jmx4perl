@@ -9,6 +9,7 @@
   - Don't set ssl_opts if on LWP < 6 (#28)
   - Fixed BaseMBean and BaseAttribute config directives (#25)
   - Fixed regexp for squeezing trailing slashes (RT#89108)
+  - Fixed check definition for 'wls_channel_connections (RT#89107)
 
 1.07 (2013-04-16) 
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
