@@ -680,8 +680,6 @@ sub _format_label {
             } elsif ($what eq "u" || $what eq "w") {
                 $ret .= sprintf $format . "s",($what eq "u" ? $args->{unit} : $args->{base_unit}) || "";
                 $ret =~ s/\s$//;
-            } elsif ($what eq "f") {
-                $ret .= sprintf $format . "f",$args->{value};
             } elsif ($what eq "v") {
                 $ret .= &_format_value($format,$args->{mode},$args->{value});
             } elsif ($what eq "t") {
