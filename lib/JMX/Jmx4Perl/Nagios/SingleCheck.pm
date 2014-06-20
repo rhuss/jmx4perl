@@ -216,7 +216,7 @@ sub extract_responses {
         $self->_update_error_stats($opts->{error_stat},$code) unless $code == OK;
         my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
-                                                    value => $value_conv, unit => $unit,base => $base_conv, 
+                                                    value => $value_conv, unit => $unit, base => $base_conv, 
                                                     base_unit => $base_unit, prefix => $opts->{prefix}));            
     } else {
         # Performance data
@@ -662,6 +662,7 @@ sub _format_label {
     # %v : value
     # %u : unit
     # %b : base value
+    # %w : base unit
     # %t : threshold failed ("" for OK or UNKNOWN)
     # %c : code ("OK", "WARNING", "CRITICAL", "UNKNOWN")
     # %d : delta
