@@ -549,7 +549,7 @@ sub _split_attr_spec {
         $p =~ s|\\(.)|$1|sg;
         push @ret,$p;
     }    
-    return (shift(@ret),shift(@ret),join("/",@ret));
+    return (shift(@ret),shift(@ret),@ret ? join("/",@ret) : undef);
 }
 
 sub _check_threshold {
@@ -658,8 +658,9 @@ sub _format_label {
     my $label = shift;
     my $args = shift;
     # %r : relative value (as percent)
-    # %f : relative value (as floating point)
+    # %q : relative value (as floating point)
     # %v : value
+    # %f : value as floating point
     # %u : unit
     # %b : base value
     # %w : base unit
@@ -672,15 +673,17 @@ sub _format_label {
     foreach my $p (@parts) {
         if ($p =~ /^(\%[\w\.\-]*)(\w)$/) {
             my ($format,$what) = ($1,$2);
-            if ($what eq "r" || $what eq "f") {
+            if ($what eq "r" || $what eq "q") {
                 my $val = $args->{rel_value} || 0;
                 $val = $what eq "r" ? $val : $val / 100; 
-                $ret .= sprintf $format . "f",$val;
+                $ret .= sprintf $format . "q",$val;
             } elsif ($what eq "b") {
                 $ret .= sprintf $format . &_format_char($args->{base}),($args->{base} || 0);
             } elsif ($what eq "u" || $what eq "w") {
                 $ret .= sprintf $format . "s",($what eq "u" ? $args->{unit} : $args->{base_unit}) || "";
                 $ret =~ s/\s$//;
+            } elsif ($what eq "f") {
+                $ret .= sprintf $format . "f",$args->{value};
             } elsif ($what eq "v") {
                 $ret .= &_format_value($format,$args->{mode},$args->{value});
             } elsif ($what eq "t") {

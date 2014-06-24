@@ -67,10 +67,6 @@ is($unit,"ns");
 is($value,1.01);
 is($unit,"us");
 
-
 my $label = $scheck->_exit_message(code => &Nagios::Plugin::OK,mode => "numeric",value => "2.1", unit => "MB");
 is($label,"Memory : Value 2.10 MB in range");
-
-
-
 
