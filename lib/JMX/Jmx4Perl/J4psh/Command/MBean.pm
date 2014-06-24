@@ -627,7 +627,6 @@ sub _cd_mbean {
     my $domain = shift;
     my $mbean = shift;
     
-    $self->_check_mbean($domain,$mbean);
     my $mbean_props = $self->_check_mbean($domain,$mbean);
     my $mbean_cmds = $self->mbean_commands($mbean_props);
     &{$self->push_on_stack($mbean_props->{prompt},$mbean_cmds)};    
@@ -644,9 +643,23 @@ sub _check_domain {
 sub _get_mbean {
     my $self = shift;
     my $domain = shift;
-    my $mbean = shift;
+    my $props = shift;
     my $context = $self->context;
-    return $context->mbeans_by_name->{$domain . ":" . $mbean};
+    if ($props =~ /\*/) {
+        my $mbeans = $context->search_mbeans($domain . ":" . $props);
+        # TODO: If more than one, present a menu to select from. Now simply die
+        return undef unless @{$mbeans};
+        if (scalar(@$mbeans) > 1) {
+            my $toomany = "";
+            for my $m (@$mbeans) {
+                my ($s,$r) = $self->color("mbean_name","reset");                          
+                $toomany .=" >>> " . $s . $m->{full} . $r . "\n";
+            }
+            die "More than one MBean found:\n" . $toomany;
+        } 
+        return $mbeans->[0];
+    }
+    return $context->mbeans_by_name->{$domain . ":" . $props};
 }
 
 # Handle navigational commands

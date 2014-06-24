@@ -153,6 +153,19 @@ sub mbeans_by_name {
     return shift->{mbeans_by_name};
 }
 
+sub search_mbeans {
+    my $self = shift;
+    my $pattern = shift;
+    $pattern = quotemeta($pattern);
+    $pattern =~ s/\\?\*/.*/g;
+    my @ret = ();
+    my $mbeans_by_name = $self->mbeans_by_name();
+    for my $name (sort keys %$mbeans_by_name) {
+        push @ret,$mbeans_by_name->{$name} if $name =~ /$pattern/        
+    }
+    return \@ret;
+}
+
 sub request { 
     my $self = shift;
     my $request = shift;

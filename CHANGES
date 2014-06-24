@@ -13,6 +13,8 @@
   - Changed check 'memory_gc_time' to be a relative check to measure the 
     relative amount taken for the GC. If you use this check (or a sub-check of this)
     YOU NEED TO UPDATE YOUR THRESHOLDS (and regenerate the pn4p graphics)
+  - Fixed bug when using 0 thresholds in checks using parent checks (#38)
+  - Added support for '*' wildcard when navigation with cd for j4psh 
 
 1.07 (2013-04-16) 
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
