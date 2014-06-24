@@ -667,7 +667,7 @@ placeholders:
  %v   the absolute value 
  %f   the absolute value as floating point number
  %r   the relative value as percentage (--base)
- %f   the relative value as ratio of value to base (--base)
+ %q   the relative value as ratio of value to base (--base)
  %u   the value's unit for the output when --unit is used (after shortening)
  %w   the base value's unit for the output when --unit is used (after shortening)
  %b   the absolut base value as it is used with --base 
