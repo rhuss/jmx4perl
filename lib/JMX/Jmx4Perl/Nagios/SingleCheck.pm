@@ -568,7 +568,8 @@ sub _check_threshold {
           (
            defined($self->critical) ? (critical => $self->critical) : (),
            defined($self->warning) ? (warning => $self->warning) : ()
-          );            
+          );  
+        #print Dumper({check => $value,@ths});
         return (@ths ? $np->check_threshold(check => $value,@ths) : OK,"numeric");    
     } else {
         return
@@ -676,7 +677,7 @@ sub _format_label {
             if ($what eq "r" || $what eq "q") {
                 my $val = $args->{rel_value} || 0;
                 $val = $what eq "r" ? $val : $val / 100; 
-                $ret .= sprintf $format . "q",$val;
+                $ret .= sprintf $format . "f",$val;
             } elsif ($what eq "b") {
                 $ret .= sprintf $format . &_format_char($args->{base}),($args->{base} || 0);
             } elsif ($what eq "u" || $what eq "w") {

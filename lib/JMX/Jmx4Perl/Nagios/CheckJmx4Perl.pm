@@ -305,7 +305,6 @@ sub _verify_and_initialize {
 
     # Fetch configuration
     my $config = $self->_get_config($o->config);
-    
     # Now, if a specific check is given, extract it, too.
     my $check_configs;
     $check_configs = $self->_extract_checks($config,$o->check);
@@ -352,7 +351,7 @@ sub _extract_checks {
     if ($check) {
         $self->nagios_die("No configuration given") unless $config;
         $self->nagios_die("No checks defined in configuration") unless $config->{check};
-        
+
         my $check_configs;
         unless ($config->{check}->{$check}) {
             $check_configs = $self->_resolve_multicheck($config,$check,$self->{cmd_args});
@@ -363,17 +362,19 @@ sub _extract_checks {
         }
         $self->nagios_die("No check configuration with name " . $check . " found") unless (@{$check_configs});
 
+        #print Dumper($check_configs);
+
         # Resolve parent values
         for my $c (@{$check_configs}) {
-            # print "[A] ",Dumper($c);
+            #print "[A] ",Dumper($c);
             $self->_resolve_check_config($c,$config,$self->{cmd_args});
             
-            # print "[B] ",Dumper($c);
+            #print "[B] ",Dumper($c);
             # Finally, resolve any left over place holders
             for my $k (keys(%$c)) {
                 $c->{$k} = $self->_replace_placeholder($c->{$k},undef) unless ref($c->{$k});
             }
-            # print "[C] ",Dumper($c);
+            #print "[C] ",Dumper($c);
         }
         return $check_configs;
     } else {
@@ -474,7 +475,7 @@ sub _resolve_check_config {
         }
         # Replace inherited values
         for my $k (keys %$parent_merged) {
-            my $parent_val = $parent_merged->{$k} || "";
+            my $parent_val = defined($parent_merged->{$k}) ?  $parent_merged->{$k} :  "";
             if (defined($check->{$k})) {
                 $check->{$k} =~ s/\$BASE/$parent_val/g;
             } else {
