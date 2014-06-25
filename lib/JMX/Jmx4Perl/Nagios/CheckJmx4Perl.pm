@@ -154,28 +154,54 @@ sub _prepare_multicheck_message {
     my $error_stat = shift;
 
     my $summary;
+    my $labels = $self->{multi_check_labels} || {};
     my $nr_checks = scalar(@{$self->{checks}});
     if ($code eq OK) {
-        $summary = "All " . $nr_checks . " checks OK";
+        $summary = $self->_format_multicheck_ok_summary($labels->{summary_ok} ||
+                                                        "All %n checks OK",$nr_checks);
     } else {
-        my $nr_warnings = scalar(@{$np->messages->{warning} || []});
-        my $nr_errors = scalar(@{$np->messages->{critical} || []});
-        my @parts;
-        my $extra = "";
-        my $nr = 0;
-        for my $code (CRITICAL,WARNING,UNKNOWN) {
-            if (my $errs = $error_stat->{$code}) {
-                $extra .= scalar(@$errs) . " " . $STATUS_TEXT{$code} . " (" . join (",",@$errs) . "), ";
-                $nr += scalar(@$errs);
-            }
-        }
-        if ($nr > 0) {
-            # Cut off extra chars at the end
-            $extra = substr($extra,0,-2);
-        }
-        $summary = $nr . " of " . $nr_checks . " failed: " . $extra;
+        $summary = $self->_format_multicheck_failure_summary($labels->{summary_failure} ||
+                                                             "%e of %n checks failed [%d]",
+                                                             $nr_checks,
+                                                             $error_stat);
     }
     return ($code,$summary . "\n" . $message);
+}
+
+sub _format_multicheck_ok_summary {
+    my $self = shift;
+    my $format = shift;
+    my $nr_checks = shift;
+    my $ret = $format;
+    $ret =~ s/\%n/$nr_checks/g;
+    return $ret;
+}
+
+sub _format_multicheck_failure_summary {
+    my $self = shift;
+    my $format = shift;
+    my $nr_checks = shift;
+    my $error_stat = shift;
+
+    my $ret = $format;
+
+    my $details = "";
+    my $total_errors = 0;
+    for my $code (CRITICAL,WARNING,UNKNOWN) {
+        if (my $errs = $error_stat->{$code}) {
+            $details .= scalar(@$errs) . " " . $STATUS_TEXT{$code} . " (" . join (",",@$errs) . "), ";
+            $total_errors += scalar(@$errs);
+        }
+    }
+    if ($total_errors > 0) {
+        # Cut off extra chars at the end
+        $details = substr($details,0,-2);
+    }
+    
+    $ret =~ s/\%d/$details/g;
+    $ret =~ s/\%e/$total_errors/g;
+    $ret =~ s/\%n/$nr_checks/g;
+    return $ret;
 }
 
 # Create a formatted prefix for multicheck output
@@ -184,13 +210,20 @@ sub _multi_check_prefix {
     my $check = shift;
     my $idx = shift;
     my $max = shift;
-    my $label = $check->{config}->{key} || $check->{config}->{name} || "";
+    
+    my $c = $check->{config};
+
     my $l = length($max);
+    
+    return sprintf("[%$l.${l}s] %%c ",$idx)
+      if (defined($c->{multicheckprefix}) && !length($c->{multicheckprefix}));
+    
+    my $label =  $c->{multicheckprefix} || $c->{name} || $c->{key} || "";
     return sprintf("[%$l.${l}s] %%c %s: ",$idx,$label);
 }
 
 
-# Sendp the requests via the build up agent
+# Send the requests via the build up agent
 sub _send_requests {
     my ($self,$jmx,@requests) = @_;
     my $o = $self->{opts};
@@ -329,15 +362,7 @@ sub _verify_and_initialize {
         my $name = $check->name ? " [Check: " . $check->name . "]" : "";
         $self->nagios_die("An MBean name and a attribute/operation must be provided " . $name)
           if ((!$check->mbean || (!$check->attribute && !$check->operation)) && !$check->alias && !$check->value && !$check->script);
-        $self->verify_check($check,$name);
     }
-}
-
-sub verify_check {
-    my $self = shift;
-    my $check = shift;
-    my $name = shift;
-    my $np = $self->{np};
 }
 
 # Extract one or more check configurations which can be 
@@ -355,6 +380,7 @@ sub _extract_checks {
         my $check_configs;
         unless ($config->{check}->{$check}) {
             $check_configs = $self->_resolve_multicheck($config,$check,$self->{cmd_args});
+            $self->_retrieve_mc_summary_label($config,$check);
         } else {
             my $check_config = $config->{check}->{$check};
             $check_configs = ref($check_config) eq "ARRAY" ? $check_config : [ $check_config ];
@@ -421,6 +447,24 @@ sub _resolve_multicheck {
         }
     }
     return $check_config;
+}
+
+sub _retrieve_mc_summary_label { 
+    my $self = shift;
+    my $config = shift;
+    my $check = shift;
+
+    my $multi_checks = $config->{multicheck};    
+    if ($multi_checks) { 
+        my $m_check = $multi_checks->{$check};
+        if ($m_check && ($m_check->{summaryok} || $m_check->{summaryfailure})) {
+            my $mc_labels = 
+            $self->{multi_check_labels} = {
+                                           summary_ok => $m_check->{summaryok},
+                                           summary_failure => $m_check->{summaryfailure}
+                                          };
+        }
+    }
 }
 
 sub _merge_multicheck_args {
@@ -581,7 +625,7 @@ EOP
 sub _parse_check_ref {
     my $self = shift;
     my $check_ref = shift;
-    if ($check_ref =~/^\s*([^(]+)\(([^)]*)\)\s*$/) {
+    if ($check_ref =~/^\s*(.+?)\((.*)\)\s*$/) {
         my $name = $1;
         my $args_s = $2;
         my $args = [ parse_line('\s*,\s*',0,$args_s) ];
