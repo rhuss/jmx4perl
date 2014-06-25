@@ -20,6 +20,8 @@
     for multi checks 
   - Added config options "SummaryOk" and "SummaryFailure" for allowing to fine tune 
     multi check output (#24)
+  - "Argument" can be used in "Operation" config checks for providing arguments to 
+    Nagios checks which are based on operations (#27)
 
 1.07 (2013-04-16) 
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
