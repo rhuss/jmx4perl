@@ -492,9 +492,9 @@ only, so for complex attributes a path is I<required>.
 
 The return values of operations can be used for threshold checking, too. Since
 a JMX exposed operation can take arguments, these has to be provided as extra
-arguments on the command line or in the configuration. Due to the agent's
-nature and the protocol used (JSON), only simple typed arguments like strings,
-numbers or booleans ("true"/"false") can be used.
+arguments on the command line or in the configuration via the C<Args> configuration 
+directive. Due to the agent's nature and the protocol used (JSON), only simple typed 
+arguments like strings, numbers or booleans ("true"/"false") can be used.
 
 Example:
 
@@ -512,7 +512,7 @@ agent. For this purpose an JMX operation C<getNrQueriesFor> is exposed which
 takes three arguments: The type ("operation"/"attribute"), the MBean's
 ObjectName and the operation/attribute name which was called.
 
-If the opertion to be called is an I<overloaded operation> (i.e. an operation
+If the operation to be called is an I<overloaded operation> (i.e. an operation
 whose name exists multiple times on the same MBean but with different parameter
 types), the argument types must be given within parentheses:
 
@@ -1459,6 +1459,20 @@ parameter types), the argument types can be given within parentheses:
      Operation = checkUserCount(java.lang.String,java.lang.String)
      ...
   </Check>
+
+=item Argument
+
+Used for specifying arguments to operation. This directive can be given multiple 
+times for multiple arguments. The order of the directive determine the order of the 
+arguments.
+
+  <Check>
+     ....
+     Operation checkUserCount(java.lang.String,java.lang.String)
+     Argument  Max
+     Argument  Morlock    
+  </Check>
+   
 
 =item Alias
 
