@@ -213,7 +213,7 @@ sub extract_responses {
         # Do the real check.
         my ($code,$mode) = $self->_check_threshold($rel_value);
         # For Multichecks, we remember the label of a currently failed check
-        $self->_update_error_stats($opts->{error_stat},$code) unless $code == OK;
+        $self->update_error_stats($opts->{error_stat},$code) unless $code == OK;
         my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
                                                     value => $value_conv, unit => $unit, base => $base_conv, 
@@ -229,7 +229,7 @@ sub extract_responses {
         
         # Do the real check.
         my ($code,$mode) = $self->_check_threshold($value);
-        $self->_update_error_stats($opts->{error_stat},$code) unless $code == OK;
+        $self->update_error_stats($opts->{error_stat},$code) unless $code == OK;
         $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit,
                                                     prefix => $opts->{prefix}));                    
     }
@@ -246,7 +246,7 @@ sub _include_perf_data {
     return $self->perfdata !~ /^\s*(false|off|no|0)\s*$/i;
 }
 
-sub _update_error_stats {
+sub update_error_stats {
     my $self = shift;
     my $error_stat = shift || return;
     my $code = shift;
@@ -298,12 +298,12 @@ sub _extract_value_from_pattern_request {
     my $self = shift;
     my $val = shift;
     my $np = $self->{np};
-    $self->nagios_die("Pattern request does not result in a proper return format: " . Dumper($val))
+    $self->_die("Pattern request does not result in a proper return format: " . Dumper($val))
       if (ref($val) ne "HASH");
-    $self->nagios_die("More than one MBean found for a pattern request: " . Dumper([keys %$val])) if keys %$val != 1;
+    $self->_die("More than one MBean found for a pattern request: " . Dumper([keys %$val])) if keys %$val != 1;
     my $attr_val = (values(%$val))[0];
-    $self->nagios_die("Invalid response for pattern match: " . Dumper($attr_val)) unless ref($attr_val) eq "HASH";
-    $self->nagios_die("Only a single attribute can be used. Given: " . Dumper([keys %$attr_val])) if keys %$attr_val != 1;
+    $self->_die("Invalid response for pattern match: " . Dumper($attr_val)) unless ref($attr_val) eq "HASH";
+    $self->_die("Only a single attribute can be used. Given: " . Dumper([keys %$attr_val])) if keys %$attr_val != 1;
     return $self->_null_safe_value((values(%$attr_val))[0]);
 }
 
@@ -363,7 +363,7 @@ sub _base_value {
     }
     my $resp = shift @{$responses};
     my $req = shift @{$requests};
-    $self->nagios_die($resp->{error}) if $resp->{error};
+    $self->_die($resp->{error}) if $resp->{error};
     #print Dumper($req,$resp);
     return $self->_extract_value($req,$resp);
 }
@@ -450,7 +450,7 @@ sub _verify_response {
     }
     
     if (!$req->is_mbean_pattern && (ref($resp->value) && !$self->string) && !JSON::is_bool($resp->value)) { 
-        $self->nagios_die("Response value is a " . ref($resp->value) .
+        $self->_die("Response value is a " . ref($resp->value) .
                         ", not a plain value. Did you forget a --path parameter ?". " Value: " . 
                         Dumper($resp->value));
     }
@@ -497,7 +497,7 @@ sub _prepare_read_args {
 
     if ($self->alias) {
         my @req_args = $jmx->resolve_alias($self->alias);
-        $self->nagios_die("Cannot resolve attribute alias ",$self->alias()) unless @req_args > 0;
+        $self->_die("Cannot resolve attribute alias ",$self->alias()) unless @req_args > 0;
         if ($self->path) {
             @req_args == 2 ? $req_args[2] = $self->path : $req_args[2] .= "/" . $self->path;
         }
@@ -532,7 +532,7 @@ sub _prepare_exec_args {
     }
     if ($self->alias) {
         my @req_args = $jmx->resolve_alias($self->alias);
-        $self->nagios_die("Cannot resolve operation alias ",$self->alias()) unless @req_args >= 2;
+        $self->_die("Cannot resolve operation alias ",$self->alias()) unless @req_args >= 2;
         return (@req_args,@args);
     } else {
         return ($self->mbean,$self->operation,@args);
@@ -733,11 +733,11 @@ sub _format_char {
     $val =~ /\./ ? "f" : "d";
 }
 
-sub nagios_die {
+sub _die {
     my $self = shift;
     my $msg = join("",@_);
-    my $np = $self->{np};
-    $np->nagios_die($msg,$np->opts->{'unknown-is-critical'} ? CRITICAL : UNKNOWN);
+    my $prefix = $self->{config}->{name} || $self->{config}->{key};
+    die $prefix . ": " . $msg,"\n";
 }
 
 my $CHECK_CONFIG_KEYS = {
@@ -782,7 +782,7 @@ sub AUTOLOAD {
             return undef;
         }
     } else {
-        $self->nagios_die("No config attribute \"" . $name . "\" known");
+        $self->_die("No config attribute \"" . $name . "\" known");
     }
 }
 
