@@ -76,19 +76,21 @@ is($ret,3,"UNKNOWN");
 ok($content =~ /Unknown.*method/,"Unknown request method");
 
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --method get --check thread_count 300 400"); 
+#print Dumper($ret,$content);
 is($ret,0,"OK");
 ok($content =~ /in range/,"In range");
 
 # =============================================================================
 # With scripting
 
-($ret,$content) = exec_check_perl4jmx("--config $config_file --check script_check Eden");
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check script_check Eden|Java");
+#print Dumper($ret,$content);
 is($ret,2);
 ok($content =~ /threshold/i,"Script-Check: Threshold contained");
 
 
-($ret,$content) = exec_check_perl4jmx("--config $config_file --check script_multi_check Perm");
-is($ret,0);
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check script_multi_check Perm|non-heap");
+ok($ret != 3);
 #print Dumper($ret,$content);
 ok($content =~ /Perm/,"Multi-Script-Check: Perm contained");
 ok($content =~ /Eden/,"Multi-Script-Check: Eden contained");
