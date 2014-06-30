@@ -1,3 +1,6 @@
+1.09 (2014-06-30)
+  - Added WebSphere checks
+
 1.08 (2014-06-30)
   - Fixed warning when using MBeanName (#31)
   - Fixed BaseMBean and formatting
@@ -23,7 +26,6 @@
     multi check output (#24)
   - "Argument" can be used in "Operation" config checks for providing arguments to 
     Nagios checks which are based on operations (#27)
-  - Added WebSphere checks
 
 1.07 (2013-04-16) 
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
