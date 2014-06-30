@@ -9,6 +9,13 @@ config/tomcat.cfg
 config/weblogic.cfg
 config/glassfish.cfg
 config/metrics.cfg
+config/websphere.cfg
+config/websphere/appstate.cfg
+config/websphere/http.cfg
+config/websphere/jca.cfg
+config/websphere/jdbc.cfg
+config/websphere/jms.cfg
+config/websphere/threads.cfg
 examples/jsr77.pl
 examples/memory.pl
 examples/memory.sh
