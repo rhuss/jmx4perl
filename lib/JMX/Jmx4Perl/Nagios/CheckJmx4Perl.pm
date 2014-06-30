@@ -340,7 +340,9 @@ sub _verify_and_initialize {
     my $config = $self->_get_config($o->config);
     # Now, if a specific check is given, extract it, too.
     my $check_configs;
+    #print Dumper($config);
     $check_configs = $self->_extract_checks($config,$o->check);
+    #print Dumper($check_configs);
     if ($check_configs) {
         for my $c (@$check_configs) {
             my $s_c = new JMX::Jmx4Perl::Nagios::SingleCheck($np,$c);
@@ -579,8 +581,8 @@ EOP
         my $orig_val = '$' . $2;
         my $i = defined($3) ? $3 : $4;
         my $default = $5;
-        $default =~ s/^\s*(.*)+?\s*$/$1/ if $default; # Trim whitespace
         my $end = defined($6) ? $6 : "";
+        $default =~ s/^\s*(.*)+?\s*$/$1/ if $default; # Trim whitespace
         #print Dumper({start => $start, orig => $orig_val,end => $end, default=> $default, rest => $rest, i => $i}); 
         if (defined($args)) {
             my $repl = $args->[$i];            

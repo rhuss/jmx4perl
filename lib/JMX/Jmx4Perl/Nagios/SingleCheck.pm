@@ -441,9 +441,11 @@ sub _verify_response {
     my ($self,$req,$resp) = @_;
     my $np = $self->{np};
     if ($resp->is_error) {
-        my $stacktrace = $resp->stacktrace;
         my $extra = "";
-        $extra = ref($stacktrace) eq "ARRAY" ? join "\n",@$stacktrace : $stacktrace if $stacktrace;
+        if ($np->opts->{verbose}) {
+            my $stacktrace = $resp->stacktrace;
+            $extra = ref($stacktrace) eq "ARRAY" ? join "\n",@$stacktrace : $stacktrace if $stacktrace;
+        }
         $self->nagios_die("Error: ".$resp->status." ".$resp->error_text.$extra);
     }
     

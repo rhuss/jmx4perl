@@ -61,7 +61,7 @@ BEGIN {
     };
 
     my $prefix = "JMX::Jmx4Perl::Agent::Jolokia::Verifier::";
-    if (`agpg --version` =~ /GnuPG/m) {
+    if (`gpg --version` =~ /GnuPG/m) {
         push @VERIFIERS,$create->($prefix . "GnuPGVerifier");        
     } else {
         push @WARNINGS,"No signature verification available. Please install GnupPG.";
