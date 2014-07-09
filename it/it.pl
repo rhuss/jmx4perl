@@ -7,6 +7,7 @@ use strict;
 use TAP::Harness;
 use Data::Dumper;
 
+
 my $dir = $FindBin::Bin . "/t";
 my ($gateway_url,$user,$password,$product,$target_url,$target_user,$target_password);
 GetOptions("dir=s" => \$dir,
@@ -36,7 +37,7 @@ my $harness = new TAP::Harness
     color => 1,
     merge => 1,
     jobs => 1,
-    lib => [ "$FindBin::Bin/../lib", "$FindBin::Bin/../t/lib" ]
+    lib => [ "$FindBin::Bin/../lib", "$FindBin::Bin/../t/lib", "$FindBin::Bin" ]
    });
 
 $ENV{JMX4PERL_GATEWAY} = $gateway_url;

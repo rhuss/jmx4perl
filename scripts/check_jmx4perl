@@ -1869,6 +1869,15 @@ the app server, sessions (number and lifing time) or requests per minute.
 
 Mostly the same checks as for jetty, but for tomcat as application server. 
 
+=head3 websphere.cfg
+
+WebSphere specific checks, which uses the configuration files below the
+`websphere/` directory. For this checks to work, a customized Jolokia agent
+with JSR-77 extensions is required. The GitHub project for this enhanced agents
+can be found at L<https://github.com/rhuss/jolokia-extra> and downloaded at
+Maven Central
+(L<http://central.maven.org/maven2/org/jolokia/extra/jolokia-extra-war/>) 
+
 =head1 LICENSE
 
 This file is part of jmx4perl.
