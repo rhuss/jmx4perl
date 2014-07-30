@@ -72,7 +72,7 @@ is($value,"AJI","Enum serialization passed");
 $req = new JMX::Jmx4Perl::Request(READ,"jolokia.it.jsonmbean:type=plain");
 $resp = $jmx->request($req);
 $value = $resp->{value};
-print Dumper($resp);
+#print Dumper($resp);
 is($resp->status,200);
 
 # Check Tabular data

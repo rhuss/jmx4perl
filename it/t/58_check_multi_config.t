@@ -23,7 +23,7 @@ ok($content =~ /\(base\)/,"First level inheritance");
 ok($content =~ /\(grandpa\)/,"Second level inheritance");
 ok($content =~ /Heap Memory/,"Heap Memory Included");
 ok($content =~ /NonHeap Memory/,"NonHeap Memory included");
-print Dumper($ret,$content);
+#print Dumper($ret,$content);
 
 # Nested multichecks
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check nested"); 
@@ -62,17 +62,35 @@ is($ret,0,"Multicheck with argument for operation");
 ok($content =~ /Value 1 in range/,"OperationWithArgument");
 
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check failing_multi_check"); 
-print Dumper($ret,$content);
+#print Dumper($ret,$content);
 is($ret,2,"Failing memory multicheck is CRITICAL");
 ok($content =~ /memory_non_heap/,"Failed check name is contained in summary");
 
 # Check labeling of failed tests
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check label_test"); 
+#print "==========================================\n";
+#print Dumper($ret,$content);
 is($ret,2,"Should fail as critical");
 my @lines = split /\n/,$content;
 is($#lines,2,"3 lines has been returned");
 ok($lines[0] =~ /bla/ && $lines[0] =~ /blub/,"Name of checks should be returned as critical values");
 #print Dumper($ret,$content);
+
+($ret,$content) = exec_check_perl4jmx("--config $config_file --check error_multi_check"); 
+is($ret,3,"Should fail as UNKNOWN");
+@lines = split /\n/,$content;
+is($#lines,3,"4 lines has been returned");
+ok($lines[1] =~ /kaputt/ && $lines[1] =~ /UNKNOWN/,"First line is UNKNOWN Check");
+#print Dumper($ret,$content);
+
+($ret,$content) = exec_check_perl4jmx("--unknown-is-critical --config $config_file --check error_multi_check"); 
+is($ret,2,"Should fail as CRITICAL");
+@lines = split /\n/,$content;
+is($#lines,3,"4 lines has been returned");
+ok($lines[0] =~ /kaputt/ && $lines[0] =~ /CRITICAL/,"First line is UNKNOWN Check");
+
+#print Dumper($ret,$content);
+
 
 # TODO:
 

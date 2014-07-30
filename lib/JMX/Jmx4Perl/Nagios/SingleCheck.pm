@@ -162,6 +162,7 @@ sub extract_responses {
     my $requests = shift;
     my $opts = shift || {};
     my $np = $self->{np};
+    my $msg_handler = $np->{msg_handler} || $np; 
 
     # Get response/request pair
     my $resp = shift @{$responses};
@@ -215,7 +216,7 @@ sub extract_responses {
         # For Multichecks, we remember the label of a currently failed check
         $self->update_error_stats($opts->{error_stat},$code) unless $code == OK;
         my ($base_conv,$base_unit) = $self->_normalize_value($base_value);
-        $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
+        $msg_handler->add_message($code,$self->_exit_message(code => $code,mode => $mode,rel_value => $rel_value, 
                                                     value => $value_conv, unit => $unit, base => $base_conv, 
                                                     base_unit => $base_unit, prefix => $opts->{prefix}));            
     } else {
@@ -230,8 +231,8 @@ sub extract_responses {
         # Do the real check.
         my ($code,$mode) = $self->_check_threshold($value);
         $self->update_error_stats($opts->{error_stat},$code) unless $code == OK;
-        $np->add_message($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit,
-                                                    prefix => $opts->{prefix}));                    
+        $msg_handler->add_message($code,$self->_exit_message(code => $code,mode => $mode,value => $value_conv, unit => $unit,
+                                                             prefix => $opts->{prefix}));                    
     }
     return @extra_requests;
 }
@@ -446,7 +447,7 @@ sub _verify_response {
             my $stacktrace = $resp->stacktrace;
             $extra = ref($stacktrace) eq "ARRAY" ? join "\n",@$stacktrace : $stacktrace if $stacktrace;
         }
-        $self->nagios_die("Error: ".$resp->status." ".$resp->error_text.$extra);
+        $self->_die("Error: ".$resp->status." ".$resp->error_text.$extra);
     }
     
     if (!$req->is_mbean_pattern && (ref($resp->value) && !$self->string) && !JSON::is_bool($resp->value)) { 
@@ -736,8 +737,7 @@ sub _format_char {
 sub _die {
     my $self = shift;
     my $msg = join("",@_);
-    my $prefix = $self->{config}->{name} || $self->{config}->{key};
-    die $prefix . ": " . $msg,"\n";
+    die $msg,"\n";
 }
 
 my $CHECK_CONFIG_KEYS = {

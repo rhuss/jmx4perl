@@ -1783,7 +1783,14 @@ multi check is, that multiple values can be retrieved from the server side with
 a single HTTP request. The output is conformant to Nagios 3 multiline
 format. It will lead to a C<CRITICAL> value as soon as one check is critical,
 same for C<WARNING>. If both, C<CRITICAL> and C<WARNING> is triggered by two or
-more checks, then a C<CRITICAL> is taken.
+more checks, then C<CRITICAL> take precedence.
+
+If a single check within a multi check fails with an exception (e.g. because an
+MBean is missing), its state becomes C<UNKNOWN>. C<UNKNOWN> is the highest
+state in so far that it shadows even C<CRITICAL> (i.e. if a single check is
+C<UNKNOWN> the whole multi check is C<UNKNOWN>, too). This can be changed by
+providing the command line option C<--unknown-is-critical> in which case all
+C<UNKNOWN> errors are mapped to C<CRITICAL>.
 
 A multi-check can be defined with the directive C<E<lt>MultiCheckE<gt>>, which
 contain various references to other C<E<lt>CheckE<gt>> definitions or other

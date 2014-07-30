@@ -1,3 +1,10 @@
+1.11 ()
+
+  - When within a MultiCheck a single check causes an exception, the
+    other checks are now still present in the output of check_jmx4perl
+    and the overall check has the status UNKNWON (#40)
+  - Minor fixes on the WebSphere Checks
+
 1.10 (2014-06-30)
 
   - Added WebSphere checks
