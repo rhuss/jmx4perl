@@ -519,7 +519,8 @@ sub _prepare_exec_args {
     # with CLI arguments taking precedence
     my @cli_args = @_;
     my $config_args = $self->{config}->{argument};
-    $config_args = [ $config_args ] unless ref($config_args) eq "ARRAY";
+    
+    $config_args = [ $config_args ] if defined($config_args) && !ref($config_args) eq "ARRAY";
     my @args = ();
     if ($config_args) {
         my @c_args = (@$config_args);

@@ -72,8 +72,8 @@ check_jmx4perl - Nagios plugin using jmx4perl for accessing JMX data remotely
                 --mbean java.lang:type=Threading \
                 --operation findDeadlockedThreads \
                 --null no-deadlock \
-                --string 1 \
-                --critical !no-deadlock \
+                --string \
+                --critical '!no-deadlock' \
                 --critical 10
 
  # Use check_jmx4perl in proxy mode

@@ -4,6 +4,7 @@
     other checks are now still present in the output of check_jmx4perl
     and the overall check has the status UNKNWON (#40)
   - Minor fixes on the WebSphere Checks
+  - Fixed issue when calling check_jmx4perl for an operation without argument (RT##98166)
 
 1.10 (2014-06-30)
 
