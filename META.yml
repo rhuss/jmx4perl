@@ -8,7 +8,7 @@ build_requires:
 configure_requires:
   Module::Build: 0.34
 dynamic_config: 1
-generated_by: 'Module::Build version 0.3901, CPAN::Meta::Converter version 2.120921'
+generated_by: 'Module::Build version 0.3901, CPAN::Meta::Converter version 2.120630'
 license: open_source
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -17,7 +17,7 @@ name: jmx4perl
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: 1.11_3
+    version: 1.11
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
     version: 0
@@ -186,8 +186,6 @@ requires:
   Sys::SigAction: 0
   Term::Clui: 0
   Term::ProgressBar: 0
-  Term::ReadKey: 0
-  Term::ReadLine::Perl: 0
   Term::ShellUI: 0
   Term::Size: 0.207
   Text::ParseWords: 0
@@ -198,4 +196,4 @@ requires:
   base: 0
 resources:
   license: http://opensource.org/licenses/gpl-license.php
-version: 1.11_3
+version: 1.11

@@ -4,7 +4,7 @@
       "Roland Huss (roland@cpan.org)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.3901, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.3901, CPAN::Meta::Converter version 2.120630",
    "license" : [
       "open_source"
    ],
@@ -47,8 +47,6 @@
             "Sys::SigAction" : "0",
             "Term::Clui" : "0",
             "Term::ProgressBar" : "0",
-            "Term::ReadKey" : "0",
-            "Term::ReadLine::Perl" : "0",
             "Term::ShellUI" : "0",
             "Term::Size" : "0.207",
             "Text::ParseWords" : "0",
@@ -63,7 +61,7 @@
    "provides" : {
       "JMX::Jmx4Perl" : {
          "file" : "lib/JMX/Jmx4Perl.pm",
-         "version" : "1.11_3"
+         "version" : "1.11"
       },
       "JMX::Jmx4Perl::Agent" : {
          "file" : "lib/JMX/Jmx4Perl/Agent.pm",
@@ -262,11 +260,11 @@
          "version" : 0
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "license" : [
          "http://opensource.org/licenses/gpl-license.php"
       ]
    },
-   "version" : "1.11_3"
+   "version" : "1.11"
 }
