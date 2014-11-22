@@ -2,6 +2,7 @@ Build.PL
 CHANGES
 config/common.cfg
 config/jboss.cfg
+config/jboss7.cfg
 config/jetty.cfg
 config/memory.cfg
 config/threads.cfg

@@ -524,7 +524,7 @@ sub _resolve_check_config {
     my $check = shift;
     my $config = shift;
     # Args can come from the outside, but also as part of a multicheck (stored
-    # in $self->{args})
+    # in $check->{args})
     my $args = $check->{args} && @{$check->{args}} ? $check->{args} : shift;
     my $np = $self->{np};
     if ($check->{use}) {
@@ -539,7 +539,7 @@ sub _resolve_check_config {
             # Clone it to avoid side effects when replacing checks inline
             my $p_check = { %{$config->{check}->{$p_name}} };
             $p_check->{key} = $p_name;
-#            print "::::: ",Dumper($p_check,$p_args);
+            #print "::::: ",Dumper($p_check,$p_args);
 
             $self->_resolve_check_config($p_check,$config,$p_args);
 
@@ -557,7 +557,6 @@ sub _resolve_check_config {
         }
     }
     $self->_replace_args($check,$config,$args);
-    #print Dumper($check);
     return $check;
 }
 

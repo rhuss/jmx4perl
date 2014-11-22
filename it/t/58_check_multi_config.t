@@ -58,6 +58,7 @@ ok($content =~ /HelloLabel/,"First param");
 ok($content =~ /NestedWithOuterArgs/,"NestedWithOuterArgs");
 
 ($ret,$content) = exec_check_perl4jmx("--config $config_file --check overloaded_multi_check"); 
+#print Dumper($ret,$content);
 is($ret,0,"Multicheck with argument for operation");
 ok($content =~ /Value 1 in range/,"OperationWithArgument");
 

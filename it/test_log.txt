@@ -1,3 +1,14 @@
+Jolokia 1.3.0
+   JEE-Server
+     Tomcat 8.0.3 & 7.0.52 & 6.0.37 & 5.5.35
+     Glassfish 4.0.0 & 3.1.2 
+
+   OSGi-Container 
+     Felix 4.2.1 (pure + bundle), 2.0.5 (bundle), 3.0.8 (jvm), 
+
+   Mule-Agent
+      Mule 3.1.1 & 3.2.0 & 3.5.0
+
 Jolokia 1.2.2
    JEE-Server
      Tomcat 8.0.3 & 7.0.52 & 6.0.37 & 5.5.35

@@ -515,6 +515,7 @@ sub _prepare_exec_args {
     my $np = $self->{np};
     my $jmx = shift;
 
+    #print Dumper($self->{config});
     # Merge CLI arguments and arguments from the configuration,
     # with CLI arguments taking precedence
     my @cli_args = @_;
