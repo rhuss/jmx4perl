@@ -40,7 +40,7 @@ sub connect_to_server {
     my $server_map = $self->{server_map};
     my $s = $server_map->{$server};
     unless ($s) {
-        unless ($server =~ m|^\w+://[\d\.\w:]+(:(\d+))?/|) {
+        unless ($server =~ m|^\w+://([\w]+:\w+@)?[\d\.\w:]+(:(\d+))?/|) {
             print "Invalid URL $server\n";
             return;
         }
