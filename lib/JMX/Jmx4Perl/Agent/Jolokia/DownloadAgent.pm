@@ -51,6 +51,7 @@ sub new {
     $self->env_proxy;
     $self->proxy("http",$cfg{http_proxy}) if $cfg{http_proxy};
     $self->proxy("https",$cfg{https_proxy}) if $cfg{https_proxy};
+    $self->agent("Jolokia Download Agent/" . $JMX::Jmx4Perl::VERSION);
     $self->{show_progress} = !$cfg{quiet};
     return $self;
 }
