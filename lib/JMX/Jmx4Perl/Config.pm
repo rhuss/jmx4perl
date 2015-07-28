@@ -62,9 +62,11 @@ JMX::Jmx4Perl::Config - Configuration file support for Jmx4Perl
 
 =item $cfg = JMX::Jmx4Perl::Config->new($file_or_hash)
 
-Create a new configuration object with the given file name. If no file name 
-is given the configuration F<~/.j4p> is tried. If the file does not 
-exist, C<server_config_exists> will alway return C<false> and
+Create a new configuration object with the given file name. If no file name is
+given the configuration F<~/.j4p> is tried. In case the given file is a
+directory, a file F<dir/jxm4perl.cfg> is tried as configuration file.
+
+If the file does not exist, C<server_config_exists> will alway return C<false> and
 C<get_server_config> will always return C<undef>
 
 If a hash is given as argument, this hash is used to extract the server 
@@ -79,6 +81,7 @@ sub new {
     my $config = undef;;
     if (!ref($file_or_hash)) {
         my $file = $file_or_hash ? $file_or_hash : $ENV{HOME} . "/.j4p";
+        $file = $file . "/jmx4perl.cfg" if -d $file;
         if (-e $file) {
             if ($HAS_CONFIG_GENERAL) {
                 local $SIG{__WARN__} = sub {};  # Keep Config::General silent
@@ -92,6 +95,8 @@ sub new {
                 warn "Configuration file $file found, but Config::General is not installed.\n" . 
                   "Please install Config::General, for the moment we are ignoring the content of $file\n\n";
             }
+        } elsif (-d $file) {
+            
         }
     } elsif (ref($file_or_hash) eq "HASH") {
         $config = $file_or_hash;
