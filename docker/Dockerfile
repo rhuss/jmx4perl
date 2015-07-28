@@ -22,6 +22,7 @@ RUN apk add --update \
  && cpanm install \
     JSON::XS \
     Term::ReadLine::Gnu \
+    XML::LibXML \
  && cpanm install ROLAND/jmx4perl-${JMX4PERL_VERSION}.tar.gz \
  && rm -rf /var/cache/apk/* \
  && apk del \
