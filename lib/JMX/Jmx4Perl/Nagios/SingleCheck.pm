@@ -179,7 +179,6 @@ sub extract_responses {
         $self->_verify_response($request,$resp);
         $value = $self->_extract_value($request,$resp);
     }
-   
     # Delta handling
     my $delta = $self->delta;
     if (defined($delta) && !$script_mode) {
@@ -278,7 +277,7 @@ sub _null_safe_value {
     my $value = shift;
     if (defined($value)) {
         if (JSON::is_bool($value)) {
-            return "$value";
+            return $value ? "true" : "false";
         } elsif (ref($value) && $self->string) {
             # We can deal with complex values withing string comparison
             if (ref($value) eq "ARRAY") {
