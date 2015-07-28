@@ -27,12 +27,12 @@ my $value = $resp->{value};
 #print Dumper($resp);
 is(scalar(keys(%$value)),2,"2 Return values");
 ok($value->{LongSeconds} == 60*60*24*2,"LongSeconds");
-ok($value->{State} eq "true","State");
+ok($value->{State},"State");
 $jmx->execute("jolokia.it:type=attribute","reset");
 
 my $value = $jmx->get_attribute("jolokia.it:type=attribute",["LongSeconds","State"]);
 ok($value->{LongSeconds} == 60*60*24*2,"LongSeconds");
-ok($value->{State} eq "true","State");
+ok($value->{State},"State");
 $jmx->execute("jolokia.it:type=attribute","reset");
 
 # Fetch a pattern with a single attribute
@@ -50,7 +50,7 @@ is($value->{"jolokia.it:type=attribute"}->{Bytes},3670016,"Bytes with pattern");
 # Fetch a pattern with multiple attributes
 my $value = $jmx->get_attribute("jolokia.it:*",["LongSeconds","State"]);
 ok($value->{"jolokia.it:type=attribute"}->{LongSeconds} == 60*60*24*2,"LongSeconds");
-ok($value->{"jolokia.it:type=attribute"}->{State} eq "true","State");
+ok($value->{"jolokia.it:type=attribute"}->{State},"State");
 $jmx->execute("jolokia.it:type=attribute","reset");
 
 my $value = $jmx->get_attribute("jolokia.it:type=attribute","ObjectName");
