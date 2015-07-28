@@ -119,7 +119,8 @@ Options:
    --target <jmx-url>      JSR-160 JMX Service URL to be used as the target server
    --target-user <user>    Credential for the target server if --target is given
    --target-password <pwd> 
-   --config                Path to an optional configuration file (default: ~/.j4p)
+   --config <cfg>          Path to an optional configuration file (default: ~/.j4p). Can be a directory
+                           in which case <dir>/jmx4perl.cfg is used.
    --history               Print out the history of return values (if switched on and present)
    --legacy-escape         Used for contacting pre 1.0 Jolokia agent for MBeans containing 
                            slashes in their name.

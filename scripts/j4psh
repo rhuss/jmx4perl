@@ -35,7 +35,8 @@ use Config::General;
                               booleans : Pair of strings separated by slash to use for printing 
                                          boolean values (Default: [true]/[false])
                               indent   : Space indent when printing complex data structures 
-   --config <cfg-file>     Path to an optional configuration file (default: ~/.j4p)
+   --config <cfg>          Path to an optional configuration file (default: ~/.j4p). Can be a directory
+                           in which case <dir>/jmx4perl.cfg is used.
    --color [yes|no]        Color option (default: yes)
 
 An optional argument can be used to directly connect to an agent URL or
