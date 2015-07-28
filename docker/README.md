@@ -1,9 +1,9 @@
 ## Jmx4Perl Tools 1.12
 
-This Docker image is intended to provided an easy access to the [Jmx4Perl](http://www.jmx4perl.org) Tools, i.e.
+This Docker image is intended to provided an easy access to the [Jmx4Perl](http://www.jmx4perl.org) tools, i.e.
 
-* [**jmx4perl**](http://search.cpan.org/~roland/jmx4perl/scripts/jmx4perl) is a command line tool for one-shot querying a Jolokia agent. It is perfectly suited for usage in shell scripts.
-* [**j4psh**](http://search.cpan.org/~roland/jmx4perl/scripts/j4psh) is a readline based, JMX shell with coloring and command line completion. You navigate the JMX namespace like a directory with `cd` and `ls`, read JMX attributes with `cat` and execute operations with `exec`. 
+* [**jmx4perl**](http://search.cpan.org/~roland/jmx4perl/scripts/jmx4perl) is a command line tool for one-shot querying a Jolokia agent. It is perfectly suited for shell scripts.
+* [**j4psh**](http://search.cpan.org/~roland/jmx4perl/scripts/j4psh) is a readline based, JMX shell with coloring and command line completion. You can navigate the JMX namespace like directories with `cd` and `ls`, read JMX attributes with `cat` and execute operations with `exec`. 
 * [**jolokia**](http://search.cpan.org/~roland/jmx4perl/scripts/jolokia) is an agent management tool which helps you in downloading Jolokia agents of various types (war, jvm, osgi, mule) and versions. It also knows how to repackage agents e.g. for enabling security with the war agent by inplace modification of the web.xml descriptor. 
 * [**check_jmx4perl**](http://search.cpan.org/~roland/jmx4perl/scripts/check_jmx4perl) is a full featured Nagios plugin.
 
