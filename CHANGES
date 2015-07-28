@@ -1,4 +1,10 @@
-1.11 ()
+1.12 (2015-07-28)
+  - Configuration can be also a directory in wich case <dir>/jmx4perl.cfg is tried
+    (e.g. ~/.j4p/jmx4perl.cfg)
+  - Added Docker build
+  - Fix boolean values to be strings "true"/"false" when deserialized. 
+
+1.11 (2014-11-22)
 
   - When within a MultiCheck a single check causes an exception, the
     other checks are now still present in the output of check_jmx4perl
