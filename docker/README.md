@@ -20,8 +20,7 @@ docker run --rm -it jolokia/jmx4perl \
 docker run --rm -it -v `pwd`:/jolokia jolokia/jmx4perl \
        jolokia
 
-# Start an interactive JMX shell
-# server "tomcat" is defined in ~/.j4p/jmx4perl.config
+# Start a JMX shell. "tomcat" is defined in ~/.j4p/jmx4perl.config
 docker run --rm -it -v ~/.j4p:/root/.j4p jolokia/jmx4perl \
        j4psh tomcat
 ```
@@ -33,10 +32,10 @@ In these examples we mounted some volumes:
 
 To simplify the usage, the following aliases are recommended:
 
-````
+```shell
 alias jmx4perl="docker run --rm -it -v ~/.j4p:/root/.j4p jolokia/jmx4perl jmx4perl"
 
 alias jolokia="docker run --rm -it -v `pwd`:/jolokia jolokia/jmx4perl jolokia"
 
 alias j4psh="docker run --rm -it -v ~/.j4p:/root/.j4p jolokia/jmx4perl j4psh"
-````
+```
