@@ -21,7 +21,7 @@ L<cacti_jmx4perl>
 sub create_nagios_plugin {
     my $self = shift;
 
-    my $np = Nagios::Plugin->
+    my $np = Monitoring::Plugin->
       new(
           usage => 
           "Usage: %s -u <agent-url> [-m <mbean>] [-a <attribute>]\n" . 

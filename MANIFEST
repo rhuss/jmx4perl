@@ -10,6 +10,7 @@ config/tomcat.cfg
 config/weblogic.cfg
 config/glassfish.cfg
 config/metrics.cfg
+config/wildfly.cfg
 config/websphere.cfg
 config/websphere/appstate.cfg
 config/websphere/http.cfg
@@ -152,3 +153,5 @@ t/j4p_test.cfg
 t/lib/It.pm
 t/lib/ProductTest/Test1Handler.pm
 t/lib/ProductTest/Test2Handler.pm
+docker/Dockerfile
+docker/README.md

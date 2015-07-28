@@ -3,14 +3,14 @@
 
 use FindBin qw ($Bin);
 
-use Nagios::Plugin::Functions;
+use Monitoring::Plugin::Functions;
 use JMX::Jmx4Perl::Nagios::CheckJmx4Perl;
 
 # Hack for avoiding a label in front of "OK" or "CRITICAL", in order to conform
 # to the usual Nagios conventions and to avoid redundancy in the UI display.
 BEGIN {
     no warnings 'redefine';
-    *Nagios::Plugin::Functions::get_shortname = sub {
+    *Monitoring::Plugin::Functions::get_shortname = sub {
         return undef;
     };
 }

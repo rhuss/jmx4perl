@@ -1,6 +1,6 @@
 package JMX::Jmx4Perl::Nagios::MessageHandler;
 
-use Nagios::Plugin::Functions qw(:codes %ERRORS %STATUS_TEXT);
+use Monitoring::Plugin::Functions qw(:codes %ERRORS %STATUS_TEXT);
 use strict;
 
 =head1 NAME

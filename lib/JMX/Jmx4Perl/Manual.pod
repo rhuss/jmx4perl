@@ -347,7 +347,7 @@ so that the oldest value gets removed from the list in case of an overflow.
 A full functional Nagios plugin called C<check_jmx4perl> is provided in the
 scripts directory. It can be used to monitor any JMX Mbean's attribute with a
 numeric value. Thresholds for warning and critical values can be provided in
-the formats as defined by L<Nagios::Plugin>. You can use autodetection and
+the formats as defined by L<Monitoring::Plugin>. You can use autodetection and
 aliasing here as well. C<check_jmx4perl> can use relative critical and warning
 thresholds which refer to some base value taken from another MBean's
 attribute. An incremental mode can be used to measure the growth rate of

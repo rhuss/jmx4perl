@@ -3,6 +3,7 @@
     (e.g. ~/.j4p/jmx4perl.cfg)
   - Added Docker build
   - Fix boolean values to be strings "true"/"false" when deserialized. 
+  - Changed from "Nagios::Plugin" to "Monitoring::Plugin"
 
 1.11 (2014-11-22)
 

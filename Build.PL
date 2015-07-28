@@ -78,7 +78,7 @@ chomp $msg;
 my $answer = y_n($msg,"y");
 if ($answer) {
     add_reqs(
-              "Nagios::Plugin" => "0.27", # req
+              "Monitoring::Plugin" => "0.37", # req
               "Text::ParseWords" => 0,    # req
               "Time::HiRes" => 0,         # req
               "Config::General" => "2.34",# req
@@ -102,7 +102,7 @@ chomp $msg;
 $answer = y_n($msg,"y");
 if ($answer) {
     add_reqs(
-              "Nagios::Plugin" => "0.27", # req
+              "Monitoring::Plugin" => "0.37", # req
               "Text::ParseWords" => 0,    # req
               "Config::General" => "2.34",# req
               "Pod::Usage" => 0,          # opt

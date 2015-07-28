@@ -8,15 +8,15 @@ use vars qw(@ARGS);
 use Test::More;
 use Data::Dumper;
 
-eval { require Nagios::Plugin };
+eval { require Monitoring::Plugin };
 if ($@) {
-    plan skip_all => 'Nagios::Plugin not installed';
+    plan skip_all => 'Monitoring::Plugin not installed';
 }
 else {
     plan tests => 29;
 }
 
-Nagios::Plugin->import();
+Monitoring::Plugin->import();
 
 eval { require JMX::Jmx4Perl::Nagios::SingleCheck };
 ok(!$@,"JMX::Jmx4Perl::Nagios::SingleCheck loads properly");
@@ -67,6 +67,6 @@ is($unit,"ns");
 is($value,1.01);
 is($unit,"us");
 
-my $label = $scheck->_exit_message(code => &Nagios::Plugin::OK,mode => "numeric",value => "2.1", unit => "MB");
+my $label = $scheck->_exit_message(code => &Monitoring::Plugin::OK,mode => "numeric",value => "2.1", unit => "MB");
 is($label,"Memory : Value 2.10 MB in range");
 

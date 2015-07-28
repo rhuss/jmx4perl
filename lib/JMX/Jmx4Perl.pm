@@ -102,7 +102,7 @@ use Data::Dumper;
 use Module::Find;
 use JSON;
 
-$VERSION = "1.11";
+$VERSION = "1.12";
 
 my $REGISTRY = {
                 # Agent based

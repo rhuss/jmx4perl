@@ -4,6 +4,8 @@
 
 FROM alpine:3.2
 
+ENV JMX4PERL_VERSION 1.11
+
 RUN apk add --update \
     build-base \
     wget \
@@ -15,25 +17,28 @@ RUN apk add --update \
     ncurses-dev \
     libxml2-dev \
     expat-dev \
-    gnupg1
-
-RUN cpan App::cpanminus < /dev/null
-
-RUN cpanm install -n Term::ReadKey
-
-RUN cpanm install \
+    gnupg1 \
+ && cpan App::cpanminus < /dev/null \
+ && cpanm install -n Term::ReadKey \
+ && cpanm install \
     JSON::XS \
-    Term::ReadLine::Gnu
-
-RUN cpanm install JMX::Jmx4Perl
-
-RUN rm -rf /var/cache/apk/*
-
-RUN apk del \
+    Term::ReadLine::Gnu \
+ && cpanm install ROLAND/jmx4perl-${JMX4PERL_VERSION}.tar.gz \
+ && rm -rf /var/cache/apk/* \
+ && apk del \
     build-base \
     perl-dev \
     readline-dev \
     ncurses-dev \
     libxml2-dev \
     expat-dev
+
+RUN mkdir /jolokia
+
+WORKDIR /jolokia
+VOLUME /jolokia
+
+CMD [ "jmx4perl", "--version" ]
+
+
 

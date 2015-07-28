@@ -7,8 +7,8 @@ use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Response;
 use JMX::Jmx4Perl::Alias;
 use Data::Dumper;
-use Nagios::Plugin;
-use Nagios::Plugin::Functions qw(:codes %STATUS_TEXT);
+use Monitoring::Plugin;
+use Monitoring::Plugin::Functions qw(:codes %STATUS_TEXT);
 use Carp;
 use Scalar::Util qw(looks_like_number);
 use URI::Escape;
@@ -32,7 +32,7 @@ server turnaround is used to obtain multiple checks results at once.
 
 =item $single_check = new $JMX::Jmx4Perl::Nagios::SingleCheck($nagios_plugin,$check_config)
 
-Construct a new single check from a given L<Nagios::Plugin> object
+Construct a new single check from a given L<Monitoring::Plugin> object
 C<$nagios_plugin> and a parsed check configuration $check_config, which is a
 hash. 
 
@@ -483,7 +483,7 @@ sub _get_name {
         # Enable this when '=' gets forbidden
         $name =~ s/=/#/g;
     }
-    # Prepare label for usage with Nagios::Plugin, which will blindly 
+    # Prepare label for usage with Monitoring::Plugin, which will blindly 
     # add quotes if a space is contained in the label.
     # We are doing the escape of quotes ourself here
     $name =~ s/'/''/g;

@@ -8,8 +8,8 @@ use JMX::Jmx4Perl;
 use JMX::Jmx4Perl::Request;
 use JMX::Jmx4Perl::Response;
 use Data::Dumper;
-use Nagios::Plugin;
-use Nagios::Plugin::Functions qw(:codes %ERRORS %STATUS_TEXT);
+use Monitoring::Plugin;
+use Monitoring::Plugin::Functions qw(:codes %ERRORS %STATUS_TEXT);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Carp;
 use Text::ParseWords;
@@ -681,7 +681,7 @@ sub _server_config {
 # Create the nagios plugin used for preparing the nagios output
 sub create_nagios_plugin {
     my $self = shift;
-    my $np = Nagios::Plugin->
+    my $np = Monitoring::Plugin->
       new(
           usage => 
           "Usage: %s -u <agent-url> -m <mbean> -a <attribute> -c <threshold critical> -w <threshold warning>\n" . 
