@@ -1,10 +1,9 @@
 # ==================================================
 # Dockerfile for jmx4perl Tools
 # ==================================================
-
 FROM alpine:3.2
 
-ENV JMX4PERL_VERSION 1.11
+ENV JMX4PERL_VERSION 1.12
 
 RUN apk add --update \
     build-base \
@@ -31,9 +30,8 @@ RUN apk add --update \
     readline-dev \
     ncurses-dev \
     libxml2-dev \
-    expat-dev
-
-RUN mkdir /jolokia
+    expat-dev \
+ && mkdir /jolokia
 
 WORKDIR /jolokia
 VOLUME /jolokia
