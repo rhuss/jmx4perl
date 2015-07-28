@@ -35,10 +35,10 @@ my $config_file = $FindBin::Bin . "/../check_jmx4perl/checks.cfg";
 ok($content =~ /value (\d+)/ && $1 eq "3","Fourth operation return 3");
 is($ret,1,"Fourth operation");
 
-#print Dumper($ret,$content);
 
 ($ret,$content) = exec_check_perl4jmx("--mbean jolokia.it:type=operation --operation emptyStringArgumentCheck",
                                        "-c 1 /");
+#print Dumper($ret,$content);
 is($ret,0,"Single slash argument (return code)");
 ok($content =~ /false/,"Single slash argument (return message)");
 $jmx->execute("jolokia.it:type=operation","reset");

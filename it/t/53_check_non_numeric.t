@@ -16,6 +16,7 @@ my ($ret,$content);
 $jmx->execute("jolokia.it:type=attribute","reset");
 
 ($ret,$content) = exec_check_perl4jmx("--mbean jolokia.it:type=attribute --attribute State --critical false");
+#print ($ret,$content);
 is($ret,0,"Boolean: OK");
 ($ret,$content) = exec_check_perl4jmx("--mbean jolokia.it:type=attribute --attribute State --critical false");
 is($ret,2,"Boolean: CRITICAL");
