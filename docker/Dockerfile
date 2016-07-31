@@ -30,7 +30,6 @@ RUN apk add --update \
     perl-dev \
     readline-dev \
     ncurses-dev \
-    libxml2-dev \
     expat-dev \
  && mkdir /jolokia
 

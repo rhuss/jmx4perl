@@ -5,12 +5,16 @@ use It;
 use Test::More (tests => 14);
 use LWP::UserAgent;
 use Data::Dumper;
+use IO::Socket::SSL;
 use strict;
 
 my $url = $ENV{JMX4PERL_GATEWAY} || $ARGV[0];
 $url .= "/" unless $url =~ /\/$/;
 my $origin = "http://localhost:8080";
-my $ua = new LWP::UserAgent();
+my $ua = new LWP::UserAgent(ssl_opts => { 
+        verify_hostname => 0, 
+        SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE 
+    });
 
 if ($ENV{JMX4PERL_USER}) {
     my $netloc = $url;

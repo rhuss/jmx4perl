@@ -1,3 +1,26 @@
+Jolokia 1.3.3
+   JEE-Server
+      Tomcat 8.0.21
+      JBoss 7.1.1
+      
+   OSGi
+      Felix 4.2.1 (pute & bundle)
+      
+   JVM
+      Tomcat 8.0.21 (with SSL)
+Jolokia 1.3.2
+   JEE-Server
+      Tomcat 8.0.21, 5.5.35
+      JBoss 8.0.0
+      Glassfish 3.1.2.2
+   OSGi-Container
+      Felix 4.2.1 (pure & bundle)
+      Equinox 3.7.1
+   JVM
+      Active MQ 5.8.0
+   Mule-Agent:
+      Mule 3.6.1
+
 Jolokia 1.2.4
    JEE-Server
      Tomcat 8.0.3 & 7.0.52 & 6.0.37 & 5.5.35
