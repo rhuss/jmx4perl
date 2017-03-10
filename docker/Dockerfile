@@ -19,6 +19,9 @@ RUN apk add --update \
     gnupg1 \
  && cpan App::cpanminus < /dev/null \
  && cpanm install -n Term::ReadKey \
+    # pin Term-Clui version, the 1.71 has a broken META.yml
+    # cf. https://rt.cpan.org/Public/Bug/Display.html?id=120160
+ && cpanm PJB/Term-Clui-1.70.tar.gz \
  && cpanm install \
     JSON::XS \
     Term::ReadLine::Gnu \
