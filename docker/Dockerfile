@@ -17,6 +17,7 @@ RUN apk add --update \
     libxml2-dev \
     expat-dev \
     gnupg1 \
+    openssl-dev \
  && cpan App::cpanminus < /dev/null \
  && cpanm install -n Term::ReadKey \
     # pin Term-Clui version, the 1.71 has a broken META.yml
@@ -25,6 +26,7 @@ RUN apk add --update \
  && cpanm install \
     JSON::XS \
     Term::ReadLine::Gnu \
+    LWP::Protocol::https \
     XML::LibXML \
  && cpanm install ROLAND/jmx4perl-${JMX4PERL_VERSION}.tar.gz \
  && rm -rf /var/cache/apk/* \
