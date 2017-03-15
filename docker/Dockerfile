@@ -3,7 +3,8 @@
 # ==================================================
 FROM alpine:3.2
 
-ENV JMX4PERL_VERSION 1.12
+# The less command from alpine does not interpret color escapes (no -R switch)
+ENV JMX4PERL_VERSION=1.12 PAGER=cat
 
 RUN apk add --update \
     build-base \
