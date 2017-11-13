@@ -33,7 +33,7 @@ sub create_nagios_plugin {
           "                  [--config <config-file>] [--check <check-name>] [--server <server-alias>] [-v] [--help]\n" .
           "                  arg1 arg2 ....",
           version => $JMX::Jmx4Perl::VERSION,
-          url => "http://www.jmx4perl.org",
+          url => "http://www.jolokia.org",
           plugin => "cacti_jmx4perl",
           license => undef,
           blurb => "This script can be used as an script for a Cacti Data Input Method",

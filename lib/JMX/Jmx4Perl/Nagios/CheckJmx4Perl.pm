@@ -693,7 +693,7 @@ sub create_nagios_plugin {
           "                      [--config <config-file>] [--check <check-name>] [--server <server-alias>] [-v] [--help]\n" .
           "                      arg1 arg2 ....",
           version => $JMX::Jmx4Perl::VERSION,
-          url => "http://www.jmx4perl.org",
+          url => "http://www.jolokia.org",
           plugin => "check_jmx4perl",
           blurb => "This plugin checks for JMX attribute values on a remote Java application server",
           extra => "\n\nYou need to deploy jolokia.war on the target application server or an intermediate proxy.\n" .
