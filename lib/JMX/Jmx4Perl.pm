@@ -1086,21 +1086,23 @@ sub _format_map {
         }
         $ret = &_format_map($ret,$map,$path,$level);
     } else {
-        for my $d (keys %$map) {
+        for my $d (sort(keys(%$map))) {
             my $prefix = "";
             if ($level == 0) {
                 $CURRENT_DOMAIN = $d;
             } elsif ($level == 1) {
                 $prefix = $CURRENT_DOMAIN . ":";
             } 
-            $ret .= &_get_space($level).$prefix.$d.$sep."\n" unless ($d eq "attr" || $d eq "op" || $d eq "error" || $d eq "desc");
+            $ret .= &_get_space($level).$prefix.$d.$sep."\n" unless ($d =~ /^(attr|op|class|desc|error)$/);
             my @args = ($ret,$map->{$d},$path);
             if ($d eq "attr") {
                 $ret = &_format_attr_or_op(@args,$level,"attr","Attributes",\&_format_attribute);
             } elsif ($d eq "op") {
                 $ret = &_format_attr_or_op(@args,$level,"op","Operations",\&_format_operation);
+            } elsif ($d eq "class") {
+                $ret .= &_get_space($level).$prefix."Class: ".$map->{$d}."\n";
             } elsif ($d eq "desc") {
-                # TODO: Print out description of an MBean
+                $ret .= &_get_space($level).$prefix."Description: ".$map->{$d}."\n";
             } elsif ($d eq "error") {
                 $ret = $ret . "\nError: ".$map->{error}->{message}."\n";
             } else {
@@ -1131,7 +1133,7 @@ sub _format_attr_or_op {
     } else {
         $ret .= &_get_space($level)."$label:\n";
     }
-    for my $key (keys %$map) {
+    for my $key (sort(keys(%$map))) {
         $ret = $format_sub->($ret,$key,$map->{$key},$level+1);
     }
     return $ret;
