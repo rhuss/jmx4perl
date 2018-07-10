@@ -5,9 +5,12 @@ use warnings;
 use FindBin qw($Bin);
 use lib qq($Bin/lib);
 
-use Test::More tests => 30;
+use Test::More tests => 35;
 
-BEGIN { use_ok("JMX::Jmx4Perl::Request"); }
+BEGIN {
+    use_ok("JMX::Jmx4Perl::Request");
+    use_ok("JMX::Jmx4Perl::Agent");
+}
 
 ok(READ eq "read","Import of constants");
 
@@ -71,5 +74,16 @@ for my $d (keys %$data) {
     }
 }
 
-
-
+# Check slash escaping in LIST requests (issue#64)
+my @list = (
+    [['domain:name=value'],        'dummy/list/domain/name%3Dvalue'],
+    [['domain:name=a/b/c'],        'dummy/list/domain/name%3Da!/b!/c'],
+    [['domain:name=value', 'x/y'], 'dummy/list/domain/name%3Dvalue/x/y'],
+    [['domain:name=a/b/c', 'x/y'], 'dummy/list/domain/name%3Da!/b!/c/x/y'],
+);
+my $agent = JMX::Jmx4Perl::Agent->new(url => 'dummy');
+for my $test (@list) {
+    my $req = JMX::Jmx4Perl::Request->new(LIST,@{$test->[0]});
+    my $url = $agent->request_url($req);
+    is($url,$test->[1],"request_url(@{$test->[0]})");
+}

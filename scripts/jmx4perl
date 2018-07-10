@@ -96,7 +96,7 @@ my $jmx4perl = new JMX::Jmx4Perl($jmx_args);
 
   jmx4perl .... <agent-url> search <mbean pattern>
 
-  jmx4perl .... <agent-url> list [<domain-name>[:<mbean name>]]
+  jmx4perl .... <agent-url> list [<domain-name>[:<mbean name>]] [path]
 
   jmx4perl .... <agent-url> attributes [max-depth max-list-size max-objects] 
 
@@ -223,12 +223,11 @@ sub command_info {
 
 =head2 list
 
-
-List meta data of all registered mbeans on the target application server. This
+List meta data of all registered MBeans on the target application server. This
 includes attributes and operations along whith their descriptions and
 parameters (as far as they are provided by mbean's info).
 
-You can provide an inner path as an additional argument as well. See
+You can provide an MBean as well as an inner path as additional arguments. See
 L<JMX::Jmx4Perl::Request> for an explanation about inner paths (in short, it's
 some sort of XPath expression which selects only a subset of all MBeans and
 their values). See L<JMX::Jmx4Perl>, method "list()" for a more rigorous
@@ -237,9 +236,8 @@ documentation abouting listing of MBeans.
 =cut
 
 sub command_list {
-    my ($jmx,$path) = @_;
-    $path =~ s|:|/|;
-    my $req = JMX::Jmx4Perl::Request->new(LIST,$path);
+    my ($jmx,$mbean,$path) = @_;
+    my $req = JMX::Jmx4Perl::Request->new(LIST,$mbean,$path);
     my $resp = $jmx->request($req);
     &_check_for_error($resp);
 
