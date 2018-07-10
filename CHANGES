@@ -1,3 +1,8 @@
+  - Changed CLI interface of 'jmx4perl list' and the possible arguments for LIST request. Note, that 
+    this change is not backwards compatible. However the fix is trivial: Instead of providing
+    a full path into the LIST response as single argument (e.g. 'java.lang/type=Memory/HeapMemoryUsage') you have to 
+    provide two arguments for the MBean and the path into MBean's meta data (e.g. 'java.lang:type=Memory' and'HeapMemoryUsage')
+  
 1.12 (2015-07-28)
 
   - Configuration can be also a directory in wich case <dir>/jmx4perl.cfg is tried
