@@ -345,7 +345,7 @@ sub request_url {
         $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq LIST) {
         # The (URI escaped) colon after the <domain> must be transformed into a slash
-        $req =~ s|%3A|/|;
+        $req =~ s|%3A|/|i;
         $req .= $self->_extract_path($request->get("path"));
     } elsif ($type eq EXEC) {
         $req .= "/" . $self->_escape($request->get("operation"));
