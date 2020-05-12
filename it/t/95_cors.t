@@ -31,9 +31,9 @@ $ua->default_headers()->header("Origin" => $origin);
 my $req = new HTTP::Request("OPTIONS",$url);
 
 my $resp = $ua->request($req);
-#print Dumper($resp);
+print Dumper($resp);
 is($resp->header('Access-Control-Allow-Origin'),$origin,"Access-Control-Allow Origin properly set");
-ok($resp->header('Access-Control-Allow-Max-Age') > 0,"Max Age set");
+ok($resp->header('Access-Control-Max-Age') > 0,"Max Age set");
 ok(!$resp->header('Access-Control-Allow-Request-Header'),"No Request headers set");
 $req->header("Access-Control-Request-Headers","X-Extra, X-Extra2");
 $req->header('X-Extra',"bla");

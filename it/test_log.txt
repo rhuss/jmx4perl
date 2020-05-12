@@ -1,3 +1,11 @@
+Jolokia 1.4.0
+   Java EE Server
+      Tomcat 7.0.52
+   JVM
+      Wildfly 10.1.0.Final
+   OSGi
+      Felix 4.2.1 (pure & bundle)
+
 Jolokia 1.3.6
    Java EE Server
       Tomcat 7.0.52
@@ -5,7 +13,7 @@ Jolokia 1.3.6
       Wildfly 10.1.0.Final
    OSGi
       Felix 4.2.1 (pure & bundle)
-      
+
 Jolokia 1.3.5
    Java EE Server
       Tomcat 7.0.52
