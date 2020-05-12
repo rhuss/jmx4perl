@@ -8,7 +8,7 @@ build_requires:
 configure_requires:
   Module::Build: '0.34'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4211, CPAN::Meta::Converter version 2.150001'
+generated_by: 'Module::Build version 0.4224, CPAN::Meta::Converter version 2.150010'
 license: gpl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -17,7 +17,7 @@ name: jmx4perl
 provides:
   JMX::Jmx4Perl:
     file: lib/JMX/Jmx4Perl.pm
-    version: '1.12'
+    version: '1.13'
   JMX::Jmx4Perl::Agent:
     file: lib/JMX/Jmx4Perl/Agent.pm
   JMX::Jmx4Perl::Agent::Jolokia::ArtifactHandler:
@@ -147,4 +147,5 @@ requires:
   base: '0'
 resources:
   license: http://opensource.org/licenses/gpl-license.php
-version: '1.12'
+version: '1.13'
+x_serialization_backend: 'CPAN::Meta::YAML version 0.018'

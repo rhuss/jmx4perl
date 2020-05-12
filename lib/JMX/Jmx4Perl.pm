@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-=head1 NAME 
+=head1 NAME
 
 JMX::Jmx4Perl - JMX access for Perl
 
@@ -10,7 +10,7 @@ Simple:
 
    use strict;
    use JMX::Jmx4Perl;
-   use JMX::Jmx4Perl::Alias;   # Import MBean aliases 
+   use JMX::Jmx4Perl::Alias;   # Import MBean aliases
 
    print "Memory Used: ",
           JMX::Jmx4Perl
@@ -22,7 +22,7 @@ Advanced:
    use strict;
    use JMX::Jmx4Perl;
    use JMX::Jmx4Perl::Request;   # Type constants are exported here
-   
+
    my $jmx = new JMX::Jmx4Perl(url => "http://localhost:8080/j4p",
                                product => "jboss");
    my $request = new JMX::Jmx4Perl::Request({type => READ,
@@ -38,10 +38,10 @@ Advanced:
 =head1 DESCRIPTION
 
 Jmx4Perl is here to connect the Java and Perl Enterprise world by providing
-transparent access to the Java Management Extensions (JMX) from the perl side. 
+transparent access to the Java Management Extensions (JMX) from the perl side.
 
 It uses a traditional request-response paradigma for performing JMX operations
-on a remote Java Virtual machine. 
+on a remote Java Virtual machine.
 
 There a various ways how JMX information can be transfered. Jmx4Perl is based
 on a Jolokia I<agent> (www.jolokia.org), which needs to deployed on the target
@@ -61,7 +61,7 @@ not be deployed on the target for some reason), you can still use Jmx4Perl
 operating with the so called I<proxy mode>.
 
 For further discussion comparing both approaches, please refer to
-L<JMX::Jmx4Perl::Manual> 
+L<JMX::Jmx4Perl::Manual>
 
 JMX itself knows about the following operations on so called I<MBeans>, which
 are specific "managed beans" designed for JMX and providing access to
@@ -69,16 +69,16 @@ management functions:
 
 =over
 
-=item * 
+=item *
 
 Reading and writing of attributes of an MBean (like memory usage or connected
-users) 
+users)
 
 =item *
 
 Executing of exposed operations (like triggering a garbage collection)
 
-=item * 
+=item *
 
 Registering of notifications which are send from the application server to a
 listener when a certain event happens.
@@ -102,7 +102,7 @@ use Data::Dumper;
 use Module::Find;
 use JSON;
 
-$VERSION = "1.12";
+$VERSION = "1.13";
 
 my $REGISTRY = {
                 # Agent based
@@ -113,10 +113,10 @@ my $REGISTRY = {
 
 my %PRODUCT_HANDLER;
 
-sub _register_handlers { 
+sub _register_handlers {
     my $handler_package = shift;
     %PRODUCT_HANDLER = ();
-    
+
     my @id2order = ();
     for my $handler (findsubmod $handler_package) {
         next unless $handler;
@@ -166,9 +166,9 @@ Path to a configuration file to use
 
 =item config
 
-A L<JMX::Jmx4Perl::Config> object which is used for 
-configuraton. Use this is you already read in the 
-configuration on your own. 
+A L<JMX::Jmx4Perl::Config> object which is used for
+configuraton. Use this is you already read in the
+configuration on your own.
 
 =item product
 
@@ -207,7 +207,7 @@ sub new {
             $cfg = { %$server_cfg, %$cfg };
         }
     }
-    
+
     my $mode = delete $cfg->{mode} || autodiscover_mode();
     my $product = $cfg->{product} ? lc delete $cfg->{product} : undef;
 
@@ -219,7 +219,7 @@ sub new {
     eval "require $class";
     croak "Cannot load $class: $@" if $@;
 
-    my $self = { 
+    my $self = {
                 cfg => $cfg,
                 product => $product
                };
@@ -232,20 +232,20 @@ sub new {
 
 =item $value => $jmx->get_attribute(...)
 
-  $value = $jmx->get_attribute($mbean,$attribute,$path) 
+  $value = $jmx->get_attribute($mbean,$attribute,$path)
   $value = $jmx->get_attribute($alias)
   $value = $jmx->get_attribute(ALIAS)       # Literal alias as defined in
                                             # JMX::Jmx4Perl::Alias
-  $value = $jmx->get_attribute({ domain => <domain>, 
-                                 properties => { <key> => value }, 
-                                 attribute => <attribute>, 
+  $value = $jmx->get_attribute({ domain => <domain>,
+                                 properties => { <key> => value },
+                                 attribute => <attribute>,
                                  path => <path> })
-  $value = $jmx->get_attribute({ alias => <alias>, 
+  $value = $jmx->get_attribute({ alias => <alias>,
                                  path => <path })
 
 Read a JMX attribute. In the first form, you provide the MBean name, the
 attribute name and an optional path as positional arguments. The second
-variant uses named parameters from a hashref. 
+variant uses named parameters from a hashref.
 
 The Mbean name can be specified with the canonical name (key C<mbean>), or with
 a domain name (key C<domain>) and one or more properties (key C<properties> or
@@ -262,7 +262,7 @@ guess the product. Note, that autodetection is potentially slow since it
 involves several JMX calls to the server. If you call with a single, scalar
 value, this argument is taken as alias (without any path). If you want to use
 aliases together with a path, you need to use the second form with a hash ref
-for providing the (named) arguments. 
+for providing the (named) arguments.
 
 Additionally you can use a pattern and/or an array ref for attributes to
 combine multiple reads into a single request. With an array ref as attribute
@@ -355,22 +355,22 @@ The return value is a map with the matching MBean names as keys and as value
 another map, with attribute names keys and attribute value values. If not a
 singel MBean matches or not a single attribute can be found on the matching
 MBeans this method dies. This format is the same whether you are using a single
-attribute or an array ref of attribute names. 
+attribute or an array ref of attribute names.
 
 =back
 
 Please don't overuse pattern matching (i.e. don't use patterns like "*:*"
 except you really want to) since this could easily blow up your Java
 application. The return value is generated completely in memory. E.g if you
-want to retrieve all attributes for Weblogic with 
+want to retrieve all attributes for Weblogic with
 
   $jmx->get_attribute("*:*",undef);
 
 you will load more than 200 MB in to the Heap. Probably not something you
 want to do. So please be nice to your appserver and use a more restrictive
-pattern. 
+pattern.
 
-=cut 
+=cut
 
 sub get_attribute {
     my $self = shift;
@@ -378,11 +378,11 @@ sub get_attribute {
     croak "No object name provided" unless $object;
 
     my $response;
-    if (ref($object) eq "CODE") {       
-        $response = $self->delegate_to_handler($object);                
+    if (ref($object) eq "CODE") {
+        $response = $self->delegate_to_handler($object);
     } else {
-        #croak "No attribute provided for object $object" unless $attribute;        
-        my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);        
+        #croak "No attribute provided for object $object" unless $attribute;
+        my $request = JMX::Jmx4Perl::Request->new(READ,$object,$attribute,$path);
         $response = $self->request($request);
 #        print Dumper($response);
     }
@@ -402,23 +402,23 @@ sub get_attribute {
   $new_value = $jmx->set_attribute($alias,$value)
   $new_value = $jmx->set_attribute(ALIAS,$value)  # Literal alias as defined in
                                                   # JMX::Jmx4Perl::Alias
-  $new_value = $jmx->set_attribute({ domain => <domain>, 
-                                     properties => { <key> => value }, 
-                                     attribute => <attribute>, 
+  $new_value = $jmx->set_attribute({ domain => <domain>,
+                                     properties => { <key> => value },
+                                     attribute => <attribute>,
                                      value => <value>,
                                      path => <path> })
-  $new_value = $jmx->set_attribute({ alias => <alias>, 
+  $new_value = $jmx->set_attribute({ alias => <alias>,
                                      value => <value>,
                                      path => <path })
 
 Method for writing an attribute. It has the same signature as L</get_attribute>
 except that it takes an additional parameter C<value> for setting the value. It
 returns the old value of the attribute (or the object pointed to by an inner
-path). 
+path).
 
 As for C<get_attribute> you can use a path to specify an inner part of a more
 complex data structure. The value is tried to set on the inner object which is
-pointed to by the given path. 
+pointed to by the given path.
 
 Please note that only basic data types can be set this way. I.e you can set
 only values of the following types
@@ -435,15 +435,15 @@ only values of the following types
 
 =cut
 
-sub set_attribute { 
+sub set_attribute {
     my $self = shift;
 
-    my ($object,$attribute,$path,$value) = 
+    my ($object,$attribute,$path,$value) =
       $self->_extract_get_set_parameters(with_value => 1,params => [@_]);
     croak "No object name provided" unless $object;
     my $response;
     if (ref($object) eq "CODE") {
-        $response =  $self->delegate_to_handler($object,$value);        
+        $response =  $self->delegate_to_handler($object,$value);
     } else {
         croak "No attribute provided for object $object" unless $attribute;
         croak "No value to set provided for object $object and attribute $attribute" unless defined($value);
@@ -460,7 +460,7 @@ sub set_attribute {
 
 Get a textual description of the server as returned by a product specific
 handler (see L<JMX::Jmx4Perl::Product::BaseHandler>). It uses the
-autodetection facility if no product is given explicitely during construction. 
+autodetection facility if no product is given explicitely during construction.
 
 If C<$verbose> is true, print even more information
 
@@ -478,19 +478,19 @@ sub info {
 
 Search for MBean based on a pattern and return a reference to the list of found
 MBeans names (as string). If no MBean can be found, C<undef> is returned. For
-example, 
+example,
 
  $jmx->search("*:j2eeType=J2EEServer,*")
 
 searches all MBeans whose name are matching this pattern, which are according
-to JSR77 all application servers in all available domains. 
+to JSR77 all application servers in all available domains.
 
-=cut 
+=cut
 
 sub search {
     my $self = shift;
     my $pattern = shift || croak "No pattern provided";
-    
+
     my $request = new JMX::Jmx4Perl::Request(SEARCH,$pattern);
     my $response = $self->request($request);
 
@@ -509,11 +509,11 @@ sub search {
   $ret = $jmx->execute($mbean,$operation,$arg1,$arg2,...)
   $ret = $jmx->execute(ALIAS,$arg1,$arg2,...)
 
-  $value = $jmx->execute({ domain => <domain>, 
-                           properties => { <key> => value }, 
-                           operation => <operation>, 
+  $value = $jmx->execute({ domain => <domain>,
+                           properties => { <key> => value },
+                           operation => <operation>,
                            arguments => [ <arg1>, <arg2>, ... ] })
-  $value = $jmx->execute({ alias => <alias>, 
+  $value = $jmx->execute({ alias => <alias>,
                            arguments => [ <arg1,<arg2>, .... ]})
 
 Execute a JMX operation with the given arguments. If used in the second form,
@@ -544,7 +544,7 @@ sub execute {
     my @args = @_;
     my ($mbean,$operation,$op_args) = $self->_extract_execute_parameters(@_);
     my $response;
-    if (ref($mbean) eq "CODE") {        
+    if (ref($mbean) eq "CODE") {
         $response = $self->delegate_to_handler($mbean,@{$op_args});
     } else {
         my $request = new JMX::Jmx4Perl::Request(EXEC,$mbean,$operation,@{$op_args});
@@ -563,7 +563,7 @@ sub execute {
 =item $resp = $jmx->version()
 
 This method return the version of the agent as well as the j4p protocol
-version. The agent's version is a regular program version and corresponds to 
+version. The agent's version is a regular program version and corresponds to
 jmx4perl's version from which the agent has been taken. The protocol version
 is an integer number which indicates the version of the protocol specification.
 
@@ -573,7 +573,7 @@ The return value is a hash with the keys C<agent> and C<protocol>
 
 sub version {
     my $self = shift;
-    
+
     my $request = new JMX::Jmx4Perl::Request(AGENT_VERSION);
     my $response = $self->request($request);
 
@@ -581,7 +581,7 @@ sub version {
         die "Error getting the agent's version: ",$response->error_text;
     }
 
-    return $response->value;    
+    return $response->value;
 }
 
 =item $resp = $jmx->request($request)
@@ -591,13 +591,13 @@ abstract method which needs to be overwritten by a subclass. The argument must
 be of type L<JMX::Jmx4Perl::Request> and it returns an object of type
 L<JMX::Jmx4Perl::Response>.
 
-=cut 
+=cut
 
 sub request {
-    croak "Internal: Must be overwritten by a subclass";    
+    croak "Internal: Must be overwritten by a subclass";
 }
 
-=item $agents = JMX::Jmx4Perl->discover_agents($timeout) 
+=item $agents = JMX::Jmx4Perl->discover_agents($timeout)
 
 Discover agents by sending a multicast request on which Jolokia agents are
 listening. The optional C<$timeout> can be used to tune how long to wait for
@@ -619,9 +619,9 @@ This methods returns an array ref, which looks like
      }
    ]
 
-Please refer to Jolokia's reference documentation for the meaning of the keys. 
-The most important part it C<url> which points to the agent's URL which can 
-be used to construct a new L<JMX::Jmx4Perl> object. 
+Please refer to Jolokia's reference documentation for the meaning of the keys.
+The most important part it C<url> which points to the agent's URL which can
+be used to construct a new L<JMX::Jmx4Perl> object.
 
 =cut
 
@@ -645,7 +645,7 @@ sub discover_agents {
     }
 
     $s->mcast_send('{"type" : "query"}',"239.192.48.84:24884");
-    
+
     my @result = ();
     my $data;
   LOOP:
@@ -662,7 +662,7 @@ sub discover_agents {
             # timed out
             last LOOP;
         }
-    }    
+    }
     return \@result;
 }
 
@@ -677,7 +677,7 @@ could be found but not such alias is known by C<jmx4perl>.
 
 If the C<product> was not set during construction, the first call to this
 method will try to autodetect the server. If it cannot determine the proper
-server it will throw an exception. 
+server it will throw an exception.
 
 For an attribute, this method returns the object, attribute, path triple which
 can be used for requesting the server or C<undef> if the handler can not
@@ -689,7 +689,7 @@ handle this alias.
 
 A handler can decide to handle the fetching of the alias value directly. In
 this case, this metod returns the code reference which needs to be executed
-with the handler as argument (see "delegate_to_handler") below. 
+with the handler as argument (see "delegate_to_handler") below.
 
 =cut
 
@@ -697,13 +697,13 @@ sub resolve_alias {
     my $self = shift;
     my $alias = shift || croak "No alias provided";
 
-    my $handler = $self->{product_handler} || $self->_create_handler();    
+    my $handler = $self->{product_handler} || $self->_create_handler();
     return $handler->alias($alias);
 }
 
-=item $do_support = $self->supports_alias($alias) 
+=item $do_support = $self->supports_alias($alias)
 
-Test for checking whether a handler supports a certain alias. 
+Test for checking whether a handler supports a certain alias.
 
 =cut
 
@@ -729,20 +729,20 @@ as additional arguments.
 sub delegate_to_handler {
     my $self = shift;
     my $code = shift;
-    my $handler = $self->{product_handler} || $self->_create_handler();    
+    my $handler = $self->{product_handler} || $self->_create_handler();
     return &{$code}($handler,@_);
 }
 
 =item $product = $self->product()
 
-For supported application servers, this methods returns product handler 
-which is an object of type L<JMX::Jmx4Perl::Product::BaseHandler>. 
+For supported application servers, this methods returns product handler
+which is an object of type L<JMX::Jmx4Perl::Product::BaseHandler>.
 
 This product is either detected automatically or provided during
 construction time.
 
 The most interesting methods on this object are C<id()>, C<name()> and
-C<version()> 
+C<version()>
 
 =cut
 
@@ -758,25 +758,25 @@ Get all MBeans as registered at the specified server. A C<$path> can be
 specified in order to fetchy only a subset of the information. When no path is
 given, the returned value has the following format
 
-  $value = { 
-              <domain> => 
-              { 
-                <canonical property list> => 
-                { 
-                    "attr" => 
-                    { 
-                       <atrribute name> => 
+  $value = {
+              <domain> =>
+              {
+                <canonical property list> =>
+                {
+                    "attr" =>
+                    {
+                       <atrribute name> =>
                        {
                           desc => <description of attribute>
-                          type => <java type>, 
-                          rw => true/false 
-                       }, 
-                       .... 
+                          type => <java type>,
+                          rw => true/false
+                       },
+                       ....
                     },
-                    "op" => 
-                    { 
-                       <operation name> => 
-                       { 
+                    "op" =>
+                    {
+                       <operation name> =>
+                       {
                          desc => <description of operation>
                          ret => <return java type>
                          args =>
@@ -791,9 +791,9 @@ given, the returned value has the following format
                        },
                        ....
                 },
-                .... 
+                ....
               }
-              .... 
+              ....
            };
 
 A complete path has the format C<"E<lt>domainE<gt>/E<lt>property
@@ -801,7 +801,7 @@ listE<gt>/("attribute"|"operation")/E<lt>indexE<gt>">
 (e.g. C<java.lang/name=Code Cache,type=MemoryPool/attribute/0>). A path can be
 provided partially, in which case the remaining map/array is returned. See also
 L<JMX::Jmx4Perl::Agent::Protocol> for a more detailed discussion of inner
-paths. 
+paths.
 
 This method throws an exception if an error occurs.
 
@@ -819,7 +819,7 @@ sub list {
         #($response->stacktrace ? "\n" . $response->stacktrace . "\n" : "\n");
         die $txt;
     }
-    return $response->value;    
+    return $response->value;
 }
 
 
@@ -835,7 +835,7 @@ properly, too.
 
 Example:
 
-  my ($domain,$attrs) = 
+  my ($domain,$attrs) =
       $jmx->parse_name("java.lang:name=Code Cache,type=MemoryPool");
   print $domain,"\n",Dumper($attrs);
 
@@ -867,13 +867,13 @@ sub parse_name {
         } else {
             if ($rest =~ s/([^,]+)(\s*,\s*|$)//) {
                 $value = $1;
-            } 
+            }
         }
         return undef unless defined($value);
         $attrs->{$key} = $value;
         #print "K: $key V: $value\n";
     }
-    # If there is something left, we were not successful 
+    # If there is something left, we were not successful
     # in parsing the name
     return undef if $rest;
     return ($domain,$attrs);
@@ -897,7 +897,7 @@ sub formatted_list {
     my $path_or_resp = shift;
     my $path;
     my $list;
-    
+
     if ($path_or_resp && UNIVERSAL::isa($path_or_resp,"JMX::Jmx4Perl::Response")) {
         $path = $path_or_resp->request->get("path");
         $list = $path_or_resp->value;
@@ -914,7 +914,7 @@ sub formatted_list {
 }
 
 
-# =============================================================================================== 
+# ===============================================================================================
 
 # Helper method for extracting parameters for the set/get methods.
 sub _extract_get_set_parameters {
@@ -928,16 +928,16 @@ sub _extract_get_set_parameters {
         $value = $f->{value};
         if ($f->{alias}) {
             my $alias_path;
-            ($object,$attribute,$alias_path) = 
+            ($object,$attribute,$alias_path) =
               $self->resolve_alias($f->{alias});
             if (ref($object) eq "CODE") {
                 # Let the handler do it
                 return ($object,undef,undef,$args{with_value} ? $value : undef);
             }
-            croak "No alias ",$f->{alias}," defined for handler ",$self->product->name unless $object; 
+            croak "No alias ",$f->{alias}," defined for handler ",$self->product->name unless $object;
             if ($alias_path) {
                 $path = $f->{path} ? $f->{path} . "/" . $alias_path : $alias_path;
-            } else { 
+            } else {
                 $path = $f->{path};
             }
         } else {
@@ -945,19 +945,19 @@ sub _extract_get_set_parameters {
               croak "No MBean name or domain + properties given";
             $attribute = $f->{attribute};
             $path = $f->{path};
-        }        
+        }
     } else {
-        if ( (@{$p} == 1 && !$args{with_value}) || 
+        if ( (@{$p} == 1 && !$args{with_value}) ||
              (@{$p} == 2 && $args{with_value}) || $self->_is_alias($p->[0])) {
             # A single argument can only be used as an alias
-            ($object,$attribute,$path) = 
+            ($object,$attribute,$path) =
               $self->resolve_alias($f);
             $value = $_[1];
             if (ref($object) eq "CODE") {
                 # Let the handler do it
                 return ($object,undef,undef,$args{with_value} ? $value : undef);
             }
-            croak "No alias ",$f," defined for handler ",$self->product->name unless $object; 
+            croak "No alias ",$f," defined for handler ",$self->product->name unless $object;
         } else {
             if ($args{with_value}) {
                 ($object,$attribute,$value,$path) = @{$p};
@@ -983,9 +983,9 @@ sub _extract_execute_parameters {
                 # Alias handles this completely on its own
                 return ($mbean,undef,$args->{arguments} || $args->{args});
             }
-            croak "No alias ",$args->{alias}," defined for handler ",$self->product->name unless $mbean; 
+            croak "No alias ",$args->{alias}," defined for handler ",$self->product->name unless $mbean;
         } else {
-            $mbean = $args->{mbean} || $self->_glue_mbean_name($args) || 
+            $mbean = $args->{mbean} || $self->_glue_mbean_name($args) ||
               croak "No MBean name or domain + properties given";
             $operation = $args->{operation} || croak "No operation given";
         }
@@ -1046,7 +1046,7 @@ sub _create_handler {
     # product has been set explicitely)
     $self->{product_handler} = $self->_new_handler($self->{product}) unless $self->{product_handler};
     croak "Cannot autodetect server product" unless $self->{product};
-    return $self->{product_handler};        
+    return $self->{product_handler};
 }
 
 sub _autodetect_product {
@@ -1073,7 +1073,7 @@ my $SPACE = 4;
 my @SEPS = (":");
 my $CURRENT_DOMAIN = "";
 
-sub _format_map { 
+sub _format_map {
     my ($ret,$map,$path,$level) = @_;
 
     my $p = shift @$path;
@@ -1092,7 +1092,7 @@ sub _format_map {
                 $CURRENT_DOMAIN = $d;
             } elsif ($level == 1) {
                 $prefix = $CURRENT_DOMAIN . ":";
-            } 
+            }
             $ret .= &_get_space($level).$prefix.$d.$sep."\n" unless ($d =~ /^(attr|op|class|desc|error)$/);
             my @args = ($ret,$map->{$d},$path);
             if ($d eq "attr") {
@@ -1160,7 +1160,7 @@ sub _format_operation {
     return $ret;
 }
 
-sub _format_method { 
+sub _format_method {
     my ($name,$args,$ret_type) = @_;
     my $ret = $ret_type." ".$name."(";
     if ($args) {

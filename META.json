@@ -4,13 +4,13 @@
       "Roland Huss (roland@cpan.org)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4211",
+   "generated_by" : "Module::Build version 0.4224",
    "license" : [
       "gpl_1"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "jmx4perl",
    "prereqs" : {
@@ -61,7 +61,7 @@
    "provides" : {
       "JMX::Jmx4Perl" : {
          "file" : "lib/JMX/Jmx4Perl.pm",
-         "version" : "1.12"
+         "version" : "1.13"
       },
       "JMX::Jmx4Perl::Agent" : {
          "file" : "lib/JMX/Jmx4Perl/Agent.pm"
@@ -217,5 +217,6 @@
          "http://opensource.org/licenses/gpl-license.php"
       ]
    },
-   "version" : "1.12"
+   "version" : "1.13",
+   "x_serialization_backend" : "JSON::PP version 4.00"
 }

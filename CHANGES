@@ -1,14 +1,20 @@
-  - Changed CLI interface of 'jmx4perl list' and the possible arguments for LIST request. Note, that 
-    this change is not backwards compatible. However the fix is trivial: Instead of providing
-    a full path into the LIST response as single argument (e.g. 'java.lang/type=Memory/HeapMemoryUsage') you have to 
-    provide two arguments for the MBean and the path into MBean's meta data (e.g. 'java.lang:type=Memory' and'HeapMemoryUsage')
-  
+1.13 (2020-05-12)
+  - Fixed bug in output for Tomcat 8 check_jmx4perl Nagios check
+  - Changed CLI interface of 'jmx4perl list' and the possible arguments
+    for LIST request. Note, that this change is not backwards compatible.
+    However the fix is trivial: Instead of providing a full path into the
+    LIST response as single argument (e.g. 'java.lang/type=Memory/HeapMemoryUsage')
+    you have to provide two arguments for the MBean and the path into MBean's
+    meta data (e.g. 'java.lang:type=Memory' and'HeapMemoryUsage')
+  - Fixed Dockerfile
+  - Add Tomcat 8 specific checks
+
 1.12 (2015-07-28)
 
   - Configuration can be also a directory in wich case <dir>/jmx4perl.cfg is tried
     (e.g. ~/.j4p/jmx4perl.cfg)
   - Added Docker build
-  - Fix boolean values to be strings "true"/"false" when deserialized. 
+  - Fix boolean values to be strings "true"/"false" when deserialized.
   - Changed from "Nagios::Plugin" to "Monitoring::Plugin"
 
 1.11 (2014-11-22)
@@ -35,55 +41,55 @@
   - Fixed BaseMBean and BaseAttribute config directives (#25)
   - Fixed regexp for squeezing trailing slashes (RT#89108)
   - Fixed check definition for 'wls_channel_connections (RT#89107)
-  - Changed check 'memory_gc_time' to be a relative check to measure the 
+  - Changed check 'memory_gc_time' to be a relative check to measure the
     relative amount taken for the GC. If you use this check (or a sub-check of this)
-    YOU NEED TO UPDATE YOUR THRESHOLDS (and regenerate the pn4p graphics) if you use this 
+    YOU NEED TO UPDATE YOUR THRESHOLDS (and regenerate the pn4p graphics) if you use this
     check directly
   - Fixed bug when using 0 thresholds in checks using parent checks (#38)
-  - Added support for '*' wildcard when navigation with cd for j4psh 
+  - Added support for '*' wildcard when navigation with cd for j4psh
   - Fixed bug with check inheritance and check parameters which contain parantheses
-  - Added an option "MultiCheckPrefix" for "Checks" in order to specify the prefix 
-    for multi checks 
-  - Added config options "SummaryOk" and "SummaryFailure" for allowing to fine tune 
+  - Added an option "MultiCheckPrefix" for "Checks" in order to specify the prefix
+    for multi checks
+  - Added config options "SummaryOk" and "SummaryFailure" for allowing to fine tune
     multi check output (#24)
-  - "Argument" can be used in "Operation" config checks for providing arguments to 
+  - "Argument" can be used in "Operation" config checks for providing arguments to
     Nagios checks which are based on operations (#27)
 
-1.07 (2013-04-16) 
+1.07 (2013-04-16)
   - Added more robust timeout for the Jmx4Perl Agent (requires Sys::SigAction)
   - SSL Host key verification switched off when connecting via SSL
   - Fixed issue with quoting in j4psh (#14)
   - 'cat' in j4psh is now caseinsensitive when using wildcards (#18)
   - Added BaseMBean, BaseAttribute and BasePath as alternative to Base f
     or check_jmx4perl (#16)
-  - "jolokia" can do 'repack' and 'info' also when not being connected 
+  - "jolokia" can do 'repack' and 'info' also when not being connected
     to the internet (#20)
   - Multi-Checks can now reference other Multi-Checks either via <MultiCheck>
     or <Check> (#19)
-  - Added new option '--perfdata true|false' (PerData false in configuration) for 
-    switching of performance data. Also, for string checks performance data is 
+  - Added new option '--perfdata true|false' (PerData false in configuration) for
+    switching of performance data. Also, for string checks performance data is
     switched off always. (#22)
   - Added %y and %z as placeholder for configured CRITICAL and WARNING thresholds
     for the output provided with "Label" in check_jmx4perl (#13)
 
 1.06 (2012-10-13)
-  - A a scripting mode to check_jmx4perl which allows putting in arbitraty 
+  - A a scripting mode to check_jmx4perl which allows putting in arbitraty
     Perl code for extracting the value to match against
   - weblogic specific Nagios checks added
   - Added name as optional parameter for Nagios checks in tomcat.cfg (thanks Wolfgang)
-  - When a multi checks fails, then the name of the check is added instead of its definition 
+  - When a multi checks fails, then the name of the check is added instead of its definition
     key. This allows for better direct usage of predefined checks in own multi checks.
   - If neither a CRITICAL nor a WARNING threshold is provided, then
     the check always returns OK. This is especially useful when the
-    motivation is to only collect performance data. 
-    
+    motivation is to only collect performance data.
+
 1.05 (2012-04-22)
   - Added Time::HiRes as dependency to check_jmx4perl
   - Replaced XML::Tidy with XML::Twig and relaxed version number
     requirement on Module::Build
   - RT#72413: Fixed configuration in threads.cfg
   - Updated documentation for 'jmx4perl' (--method and --legacy-escape
-    explained) 
+    explained)
   - Bundled Module::Build 0.34 in order to improve the installation
     experience
   - j4psh: Added 'pwd' command
@@ -91,8 +97,8 @@
     command which now also supports wildcards for filtering
 
 1.04 (2011-11-27)
-  - Fixed serious (and stupid) bug for jmx4perl and j4psh when printing 
-    out scalar values. 
+  - Fixed serious (and stupid) bug for jmx4perl and j4psh when printing
+    out scalar values.
 
 1.03 (2011-11-23)
   - Fixed stupid last minute bug.
@@ -100,12 +106,12 @@
 1.02 (2011-11-23)
   - Fix for threshold with 0 value in check_jmx4perl
   - Fix automatic detection of the largest version number for Jolokia
-    agents in with the format 1.0.1 when downloading with 'jolokia' 
-  - Fixed printing of boolean values for jmx4perl and j4psh for 
+    agents in with the format 1.0.1 when downloading with 'jolokia'
+  - Fixed printing of boolean values for jmx4perl and j4psh for
     complex data structures (finally)
-  - Added option '--option key=val' to jmx4perl and j4psh for tuning the 
+  - Added option '--option key=val' to jmx4perl and j4psh for tuning the
     output format of these tools (known keys: format,booleans,indent)
-  - Added '--target' to j4psh so that it can operate against a JSR-160 
+  - Added '--target' to j4psh so that it can operate against a JSR-160
     proxy
 
 1.01 (2011-10-25)
@@ -123,7 +129,7 @@
     name. JMX::Jmx4Perl knows this option as well
     ('legacy-escape'). j4psh does the detection automatically,
     jmx4perl, check_jmx4perl and cacti_jmx4perl know about the new
-    configuration option.  
+    configuration option.
   - That's 1.0
 
 0.95 (2011-8-21)
@@ -131,12 +137,12 @@
   - Tuned ancient Perl coding style (thanks, datamuc)
   - Fixed problem with jolokia and PGP verification in non-english
     environments.
-  - Fixed 'search' command which now really returns undef if nothing 
+  - Fixed 'search' command which now really returns undef if nothing
     is found (and not a ref to an empty array). That will also fix some
-    detectors when the 'info' command is used. 
+    detectors when the 'info' command is used.
 
 0.92 (2011-5-9)
-  - Fixed bug in pack specification (encryption) which is not available for 
+  - Fixed bug in pack specification (encryption) which is not available for
     Perl 5.8 (and which broke Jmx4Perl for Perl 5.8)
 
 0.91 (2011-5-6)
@@ -145,19 +151,19 @@
   - Fixed bug RT#67815 which was caused by an invalid replacement of placeholder
     for certain cases (i.e. is during parent check definition resolving
     ($0,$1) needs to be replaced by ($1,$2) which ended up falsely as ($2,$2)).
-  - Implemented --timeout option for check_jmx4perl, which is a pure HTTP timeout 
+  - Implemented --timeout option for check_jmx4perl, which is a pure HTTP timeout
     for the communication between the Nagios checks and the Jolokia agent (RT#67821)
   - Added a possibility to store encrypted passwords in the configuration file.
     Please note, that this is *not* secure and only prevents casual attacks, since
-    the password needs to be symmetrically decrypted before passing it to the server. 
+    the password needs to be symmetrically decrypted before passing it to the server.
     In order to create an encrypted password, use 'jmx4perl encrypt <passwd>'.
-  - Fixed RT#67772 which prevented the proper count of failed checks for non-relative 
+  - Fixed RT#67772 which prevented the proper count of failed checks for non-relative
     checks within multi checks
 
 0.90 (2011-4-11)
   - Tuned Build.PL so that scripts can be added conditionally.
   - Fixed normalization issue with negative delta check values.
-  - Support for new JSON serialization style of Jolokia 0.90 added. 
+  - Support for new JSON serialization style of Jolokia 0.90 added.
     (i.e numbers and booleans are not returned as plain strings anymore
     but as Long, Double, true/false. Null is returned as JSON-null.
     If you have trouble with boolean checks in check_jmx4perl, please
@@ -165,38 +171,38 @@
   - Added 'jolokia' for downloading and managing Jolokia agents
   - Removed jmx4perl Java agent source and agent since jmx4perl now uses
     Jolokia as agents (www.jolokia.org)
-  - Added 'cacti_jmx4perl', a tool for gathering Cacti data (www.cacti.net) 
-    It is heavily based on 'check_jmx4perl' (without threshold handling). 
- 
+  - Added 'cacti_jmx4perl', a tool for gathering Cacti data (www.cacti.net)
+    It is heavily based on 'check_jmx4perl' (without threshold handling).
+
 0.75 (2011-2-4)
-  - Fixed typo in POD documentation which prevented a successful 
+  - Fixed typo in POD documentation which prevented a successful
     build in some situations
 
 0.74 (2011-1-16)
   - Fixed problem with multichecks including operation-checks with
     arguments. Specifying them in a configuration has been falsely
-    ignored. 
+    ignored.
   - Added '--method' command line option and 'Method' check
     configuration option to check_jmx4perl for selecting the prefered
-    HTTP request method. 
+    HTTP request method.
   - Fixed normalization of time values (RT #63545)
-  - Improved default check_jmx4perl configuration (in hopefully a backward 
+  - Improved default check_jmx4perl configuration (in hopefully a backward
     compatible way)
   - Multi check service summary now contains the name of failed services
   - Fixed problems with a single '/' argument (RT #62915)
 
 0.73 (2010-11-03)
-  - Fixed RT #61903 which occurs when the same check is referenced 
-    multiple times (with potentially different parameters) in a 
+  - Fixed RT #61903 which occurs when the same check is referenced
+    multiple times (with potentially different parameters) in a
     multicheck scenario.
   - Fixed RT #62342: Perl warning when using operations and not --name
     in check_jmx4perl
-  - Added --method to jmx4perl, config option 'method' for JMX::Jmx4Perl 
+  - Added --method to jmx4perl, config option 'method' for JMX::Jmx4Perl
     in order to allow a default HTTP Method to use.
-  - Changed request command constant 'VERSION' to 'AGENT_VERSION' in 
-    order to avoid conflicts with the usual versioning conventions for 
+  - Changed request command constant 'VERSION' to 'AGENT_VERSION' in
+    order to avoid conflicts with the usual versioning conventions for
     Perl Modules. This is an API change, so in case you are using requests
-    with the constant VERSION you should change this to AGENT_VERSION 
+    with the constant VERSION you should change this to AGENT_VERSION
   - Fixed issues when browsing with less in j4psh
   - Extended config handling in j4psh to allow includes
 
@@ -205,20 +211,20 @@
     and/or "Base".
   - Adapted tomcat.cfg to be more flexible (e.g. replaced 'Catalina'
     domain part by a wildcard).
-  - Fixed bug for merged MBeanServers when using multiple attributes 
+  - Fixed bug for merged MBeanServers when using multiple attributes
     and/or MBean patterns for a READ request
-  - Fixed broken --target, --target-user and --target-password for 
+  - Fixed broken --target, --target-user and --target-password for
     check_jmx4perl (same for --proxy and co.)
   - Tuned output of complex data in j4psh
-  - Unwrap an MBeanException to use the target exception for an error 
+  - Unwrap an MBeanException to use the target exception for an error
     message
   - Agent tested with Mule 3.0
 
 0.71 (2010-8-16)
   - Added 'ns' as unit (CpuThreadTime returns nano seconds)
-  - Fixed quoting of performance data in so far to let 
+  - Fixed quoting of performance data in so far to let
     Nagios::Plugin the complete control
-  - Fixed '--color' option and UseColor config directive 
+  - Fixed '--color' option and UseColor config directive
     (section: <Shell>) to j4psh
   - Added detection of a suitable pager for j4psh
   - Fixed bug in server configuration when using old style syntax
@@ -232,10 +238,10 @@
     + Check-Inheritance
     + Predefined checks for certain environments (as sample configuration files)
     + Added null value check, can be tuned with --null
-  - Added '--value' as a shortcut for --mbean/--attribute/--value  
+  - Added '--value' as a shortcut for --mbean/--attribute/--value
   - Better documentation for check_jmx4perl (30 extra pages)
-  - <Server> sections are now named blocks, taking the server name as block 
-    name (similar to <Check>). The old syntax with an "Name" argument is 
+  - <Server> sections are now named blocks, taking the server name as block
+    name (similar to <Check>). The old syntax with an "Name" argument is
     still support but must not be mixed with the new syntax.
   - Path elements containing '/' can now be escaped with '\/'
   - j4p-osgi-bundle including pax-web-bundle so only a single bundle
@@ -251,9 +257,9 @@
       is used
   - Started to add a java client library
   - j4psh beta version added
-  - Agent: 
+  - Agent:
     + Switched from JUnit to TestNG for testing because of
-      support of testing groups 
+      support of testing groups
     + New servlet init parameter option 'mbeanQualifier' to allow
       multiple j4p-servlet in a single application server
 
@@ -262,17 +268,17 @@
     HTTP/JSON.
   - Extended READ operation to support MBean patternames and multiple
     attributes with a single request
-  - Renamed 'max_depth', 'max_list_size','max_objects' as processing 
+  - Renamed 'max_depth', 'max_list_size','max_objects' as processing
     configuration parameters to 'maxDepth', 'maxCollectionSize' and
     'maxObjects' respectively for consistencies sake.
-  - Bug fix: POST request respect these parameters as well now 
+  - Bug fix: POST request respect these parameters as well now
   - Added 'ignoreErrors' request option in order to allow a bulk read
-    to succeed even if single read fails. In this case, the valu will 
+    to succeed even if single read fails. In this case, the valu will
   - 'search' returns properly escaped MBean Names if unsafe characters
-    are used. 
+    are used.
   - For GET request, instead of pathinfo a query with parameter 'p'
     can be used as alternative. This works around certain issues with
-    special path handling with certain app-servers (e.g. Tomcat). 
+    special path handling with certain app-servers (e.g. Tomcat).
   - JMX::Jmx4Perl::Request and JMX::Jmx4Perl::Agent hardened in order
     to be more smart with unsafe MBean Names and detect automatically
     the most convenient HTTP Request method (if not explicitely set)
@@ -309,7 +315,7 @@
   - Protocol of j4p.war has been extended to enable proxy mode
   - Added '--target' to check_jmx4perl for using proxy mode
   - Added '--target' to jmx4perl
-  - Added Mule agent. Use maven to build it in agent/modules/j4p-mule  
+  - Added Mule agent. Use maven to build it in agent/modules/j4p-mule
   - 'get_war' and 'get_mule_agent' as actions for Build.PL for
     fetching java artifacts from the labs.consol.de maven repository.
   - Cleaned up and updated Manual.pod
@@ -324,27 +330,27 @@
   - Support for Glassfish V3 Preview, Jonas 5.1 and Jetty 7.0.0
 
 0.36 (2009-10-30)
-  - Added <remote> to j4p-access.xml for restricting 
+  - Added <remote> to j4p-access.xml for restricting
     access to certain hosts or subnets only.
-  - Added support for a JDK 1.4 agent war. The feature base for 
+  - Added support for a JDK 1.4 agent war. The feature base for
     this agent is frozen. It might even vanish in the future.
     You need a JDK 1.4 agent for running within Weblogic 8.1
-  - Cleaned up j4p agent with help of sonar and associated 
+  - Cleaned up j4p agent with help of sonar and associated
     metric checkers like PMD, check_style and FindBugs.
-  - Added support for config files in jmx4perl and JMX::Jmx4Perl 
-    which allows for shortcuts for agent URL as well as storing 
+  - Added support for config files in jmx4perl and JMX::Jmx4Perl
+    which allows for shortcuts for agent URL as well as storing
     user and credentials information.
   - Fixed some bugs
 
 0.35 (2009-08-15)
   - Added example 'threadDump.pl'
   - Fixed bug when serializing floats and doubles.
-  - check_jmx4perl: 
+  - check_jmx4perl:
     * Added support for checking string and boolean values
     * Escaping performance data
     * Include units-of-measurement in the plugin output
     * Custom labeling of plugin output
-    * Perfdata contains always absolute values, even when 
+    * Perfdata contains always absolute values, even when
       used with --base
 
 0.30 (2009-07-31)
@@ -359,13 +365,13 @@
   - jmx4perl: URL now as first argument for easier workflow when using
     bash history for repeated usage.
   - Added support for restricting MBean access via a policy file
-    (j4p-access.xml)  
+    (j4p-access.xml)
 
 0.21 (2009-07-03)
   - Added '--proxy' for check_jmx4perl and jmx4perl
   - check_jmx4perl:
     + Refactored to work within the embedded Nagios Perl interpreter
-      (ePN)  
+      (ePN)
     + use relative values in the range from 0 to 100%
       (for --critical and --warning) instead of [0..1]
     + Renamed '--base-value' to '--base' since it can take now
@@ -376,20 +382,20 @@
     + Added ~ 50 integration tests
 
 0.20 (2009-06-28)
-  - Support for writing attributes and executing operations 
+  - Support for writing attributes and executing operations
   - Documentation fixes
-  - Tested for WebLogic 9. New initial support for Websphere 6.1 and 
+  - Tested for WebLogic 9. New initial support for Websphere 6.1 and
     7.0
   - New "version" command to j4p-agent
   - New "search" j4p-agent command for querying for MBean names
-  - Added '--base-alias' to check_jmx4perl for using relative 
+  - Added '--base-alias' to check_jmx4perl for using relative
     thresholds
-  - Added '--delta' to check_jmx4perl for using an incremental 
+  - Added '--delta' to check_jmx4perl for using an incremental
     mode
   - Cleaned up check_jmx4perl perfdata output
-  - Added own j4p-agent MBean for configuration management 
+  - Added own j4p-agent MBean for configuration management
     (history tracking and debugging info)
-  - JMX::Jmx4Perl has new request short-cuts 'set_attribute' and 
+  - JMX::Jmx4Perl has new request short-cuts 'set_attribute' and
     'execute'
   - Renamed j4p-agent.war to j4p.war
   - Started integration test suite below "it/" and "agent/modules/j4p-it"
@@ -400,23 +406,23 @@
 0.16
   - Switched off debugging in agent servlet
   - Fixed syntax error when using 'jmx4perl -v attributes'
-  - Fixed Jetty Handler. 
+  - Fixed Jetty Handler.
 
 0.15
   - Aliasing
-  - Autodetection 
+  - Autodetection
   - Command line tool "jmx4perl"
     * reading of attributes
-    * listing of all availabel attributes and operations. 
+    * listing of all availabel attributes and operations.
     * listing of all attribute values
     * print server info
     * print all available aliases
   - Bug Fixes:
     * Correct URL encoding for request URL
-    * Slash '/' needs to be custom encoded, since URI encoding doesn't 
+    * Slash '/' needs to be custom encoded, since URI encoding doesn't
       work for JBoss 4/5 due to a bug
-  - Tested to work on JBoss 4 & 5, Oracle WebLogic 10, Jonas 4, Geronimo 2, 
-    Glassfish 2, Tomcat 4-6 and Jetty 5 & 6 
+  - Tested to work on JBoss 4 & 5, Oracle WebLogic 10, Jonas 4, Geronimo 2,
+    Glassfish 2, Tomcat 4-6 and Jetty 5 & 6
 
 0.1
   - Initial release
